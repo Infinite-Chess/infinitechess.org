@@ -1,7 +1,7 @@
 // src/shared/chess/logic/boardchanges.ts
 
 /**
- * This script both contructs the changes list of a Move, and executes them
+ * This script both constructs the changes list of a Move, and executes them
  * when requested, modifying the piece lists according to what moved
  * or was captured, forward or backward.
  *
@@ -28,7 +28,7 @@ export type Change = {
 	/** Whether this change affects the main piece moved.
 	 * This would be true if the change was for moving the king during castling, but false for moving the rook. */
 	main: boolean;
-	/** The main piece affected by the move. If this is a move/capture action, it's the piece moved. If it's an add/delete action, it's the piece added/deleted. */
+	/** The piece this change affects: the piece moved, captured, added or deleted. */
 	piece: Piece;
 } & (
 	| {
@@ -52,9 +52,8 @@ export type Change = {
 );
 
 /**
- * A generic function that takes the changes list of a move, and modifies either
- * the piece lists to reflect that move, or modifies the mesh of the pieces,
- * depending on the function, BUT NOT BOTH.
+ * A generic function that applies one change of a move, modifying either
+ * the piece lists or the mesh of the pieces, depending on the function, BUT NOT BOTH.
  */
 export type genericChangeFunc<T> = (actiondata: T, change: Change) => void;
 
@@ -68,9 +67,7 @@ interface ActionList<F extends CallableFunction> {
 	[actionName: string]: F;
 }
 
-/**
- * A change application is used for applying the changelist of a move in both directions.
- */
+/** A change application is used for applying the changelist of a move in both directions. */
 export interface ChangeApplication<F extends CallableFunction> {
 	forward: ActionList<F>;
 	backward: ActionList<F>;
@@ -82,7 +79,7 @@ export interface ChangeApplication<F extends CallableFunction> {
  * All Change actions that cannot be undone to return to the same board position later in
  * the game, unless in the future it's possible to add pieces mid-game.
  */
-const ONE_WAY_ACTIONS: string[] = ['capture', 'delete'];
+const ONE_WAY_ACTIONS: Change['action'][] = ['capture', 'delete'];
 
 /** Maps each move change to the function that performs its piece list changes. */
 const CHANGE_FUNCS: ChangeApplication<genericChangeFunc<Board>> = {
@@ -103,7 +100,7 @@ const CHANGE_FUNCS: ChangeApplication<genericChangeFunc<Board>> = {
 // Adding changes to a Move ----------------------------------------------------
 
 /**
- * Queues a move with capture. Distinct from a plain move so animations can work,
+ * Queues the capture of a piece. Distinct from a plain deletion so animations can work,
  * and so that royal capture can be recognised.
  * @param changes - The running list of Changes for the move.
  * @param main - Whether this change is affecting the main piece moved, not a secondary piece.
@@ -218,7 +215,6 @@ function applyChanges<T>(
  * and organizes the piece in the organized lists.
  */
 function addPiece(boardsim: Board, change: Change): void {
-	// desiredIndex optional
 	const pieces = boardsim.pieces;
 	const typedata = pieces.typeRanges.get(change.piece.type);
 	if (typedata === undefined)
@@ -248,19 +244,19 @@ function addPiece(boardsim: Board, change: Change): void {
 		idx = boardutil.getAbsoluteIdx(pieces, change.piece); // Remove the relative-ness to the start of its type range
 		const { found, index } = jsutil.binarySearch(typedata.undefineds, idx);
 		if (!found)
-			throw Error(`Newly added piece ${JSON.stringify(change.piece)} attemped to overwrite an occupied index`); // prettier-ignore
+			throw Error(`Newly added piece ${JSON.stringify(change.piece)} attempted to overwrite an occupied index`); // prettier-ignore
 		typedata.undefineds.splice(index, 1);
 	}
 	pieces.XPositions[idx] = change.piece.coords[0];
 	pieces.YPositions[idx] = change.piece.coords[1];
-	// Don't need to set it's type, because it's spot in the type range already has its type.
+	// Don't need to set its type, because its spot in the type range already has its type.
 
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
 
 /**
- * Most basic delete-a-piece method. Deletes it from the gamefile's piece list,
- * from the organized lists.
+ * Most basic delete-a-piece method. Deletes it from the board's piece list,
+ * and from the organized lists.
  */
 function deletePiece(boardsim: Board, change: Change): void {
 	const pieces = boardsim.pieces;
@@ -283,9 +279,7 @@ function deletePiece(boardsim: Board, change: Change): void {
 
 /**
  * Most basic move-a-piece method. Adjusts its coordinates in the board's piece lists,
- * reorganizes the piece in the organized lists, and updates its mesh data.
- *
- * If the move is a capture, then use capturePiece() instead, so that we can animate it.
+ * and reorganizes the piece in the organized lists.
  */
 function movePiece(boardsim: Board, change: Change): void {
 	if (change.action !== 'move')
@@ -300,9 +294,7 @@ function movePiece(boardsim: Board, change: Change): void {
 	organizedpieces.registerPieceInSpace(idx, pieces);
 }
 
-/**
- * Reverses `movePiece`
- */
+/** Reverses `movePiece`. */
 function returnPiece(boardsim: Board, change: Change): void {
 	if (change.action !== 'move')
 		throw new Error(`returnPiece called with a non-move change: ${change.action}`);
@@ -326,7 +318,7 @@ function returnPiece(boardsim: Board, change: Change): void {
  * It does NOT modify a gamefile or its organized pieces.
  * This also only works applying a move's changes FORWARD.
  *
- * This is intended for updating a simplified board state, one that is used in gamecompressor.GameToPosition
+ * This is intended for updating a simplified board state, such as a `VariantOptions` position.
  */
 function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]): void {
 	for (const change of changes) {
@@ -351,9 +343,7 @@ function runChanges_Position(position: Map<CoordsKey, number>, changes: Change[]
 
 // Helper Functions ------------------------------------------------------------
 
-/**
- * Gets every captured piece in changes
- */
+/** Gets the type of every piece the move captured. */
 function getCapturedPieceTypes(move: MoveFull): Set<number> {
 	const pieceTypes: Set<number> = new Set();
 	move.changes.forEach((change) => {
@@ -362,14 +352,12 @@ function getCapturedPieceTypes(move: MoveFull): Set<number> {
 	return pieceTypes;
 }
 
-/**
- * Returns true if any piece was captured by the move, whether directly or by special actions.
- */
+/** Returns true if any piece was captured by the move, whether directly or by special actions. */
 function wasACapture(move: MoveFull): boolean {
 	// Safety net if we ever accidentally call this method too soon.
 	// There will never be a valid move with zero changes, that's just absurd.
 	if (move.changes.length === 0)
-		throw Error("Move doesn't have it's changes calculated yet, do that before this.");
+		throw Error("Move doesn't have its changes calculated yet, do that before this.");
 	return move.changes.some((change) => change.action === 'capture');
 }
 
