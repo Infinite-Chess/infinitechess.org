@@ -175,6 +175,9 @@ Re-run `npm run generate:types` whenever you add a script-facing key.
 
 ## Adding a new component
 
+To localize a page, start with `npx tsx scripts/find-hardcoded-strings.ts <page>`: it lists the
+hardcoded English in the page's templates and in every module its bundle ships.
+
 1. Create `translation/<component>/en-US.toml`. Use `[table]` sub-tables for grouping; put any
    browser-side keys under a single top-level `[script]` table (or set `script_only = true` if every
    key is browser-side).
