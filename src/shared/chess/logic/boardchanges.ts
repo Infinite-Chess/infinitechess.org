@@ -57,15 +57,8 @@ export type Change = {
  */
 export type genericChangeFunc<T> = (actiondata: T, change: Change) => void;
 
-/**
- * An actionlist is a dictionary links actions to functions.
- * The function uses the change data for operations. Eg animation, updating mesh, logic
- * It won't always include every action.
- * If an action is looked up and there isn't a function for it, it's change is ignored
- */
-interface ActionList<F extends CallableFunction> {
-	[actionName: string]: F;
-}
+/** Maps every change action to the function that applies it. */
+type ActionList<F extends CallableFunction> = Record<Change['action'], F>;
 
 /** A change application is used for applying the changelist of a move in both directions. */
 export interface ChangeApplication<F extends CallableFunction> {
@@ -173,37 +166,13 @@ function runChanges<T>(
 	changeFuncs: ChangeApplication<genericChangeFunc<T>>,
 	forward: boolean = true,
 ): void {
-	const funcs = forward ? changeFuncs.forward : changeFuncs.backward;
-	applyChanges(actiondata, changes, funcs, forward);
-}
-
-/**
- * Applies the logical board changes of a change list in the provided order, modifying the piece lists.
- * @param actiondata - The data to apply the changes to.
- * @param changes - The changes to apply.
- * @param funcs - The object containing the change funcs.
- * @param forward - Whether to apply changes in forward order (true) or reverse order (false).
- */
-function applyChanges<T>(
-	actiondata: T,
-	changes: Change[],
-	funcs: ActionList<genericChangeFunc<T>>,
-	forward: boolean,
-): void {
 	if (forward) {
-		// Iterate forwards through the changes array
-		for (const change of changes) {
-			if (!(change.action in funcs))
-				throw Error(`Missing change function for likely-invalid change action "${change.action}"!`); // prettier-ignore
-			funcs[change.action]!(actiondata, change);
-		}
+		for (const change of changes) changeFuncs.forward[change.action](actiondata, change);
 	} else {
 		// Iterate backwards through the changes array so the move's changes are reverted in the correct order
 		for (let i = changes.length - 1; i >= 0; i--) {
 			const change = changes[i]!;
-			if (!(change.action in funcs))
-				throw Error(`Missing change function for likely-invalid change action "${change.action}"!`); // prettier-ignore
-			funcs[change.action]!(actiondata, change);
+			changeFuncs.backward[change.action](actiondata, change);
 		}
 	}
 }
