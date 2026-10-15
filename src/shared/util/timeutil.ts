@@ -11,7 +11,7 @@ type TimeUnit = keyof typeof MS_PER_UNIT;
 
 // Constants -------------------------------------------------------------------
 
-/** The length of each time unit in milliseconds. A year is 365 days, a month a twelfth of one. */
+/** The length of each time unit in milliseconds. */
 const MS_PER_UNIT = {
 	milliseconds: 1,
 	seconds: 1000,
