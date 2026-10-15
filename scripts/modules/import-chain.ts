@@ -19,6 +19,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import esbuild from 'esbuild';
 
+import srcgraph from './srcgraph.js';
+
 // Arguments -------------------------------------------------------------------
 
 const entryArg = process.argv[2];
@@ -98,13 +100,8 @@ const maxDepth = Math.max(...levels.keys());
 
 // Markdown Report -------------------------------------------------------------
 
-/** Trims the noisy common prefix so paths read cleanly while still showing src boundaries. */
-function short(file: string): string {
-	return file.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
-}
-
 const lines: string[] = [];
-lines.push(`# Import chain: ${short(entry)}`);
+lines.push(`# Import chain: ${srcgraph.short(entry)}`);
 lines.push('');
 lines.push(`Entry: \`${entry}\``);
 lines.push(`Total first-party modules: ${depth.size} · Max depth: ${maxDepth}`);
@@ -122,12 +119,12 @@ for (let d = 0; d <= maxDepth; d++) {
 		const back = importers.filter((p) => depth.get(p)! >= d);
 		const suffix =
 			importers.length > 0
-				? `  ⟵ \`${shortestImporter ? short(shortestImporter) : '?'}\`` +
+				? `  ⟵ \`${shortestImporter ? srcgraph.short(shortestImporter) : '?'}\`` +
 					` (${importers.length} importer${importers.length === 1 ? '' : 's'}` +
 					(back.length > 0 ? `, ${back.length} from same/deeper level` : '') +
 					')'
 				: '';
-		lines.push(`- \`${short(file)}\`${suffix}`);
+		lines.push(`- \`${srcgraph.short(file)}\`${suffix}`);
 	}
 	lines.push('');
 }

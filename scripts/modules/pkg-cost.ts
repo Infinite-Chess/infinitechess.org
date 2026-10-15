@@ -16,10 +16,9 @@
  */
 
 import fs from 'node:fs';
-import ts from 'typescript';
-import path from 'node:path';
 import esbuild from 'esbuild';
 
+import srcgraph from './srcgraph.js';
 import { ESMEntryPoints } from '../../build/client.js';
 
 // Arguments -------------------------------------------------------------------
@@ -61,55 +60,19 @@ function pathToPackage(entry: string, pkg: string): string[] | undefined {
 /** A file's runtime imports, static and dynamic, with type-only ones dropped. */
 function depsOf(f: string): { local: string[]; bare: string[] } {
 	if (depCache.has(f)) return depCache.get(f)!;
-	const text = fs.readFileSync(f, 'utf8');
-	const sf = ts.createSourceFile(f, text, ts.ScriptTarget.Latest, true);
 	const local: string[] = [];
 	const bare: string[] = [];
-	const add = (spec: string, typeOnly: boolean): void => {
-		if (typeOnly) return; // erased by esbuild — never bundled
-		if (spec.startsWith('.')) {
-			const r = resolveSpec(f, spec);
-			if (r) local.push(r);
-		} else bare.push(spec);
-	};
-	for (const stmt of sf.statements) {
-		if (ts.isImportDeclaration(stmt) && ts.isStringLiteral(stmt.moduleSpecifier)) {
-			const c = stmt.importClause;
-			let typeOnly = false;
-			// `phaseModifier` is also set for `import defer`, which IS a runtime import.
-			if (c?.phaseModifier === ts.SyntaxKind.TypeKeyword) typeOnly = true;
-			else if (c?.namedBindings && ts.isNamedImports(c.namedBindings) && !c.name)
-				typeOnly = c.namedBindings.elements.every((el) => el.isTypeOnly);
-			add(stmt.moduleSpecifier.text, typeOnly);
-		} else if (
-			ts.isExportDeclaration(stmt) &&
-			stmt.moduleSpecifier &&
-			ts.isStringLiteral(stmt.moduleSpecifier)
-		) {
-			let typeOnly = stmt.isTypeOnly;
-			if (!typeOnly && stmt.exportClause && ts.isNamedExports(stmt.exportClause))
-				typeOnly = stmt.exportClause.elements.every((el) => el.isTypeOnly);
-			add(stmt.moduleSpecifier.text, typeOnly);
+	for (const spec of srcgraph.runtimeSpecifiers(f, fs.readFileSync(f, 'utf8'))) {
+		if (!spec.startsWith('.')) {
+			bare.push(spec);
+			continue;
 		}
+		const resolved = srcgraph.resolveRelative(f, spec);
+		if (resolved) local.push(resolved);
 	}
-	const visit = (n: ts.Node): void => {
-		if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword) {
-			const a = n.arguments[0];
-			if (a && ts.isStringLiteral(a)) add(a.text, false);
-		}
-		n.forEachChild(visit);
-	};
-	sf.statements.forEach(visit);
 	const r = { local, bare };
 	depCache.set(f, r);
 	return r;
-}
-
-/** Resolves a relative import specifier to the file it names, or undefined if none exists. */
-function resolveSpec(from: string, spec: string): string | undefined {
-	const base = path.posix.join(path.posix.dirname(from), spec);
-	const cands = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`, `${base}/index.ts`];
-	return cands.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
 }
 
 // Cost ------------------------------------------------------------------------

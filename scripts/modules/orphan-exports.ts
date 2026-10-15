@@ -15,20 +15,10 @@
 
 import fs from 'node:fs';
 import ts from 'typescript';
-import path from 'node:path';
 
-const ROOTS = ['src/shared', 'src/client', 'src/server'];
+import srcgraph from './srcgraph.js';
 
-function walk(dir: string, out: string[] = []): string[] {
-	for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-		const child = path.posix.join(dir, e.name);
-		if (e.isDirectory()) walk(child, out);
-		else if (/\.(ts|js)$/.test(e.name)) out.push(child);
-	}
-	return out;
-}
-
-const allFiles = ROOTS.flatMap((r) => (fs.existsSync(r) ? walk(r) : []));
+const allFiles = srcgraph.walkSrc();
 const text = new Map(allFiles.map((f) => [f, fs.readFileSync(f, 'utf8')]));
 
 const target = process.argv[2] ?? 'src/shared';

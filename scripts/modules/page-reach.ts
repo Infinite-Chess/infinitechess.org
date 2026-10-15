@@ -26,6 +26,7 @@
 import esbuild from 'esbuild';
 import { globSync } from 'node:fs';
 
+import srcgraph from './srcgraph.js';
 import { ESMEntryPoints } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
@@ -54,14 +55,9 @@ const PREFIXES = ['game/', 'util/', 'components/', 'board/', 'chess/', 'webgl/',
 
 // Helper Functions ------------------------------------------------------------
 
-/** Trims the noisy common prefix so paths read cleanly. */
-function short(f: string): string {
-	return f.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
-}
-
 /** A page's display name, suffixed `*` when it is not a registered entry point yet. */
 function label(entry: string): string {
-	const s = short(entry);
+	const s = srcgraph.short(entry);
 	let name = s;
 	if (s.startsWith('views/')) {
 		const rest = s.replace('views/', '');
@@ -128,7 +124,7 @@ await Promise.all(
 		try {
 			graphs.set(entry, await graphOf(entry));
 		} catch {
-			console.error(`!! failed to build ${short(entry)}`);
+			console.error(`!! failed to build ${srcgraph.short(entry)}`);
 		}
 	}),
 );
@@ -151,7 +147,7 @@ if (targets.length > 0) {
 	const byModule = new Map<string, Set<string>>();
 	for (const [entry, graph] of graphs) {
 		for (const m of Object.keys(graph)) {
-			const k = short(m);
+			const k = srcgraph.short(m);
 			if (!byModule.has(k)) byModule.set(k, new Set());
 			byModule.get(k)!.add(label(entry));
 		}
@@ -163,7 +159,7 @@ if (targets.length > 0) {
 	for (const { m, e } of rows) console.log(`${e.join(',')}\t${m}`);
 
 	// Files that NO page reaches at all.
-	const all = globSync(`${E}**/*.ts`).map((f) => short(f));
+	const all = globSync(`${E}**/*.ts`).map((f) => srcgraph.short(f));
 	const orphans = all.filter((f) => !byModule.has(f) && !f.endsWith('.test.ts'));
 	console.log('\n=== UNREACHABLE ===');
 	for (const o of orphans.sort()) console.log(o);

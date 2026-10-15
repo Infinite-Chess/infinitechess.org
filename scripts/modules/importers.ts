@@ -15,11 +15,8 @@
 
 import fs from 'node:fs';
 import ts from 'typescript';
-import path from 'node:path';
 
-// Constants -------------------------------------------------------------------
-
-const ROOTS = ['src/shared', 'src/client', 'src/server'];
+import srcgraph from './srcgraph.js';
 
 // Arguments -------------------------------------------------------------------
 
@@ -31,23 +28,8 @@ if (target === undefined) {
 
 // Graph -----------------------------------------------------------------------
 
-function walk(dir: string, out: string[] = []): string[] {
-	for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-		const child = path.posix.join(dir, e.name);
-		if (e.isDirectory()) walk(child, out);
-		else if (/\.(ts|js)$/.test(e.name) && !/\.d\.ts$/.test(e.name)) out.push(child);
-	}
-	return out;
-}
-
-function resolveSpec(from: string, spec: string): string | undefined {
-	const base = path.posix.join(path.posix.dirname(from), spec);
-	const cands = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`, `${base}/index.ts`];
-	return cands.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
-}
-
 /** Every first-party file, across all three roots — so importers anywhere are seen. */
-const allFiles = ROOTS.flatMap((r) => (fs.existsSync(r) ? walk(r) : []));
+const allFiles = srcgraph.walkSrc().filter((f) => !f.endsWith('.d.ts'));
 
 /** file -> resolved deps */
 const deps = new Map<string, Set<string>>();
@@ -61,41 +43,15 @@ for (const f of allFiles) {
 	// preProcessFile finds every import/export/dynamic-import specifier, incl. `import type`.
 	for (const ref of ts.preProcessFile(text, true, true).importedFiles) {
 		if (!ref.fileName.startsWith('.')) continue;
-		const r = resolveSpec(f, ref.fileName);
+		const r = srcgraph.resolveRelative(f, ref.fileName);
 		if (r && r !== f) set.add(r);
 	}
-	// Classify type-only separately with the AST, which preProcessFile doesn't expose.
-	const sf = ts.createSourceFile(f, text, ts.ScriptTarget.Latest, true);
-	const record = (spec: string, typeOnly: boolean): void => {
-		const r = resolveSpec(f, spec);
-		if (!r || r === f) return;
-		if (!typeOnly) runtimeEdge.add(`${f}->${r}`);
-	};
-	for (const stmt of sf.statements) {
-		if (ts.isImportDeclaration(stmt) && ts.isStringLiteral(stmt.moduleSpecifier)) {
-			const clause = stmt.importClause;
-			// `phaseModifier` is also set for `import defer`, which IS a runtime import.
-			let typeOnly = clause?.phaseModifier === ts.SyntaxKind.TypeKeyword;
-			if (!typeOnly && clause?.namedBindings && ts.isNamedImports(clause.namedBindings) && !clause.name) {
-				typeOnly = clause.namedBindings.elements.every((el) => el.isTypeOnly);
-			} // prettier-ignore
-			record(stmt.moduleSpecifier.text, typeOnly);
-		} else if (ts.isExportDeclaration(stmt) && stmt.moduleSpecifier && ts.isStringLiteral(stmt.moduleSpecifier)) {
-			let typeOnly = stmt.isTypeOnly;
-			if (!typeOnly && stmt.exportClause && ts.isNamedExports(stmt.exportClause)) {
-				typeOnly = stmt.exportClause.elements.every((el) => el.isTypeOnly);
-			}
-			record(stmt.moduleSpecifier.text, typeOnly);
-		} // prettier-ignore
+	// Marks which of those edges survive into a bundle, which preProcessFile can't tell.
+	for (const spec of srcgraph.runtimeSpecifiers(f, text)) {
+		if (!spec.startsWith('.')) continue;
+		const r = srcgraph.resolveRelative(f, spec);
+		if (r && r !== f) runtimeEdge.add(`${f}->${r}`);
 	}
-	const visitDynamic = (n: ts.Node): void => {
-		if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword) {
-			const a = n.arguments[0];
-			if (a && ts.isStringLiteral(a) && a.text.startsWith('.')) record(a.text, false);
-		}
-		n.forEachChild(visitDynamic);
-	};
-	sf.statements.forEach(visitDynamic);
 }
 
 // Report ----------------------------------------------------------------------

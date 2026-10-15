@@ -17,9 +17,9 @@
 
 import fs from 'node:fs';
 import ts from 'typescript';
-import path from 'node:path';
 import esbuild, { Metafile } from 'esbuild';
 
+import srcgraph from './srcgraph.js';
 import { ESMEntryPoints } from '../../build/client.js';
 
 // Types -----------------------------------------------------------------------
@@ -257,11 +257,6 @@ const ENTRIES = ESMEntryPoints.filter((e) => e.endsWith('.ts') || e.endsWith('.j
 
 // Helper Functions ------------------------------------------------------------
 
-/** Trims the noisy common prefix so paths read cleanly. */
-function short(file: string): string {
-	return file.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
-}
-
 /** Which root a short path lives under. */
 function rootNameOf(moduleShort: string): RootName {
 	return moduleShort.startsWith('server/')
@@ -315,26 +310,6 @@ function cap(edges: string[]): string[] {
 
 // Source Scan -----------------------------------------------------------------
 
-/** Every .ts/.js file under a directory, as cwd-relative forward-slash paths. */
-function walkScripts(dir: string, out: string[] = []): string[] {
-	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-		const child = path.posix.join(dir, entry.name);
-		if (entry.isDirectory()) walkScripts(child, out);
-		else if (/\.(ts|js)$/.test(entry.name)) out.push(child);
-	}
-	return out;
-}
-
-/**
- * Resolves a relative specifier to the file it means — ".js" specifiers point at ".ts" sources.
- * Relative only, which is safe while tsconfig.json declares no `paths`.
- */
-function resolveRelative(fromFile: string, specifier: string): string | undefined {
-	const base = path.posix.join(path.posix.dirname(fromFile), specifier);
-	const candidates = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`];
-	return candidates.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
-}
-
 /**
  * Every first-party import edge across all three roots, in short form: one walk
  * feeding the ladder, cycle and gate checks. Relative specifiers only — bare ones
@@ -344,14 +319,14 @@ function resolveRelative(fromFile: string, specifier: string): string | undefine
 function collectEdges(): Edge[] {
 	const edges: Edge[] = [];
 	for (const ladder of Object.values(LADDERS)) {
-		for (const file of walkScripts(ladder.root)) {
+		for (const file of srcgraph.walkScripts(ladder.root)) {
 			const source = fs.readFileSync(file, 'utf8');
 			// TypeScript's own preprocessor: every import form, type-only and dynamic included.
 			for (const { fileName } of ts.preProcessFile(source, true, true).importedFiles) {
 				if (!fileName.startsWith('.')) continue; // Bare specifiers are npm packages.
-				const resolved = resolveRelative(file, fileName);
+				const resolved = srcgraph.resolveRelative(file, fileName);
 				if (resolved === undefined) continue; // No source file behind it — nothing to check.
-				edges.push({ from: short(file), to: short(resolved) });
+				edges.push({ from: srcgraph.short(file), to: srcgraph.short(resolved) });
 			}
 		}
 	}
@@ -554,14 +529,14 @@ function chainToTarget(
 			if (seen.has(dep)) continue;
 			seen.add(dep);
 			importedBy.set(dep, current);
-			if (!matches(short(dep))) {
+			if (!matches(srcgraph.short(dep))) {
 				queue.push(dep);
 				continue;
 			}
 			// Walk the breadcrumbs back up, stopping before the entry itself.
 			const chain: string[] = [];
 			for (let hop = dep; hop !== entry; hop = importedBy.get(hop)!)
-				chain.unshift(short(hop));
+				chain.unshift(srcgraph.short(hop));
 			return chain;
 		}
 	}
@@ -588,7 +563,7 @@ async function checkReachability(): Promise<CheckResult> {
 
 		const findings: string[] = [];
 		for (const entry of ENTRIES) {
-			const entryShort = short(entry);
+			const entryShort = srcgraph.short(entry);
 			// A bundle rooted inside the target cannot avoid containing it.
 			if (matches(entryShort)) continue;
 			if (rule.allowedEntries.some((a) => entryShort.includes(a))) continue;
@@ -596,7 +571,7 @@ async function checkReachability(): Promise<CheckResult> {
 			const graph = graphByEntry.get(entry)!;
 			const hits = Object.keys(graph)
 				.filter((f) => f.startsWith(SRC_PREFIX)) // First-party only; skip node_modules.
-				.map(short)
+				.map((f) => srcgraph.short(f))
 				.filter(matches);
 			if (hits.length === 0) continue;
 
