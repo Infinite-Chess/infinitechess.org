@@ -4,15 +4,15 @@
  * Which client pages bundle an npm package, why, and what it costs them.
  *
  * Usage:
- *   npx tsx scripts/modules/pkg-cost.ts [pkg] [--why] [--cost]
+ *   npx tsx scripts/modules/pkg-cost.ts <pkg> [--why] [--cost]
  *
- * Defaults to zod. --why prints the shortest import chain pulling it in; --cost bundles each
- * entry twice, once with the package stubbed empty, and diffs the minified bytes — reading up
- * to ~0.6 KB low, since the stub pulls esbuild's CommonJS interop helpers into the stubbed build.
+ * --why prints the shortest import chain pulling it in; --cost bundles each entry twice, once
+ * with the package stubbed empty, and diffs the minified bytes — reading up to ~0.6 KB low,
+ * since the stub pulls esbuild's CommonJS interop helpers into the stubbed build.
  *
- * A heavy package is a placement constraint of its own — zod alone is ~60 KB. Before relocating
- * a schema, check its new home is reached only by pages already carrying it. Type-only imports
- * are skipped throughout, since esbuild erases them.
+ * A heavy package is a placement constraint of its own. Before relocating a module that imports
+ * one, check its new home is reached only by pages already carrying it. Type-only imports are
+ * skipped throughout, since esbuild erases them.
  */
 
 import fs from 'node:fs';
@@ -124,7 +124,11 @@ async function sizeOf(entry: string, stub: string | undefined): Promise<number> 
 const args = process.argv.slice(2);
 const why = args.includes('--why');
 const cost = args.includes('--cost');
-const pkg = args.find((a) => !a.startsWith('--')) ?? 'zod';
+const pkg = args.find((a) => !a.startsWith('--'));
+if (pkg === undefined) {
+	console.error('Usage: npx tsx scripts/modules/pkg-cost.ts <pkg> [--why] [--cost]');
+	process.exit(1);
+}
 const kb = (n: number): string => `${(n / 1024).toFixed(1)} KB`;
 
 const scripts = ESMEntryPoints.filter((e) => /\.(ts|js)$/.test(e));
