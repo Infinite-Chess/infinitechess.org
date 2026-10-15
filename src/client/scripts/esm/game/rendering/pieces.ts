@@ -10,6 +10,7 @@ import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type RenderContext from '../../board/rendering/RenderContext.js';
 
 import meshes from '../../board/rendering/meshes.js';
+import camera from '../../board/rendering/camera.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import miniimage from './miniimage.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
@@ -37,7 +38,7 @@ function renderPiecesInGame(ctx: RenderContext, mesh: Mesh | undefined): void {
 
 /** Renders a semi-transparent piece at the specified coordinates. */
 function renderGhostPiece(type: number, coords: Coords): void {
-	const data = meshes.QuadWorld_ColorTexture(coords, [1, 1, 1, GHOST_OPACITY]);
+	const data = meshes.QuadWorld_ColorTexture(camera, boardpos, coords, [1, 1, 1, GHOST_OPACITY]);
 	const model = createRenderable(
 		data,
 		2,

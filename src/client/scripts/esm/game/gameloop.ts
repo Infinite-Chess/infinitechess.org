@@ -16,7 +16,6 @@ import clock from '../../../../shared/chess/logic/clock.js';
 
 import mouse from './mouse.js';
 import webgl from '../board/rendering/webgl.js';
-import arrows from './rendering/arrows/arrows.js';
 import camera from '../board/rendering/camera.js';
 import toggles from './debug/toggles.js';
 import boardnav from './boardnav.js';
@@ -27,28 +26,30 @@ import guiclock from './gui/guiclock.js';
 import premoves from './chess/premoves.js';
 import keybinds from './keybinds.js';
 import listeners from './listeners.js';
-import animation from './rendering/animation.js';
+import animation from '../board/rendering/animation.js';
 import selection from './chess/selection.js';
 import boarddrag from './rendering/boarddrag.js';
 import IndexedDB from '../util/IndexedDB.js';
 import starfield from './rendering/starfield.js';
 import gamesound from '../board/gamesound.js';
 import gamescene from './rendering/gamescene.js';
+import boardview from './rendering/boardview.js';
 import droparrows from './rendering/dragging/droparrows.js';
 import dragarrows from './rendering/dragging/dragarrows.js';
 import maskeddraw from '../webgl/maskeddraw.js';
 import Transition from './rendering/transitions/Transition.js';
 import gamesession from './chess/gamesession.js';
-import arrowshifts from './rendering/arrows/arrowshifts.js';
 import annotations from './rendering/highlights/annotations/annotations.js';
 import { GameBus } from '../board/GameBus.js';
+import perspective from './rendering/perspective.js';
 import LocalStorage from '../util/LocalStorage.js';
 import guimoveslist from './gui/guimoveslist.js';
 import frametracker from '../board/rendering/frametracker.js';
+import WaterRipples from '../board/rendering/WaterRipples.js';
 import draganimation from './rendering/dragging/draganimation.js';
 import frameprofiler from '../board/frameprofiler.js';
-import boardgeometry from '../board/rendering/boardgeometry.js';
 import guiboardcontrols from './gui/guiboardcontrols.js';
+import arrowinteraction from './rendering/arrows/arrowinteraction.js';
 import arrowlegalmovehighlights from './rendering/arrows/arrowlegalmovehighlights.js';
 
 // State -----------------------------------------------------------------------
@@ -75,7 +76,7 @@ function init(canvas: HTMLCanvasElement): void {
 		// A resize changes the board's on-screen bounding box, so recalculate the geometry
 		// before repainting — otherwise we'd draw with the stale box, or an undefined one on
 		// the first frame, since the normal loop only recalculates it inside update().
-		boardgeometry.recalcVariables();
+		boardview.recalcVariables();
 		render();
 	});
 
@@ -144,11 +145,11 @@ function update(): void {
 	if (!Transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
 
 	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After boardnav.update(), boardpos.update()
-	// BEFORE board.recalcVariables(), as that needs to be called after the board position is updated.
+	// BEFORE boardview.recalcVariables(), as that needs to be called after the board position is updated.
 	Transition.update();
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER transition.update() since that updates the board position
-	boardgeometry.recalcVariables();
+	boardview.recalcVariables();
 
 	starfield.update();
 	// Update the effect zone manager (after board variables are recalculated).
@@ -158,16 +159,18 @@ function update(): void {
 	// This needs to be early in the update loop, as pinching the board has priority over the pointer than a lot of things.
 	boarddrag.checkIfBoardPinched();
 
-	// NEEDS TO BE BEFORE arrows.update(), since this may forward to front, which changes all arrows visible.
+	// NEEDS TO BE BEFORE arrowinteraction.update(), since this may forward to front, which changes all arrows visible.
 	selection.update();
-	arrows.update();
-	// NEEDS TO BE AFTER arrows.update() because this modifies the arrow indicator list.
+	arrowinteraction.update();
+	const gameBoard = gamescene.getGameContext();
+	WaterRipples.update(gameBoard, perspective.getEnabled());
+	// NEEDS TO BE AFTER arrowinteraction.update() because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE boarddrag.checkIfBoardSingleGrabbed() because that shift arrows needs to overwrite this.
-	animation.update();
+	animation.update(gameBoard);
 	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts().
-	arrowshifts.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. BEFORE arrowlegalmovehighlights.update()
+	arrowinteraction.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. BEFORE arrowlegalmovehighlights.update()
 	droparrows.updateLegalCaptureArrows(); // AFTER executeArrowShifts(), so rebuilt arrow lines don't reset pulsating opacities.
 
 	arrowlegalmovehighlights.update(); // AFTER executeArrowShifts()

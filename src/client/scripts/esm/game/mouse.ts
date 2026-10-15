@@ -10,6 +10,7 @@ import type { BDCoords, Coords, DoubleCoords } from '../../../../shared/util/coo
 
 import space from '../board/rendering/space.js';
 import camera from '../board/rendering/camera.js';
+import boardpos from '../board/rendering/boardpos.js';
 import perspective from './rendering/perspective.js';
 import { listener_document, listener_canvas } from './listeners.js';
 import input, { InputListener, Mouse, MouseButton } from './input.js';
@@ -151,14 +152,14 @@ function getAllPointerWorlds(): DoubleCoords[] {
 function getTileMouseOver_Float(button: MouseButton = Mouse.LEFT): BDCoords | undefined {
 	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
-	return space.convertWorldSpaceToCoords(mouseWorld);
+	return space.convertWorldSpaceToCoords(boardpos, mouseWorld);
 }
 
 /** Returns the integer square the mouse is over. */
 function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | undefined {
 	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
-	return space.convertWorldSpaceToCoords_Rounded(mouseWorld);
+	return space.convertWorldSpaceToCoords_Rounded(boardpos, mouseWorld);
 }
 
 /** Returns the floating point tile the given LOGICAL pointer is over. */
@@ -169,14 +170,14 @@ function getTilePointerOver_Float(pointerId: string): BDCoords | undefined {
 	if (!pointerCoords) return undefined;
 
 	const pointerWorld = convertMousePositionToWorldSpace(pointerCoords);
-	return space.convertWorldSpaceToCoords(pointerWorld);
+	return space.convertWorldSpaceToCoords(boardpos, pointerWorld);
 }
 
 /** Gets the given pointer's current coordinates being hovered over, rounded to the integer square. */
 function getTilePointerOver_Integer(pointerId: string): Coords | undefined {
 	const pointerWorld: DoubleCoords | undefined = getPointerWorld(pointerId);
 	if (!pointerWorld) return undefined;
-	return space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+	return space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 }
 
 // Listener Wrappers -----------------------------------------------------------

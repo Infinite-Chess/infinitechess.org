@@ -21,12 +21,12 @@ import gameslot from './gameslot.js';
 import { Mesh } from '../../board/rendering/piecemodels.js';
 import premoves from './premoves.js';
 import gamescene from '../rendering/gamescene.js';
-import animation from '../rendering/animation.js';
+import animation from '../../board/rendering/animation.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
 import frametracker from '../../board/rendering/frametracker.js';
-import graphicalchanges from './graphicalchanges.js';
+import graphicalchanges from '../../board/rendering/graphicalchanges.js';
 
 // Global Moving ---------------------------------------------------------------
 
@@ -119,7 +119,7 @@ function makeMoveAndAnimate(
 	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
 	const move = makeMove(gamefile, mesh, moveTagged, conclusion);
-	if (mesh) graphicalchanges.animateMove(move.changes, true);
+	if (mesh) graphicalchanges.animateMove(gamescene.getGameContext(), move.changes, true);
 	return move;
 }
 
@@ -144,7 +144,7 @@ function runMeshChanges(boardsim: GameFile, mesh: Mesh, edit: Edit, forward: boo
 /** Makes a global backward move in the game. */
 function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	// Terminate all current animations to avoid a crash when undoing moves
-	animation.clearAnimations();
+	animation.clearAnimations(gamescene.getGameContext());
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
@@ -205,8 +205,9 @@ function viewIndex(
 		// Dispatch ONCE for the whole navigation, not per-ply. Listeners only care about the final resting position.
 		GameBus.dispatch('view-move');
 		// Only clear any previous animations if we viewed a different index.
-		animation.clearAnimations();
-		if (animateFinal && mesh) graphicalchanges.animateMove(lastMove.changes, forward);
+		animation.clearAnimations(gamescene.getGameContext());
+		if (animateFinal && mesh)
+			graphicalchanges.animateMove(gamescene.getGameContext(), lastMove.changes, forward);
 	}
 }
 
@@ -245,7 +246,7 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	GameBus.dispatch('view-move');
-	graphicalchanges.animateMove(move.changes, forward); // Animate
+	graphicalchanges.animateMove(gamescene.getGameContext(), move.changes, forward); // Animate
 }
 
 // --------------------------------------------------------------------------------------------------------------------------

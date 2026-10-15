@@ -24,15 +24,16 @@ import bdcoords from '../../../../../shared/util/bdcoords.js';
 
 import space from '../../board/rendering/space.js';
 import camera from '../../board/rendering/camera.js';
-import arrows from './arrows/arrows.js';
 import boardpos from '../../board/rendering/boardpos.js';
+import gamescene from './gamescene.js';
+import boardview from './boardview.js';
 import primitives from '../../board/rendering/primitives.js';
 import glyphatlas from './text/glyphatlas.js';
 import perspective from './perspective.js';
 import preferences from '../../util/preferences.js';
 import textrenderer from './text/textrenderer.js';
-import boardgeometry from '../../board/rendering/boardgeometry.js';
-import arrowscalculator from './arrows/arrowscalculator.js';
+import arrowscalculator from '../../board/rendering/arrows/arrowscalculator.js';
+import arrowinteraction from './arrows/arrowinteraction.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
@@ -133,10 +134,10 @@ function render(): void {
 
 	const scale = boardpos.getBoardScale();
 	const labelSizePx = calcLabelSizePx();
-	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(labelSizePx);
-	const paddingWorld = space.convertPixelsToWorldSpace_Virtual(LABEL_PADDING_PX);
+	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(camera, labelSizePx);
+	const paddingWorld = space.convertPixelsToWorldSpace_Virtual(camera, LABEL_PADDING_PX);
 	const screenBox = camera.getScreenBoundingBox(false);
-	const tileBox = boardgeometry.gboundingBox(false);
+	const tileBox = boardview.gboundingBox(false);
 	// Shrink the bounding box by 1 on each side to skip cut off edge tiles.
 	tileBox.left += 1n;
 	tileBox.right -= 1n;
@@ -173,9 +174,9 @@ function render(): void {
 
 	// Pre-compute arrow indicator hitboxes for this frame to skip overlapping labels.
 	const arrowHalfWidth =
-		arrowscalculator.getArrowIndicatorHalfWidth() +
-		space.convertPixelsToWorldSpace_Virtual(LABEL_ARROW_PADDING_PX);
-	const arrowLocations = arrows.getAllArrowWorldLocations();
+		arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext()) +
+		space.convertPixelsToWorldSpace_Virtual(camera, LABEL_ARROW_PADDING_PX);
+	const arrowLocations = arrowinteraction.getAllArrowWorldLocations();
 
 	const isBlackPerspective = camera.getIsViewingBlackPerspective();
 	// Arrow hitbox locations in black's perspective need to be negated so overlap detection remains accurate.
@@ -198,13 +199,21 @@ function render(): void {
 	// In black's perspective the view matrix carries a 180° Z-rotation that would otherwise flip the text.
 	camera.renderWithoutPerspectiveRotations(() => {
 		for (let file = firstFile; file <= tileBox.right; file += stepBig) {
-			let worldX = space.convertCoordToWorldSpace(bdcoords.fromCoords([file, 0n]))[0];
+			let worldX = space.convertCoordToWorldSpace(
+				bdcoords.fromCoords([file, 0n]),
+				boardpos.getBoardPos(),
+				boardpos.getBoardScale(),
+			)[0];
 			if (isBlackPerspective) worldX = -worldX; // Invert world coords
 			// prettier-ignore
 			renderLabel(formatCoord(file), [worldX, fileWorldY], sizeWorld, 'center', arrowHalfWidth, effectiveArrowLocations);
 		}
 		for (let rank = firstRank; rank <= tileBox.top; rank += stepBig) {
-			let worldY = space.convertCoordToWorldSpace(bdcoords.fromCoords([0n, rank]))[1];
+			let worldY = space.convertCoordToWorldSpace(
+				bdcoords.fromCoords([0n, rank]),
+				boardpos.getBoardPos(),
+				boardpos.getBoardScale(),
+			)[1];
 			if (isBlackPerspective) worldY = -worldY; // Invert world coords
 			// prettier-ignore
 			renderLabel(formatCoord(rank), [rankWorldX, worldY], sizeWorld, 'left', arrowHalfWidth, effectiveArrowLocations);

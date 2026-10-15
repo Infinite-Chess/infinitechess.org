@@ -42,7 +42,7 @@ function drawPlayableRegionMask(
 		};
 		const boundingBoxBD =
 			meshes.expandTileBoundingBoxToEncompassWholeSquare(worldBorderNotNull);
-		worldBox = meshes.applyWorldTransformationsToBoundingBox(boundingBoxBD, ctx.boardpos);
+		worldBox = meshes.applyWorldTransformationsToBoundingBox(ctx.boardpos, boundingBoxBD);
 
 		// Cap the world box to the screen box.
 		// Fixes graphical glitches when the vertex data is beyond float32 range.

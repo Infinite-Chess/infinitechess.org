@@ -1,22 +1,28 @@
 // src/client/scripts/esm/board/rendering/miniimagerenderer.ts
 
 /**
- * The core mini image rendering pipeline.
- * Accepts pre-built instance data and renders instanced piece sprites.
- * Has no dependency on live game state.
+ * The core mini image rendering pipeline: which pieces a board shows as mini images,
+ * animated ones included, and rendering pre-built instance data as instanced piece sprites.
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
+import type { Animation } from './animation.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
+import type { BDCoords, CoordsKey } from '../../../../../shared/util/coordutil.js';
+
+import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import space from './space.js';
+import animation from './animation.js';
+import boardgeometry from './boardgeometry.js';
 import instancedshapes from './instancedshapes.js';
 import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
@@ -30,6 +36,9 @@ const MAX_PIECE_COUNT = 40_000;
 
 const MINI_IMAGE_OPACITY: number = 0.6;
 
+/** The maximum distance in virtual pixels an animated mini image travels before teleporting mid-animation. */
+const MAX_ANIM_DIST_VPIXELS = bd.fromBigInt(2300n);
+
 const ATTRIB_INFO: AttributeInfoInstanced = {
 	vertexDataAttribInfo: [
 		{ name: 'a_position', numComponents: 2 },
@@ -42,27 +51,90 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 // Functions -------------------------------------------------------------------
 
 /**
- * Builds instance data (world-space positions per type) for all pieces in a
- * board preview. No animation, no hover — a flat pass over the piece list.
- * @param ctx - The render context whose board position places the pieces.
+ * Iterates over every piece a board renders as a mini image, animated and static alike,
+ * invoking the callback with its board coords and type. Voids are skipped.
+ * @param animations - The animations playing on the board. Their pieces are shown mid-flight.
  */
-function buildInstanceData(ctx: RenderContext, boardsim: BoardPreview): TypeGroup<number[]> {
+function forEachRenderablePiece(
+	ctx: RenderContext,
+	boardsim: BoardPreview,
+	animations: Animation[],
+	callback: (coords: BDCoords, type: number) => void,
+): void {
+	const pieces = boardsim.pieces;
+
+	// Animated pieces
+	const maxDistB4Teleport = getMaxAnimationDistance(ctx);
+	/** Pieces temporarily being hidden via transparent squares on their destination square. */
+	const activeHides: Set<CoordsKey> = new Set();
+	for (const a of animations) {
+		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
+		const currentAnimationPosition = animation.getCurrentAnimationPosition(
+			a.segments,
+			segmentInfo,
+		);
+		callback(currentAnimationPosition, a.type);
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, (pieces) =>
+			pieces.forEach((p) => {
+				const pieceBDCoords = bdcoords.fromCoords(p.coords);
+				callback(pieceBDCoords, p.type);
+			}),
+		);
+		// Construct the hidden pieces for below
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, (pieces) =>
+			pieces.map(coordutil.getKeyFromCoords).forEach((c) => activeHides.add(c)),
+		);
+	}
+
+	// Static pieces
+	boardsim.existingTypes.forEach((type: number) => {
+		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
+
+		const range = pieces.typeRanges.get(type)!;
+		// Skip types with no pieces
+		if (boardutil.getPieceCountOfTypeRange(range) === 0) return;
+
+		boardutil.iteratePiecesInTypeRange(pieces, type, (idx) => {
+			const coords = boardutil.getCoordsFromIdx(pieces, idx);
+			const coordsKey = coordutil.getKeyFromCoords(coords);
+			if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
+			const coordsBD = bdcoords.fromCoords(coords);
+			callback(coordsBD, type);
+		});
+	});
+}
+
+/**
+ * The farthest, in squares, an animated mini image travels before teleporting mid-animation
+ * near the end of its destination, so it doesn't move too rapidly on-screen.
+ */
+function getMaxAnimationDistance(ctx: RenderContext): BigDecimal {
+	const tileWidthPixels = boardgeometry.getTileWidthPixels(
+		ctx.camera,
+		ctx.boardpos.getBoardScale(),
+	);
+	return bd.divideFloating(MAX_ANIM_DIST_VPIXELS, tileWidthPixels);
+}
+
+/**
+ * Builds instance data (world-space positions per type) for every piece a board renders
+ * as a mini image. No hover.
+ * @param ctx - The render context whose board position places the pieces.
+ * @param animations - The animations playing on the board. Their pieces are shown mid-flight.
+ */
+function buildInstanceData(
+	ctx: RenderContext,
+	boardsim: BoardPreview,
+	animations: Animation[],
+): TypeGroup<number[]> {
 	const instanceData: TypeGroup<number[]> = {};
 
 	const boardPos = ctx.boardpos.getBoardPos();
 	const boardScale = ctx.boardpos.getBoardScale();
 
-	boardsim.existingTypes.forEach((type: number) => {
-		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
-		const range = boardsim.pieces.typeRanges.get(type)!;
-		if (boardutil.getPieceCountOfTypeRange(range) === 0) return; // Skip types with no pieces
-		instanceData[type] = [];
-		boardutil.iteratePiecesInTypeRange(boardsim.pieces, type, (idx) => {
-			const coords = boardutil.getCoordsFromIdx(boardsim.pieces, idx);
-			const coordsBD = bdcoords.fromCoords(coords);
-			const coordsWorld = space.convertCoordToWorldSpace(coordsBD, boardPos, boardScale);
-			instanceData[type]!.push(...coordsWorld);
-		});
+	forEachRenderablePiece(ctx, boardsim, animations, (coords, type) => {
+		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
+		(instanceData[type] ??= []).push(...coordsWorld);
 	});
 
 	return instanceData;
@@ -133,7 +205,7 @@ function render(
 		.filter((t: number) => typeutil.getColorFromType(t) !== p.NEUTRAL)
 		.sort((a: number, b: number) => b - a);
 
-	const u_size = space.convertPixelsToWorldSpace_Virtual(entityWidthVPixels, ctx.camera);
+	const u_size = space.convertPixelsToWorldSpace_Virtual(ctx.camera, entityWidthVPixels);
 
 	ctx.executeWithDepthFunc_ALWAYS(() => {
 		for (const neut of sortedNeutrals) {
@@ -151,6 +223,8 @@ function render(
 
 export default {
 	MAX_PIECE_COUNT,
+	forEachRenderablePiece,
+	getMaxAnimationDistance,
 	buildInstanceData,
 	render,
 };

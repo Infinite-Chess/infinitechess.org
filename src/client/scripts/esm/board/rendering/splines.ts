@@ -1,17 +1,16 @@
-// src/client/scripts/esm/game/rendering/splines.ts
+// src/client/scripts/esm/board/rendering/splines.ts
 
 /**
  * This script contains utility methods for working with splines.
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
+import type RenderContext from './RenderContext.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from '../../board/rendering/space.js';
-import boardpos from '../../board/rendering/boardpos.js';
-import { createRenderable } from '../../board/rendering/renderable.js';
+import space from './space.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -216,17 +215,24 @@ function generateSplinePath(controlPoints: Coords[], resolution: number): BDCoor
  * @param width - The ribbon's desired width, specified in square units.
  * @param color - RGBA color for the ribbon.
  */
-function renderSplineDebug(controlPoints: BDCoords[], width: number, color: Color): void {
+function renderSplineDebug(
+	ctx: RenderContext,
+	controlPoints: BDCoords[],
+	width: number,
+	color: Color,
+): void {
 	if (controlPoints.length < 2) throw Error('Spline requires at least 2 waypoints to render.');
 
 	// Convert all high-precision square coordinates to world-space
 	// floating-point coordinates immediately so we can perform double arithmetic.
+	const boardPos = ctx.boardpos.getBoardPos();
+	const boardScale = ctx.boardpos.getBoardScale();
 	const worldControlPoints: DoubleCoords[] = controlPoints.map((p) =>
-		space.convertCoordToWorldSpace(p),
+		space.convertCoordToWorldSpace(p, boardPos, boardScale),
 	);
 
 	// Convert the desired width from square units to world units by applying the board scale.
-	const scale = boardpos.getBoardScaleAsNumber();
+	const scale = ctx.boardpos.getBoardScaleAsNumber();
 	const halfWorldWidth = (width * scale) / 2;
 
 	const vertexData: number[] = [];
@@ -291,7 +297,7 @@ function renderSplineDebug(controlPoints: BDCoords[], width: number, color: Colo
 	}
 
 	// Create and render the debug model.
-	createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
+	ctx.renderable.createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
 
 // Exports ---------------------------------------------------------------------

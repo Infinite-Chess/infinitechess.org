@@ -19,13 +19,14 @@ import bounds, {
 import mouse from '../../../../game/mouse.js';
 import space from '../../../../board/rendering/space.js';
 import sdrag from './sdrag.js';
-import arrows from '../../../../game/rendering/arrows/arrows.js';
+import camera from '../../../../board/rendering/camera.js';
 import scursor from './scursor.js';
 import gameslot from '../../../../game/chess/gameslot.js';
 import { Mouse } from '../../../../game/input.js';
 import selectiontool from './selectiontool.js';
 import stoolgraphics from './stoolgraphics.js';
 import stransformations from './stransformations.js';
+import arrowinteraction from '../../../../game/rendering/arrows/arrowinteraction.js';
 
 // State -----------------------------------------------------------------------
 
@@ -71,7 +72,7 @@ function update(): void {
 			}
 
 			// Determine if we started dragging the fill handle
-			if (mouse.isMouseDown(Mouse.LEFT) && !arrows.areHoveringAtleastOneArrow()) {
+			if (mouse.isMouseDown(Mouse.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
 				// Start dragging
 				mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 				mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
@@ -102,7 +103,7 @@ function isMouseHoveringOverFillHandle(): boolean {
 	if (!mouseWorld) return false;
 
 	// Convert grab distance to world space
-	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(sdrag.getGrabbableDist());
+	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(camera, sdrag.getGrabbableDist());
 
 	// Determine the distance from the mouse to the fill handle corner
 	const distToFillHandle = vectors.chebyshevDistanceDoubles(mouseWorld, fillHandleCorner);

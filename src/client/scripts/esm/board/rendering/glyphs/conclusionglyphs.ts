@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/glyphs/conclusionglyphs.ts
+// src/client/scripts/esm/board/rendering/glyphs/conclusionglyphs.ts
 
 /**
  * Renders the game-end glyph (lichess's) of the conclusion the viewed position reached: on the
@@ -10,6 +10,7 @@ import type { Glyph } from './boardglyphs.js';
 import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Condition } from '../../../../../../shared/chess/util/winconutil.js';
+import type RenderContext from '../RenderContext.js';
 import type { GameConclusion } from '../../../../../../shared/chess/util/typeschemas.js';
 
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
@@ -17,8 +18,6 @@ import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../../shared/chess/util/gamerules.js';
 
 import boardglyphs from './boardglyphs.js';
-import { GameBus } from '../../../board/GameBus.js';
-import frametracker from '../../../board/rendering/frametracker.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -44,17 +43,12 @@ const CONCLUSION_GLYPHS: Record<Condition, Glyph | undefined> = {
 /** Wins whose final move captured what the glyph would otherwise mark. */
 const CAPTURE_CONDITIONS: Condition[] = ['royalcapture', 'allroyalscaptured', 'allpiecescaptured'];
 
-// Init ------------------------------------------------------------------------
-
-// Load-bearing: a resignation, flag or disconnect concludes the game without any move to redraw.
-GameBus.addEventListener('game-concluded', () => frametracker.onVisualChange());
-
 // Rendering -------------------------------------------------------------------
 
 /** Renders the glyph of the conclusion the viewed position reached. */
-function render(gamefile: GameFile, conclusion: GameConclusion): void {
+function render(ctx: RenderContext, gamefile: GameFile, conclusion: GameConclusion): void {
 	const glyph = CONCLUSION_GLYPHS[conclusion.condition];
-	if (glyph) boardglyphs.render(glyph, getGlyphSquares(gamefile, conclusion));
+	if (glyph) boardglyphs.render(ctx, glyph, getGlyphSquares(gamefile, conclusion));
 }
 
 /** The squares a conclusion's glyph marks. */

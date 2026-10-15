@@ -1,11 +1,12 @@
-// src/client/scripts/esm/game/chess/graphicalchanges.ts
+// src/client/scripts/esm/board/rendering/graphicalchanges.ts
 
 /**
  * This script contains the functions that know what mesh changes to make,
  * and what animations to make, according to each action of a move's actions list.
  */
 
-import type { Mesh } from '../../board/rendering/piecemodels.js';
+import type { Mesh } from './piecemodels.js';
+import type LiveBoard from './LiveBoard.js';
 import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type {
@@ -14,8 +15,8 @@ import type {
 	genericChangeFunc,
 } from '../../../../../shared/chess/logic/boardchanges.js';
 
-import animation from '../rendering/animation.js';
-import piecemodels from '../../board/rendering/piecemodels.js';
+import animation from './animation.js';
+import piecemodels from './piecemodels.js';
 import preferences from '../../util/preferences.js';
 
 // Mesh Changes ----------------------------------------------------------------
@@ -63,7 +64,7 @@ function returnMeshPiece(mesh: Mesh, change: Change): void {
 // Animate ---------------------------------------------------------------------
 
 /**
- * Animates a given set of changes to the board.
+ * Animates a given set of changes on a board.
  * We don't use boardchanges because a custom compositor is needed.
  * @param moveChanges - the changes to animate
  * @param forward - whether this is a forward or back animation
@@ -72,6 +73,7 @@ function returnMeshPiece(mesh: Mesh, change: Change): void {
  * @param force_instant - Whether to FORCE instant animation, EVEN secondary pieces won't be animated. Enable when you are playing a premove in the game.
  */
 function animateMove(
+	board: LiveBoard,
 	moveChanges: Change[],
 	forward = true,
 	animateMain = true,
@@ -145,6 +147,7 @@ function animateMove(
 			pushToArrayMap(newHideFrames, last, waypoints[last]);
 
 			animation.animatePiece(
+				board,
 				change.piece.type,
 				waypoints,
 				showKeyframes,

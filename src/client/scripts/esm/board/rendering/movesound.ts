@@ -1,18 +1,18 @@
-// src/client/scripts/esm/game/movesound.ts
+// src/client/scripts/esm/board/rendering/movesound.ts
 
 /**
- * Handles the game-specific logic for move sound effects: calculating reverb,
- * dampening, bell, ripple, and screen-shake based on move distance, then
- * delegating playback to gamesound.
+ * Handles the effects of a piece landing: its sound (reverb, dampening, bell, ripple),
+ * and the water ripple and screen shake of very large moves, on the board it landed on.
+ * A silent board still ripples and shakes.
  */
 
-import type { Coords } from '../../../../shared/util/coordutil.js';
+import type LiveBoard from './LiveBoard.js';
+import type { Coords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import camera from '../board/rendering/camera.js';
-import gamesound from '../board/gamesound.js';
-import WaterRipples from './rendering/WaterRipples.js';
+import gamesound from '../gamesound.js';
+import WaterRipples from './WaterRipples.js';
 
 // Move Configs ----------------------------------------------------------------
 
@@ -96,19 +96,33 @@ let timeLastMoveOrCaptureSound = 0;
 // Functions -------------------------------------------------------------------
 
 /**
- * Plays a piece move sound effect.
- * Automatically handles effects such as capture, reverb, bell, dampening, etc.
+ * Plays a piece move's effects on its board: its ripple and screen shake if large enough,
+ * and its sound effect if the board plays sound, handling capture, reverb, bell, dampening, etc.
  * @param distanceMoved - How far the piece moved.
  * @param capture - Whether this move made a capture.
  * @param premove - Whether this move is a premove.
  * @param destination - The destination coordinates of the piece move, for ripple effects.
  */
 function playMove(
+	board: LiveBoard,
 	distanceMoved: BigDecimal,
 	capture: boolean,
 	premove: boolean,
 	destination: Coords,
 ): void {
+	if (bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
+		WaterRipples.addRipple(board, destination);
+		board.camera.shake.trigger(0.25);
+	} else if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
+		const eAboveBell = bd.log10(distanceMoved) - bd.log10(BELL_CONFIG.minDist);
+		board.camera.shake.trigger(SHAKE_CONFIG.minTrauma + eAboveBell * SHAKE_CONFIG.traumaPerE);
+	}
+
+	if (board.sound) playSound(distanceMoved, capture, premove);
+}
+
+/** Plays a piece move's sound effect: its capture or move sound, plus any ripple or bell sound. */
+function playSound(distanceMoved: BigDecimal, capture: boolean, premove: boolean): void {
 	// Update the time since the last move sound was played
 	const now = Date.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
@@ -158,13 +172,8 @@ function playMove(
 			delay: delaySecs,
 			playbackRate: ripplePlayrate,
 		});
-		WaterRipples.addRipple(destination);
-		camera.shake.trigger(0.25);
 	} else if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
-		// Move is large enough for the bell and screen shake
-		const eAboveBell = bd.log10(distanceMoved) - bd.log10(BELL_CONFIG.minDist);
-		camera.shake.trigger(SHAKE_CONFIG.minTrauma + eAboveBell * SHAKE_CONFIG.traumaPerE);
-
+		// Move is large enough for the bell
 		const bellVolume = volume * BELL_CONFIG.volume;
 		gamesound.playSoundEffect('bell', {
 			volume: bellVolume,

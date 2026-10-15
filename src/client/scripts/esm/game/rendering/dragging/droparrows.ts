@@ -15,12 +15,15 @@ import coordutil from '../../../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import space from '../../../board/rendering/space.js';
-import arrows from '../arrows/arrows.js';
+import arrows from '../../../board/rendering/arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import selection from '../../chess/selection.js';
-import arrowshifts from '../arrows/arrowshifts.js';
+import gamescene from '../gamescene.js';
+import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import draganimation from './draganimation.js';
+import arrowinteraction from '../arrows/arrowinteraction.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -58,7 +61,7 @@ function updateCapturedPiece(): void {
 
 	// Test if the mouse is hovering over any arrow
 
-	let hoveredArrows = arrows.getHoveredArrows();
+	let hoveredArrows = arrowinteraction.getHoveredArrows();
 
 	// Filter out the selected piece, and floating point arrows (animated ones)
 
@@ -115,19 +118,25 @@ function shiftArrows(): void {
 		// Reflect the dragged piece's new location in draganimation.ts
 		const worldCoords = space.convertCoordToWorldSpace(
 			bdcoords.fromCoords(capturedPieceThisFrame.coords),
+			boardpos.getBoardPos(),
+			boardpos.getBoardScale(),
 		);
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
-		arrowshifts.deleteArrow(capturedPieceThisFrame.coords);
+		arrowshifts.deleteArrow(gamescene.getGameContext(), capturedPieceThisFrame.coords);
 		// Place the selected piece's arrow location on it
 		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
 	}
 
 	// Shift the arrow of the selected piece
 	if (newLocationOfSelectedPiece)
-		arrowshifts.moveArrow(selectedPiece.coords, newLocationOfSelectedPiece);
+		arrowshifts.moveArrow(
+			gamescene.getGameContext(),
+			selectedPiece.coords,
+			newLocationOfSelectedPiece,
+		);
 	// Or just delete if there's no new integer destination
-	else arrowshifts.deleteArrow(selectedPiece.coords);
+	else arrowshifts.deleteArrow(gamescene.getGameContext(), selectedPiece.coords);
 }
 
 /**
@@ -151,7 +160,7 @@ function updateLegalCaptureArrows(): void {
 		((1 - LEGAL_CAPTURE_PULSATE.MIN_OPACITY) * (Math.cos(phase) + 1)) / 2;
 
 	let hasCapturable = false;
-	for (const arrow of arrows.getAllArrows()) {
+	for (const arrow of arrows.getAllArrows(gamescene.getGameContext())) {
 		if (arrow.piece.floating) continue;
 		const intCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
 		if (coordutil.areCoordsEqual(intCoords, selectedPiece.coords)) continue;

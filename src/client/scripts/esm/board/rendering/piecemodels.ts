@@ -20,7 +20,6 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
-import frametracker from './frametracker.js';
 import instancedshapes from './instancedshapes.js';
 import { AttributeInfoInstanced, RenderableInstanced } from '../../webgl/Renderable.js';
 
@@ -114,7 +113,7 @@ function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undef
 		else mesh.types[type] = genTypeModel(ctx, boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 	}
 
-	frametracker.onVisualChange();
+	ctx.frames.onVisualChange();
 
 	delete boardsim.pieces.newlyRegenerated; // Delete this flag now. It was to let us know the piece models needed to be regen'd.
 }
@@ -133,7 +132,7 @@ function regenType(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh, type:
 		mesh.types[type] = genVoidModel(ctx, boardsim, mesh, type); // Custom mesh generation logic for voids
 	else mesh.types[type] = genTypeModel(ctx, boardsim, mesh, type); // Normal generation logic for all pieces with a texture
 
-	frametracker.onVisualChange();
+	ctx.frames.onVisualChange();
 }
 
 /**
@@ -412,7 +411,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
 function renderAll(ctx: RenderContext, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
-	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z, ctx.boardpos);
+	const { position, scale } = meshes.getBoardRenderTransform(ctx.boardpos, mesh.offset, Z);
 
 	// Do we need to shift the instance data of the piece models? Are we out of bounds of our REGEN_RANGE?
 	if (!ctx.boardpos.areZoomedOut() && isOffsetOutOfRangeOfRegenRange(ctx, mesh.offset))
@@ -433,7 +432,7 @@ function renderAll(ctx: RenderContext, mesh: Mesh | undefined): void {
 function renderVoids(ctx: RenderContext, mesh: Mesh | undefined): void {
 	if (!mesh) return; // Mesh hasn't been generated yet
 
-	const { position, scale } = meshes.getBoardRenderTransform(mesh.offset, Z, ctx.boardpos);
+	const { position, scale } = meshes.getBoardRenderTransform(ctx.boardpos, mesh.offset, Z);
 
 	mesh.types[r.VOID]?.model.render(position, scale);
 }

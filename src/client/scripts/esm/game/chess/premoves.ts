@@ -26,14 +26,15 @@ import mouse from '../mouse.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import gameslot from './gameslot.js';
 import selection from './selection.js';
-import animation from '../rendering/animation.js';
+import gamescene from '../rendering/gamescene.js';
+import animation from '../../board/rendering/animation.js';
 import { Mouse } from '../input.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
-import squarerendering from '../rendering/highlights/squarerendering.js';
+import squarerendering from '../../board/rendering/squarerendering.js';
 import { SettingsBus } from '../../util/SettingsBus.js';
-import graphicalchanges from './graphicalchanges.js';
+import graphicalchanges from '../../board/rendering/graphicalchanges.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -197,7 +198,7 @@ function cancelPremoves(gamefile: GameFile, mesh?: Mesh): void {
 
 	// If there were any animations, this should ensure they're only cancelled if they are for premoves,
 	// and not for the opponent's move. After all cancelPremoves() can be called at any time.
-	if (hadAtleastOnePremove) animation.clearAnimations();
+	if (hadAtleastOnePremove) animation.clearAnimations(gamescene.getGameContext());
 }
 
 /** Unapplies all pending premoves by undoing their changes on the board. */
@@ -312,7 +313,14 @@ function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 		// This also immediately terminates the opponent's move animation
 		// MUST READ the move's changes returned from movesequence.makeMove()
 		// instead of the premove's changes, as the changes need to be regenerated!
-		graphicalchanges.animateMove(move.changes, true, false, false, true); // true for force instant animation, even secondary pieces aren't animated!
+		graphicalchanges.animateMove(
+			gamescene.getGameContext(),
+			move.changes,
+			true,
+			false,
+			false,
+			true,
+		); // true for force instant animation, even secondary pieces aren't animated!
 
 		// Apply remaining premove changes & visuals, but don't make them physically on the board
 		applyPremoves(gamefile, mesh);
@@ -438,7 +446,9 @@ function render(): void {
 	const color: Color = preferences.getAnnoteSquareColor();
 
 	// Render preset squares
-	squarerendering.genModel(premoveSquares, color).render(undefined, undefined, { u_size });
+	squarerendering
+		.genModel(gamescene.getGameContext(), premoveSquares, color)
+		.render(undefined, undefined, { u_size });
 }
 
 // Exports ---------------------------------------------------------------------

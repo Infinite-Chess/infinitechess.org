@@ -1,13 +1,9 @@
 // src/client/scripts/esm/board/rendering/boardgeometry.ts
 
 /**
- * Board geometry queries: the bounding box of the board currently visible on the
- * canvas, tile widths, and square-center helpers.
- *
- * This is pure geometry derived from the interactive game's camera & board position,
- * used by both game logic (coordinate math) and rendering. It holds a per-frame cached
- * bounding box, recalculated once per game update. The actual drawing of the tiles
- * (its textures & shaders) lives in the per-context {@link boardtiles}.
+ * Board geometry queries: the bounding box of the board a camera sees at a given position
+ * and scale, tile widths, and square-center helpers. Pure geometry — the actual drawing of
+ * the tiles (its textures & shaders) lives in the per-context {@link boardtiles}.
  */
 
 import type { Camera } from './camera.js';
@@ -16,11 +12,6 @@ import type { BoundingBox, BoundingBoxBD } from '../../../../../shared/util/math
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import jsutil from '../../../../../shared/util/jsutil.js';
-
-import camera from './camera.js';
-import boardpos from './boardpos.js';
-
 // Constants -------------------------------------------------------------------
 
 /** Without this, the center of tiles would be their bottom-left corner. Range: 0-1 */
@@ -28,50 +19,6 @@ const SQUARE_CENTER: number = 0.5;
 
 // BigDecimal constants
 const ONE = bd.fromBigInt(1n);
-
-// Variables -------------------------------------------------------------------
-
-/**
- * The *exact* bounding box of the board currently visible on the canvas.
- * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
- */
-let boundingBoxFloat: BoundingBoxBD;
-/**
- * The bounding box of the board currently visible on the canvas,
- * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
- * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
- * CONTAINS INTEGER SQUARE VALUES. No floating points!
- */
-let boundingBox: BoundingBox;
-/**
- * The bounding box of the board currently visible on the canvas when the CAMERA IS IN DEBUG MODE,
- * rounded away from the center of the canvas to encapsulate the whole of any partially visible squares.
- * This differs from the camera's bounding box because this is effected by the camera's scale (zoom).
- */
-let boundingBox_debugMode: BoundingBox;
-
-// Updating --------------------------------------------------------------------
-
-/** Recalculates all three cached bounding boxes of the board. */
-function recalcVariables(): void {
-	recalcBoundingBox();
-}
-
-function recalcBoundingBox(): void {
-	boundingBoxFloat = getBoundingBoxOfBoard(
-		boardpos.getBoardPos(),
-		boardpos.getBoardScale(),
-		false,
-	);
-	boundingBox = roundAwayBoundingBox(boundingBoxFloat);
-
-	const boundingBoxFloat_debugMode = getBoundingBoxOfBoard(
-		boardpos.getBoardPos(),
-		boardpos.getBoardScale(),
-		true,
-	);
-	boundingBox_debugMode = roundAwayBoundingBox(boundingBoxFloat_debugMode);
-}
 
 // Public API ------------------------------------------------------------------
 
@@ -85,13 +32,13 @@ function getSquareCenterAsNumber(): number {
 
 /**
  * Returns the width of a tile in virtual pixels at the provided board scale.
- * @param scale - Defaults to the current board scale, but can be overridden.
- * @param cam - The camera to measure against. Defaults to the game camera.
+ * @param cam - The camera to measure against.
+ * @param debugMode - Whether to measure against the camera's debug view. Defaults to its current state.
  */
 function getTileWidthPixels(
-	debugMode = camera.getDebug(),
-	scale: BigDecimal = boardpos.getBoardScale(),
-	cam: Camera = camera,
+	cam: Camera,
+	scale: BigDecimal,
+	debugMode = cam.getDebug(),
 ): BigDecimal {
 	// If we're in developer mode, our screenBoundingBox is different
 	const screenBoundingBox = cam.getScreenBoundingBox(debugMode);
@@ -107,26 +54,6 @@ function getTileWidthPixels(
 }
 
 /**
- * Returns a copy of the board bounding box, rounded away from the center
- * of the canvas to encapsulate the whole of any partially visible squares.
- * CONTAINS INTEGER SQUARE VALUES. No floating points!
- * @returns The board bounding box
- */
-function gboundingBox(debugMode = camera.getDebug()): BoundingBox {
-	return debugMode
-		? jsutil.deepCopyObject(boundingBox_debugMode)
-		: jsutil.deepCopyObject(boundingBox);
-}
-
-/**
- * Returns a copy of the *exact* board bounding box.
- * @returns The board bounding box
- */
-function gboundingBoxFloat(): BoundingBoxBD {
-	return jsutil.deepCopyObject(boundingBoxFloat);
-}
-
-/**
  * Calculates the bounding box of the board visible on screen,
  * when the camera is at the specified position, up to a certain precision level.
  *
@@ -135,17 +62,17 @@ function gboundingBoxFloat(): BoundingBoxBD {
  *
  * Returns in float form. To round away from the origin to encapsulate
  * the whole of all tiles at least partially visible, further use {@link roundAwayBoundingBox}
- * @param [position] The position of the camera.
- * @param [scale] The scale (zoom) of the camera.
+ * @param cam - The camera whose screen box bounds the board.
+ * @param position The position of the camera.
+ * @param scale The scale (zoom) of the camera.
  * @param debugMode - Whether developer mode is enabled.
- * @param cam - The camera whose screen box bounds the board. Defaults to the game camera.
  * @returns The bounding box
  */
 function getBoundingBoxOfBoard(
-	position: BDCoords = boardpos.getBoardPos(),
-	scale: BigDecimal = boardpos.getBoardScale(),
+	cam: Camera,
+	position: BDCoords,
+	scale: BigDecimal,
 	debugMode?: boolean,
-	cam: Camera = camera,
 ): BoundingBoxBD {
 	const screenBoundingBox = cam.getScreenBoundingBox(debugMode);
 
@@ -161,26 +88,6 @@ function getBoundingBoxOfBoard(
 	const [bottom, top] = getAxisEdges(position[1], screenBoundingBox.top);
 
 	return { left, right, bottom, top };
-}
-
-/**
- * Returns the expected render range bounding box when we're in perspective mode.
- * @param rangeOfView - The distance in tiles (when scale is 1) to render the legal move fields in perspective mode.
- * @returns The perspective mode render range bounding box
- */
-function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD {
-	// ~18
-	const position = boardpos.getBoardPos();
-	const scale = boardpos.getBoardScale();
-	const rangeOfViewBD = bd.fromNumber(rangeOfView);
-	const renderDistInSquares = bd.divideFloating(rangeOfViewBD, scale);
-
-	return {
-		left: bd.subtract(position[0], renderDistInSquares),
-		right: bd.add(position[0], renderDistInSquares),
-		bottom: bd.subtract(position[1], renderDistInSquares),
-		top: bd.add(position[1], renderDistInSquares),
-	};
 }
 
 /**
@@ -205,15 +112,9 @@ function roundAwayBoundingBox(src: BoundingBoxBD): BoundingBox {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Updating
-	recalcVariables,
-	// Public API
 	getSquareCenter,
 	getSquareCenterAsNumber,
 	getTileWidthPixels,
-	gboundingBox,
-	gboundingBoxFloat,
 	getBoundingBoxOfBoard,
-	generatePerspectiveBoundingBox,
 	roundAwayBoundingBox,
 };

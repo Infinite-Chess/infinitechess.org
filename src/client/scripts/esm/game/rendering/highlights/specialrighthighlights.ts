@@ -14,12 +14,13 @@ import coordutil from '../../../../../../shared/util/coordutil.js';
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../../../board/rendering/boardpos.js';
+import gamescene from '../gamescene.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
-import squarerendering from './squarerendering.js';
+import squarerendering from '../../../board/rendering/squarerendering.js';
 import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
@@ -102,7 +103,10 @@ function regenModel(): void {
 function renderSpecialRights(): void {
 	if (!model) throw Error('Specialrights model not initialized');
 
-	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
+	const { position, scale } = meshes.getBoardRenderTransform(
+		boardpos,
+		legalmovemodel.getOffset(),
+	);
 
 	model.render(position, scale);
 }
@@ -113,7 +117,11 @@ function renderEnPassant(): void {
 
 	const u_size = boardpos.getBoardScaleAsNumber();
 	squarerendering
-		.genModel([gamefile.state.global.enpassant.square], ENPASSANT_COLOR)
+		.genModel(
+			gamescene.getGameContext(),
+			[gamefile.state.global.enpassant.square],
+			ENPASSANT_COLOR,
+		)
 		.render(undefined, undefined, { u_size });
 }
 

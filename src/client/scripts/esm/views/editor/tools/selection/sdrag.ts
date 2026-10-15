@@ -16,7 +16,7 @@ import bounds, {
 
 import mouse from '../../../../game/mouse.js';
 import space from '../../../../board/rendering/space.js';
-import arrows from '../../../../game/rendering/arrows/arrows.js';
+import camera from '../../../../board/rendering/camera.js';
 import docutil from '../../../../util/docutil.js';
 import scursor from './scursor.js';
 import gameslot from '../../../../game/chess/gameslot.js';
@@ -24,6 +24,7 @@ import { Mouse } from '../../../../game/input.js';
 import selectiontool from './selectiontool.js';
 import stoolgraphics from './stoolgraphics.js';
 import stransformations from './stransformations.js';
+import arrowinteraction from '../../../../game/rendering/arrows/arrowinteraction.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -79,7 +80,7 @@ function update(): void {
 			}
 
 			// Determine if we picked up the selection
-			if (mouse.isMouseDown(Mouse.LEFT) && !arrows.areHoveringAtleastOneArrow()) {
+			if (mouse.isMouseDown(Mouse.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
 				// Start dragging
 				mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 				mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
@@ -105,7 +106,7 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 	if (!mouseWorld) return false;
 
 	// Convert grab distance to world space
-	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(getGrabbableDist());
+	const grabbableDist = space.convertPixelsToWorldSpace_Virtual(camera, getGrabbableDist());
 
 	// Determine if the mouse is within the grabbable edge area.
 	// This is true if the mouse is inside the selection box expanded by the grab distance,

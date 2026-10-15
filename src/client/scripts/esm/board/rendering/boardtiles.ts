@@ -23,7 +23,6 @@ import math from '../../../../../shared/util/math/math.js';
 import colorutil from '../../util/colorutil.js';
 import primitives from './primitives.js';
 import preferences from '../../util/preferences.js';
-import frametracker from './frametracker.js';
 import boardgeometry from './boardgeometry.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
 import { SettingsBus } from '../../util/SettingsBus.js';
@@ -138,7 +137,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 			mipmapped: TextureLoader.loadTexture(ctx.gl, mipmappedImage, { mipmaps: true }),
 		};
 
-		frametracker.onVisualChange();
+		ctx.frames.onVisualChange();
 	}
 
 	/** Returns a promise that resolves when the new tiles textures have been generated. */
@@ -148,7 +147,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	): Promise<void> {
 		tileColors = { light: newLightTiles, dark: newDarkTiles };
 		updateSkyColor();
-		frametracker.onVisualChange();
+		ctx.frames.onVisualChange();
 		return initTextures();
 	}
 

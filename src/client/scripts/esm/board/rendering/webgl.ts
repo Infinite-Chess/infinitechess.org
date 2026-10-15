@@ -6,9 +6,8 @@
  *
  * {@link createContext} builds & configures a fresh WebGL2 context for any canvas.
  * {@link init} creates the interactive game's context and stores it as the module {@link gl}
- * export (used by game-only code). The variant-preview tooltip creates its own context via
- * {@link createContext}. The stateless helpers below take an optional `glCtx` that defaults
- * to the game context, so game-only callers stay unchanged while per-context code passes its own.
+ * export (used by game-only code). Every other board creates its own context via
+ * {@link createContext}. The stateless helpers below act on whichever context they're given.
  */
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
@@ -124,7 +123,7 @@ function clearScreen(glCtx: WebGL2RenderingContext, color: Vec3 = CLEAR_COLOR): 
  * Toggles normal blending mode. Transparent objects will correctly have
  * their color shaded onto the color behind them.
  */
-function toggleNormalBlending(glCtx: WebGL2RenderingContext = gl): void {
+function toggleNormalBlending(glCtx: WebGL2RenderingContext): void {
 	// Non-premultiplied alpha blending mode. (Pre-multiplied would be gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 	glCtx.blendFunc(glCtx.SRC_ALPHA, glCtx.ONE_MINUS_SRC_ALPHA);
 }
@@ -135,7 +134,7 @@ function toggleNormalBlending(glCtx: WebGL2RenderingContext = gl): void {
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
  */
-function enableBlending_Inverse(glCtx: WebGL2RenderingContext = gl): void {
+function enableBlending_Inverse(glCtx: WebGL2RenderingContext): void {
 	glCtx.blendFunc(glCtx.ONE_MINUS_DST_COLOR, glCtx.ZERO);
 }
 
@@ -143,10 +142,10 @@ function enableBlending_Inverse(glCtx: WebGL2RenderingContext = gl): void {
  * Executes a function (typically a render function) while the depth function paramter
  * is `ALWAYS`. Objects will be rendered no matter if they are behind or on top of other objects.
  * This is useful for preventing tearing when objects are on the same z-level in perspective.
+ * @param glCtx - The context to affect.
  * @param func - The render function to run.
- * @param glCtx - The context to affect. Defaults to the game context.
  */
-function executeWithDepthFunc_ALWAYS(func: () => void, glCtx: WebGL2RenderingContext = gl): void {
+function executeWithDepthFunc_ALWAYS(glCtx: WebGL2RenderingContext, func: () => void): void {
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	glCtx.depthFunc(glCtx.ALWAYS); // Temporary toggle the depth function to ALWAYS.
 	func();
@@ -159,10 +158,10 @@ function executeWithDepthFunc_ALWAYS(func: () => void, glCtx: WebGL2RenderingCon
  *
  * This is useful for rendering crosshairs, because they will appear black on white backgrounds,
  * and white on black backgrounds.
+ * @param glCtx - The context to affect.
  * @param func - The render function to run.
- * @param glCtx - The context to affect. Defaults to the game context.
  */
-function executeWithInverseBlending(func: () => void, glCtx: WebGL2RenderingContext = gl): void {
+function executeWithInverseBlending(glCtx: WebGL2RenderingContext, func: () => void): void {
 	enableBlending_Inverse(glCtx);
 	func();
 	toggleNormalBlending(glCtx);

@@ -19,9 +19,10 @@ import mouse from '../../../mouse.js';
 import snapping from '../snapping.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
 import gameslot from '../../../chess/gameslot.js';
+import gamescene from '../../gamescene.js';
 import { Mouse } from '../../../input.js';
 import preferences from '../../../../util/preferences.js';
-import squarerendering from '../squarerendering.js';
+import squarerendering from '../../../../board/rendering/squarerendering.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -33,9 +34,6 @@ const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.19   Transpa
  * include a LOT of squares), lone squares get an opacity offset.
  */
 const OPACITY_OFFSET = 0.08;
-
-/** ADDITONAL (not overriding) opacity when hovering over highlights. */
-const HOVER_OPACITY = 0.5;
 
 // Variables -------------------------------------------------------------------
 
@@ -75,7 +73,11 @@ function getSquaresBelowWorld(
 
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach((coords) => {
-		const coordsWorld = space.convertCoordToWorldSpace(bdcoords.fromCoords(coords));
+		const coordsWorld = space.convertCoordToWorldSpace(
+			bdcoords.fromCoords(coords),
+			boardpos.getBoardPos(),
+			boardpos.getBoardScale(),
+		);
 		const dist_cheby = vectors.chebyshevDistanceDoubles(coordsWorld, world);
 		if (dist_cheby < entityHalfWidthWorld) {
 			squares.push(coords);
@@ -100,7 +102,10 @@ function update(highlights: Coords[]): void {
 		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
 		const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT);
 		if (!pointerWorld) return; // Maybe we're looking into sky?
-		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(
+			boardpos,
+			pointerWorld,
+		);
 
 		const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
 		const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
@@ -169,10 +174,12 @@ function render(highlights: Coords[]): void {
 		? snapping.getEntityWidthWorld()
 		: boardpos.getBoardScaleAsNumber();
 
+	const ctx = gamescene.getGameContext();
+
 	// Render preset squares (only if zoomed in)
 	if (!boardpos.areZoomedOut() && presetSquares.length > 0)
 		squarerendering
-			.genModel(presetSquares, PRESET_SQUARE_COLOR)
+			.genModel(ctx, presetSquares, PRESET_SQUARE_COLOR)
 			.render(undefined, undefined, { u_size });
 
 	// Early exit if no drawn-squares to draw
@@ -182,7 +189,7 @@ function render(highlights: Coords[]): void {
 	const color = preferences.getAnnoteSquareColor();
 	color[3] += OPACITY_OFFSET; // Add opacity offset to make it more visible than rays
 
-	squarerendering.genModel(highlights, color).render(undefined, undefined, { u_size });
+	squarerendering.genModel(ctx, highlights, color).render(undefined, undefined, { u_size });
 
 	// Render hovered highlights
 
@@ -191,8 +198,10 @@ function render(highlights: Coords[]): void {
 	const allHovered = getAllSquaresHovered(highlights);
 	if (allHovered.length > 0) {
 		const hoverColor = preferences.getAnnoteSquareColor();
-		hoverColor[3] = HOVER_OPACITY;
-		squarerendering.genModel(allHovered, hoverColor).render(undefined, undefined, { u_size });
+		hoverColor[3] = squarerendering.HOVER_OPACITY;
+		squarerendering
+			.genModel(ctx, allHovered, hoverColor)
+			.render(undefined, undefined, { u_size });
 	}
 }
 
@@ -200,7 +209,6 @@ function render(highlights: Coords[]): void {
 
 export default {
 	PRESET_SQUARE_COLOR,
-	HOVER_OPACITY,
 	update,
 	getAllSquaresHovered,
 	getSquaresBelowWorld,

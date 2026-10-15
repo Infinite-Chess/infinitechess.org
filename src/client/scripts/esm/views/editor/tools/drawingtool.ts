@@ -21,7 +21,6 @@ import typeutil, {
 } from '../../../../../../shared/chess/util/typeutil.js';
 
 import mouse from '../../../game/mouse.js';
-import arrows from '../../../game/rendering/arrows/arrows.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import selection from '../../../game/chess/selection.js';
 import { Mouse } from '../../../game/input.js';
@@ -29,6 +28,7 @@ import egamerules from '../egamerules.js';
 import guipalette from '../gui/guipalette.js';
 import edithistory from '../edithistory.js';
 import { GameBus } from '../../../board/GameBus.js';
+import arrowinteraction from '../../../game/rendering/arrows/arrowinteraction.js';
 import specialrighthighlights from '../../../game/rendering/highlights/specialrighthighlights.js';
 
 // Events ----------------------------------------------------------------------
@@ -110,7 +110,11 @@ function cancelEdit(): void {
 function update(currentTool: Tool): void {
 	if (!drawingTools.includes(currentTool)) return; // Not using a drawing tool
 
-	if (mouse.isMouseDown(Mouse.LEFT) && !drawing && !arrows.areHoveringAtleastOneArrow()) {
+	if (
+		mouse.isMouseDown(Mouse.LEFT) &&
+		!drawing &&
+		!arrowinteraction.areHoveringAtleastOneArrow()
+	) {
 		mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 		mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
 		drawingToolPointerId = mouse.getMouseId(Mouse.LEFT)!;

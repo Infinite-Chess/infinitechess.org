@@ -19,7 +19,6 @@ import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import toast from '../../components/toast.js';
 import mouse from '../mouse.js';
 import space from '../../board/rendering/space.js';
-import arrows from '../rendering/arrows/arrows.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
@@ -28,6 +27,7 @@ import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import { GameBus } from '../../board/GameBus.js';
+import arrowinteraction from '../rendering/arrows/arrowinteraction.js';
 import { listener_document, listener_canvas } from '../listeners.js';
 
 // Elements --------------------------------------------------------------------
@@ -103,12 +103,12 @@ function update_PerspectiveButton(): void {
 /** Cycles the arrow-indicators mode. */
 function callback_Arrows(): void {
 	if (!gameslot.getGamefile()) return; // Game not loaded yet
-	arrows.toggleArrows();
+	arrowinteraction.toggleArrows();
 }
 
 /** Reveals the glyph + tooltip matching the active arrow-indicators mode. */
 function update_ArrowsButton(): void {
-	const mode = arrows.getMode();
+	const mode = arrowinteraction.getMode();
 	element_ArrowUses.forEach((use, i) => use.classList.toggle('hidden', i !== mode));
 	element_Arrows.setAttribute('data-tooltip', ARROW_TOOLTIPS[mode]);
 }

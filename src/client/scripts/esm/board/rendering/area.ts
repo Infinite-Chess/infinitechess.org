@@ -13,7 +13,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import bounds, { BoundingBoxBD } from '../../../../../shared/util/math/bounds.js';
 
 import space from './space.js';
-import camera from './camera.js';
 import meshes from './meshes.js';
 import boardgeometry from './boardgeometry.js';
 
@@ -65,38 +64,38 @@ const PADDING_RECALC_ITERATIONS: number = 10;
 
 /**
  * Calculates the area object that contains every coordinate in the provided list, *with padding added*.
+ * @param cam - The camera to fit the area within.
  * @param coordsList - An array of coordinates, typically of the pieces.
  * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
- * @param cam - The camera to fit the area within. Defaults to the game camera.
  * @returns The area object
  */
 function calculateFromCoordsList(
+	cam: Camera,
 	coordsList: Coords[],
 	entityWidthVPixels: number,
-	cam: Camera = camera,
 ): Area {
 	if (coordsList.length === 0) throw Error('Cannot calculate area from an empty coords list.');
 
 	const box = bounds.getBoxFromCoordsList(coordsList); // Unpadded
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
 
-	return calculateFromUnpaddedBox(boxFloating, entityWidthVPixels, cam);
+	return calculateFromUnpaddedBox(cam, boxFloating, entityWidthVPixels);
 }
 
 /**
  * Calculates the area object from the provided bounding box, *with padding added*.
+ * @param cam - The camera to fit the area within.
  * @param box - A BoundingBox object.
  * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
- * @param cam - The camera to fit the area within. Defaults to the game camera.
  * @returns The area object
  */
 function calculateFromUnpaddedBox(
+	cam: Camera,
 	box: BoundingBoxBD,
 	entityWidthVPixels: number,
-	cam: Camera = camera,
 ): Area {
-	const paddedBox = applyPaddingToBox(box, entityWidthVPixels, cam);
-	return calculateFromBox(paddedBox, cam);
+	const paddedBox = applyPaddingToBox(cam, box, entityWidthVPixels);
+	return calculateFromBox(cam, paddedBox);
 }
 
 /**
@@ -105,17 +104,17 @@ function calculateFromUnpaddedBox(
  * @param box - The bounding box
  * @returns The area object
  */
-function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
+function calculateFromBox(cam: Camera, box: BoundingBoxBD): Area {
 	// The new boardPos is the middle point
 	const newBoardPos = bounds.calcCenterOfBoundingBox(box);
 
 	// What is the scale required to match the sides?
-	const newScale = calcScaleToMatchSides(box, cam);
+	const newScale = calcScaleToMatchSides(cam, box);
 
 	// Now maximize the bounding box to fill entire screen when at position and scale, so that
 	// we don't have long thin slices of a bounding box that will fail the bounds.boxContainsSquare() function EVEN
 	// if the square is visible on screen!
-	const maximizedBox = boardgeometry.getBoundingBoxOfBoard(newBoardPos, newScale, false, cam);
+	const maximizedBox = boardgeometry.getBoundingBoxOfBoard(cam, newBoardPos, newScale, false);
 
 	return {
 		coords: newBoardPos,
@@ -130,7 +129,7 @@ function calculateFromBox(box: BoundingBoxBD, cam: Camera = camera): Area {
  * @param boundingBox - The bounding box
  * @returns The scale (zoom) required
  */
-function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera): BigDecimal {
+function calcScaleToMatchSides(cam: Camera, boundingBox: BoundingBoxBD): BigDecimal {
 	const { xHalfLength, yHalfLength } = getBoundingBoxHalfDimensions(boundingBox);
 
 	const screenBoundingBox = cam.getScreenBoundingBox(false); // Debug mode's zoomed-out view ignored
@@ -150,7 +149,7 @@ function calcScaleToMatchSides(boundingBox: BoundingBoxBD, cam: Camera = camera)
 	newScale = bd.min(newScale, capScale);
 
 	// Also cap the scale if squares would be too large visibly on screen
-	const tileWidthPixels = boardgeometry.getTileWidthPixels(false, newScale, cam);
+	const tileWidthPixels = boardgeometry.getTileWidthPixels(cam, newScale, false);
 	if (bd.compare(tileWidthPixels, AREA_MAX_SQUARE_VPIXELS) > 0) {
 		const scaleFactor = bd.divideFloating(AREA_MAX_SQUARE_VPIXELS, tileWidthPixels);
 		newScale = bd.multiplyFloating(newScale, scaleFactor);
@@ -176,21 +175,21 @@ function getBoundingBoxHalfDimensions(boundingBox: BoundingBoxBD): {
 
 /**
  * Returns a new bounding box, with added padding so the pieces aren't too close to the edge.
+ * @param cam - The camera to fit the box within.
  * @param box - The source bounding box, floating point edges.
  * @param entityWidthVPixels - The on-screen size of each mini image, in virtual pixels.
- * @param cam - The camera to fit the box within. Defaults to the game camera.
  * @returns The new bounding box
  */
 function applyPaddingToBox(
+	cam: Camera,
 	box: BoundingBoxBD,
 	entityWidthVPixels: number,
-	cam: Camera = camera,
 ): BoundingBoxBD {
 	const canvasWidth = cam.getCanvasWidthVirtualPixels();
 	const canvasHeight = cam.getCanvasHeightVirtualPixels();
 
 	let paddedBox: BoundingBoxBD = box;
-	let scaleBD: BigDecimal = calcScaleToMatchSides(paddedBox, cam);
+	let scaleBD: BigDecimal = calcScaleToMatchSides(cam, paddedBox);
 
 	// Iterate until we have desired padding
 	for (let i = 0; i < PADDING_RECALC_ITERATIONS; i++) {
@@ -199,10 +198,10 @@ function applyPaddingToBox(
 		const paddingVertPixels = calcPaddingPixels(canvasHeight, zoomedOut, entityWidthVPixels);
 
 		const paddingHorzWorldBD = bd.fromNumber(
-			space.convertPixelsToWorldSpace_Virtual(paddingHorzPixels, cam),
+			space.convertPixelsToWorldSpace_Virtual(cam, paddingHorzPixels),
 		);
 		const paddingVertWorldBD = bd.fromNumber(
-			space.convertPixelsToWorldSpace_Virtual(paddingVertPixels, cam),
+			space.convertPixelsToWorldSpace_Virtual(cam, paddingVertPixels),
 		);
 		const paddingHorz: BigDecimal = bd.divide(paddingHorzWorldBD, scaleBD);
 		const paddingVert: BigDecimal = bd.divide(paddingVertWorldBD, scaleBD);
@@ -215,7 +214,7 @@ function applyPaddingToBox(
 		};
 
 		// Prep for next iteration
-		scaleBD = calcScaleToMatchSides(paddedBox, cam);
+		scaleBD = calcScaleToMatchSides(cam, paddedBox);
 	}
 
 	return paddedBox;

@@ -21,9 +21,10 @@ the edges of the screen are at) we use **BigDecimals** from `@naviary/bigdecimal
 number package that adds decimal precision to arbitrarily large coordinates. The package provides
 fully type safe arithmetic methods for working with them when needed.
 
-The bounding box of the screen over the grid space can be retrieved with
-`boardtiles.gboundingBoxFloat()` (decimal precision) or `boardtiles.gboundingBox()` (rounded away
-from screen center to next integer coordinates).
+The interactive game's bounding box of the screen over the grid space can be retrieved with
+`boardview.gboundingBoxFloat()` (decimal precision) or `boardview.gboundingBox()` (rounded away from
+screen center to next integer coordinates). Any other board computes its own with
+`boardgeometry.getBoundingBoxOfBoard()`.
 
 ### World Space
 
@@ -107,8 +108,8 @@ space for you.
 ### Square Highlights
 
 For the common task of highlighting squares on the board,
-[`squarerendering.genModel()`](/src/client/scripts/esm/game/rendering/highlights/squarerendering.ts)
-is high-level helper that internally handles the vertex data and instance data creation for you from
+[`squarerendering.genModel()`](/src/client/scripts/esm/board/rendering/squarerendering.ts) is
+high-level helper that internally handles the vertex data and instance data creation for you from
 just a list of integer coordinates and a color, returning a ready-to-render object.
 
 ## Rendering Vertex Data
@@ -186,24 +187,30 @@ textures, buffers/VAOs) can **never** be shared across contexts.
 
 A [`RenderContext`](/src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything
 bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale),
-piece `textures`, stencil `maskedDraw`, tile renderer (`boardtiles`), and a `renderable` factory for
-creating models in that context. The interactive game builds one in `gamescene.init()`; each preview
-builds its own with
+piece `textures`, stencil `maskedDraw`, `frames` tracker (whether it needs a redraw), tile renderer
+(`boardtiles`), and a `renderable` factory for creating models in that context. Each preview builds
+one with
 [`previewrenderer.createContext()`](/src/client/scripts/esm/board/rendering/previewrenderer.ts).
 Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of
 reaching for a process-wide singleton.
+
+A board that plays a game out is a
+[`LiveBoard`](/src/client/scripts/esm/board/rendering/LiveBoard.ts): a `RenderContext` that also
+holds its piece animations, arrow indicators, water ripples, and post-processing pipeline. The
+interactive game builds one in `gamescene.init()`. Live-board modules (animation, arrows, ripples,
+move effects) hold no state of their own and take the board they act on.
 
 ### Choosing a shape for a new render module
 
 When you add a rendering script, pick one of these based on what state it owns and who calls it:
 
-| Pattern                      | Use when                                                                                                                                                             | How                                                                                                                                                                                                  | Examples                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| **Factory** (+ game default) | The module owns context- or view-bound state: GPU objects (textures, programs) or the view (camera matrices, board position). Two boards genuinely need two copies.  | Export a `createX()` that builds one instance. Expose the interactive game's instance as the module default so existing `x.foo()` callers stay unchanged; the preview calls `createX()` for its own. | camera, boardpos, texturecache, maskeddraw, renderable, boardtiles             |
-| **Thread `ctx`**             | Shared draw logic that BOTH boards run, needing the whole GPU bundle (gl + programs + textures + masker + tiles). Redundancy rules forbid giving the preview a copy. | Take `ctx: RenderContext` as the first parameter. This forces the game's callers (`renderScene`) to pass `gameContext`.                                                                              | piecemodels, border, promotionlines, miniimagerenderer, previewrenderer        |
-| **Sub-part w/ game default** | Shared helper that needs only ONE piece of context (just the camera, or just boardpos), not the whole bundle.                                                        | Take that piece as a parameter defaulting to the game singleton: `cam: Camera = camera`. Game callers omit it; the preview passes `ctx.camera`.                                                      | area, meshes                                                                   |
-| **Stay a singleton**         | Game-only rendering the preview never uses, OR pure math derived from the interactive game.                                                                          | Read the game's default exports directly. No `ctx` needed — there is only ever one caller.                                                                                                           | highlights, coordinates, starfield, arrows, selection, snapping, boardgeometry |
-| **Unchanged** (context-free) | Holds no context/view state at all — decoded bitmaps, SVGs, pure math. Already shareable across contexts.                                                            | Leave as-is.                                                                                                                                                                                         | imagecache, svgcache                                                           |
+| Pattern                      | Use when                                                                                                                                                             | How                                                                                                                                                                                                       | Examples                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Factory** (+ game default) | The module owns context- or view-bound state: GPU objects (textures, programs) or the view (camera matrices, board position). Two boards genuinely need two copies.  | Export a `createX()` that builds one instance. Expose the interactive game's instance as the module default so existing `x.foo()` callers stay unchanged; the preview calls `createX()` for its own.      | camera, boardpos, texturecache, maskeddraw, renderable, boardtiles        |
+| **Thread `ctx`**             | Shared draw logic that BOTH boards run, needing the whole GPU bundle (gl + programs + textures + masker + tiles). Redundancy rules forbid giving the preview a copy. | Take `ctx: RenderContext` (or `board: LiveBoard`) as the first parameter. This forces the game's callers (`renderScene`) to pass `gameContext`.                                                           | piecemodels, border, promotionlines, miniimagerenderer, animation, arrows |
+| **Sub-part**                 | Shared helper that needs only ONE piece of context (just the camera, or just boardpos), not the whole bundle.                                                        | Take that piece as a required first parameter. Game callers pass the game's `camera`/`boardpos`; other boards pass `ctx.camera`. Never default it: a forgotten argument would draw with the game's board. | area, meshes, space, boardgeometry                                        |
+| **Stay a singleton**         | Game-only rendering the preview never uses, OR pure math derived from the interactive game.                                                                          | Read the game's default exports directly. No `ctx` needed — there is only ever one caller.                                                                                                                | highlights, coordinates, starfield, selection, snapping, boardview        |
+| **Unchanged** (context-free) | Holds no context/view state at all — decoded bitmaps, SVGs, pure math. Already shareable across contexts.                                                            | Leave as-is.                                                                                                                                                                                              | imagecache, svgcache                                                      |
 
 Wiring notes for the factory pattern:
 

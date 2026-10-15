@@ -12,12 +12,13 @@ import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
+import gamescene from '../rendering/gamescene.js';
 import engineicn from '../../chess/engineicn.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import gamecompressor from '../../chess/gamecompressor.js';
-import squarerendering from '../rendering/highlights/squarerendering.js';
+import squarerendering from '../../board/rendering/squarerendering.js';
 
 /** A move request dispatched to the engine worker for a specific position. */
 interface DebugMoveRequest {
@@ -175,9 +176,9 @@ function render(): void {
 		? snapping.getEntityWidthWorld()
 		: boardpos.getBoardScaleAsNumber();
 
-	squarerendering.genModel(coords, drawsquares.PRESET_SQUARE_COLOR).render(undefined, undefined, {
-		u_size,
-	});
+	squarerendering
+		.genModel(gamescene.getGameContext(), coords, drawsquares.PRESET_SQUARE_COLOR)
+		.render(undefined, undefined, { u_size });
 }
 
 /** Parses the destination coords out of a compact move token ("from>to=promotion"), or undefined if malformed. */

@@ -19,7 +19,7 @@ import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 
-import arrows from '../../game/rendering/arrows/arrows.js';
+import arrows from '../../board/rendering/arrows/arrows.js';
 import gameslot from '../../game/chess/gameslot.js';
 import miniimage from '../../game/rendering/miniimage.js';
 import selection from '../../game/chess/selection.js';
@@ -29,6 +29,7 @@ import { GameBus } from '../../board/GameBus.js';
 import boardeditor from './boardeditor.js';
 import movesequence from '../../game/chess/movesequence.js';
 import guinavigation from './gui/guinavigation.js';
+import arrowinteraction from '../../game/rendering/arrows/arrowinteraction.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
@@ -103,7 +104,7 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
 	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT || pieceCount > arrows.MAX_PIECES) {
 		miniimage.disable();
-		arrows.forceModeOff();
+		arrowinteraction.forceModeOff();
 	}
 
 	// Prune the oldest edits in the history if we exceed the cap, to help prevent memory crashes.

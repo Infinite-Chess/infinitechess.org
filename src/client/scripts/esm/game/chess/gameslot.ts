@@ -23,7 +23,7 @@ import variantcache from '../../../../../shared/chess/variants/variantcache.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import arrows from '../rendering/arrows/arrows.js';
+import arrows from '../../board/rendering/arrows/arrows.js';
 import { gl } from '../../board/rendering/webgl.js';
 import camera from '../../board/rendering/camera.js';
 import guiclock from '../gui/guiclock.js';
@@ -32,6 +32,7 @@ import gamescene from '../rendering/gamescene.js';
 import miniimage from '../rendering/miniimage.js';
 import starfield from '../rendering/starfield.js';
 import gamesound from '../../board/gamesound.js';
+import animation from '../../board/rendering/animation.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import gamesession from './gamesession.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
@@ -41,6 +42,8 @@ import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import frametracker from '../../board/rendering/frametracker.js';
+import arrowinteraction from '../rendering/arrows/arrowinteraction.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
@@ -164,8 +167,8 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT) miniimage.disable();
 	// Disable arrows if there's too many pieces or lines in the game
 	if (pieceCount > arrows.MAX_PIECES || game.pieces.lines.size > arrows.MAX_LINES)
-		arrows.forceModeOff();
-	else arrows.applyPreferredMode(); // A previous game may have forced them off, or lowered the mode
+		arrowinteraction.forceModeOff();
+	else arrowinteraction.applyPreferredMode(); // A previous game may have forced them off, or lowered the mode
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
 	if (loadOptions.presetAnnotes?.squares)
@@ -248,6 +251,7 @@ function unloadGame(): void {
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
+	animation.clearAnimations(gamescene.getGameContext());
 	starfield.terminate();
 
 	GameBus.dispatch('game-unloaded');
@@ -273,6 +277,8 @@ function concludeGame(playSound = true): void {
 	guiclock.stopClocks(loadedGamefile);
 
 	GameBus.dispatch('game-concluded');
+	// Load-bearing: a resignation, flag or disconnect concludes the game without any move to redraw.
+	frametracker.onVisualChange();
 
 	if (playSound) gamesound.playNotify(true);
 }

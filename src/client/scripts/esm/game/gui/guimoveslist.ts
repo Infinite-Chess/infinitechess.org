@@ -26,7 +26,8 @@ import gameslot from '../chess/gameslot.js';
 import premoves from '../chess/premoves.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
-import animation from '../rendering/animation.js';
+import animation from '../../board/rendering/animation.js';
+import gamescene from '../rendering/gamescene.js';
 import holdrepeat from '../../components/holdrepeat.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gamesession from '../chess/gamesession.js';
@@ -161,7 +162,7 @@ function jumpToStart(): void {
 	movesequence.viewStart(gamefile, mesh);
 	selection.unselectPiece();
 	scrollToCurrentPly();
-	animation.clearAnimations();
+	animation.clearAnimations(gamescene.getGameContext());
 }
 
 /** Jumps to the latest move, unselecting any piece. */

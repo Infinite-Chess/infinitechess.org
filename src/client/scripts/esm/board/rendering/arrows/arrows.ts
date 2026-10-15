@@ -1,25 +1,22 @@
-// src/client/scripts/esm/game/rendering/arrows/arrows.ts
+// src/client/scripts/esm/board/rendering/arrows/arrows.ts
 
 /**
- * This script manages the state of arrow indicators on the sides of the screen,
+ * This script manages the state of a board's arrow indicators on the sides of the screen,
  * pointing to pieces off-screen that are in that direction.
- *
- * If the pictures are clicked, we initiate a teleport to that piece.
  *
  * Other scripts may add/remove arrows in between update() and render() calls.
  * Calculation is handled by arrowscalculator, shifting by arrowshifts,
- * and rendering by arrowsgraphics.
+ * and rendering by arrowsgraphics. Clicking them is game-only, in arrowinteraction.
  */
 
+import type LiveBoard from '../LiveBoard.js';
+import type { Shift } from './arrowshifts.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
+import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
-import gameslot from '../../chess/gameslot.js';
-import arrowshifts from './arrowshifts.js';
-import { GameBus } from '../../../board/GameBus.js';
-import frametracker from '../../../board/rendering/frametracker.js';
 import arrowscalculator from './arrowscalculator.js';
-import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -30,7 +27,47 @@ import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
  * 2 = All (orthogonals & diagonals)
  * 3 = All (including hippogonals, only used in variants using hippogonals)
  */
-type Mode = 0 | 1 | 2 | 3;
+export type Mode = 0 | 1 | 2 | 3;
+
+/** One board's arrow indicators, recalculated every frame. */
+export interface ArrowsState {
+	/** The mode the arrow indicators are in. */
+	mode: Mode;
+	/**
+	 * All arrows present for the current frame.
+	 *
+	 * Other scripts are given an opportunity to add/remove
+	 * arrows from this list before rendering, but they must
+	 * do so between the update() and render() calls.
+	 */
+	slideArrows: SlideArrows;
+	/**
+	 * All piece-arrows being hovered over this frame,
+	 * with a reference to the piece they are pointing to.
+	 */
+	hoveredArrows: HoveredArrow[];
+	/**
+	 * All animated arrows IN MOTION for the current frame.
+	 *
+	 * This does not include still ones, for example rendered from
+	 * the piece captured being rendered in place.
+	 * Still animation's lines are recalculated manually.
+	 */
+	animatedArrows: Arrow[];
+	/**
+	 * The bounding box of the screen for this frame, with padding added so
+	 * that arrow indicators aren't touching the very edge of the screen.
+	 */
+	boundingBoxFloat?: BoundingBoxBD;
+	/**
+	 * The bounding box of the screen for this frame,
+	 * rounded outward to contain the entirety of
+	 * any square even partially visible.
+	 */
+	boundingBoxInt?: BoundingBox;
+	/** Arrow modifications made by other scripts after update() and before render(). */
+	shifts: Shift[];
+}
 
 /** An object containing all the arrow lines of a single frame. */
 export interface SlideArrows {
@@ -133,91 +170,20 @@ const MAX_PIECES = 40_000;
 /** The maximum number of lines in a game before we disable arrow indicator rendering, for performance. */
 const MAX_LINES = 8;
 
+/** The mode every board's arrow indicators start in. */
+const DEFAULT_MODE: Mode = 1;
+
 // State -----------------------------------------------------------------------
 
-/** The mode the arrow indicators on the edges of the screen is currently in. */
-let mode: Mode = 1;
-
-/**
- * The mode the user last rotated to. Games that can't support
- * it lower {@link mode} only, so a game that does gets it back.
- */
-let preferredMode: Mode = 1;
-
-/**
- * A list of all arrows present for the current frame.
- *
- * Other scripts are given an opportunity to add/remove
- * arrows from this list before rendering, but they must
- * do so between the update() and render() calls.
- */
-let slideArrows: SlideArrows = {};
-
-/**
- * A list of all piece-arrows being hovered over this frame (excludes move hints),
- * with a reference to the piece they are pointing to.
- * Other scripts may access this so they can add interaction with them.
- */
-let hoveredArrows: HoveredArrow[] = [];
-
-/**
- * A list of all animated arrows IN MOTION for the current frame.
- *
- * This does not include still ones, for example rendered from
- * the piece captured being rendered in place.
- * Still animation's lines are recalculated manually.
- */
-let animatedArrows: Arrow[] = [];
-
-/**
- * A list of all hint arrows computed for the current frame.
- * Each hints at an off-screen individual legal move destination.
- */
-let hintArrows: HintArrow[] = [];
-
-// Mode management -------------------------------------------------------------
-
-/** Returns the mode the arrow indicators on the edges of the screen is currently in. */
-function getMode(): Mode {
-	return mode;
-}
-
-/** Sets the current mode of the arrow indicators. */
-function setMode(value: Mode): void {
-	if (value === mode) return;
-
-	mode = value;
-	if (mode === 0) {
-		reset();
-		arrowlegalmovehighlights.reset(); // Erase, otherwise their legal move highlights continue to render
-	}
-	GameBus.dispatch('arrow-mode-change');
-}
-
-/** Turns the arrows off for a game that can't render them, leaving the user's preference intact. */
-function forceModeOff(): void {
-	setMode(0);
-}
-
-/** Sets the mode to the user's preference, lowered to what the current game offers. */
-function applyPreferredMode(): void {
-	const cap = getModeCap();
-	setMode(preferredMode > cap ? cap : preferredMode);
-}
-
-/** The highest mode the current game offers. Hippogonal arrows are only offered in variants using them. */
-function getModeCap(): 2 | 3 {
-	return gameslot.getGamefile()!.pieces.hippogonalsPresent ? 3 : 2;
-}
-
-/** Rotates the current mode of the arrow indicators. */
-function toggleArrows(): void {
-	frametracker.onVisualChange();
-	// Have to do it weirdly like this, instead of using '++', because typescript complains that nextMode is of type number.
-	let nextMode: Mode = mode === 0 ? 1 : mode === 1 ? 2 : mode === 2 ? 3 : /* mode === 3 ? */ 0;
-	if (nextMode > getModeCap()) nextMode = 0; // Wrap back to zero
-	preferredMode = nextMode; // Whatever they rotate to becomes their preference for future games.
-	setMode(nextMode);
+/** Creates a board's arrow indicator state, empty until its first update. */
+function createState(): ArrowsState {
+	return {
+		mode: DEFAULT_MODE,
+		slideArrows: {},
+		hoveredArrows: [],
+		animatedArrows: [],
+		shifts: [],
+	};
 }
 
 // Getters ---------------------------------------------------------------------
@@ -227,9 +193,9 @@ function toggleArrows(): void {
  * Does NOT include animated arrows.
  * Callers may mutate arrow properties (e.g. opacity) before rendering.
  */
-function getAllArrows(): Arrow[] {
+function getAllArrows(board: LiveBoard): Arrow[] {
 	const result: Arrow[] = [];
-	for (const linesOfDirection of Object.values(slideArrows)) {
+	for (const linesOfDirection of Object.values(board.arrows.slideArrows)) {
 		for (const line of Object.values(linesOfDirection as { [lineKey: string]: ArrowsLine })) {
 			for (const arrow of line.posDotProd) result.push(arrow);
 			for (const arrow of line.negDotProd) result.push(arrow);
@@ -238,66 +204,16 @@ function getAllArrows(): Arrow[] {
 	return result;
 }
 
-/** Returns the current slide arrows state for this frame. */
-function getSlideArrows(): SlideArrows {
-	return slideArrows;
-}
-
-/** Returns the current animated arrows for this frame. */
-function getAnimatedArrows(): Arrow[] {
-	return animatedArrows;
-}
-
-/**
- * Returns the list of arrow indicators hovered over this frame,
- * with references to the piece they are pointing to.
- */
-function getHoveredArrows(): HoveredArrow[] {
-	return hoveredArrows;
-}
-
-/** Returns the current hint arrows for this frame. */
-function getHintArrows(): HintArrow[] {
-	return hintArrows;
-}
-
-/**
- * Whether the mouse is currently hovering over at least one
- * arrow indicator of any type (piece or move hint) on the screen.
- */
-function areHoveringAtleastOneArrow(): boolean {
-	return hoveredArrows.length > 0 || hintArrows.some((ha) => ha.hovered);
-}
-
-/**
- * Returns the world-space locations of all arrow indicators present for the current frame.
- * Must be called after update().
- */
-function getAllArrowWorldLocations(): DoubleCoords[] {
-	return [...getAllArrows(), ...animatedArrows, ...hintArrows].map((a) => a.worldLocation);
-}
-
 /**
  * Whether the piece arrows should be calculated and rendered this frame.
  * Excludes move hint arrows--those are always active so long as we're zoomed in enough.
  */
-function areArrowsActiveThisFrame(): boolean {
+function areArrowsActiveThisFrame(board: LiveBoard): boolean {
 	// false if the arrows are off, or if the board is too zoomed out
-	return mode !== 0 && arrowscalculator.areZoomedInEnoughForArrows();
+	return board.arrows.mode !== 0 && arrowscalculator.areZoomedInEnoughForArrows(board);
 }
 
 // Frame lifecycle -------------------------------------------------------------
-
-/**
- * Resets the arrows lists in prep for the next frame.
- */
-function reset(): void {
-	slideArrows = {};
-	animatedArrows = [];
-	hoveredArrows = [];
-	hintArrows = [];
-	arrowshifts.reset();
-}
 
 /**
  * Calculates what arrows should be visible this frame.
@@ -305,22 +221,27 @@ function reset(): void {
  * Needs to be done every frame, even if the mouse isn't moved,
  * since actions such as rewinding/forwarding may change them,
  * or board velocity.
+ * @param boundingBoxFloat - The exact bounding box of the board visible on screen.
+ * @param pointerWorlds - The world coordinates every existing pointer is over, for hovering.
  */
-function update(): void {
-	reset();
+function update(
+	board: LiveBoard,
+	boardsim: GameFile,
+	boundingBoxFloat: BoundingBoxBD,
+	pointerWorlds: DoubleCoords[],
+): void {
+	const state = board.arrows;
+	state.slideArrows = {};
+	state.animatedArrows = [];
+	state.hoveredArrows = [];
+	state.shifts.length = 0;
 
-	const result = arrowscalculator.calculateArrows(mode); // { active, slideArrows, hoveredArrows, hintArrows }
+	arrowscalculator.updateBoundingBoxes(board, boundingBoxFloat);
+	if (!areArrowsActiveThisFrame(board)) return; // Arrow indicators are off, nothing is visible.
 
-	if (result.hintArrows) hintArrows = result.hintArrows;
-
-	if (!result.active) {
-		// Arrow indicators are off, nothing is visible.
-		arrowlegalmovehighlights.reset(); // Also reset this
-		return;
-	}
-
-	hoveredArrows = result.hoveredArrows!;
-	slideArrows = result.slideArrows!;
+	const result = arrowscalculator.calculateArrows(board, boardsim, pointerWorlds);
+	state.slideArrows = result.slideArrows;
+	state.hoveredArrows = result.hoveredArrows;
 }
 
 // Exports ---------------------------------------------------------------------
@@ -329,19 +250,10 @@ export default {
 	// Constants
 	MAX_PIECES,
 	MAX_LINES,
-	// Mode management
-	getMode,
-	forceModeOff,
-	applyPreferredMode,
-	toggleArrows,
+	// State
+	createState,
 	// Getters
 	getAllArrows,
-	getSlideArrows,
-	getAnimatedArrows,
-	getHoveredArrows,
-	getHintArrows,
-	areHoveringAtleastOneArrow,
-	getAllArrowWorldLocations,
 	areArrowsActiveThisFrame,
 	// Frame lifecycle
 	update,

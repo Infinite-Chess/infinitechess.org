@@ -24,6 +24,7 @@ import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.j
 import space from '../../../board/rendering/space.js';
 import mouse from '../../mouse.js';
 import meshes from '../../../board/rendering/meshes.js';
+import camera from '../../../board/rendering/camera.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../../../board/rendering/boardpos.js';
@@ -110,7 +111,7 @@ type Intersection = {
 
 /** Returns the width of entity icons when zoomed out, in world-space units. */
 export function getEntityWidthWorld(): number {
-	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
+	return space.convertPixelsToWorldSpace_Virtual(camera, ENTITY_WIDTH_VPIXELS);
 }
 
 /** Returns all entities (pieces and squares highlights) under the given world coordinates. */
@@ -189,7 +190,7 @@ function getSnapContext(world: DoubleCoords): SnapContext | undefined {
 	const allLines: Line[] = getAllLinesSegmented(annotations.getRays(), drawrays.getPresetRays());
 	if (allLines.length === 0) return undefined; // No lines to snap to
 
-	const pointerCoords = space.convertWorldSpaceToCoords(world);
+	const pointerCoords = space.convertWorldSpaceToCoords(boardpos, world);
 
 	/** The minimum distance from a snap point, in world space, for our mouse to snap to it. */
 	const snapDistWorld: BigDecimal = bd.fromNumber(getEntityWidthWorld() / 2);
@@ -472,7 +473,7 @@ function findClosestEntityOfGroup(
 					continue; // Chebyshev distance isn't even within the threshold, the euclidean distance won't be either.
 				const euclidDist = vectors.euclideanDistanceBD(intersection, mouseCoords);
 				// Is the intersection point closer to the mouse than the previous closest snap?
-				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
+				// const intersectionWorld = space.convertCoordToWorldSpace(intersection, boardpos.getBoardPos(), boardpos.getBoardScale());
 				if (
 					closestEntitySnap === undefined ||
 					bd.compare(euclidDist, closestEntitySnap.dist) < 0
@@ -565,8 +566,16 @@ function render(): void {
 		// Render a single line between the snap point and its source
 		if (snap.source !== undefined) {
 			const [r, g, b, a] = SNAP_LINE_COLOR;
-			const start = space.convertCoordToWorldSpace(snap.source);
-			const end = space.convertCoordToWorldSpace(snap.coords);
+			const start = space.convertCoordToWorldSpace(
+				snap.source,
+				boardpos.getBoardPos(),
+				boardpos.getBoardScale(),
+			);
+			const end = space.convertCoordToWorldSpace(
+				snap.coords,
+				boardpos.getBoardPos(),
+				boardpos.getBoardScale(),
+			);
 			// prettier-ignore
 			const data = [
 				//   Vertex              Color
@@ -578,7 +587,11 @@ function render(): void {
 
 		// Next we render either the glow dot or the mini image of the piece.
 
-		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
+		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(
+			snap.coords,
+			boardpos.getBoardPos(),
+			boardpos.getBoardScale(),
+		);
 
 		if (snap.type === undefined) {
 			// Render glow dot
@@ -586,7 +599,7 @@ function render(): void {
 			const colorTransparent = jsutil.deepCopyObject(color);
 			colorTransparent[3] = 0;
 
-			const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
+			const radius = space.convertPixelsToWorldSpace_Virtual(camera, GLOW_DOT.RADIUS_PIXELS);
 			// prettier-ignore
 			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
 			createRenderable(data, 2, 'TRIANGLE_FAN', 'color', true).render();
@@ -601,7 +614,7 @@ function render(): void {
 function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
 	const dataGhost: number[] = [];
 
-	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords(camera);
 
 	const entityWorldWidth = getEntityWidthWorld();
 	const halfWidth = entityWorldWidth / 2;

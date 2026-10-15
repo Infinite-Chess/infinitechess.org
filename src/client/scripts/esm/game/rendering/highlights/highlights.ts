@@ -9,17 +9,13 @@
  */
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { Color } from '../../../../../../shared/types/color.js';
-
-import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 
 import boardpos from '../../../board/rendering/boardpos.js';
 import premoves from '../../chess/premoves.js';
+import gamescene from '../gamescene.js';
 import movehints from './movehints.js';
 import annotations from './annotations/annotations.js';
-import preferences from '../../../util/preferences.js';
-import checkhighlight from './checkhighlight.js';
-import squarerendering from './squarerendering.js';
+import positionhighlights from '../../../board/rendering/positionhighlights.js';
 import legalmovehighlights from './legalmovehighlights.js';
 import specialrighthighlights from './specialrighthighlights.js';
 
@@ -33,10 +29,9 @@ import specialrighthighlights from './specialrighthighlights.js';
  * Outline of highlights render box
  */
 function render(boardsim: Board): void {
+	positionhighlights.render(gamescene.getGameContext(), boardsim);
 	if (!boardpos.areZoomedOut()) {
 		// Zoomed in
-		highlightLastMove(boardsim);
-		checkhighlight.render(boardsim);
 		legalmovehighlights.render();
 		specialrighthighlights.render(); // Should be after legalmovehighlights.render(), since that updates model_Offset
 	}
@@ -44,19 +39,6 @@ function render(boardsim: Board): void {
 	// Needs to render EVEN if zoomed out (different mode)
 	annotations.render_belowPieces(); // The square highlights added by the user
 	movehints.render(); // Individual legal move hints when in check
-}
-
-/** Highlights the start and end squares of the most recently played move. */
-function highlightLastMove(boardsim: Board): void {
-	const lastMove = moveutil.getCurrentMove(boardsim);
-	if (!lastMove) return; // Don't render if last move is undefined.
-
-	const color: Color = preferences.getLastMoveHighlightColor();
-	const u_size: number = boardpos.getBoardScaleAsNumber();
-
-	squarerendering
-		.genModel([lastMove.startCoords, lastMove.endCoords], color)
-		.render(undefined, undefined, { u_size });
 }
 
 export default {

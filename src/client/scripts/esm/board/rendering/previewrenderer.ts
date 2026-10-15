@@ -25,6 +25,7 @@ import miniimagerenderer from './miniimagerenderer.js';
 import { createBoardPos } from './boardpos.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { createMaskedDraw } from '../../webgl/maskeddraw.js';
+import { createFrameTracker } from './frametracker.js';
 import { createTextureCache } from '../../chess/rendering/texturecache.js';
 
 // Constants -------------------------------------------------------------------
@@ -52,6 +53,7 @@ async function createContext(canvas: HTMLCanvasElement): Promise<RenderContext> 
 		boardpos: createBoardPos(camera),
 		textures: createTextureCache(),
 		maskedDraw: createMaskedDraw(gl, programManager),
+		frames: createFrameTracker(), // Nothing reads it: a preview draws only when told to.
 	});
 
 	await ctx.boardtiles.init();
@@ -76,7 +78,11 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 
 	const startBox = boardsim.startSnapshot.box;
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBox);
-	const centerArea = area.calculateFromUnpaddedBox(boxFloating, PREVIEW_ENTITY_WIDTH_VPIXELS, ctx.camera); // prettier-ignore
+	const centerArea = area.calculateFromUnpaddedBox(
+		ctx.camera,
+		boxFloating,
+		PREVIEW_ENTITY_WIDTH_VPIXELS,
+	);
 
 	ctx.boardpos.setBoardPos(centerArea.coords);
 	ctx.boardpos.setBoardScale(centerArea.scale);
@@ -101,7 +107,7 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 	) {
 		piecemodels.renderAll(ctx, mesh);
 	} else {
-		const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim);
+		const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim, []);
 		miniimagerenderer.render(ctx, boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
 	}
 }

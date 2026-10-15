@@ -17,6 +17,7 @@ import mouse from '../../../../game/mouse.js';
 import space from '../../../../board/rendering/space.js';
 import camera from '../../../../board/rendering/camera.js';
 import meshes from '../../../../board/rendering/meshes.js';
+import boardpos from '../../../../board/rendering/boardpos.js';
 import primitives from '../../../../board/rendering/primitives.js';
 import { createRenderable } from '../../../../board/rendering/renderable.js';
 
@@ -50,7 +51,7 @@ function outlineRankAndFile(): void {
 	if (!currentTile) return;
 
 	// The coordinates of the edges of the square
-	const { left, right, bottom, top } = meshes.getCoordBoxWorld(currentTile);
+	const { left, right, bottom, top } = meshes.getCoordBoxWorld(boardpos, currentTile);
 
 	const data: number[] = [];
 
@@ -106,8 +107,8 @@ function renderSelectionBoxWireframeDashed(worldBox: DoubleBoundingBox): void {
 	if (bounds.areBoxesDisjoint(clampedBox, screenBox)) return; // Box is off-screen -> not visible
 
 	// Convert virtual pixel dimensions to world space
-	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(DASHED_WIDTH);
-	const dashedLength = space.convertPixelsToWorldSpace_Virtual(DASHED_LENGTH);
+	const dashedWidth = space.convertPixelsToWorldSpace_Virtual(camera, DASHED_WIDTH);
+	const dashedLength = space.convertPixelsToWorldSpace_Virtual(camera, DASHED_LENGTH);
 
 	const data: number[] = primitives.DashedRect(
 		clampedBox.left,
@@ -148,7 +149,7 @@ function renderSelectionBoxFill(worldBox: DoubleBoundingBox): void {
  */
 function renderCornerSquare(worldBox: DoubleBoundingBox): void {
 	// Convert width to world space
-	const widthWorld = space.convertPixelsToWorldSpace_Virtual(CORNER_DOT_WIDTH);
+	const widthWorld = space.convertPixelsToWorldSpace_Virtual(camera, CORNER_DOT_WIDTH);
 
 	// Bottom right corner world space
 	const corner: DoubleCoords = [worldBox.right, worldBox.bottom];
