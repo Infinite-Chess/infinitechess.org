@@ -6,8 +6,8 @@
  * Usage:
  *   npx tsx scripts/find-hardcoded-strings.ts <page>     e.g. game, analysis, index
  *
- * Reads src/server/views/<page>.njk and every template it imports or includes, reporting text and
- * user-facing attributes that aren't template expressions. Then bundles every script those
+ * Reads src/server/views/<page>.njk and every template it imports or includes, reporting its text,
+ * user-facing attributes, and prose inside its tags and expressions. Then bundles every script those
  * templates load, exactly as the build does, and reports each prose-looking string literal in
  * every first-party module the bundle ships — including shared/ ones far from the page.
  *
@@ -27,7 +27,10 @@ import srcgraph from './modules/srcgraph.js';
 const VIEWS_DIR = 'src/server/views';
 
 /** Attributes whose value a user reads. */
-const TEXT_ATTRIBUTES = ['title', 'placeholder', 'data-tooltip', 'aria-label', 'alt'];
+const TEXT_ATTRIBUTES = ['title', 'placeholder', 'data-tooltip', 'aria-label', 'alt', 'value'];
+
+/** A Nunjucks comment, tag or expression: `{# … #}`, `{% … %}` or `{{ … }}`. */
+const NUNJUCKS_SYNTAX = /\{#[\s\S]*?#\}|\{%[\s\S]*?%\}|\{\{[\s\S]*?\}\}/g;
 
 /** Callees whose string arguments are never shown: logging, errors, DOM lookups, event names. */
 const SILENT_CALLEE = /^(console\.\w+|logEvents?\.\w+|Error)$|\.(getElementById|querySelector(All)?|closest|addEventListener|removeEventListener|dispatch|getAttribute|removeAttribute|hasAttribute)$/; // prettier-ignore
@@ -68,18 +71,29 @@ function collectTemplates(entry: string): string[] {
 	return [...seen];
 }
 
-/** Prints the template's hardcoded text nodes and user-facing attribute values. */
+/**
+ * Prints the template's hardcoded text nodes, user-facing attribute values, and prose-looking
+ * string literals inside its tags and expressions.
+ */
 function sweepTemplate(name: string): void {
-	const original = fs.readFileSync(path.join(VIEWS_DIR, name), 'utf8');
+	const file = `${VIEWS_DIR}/${name}`;
+	const original = fs.readFileSync(file, 'utf8');
 	const src = stripTemplateSyntax(original);
 	const lineOf = (index: number): number => original.slice(0, index).split('\n').length;
-	const attrs = new RegExp(`\\b(?:${TEXT_ATTRIBUTES.join('|')})="([^"]*)"`, 'g');
+	const attrs = new RegExp(`\\b(?:${TEXT_ATTRIBUTES.join('|')})=(?:"([^"]*)"|'([^']*)')`, 'g');
 
 	for (const m of src.matchAll(/>([^<>]+)</g)) {
-		if (/[A-Za-z]{2,}/.test(m[1]!)) report(`${VIEWS_DIR}/${name}`, lineOf(m.index!), m[1]!);
+		if (/[A-Za-z]{2,}/.test(m[1]!)) report(file, lineOf(m.index!), m[1]!);
 	}
 	for (const m of src.matchAll(attrs)) {
-		if (/[A-Za-z]{2,}/.test(m[1]!)) report(`${VIEWS_DIR}/${name}`, lineOf(m.index!), m[0]);
+		if (/[A-Za-z]{2,}/.test(m[1] ?? m[2]!)) report(file, lineOf(m.index!), m[0]);
+	}
+	for (const tag of original.matchAll(NUNJUCKS_SYNTAX)) {
+		if (tag[0].startsWith('{#')) continue;
+		for (const m of tag[0].matchAll(/'([^']*)'|"([^"]*)"/g)) {
+			const text = m[1] ?? m[2]!;
+			if (PROSE.test(text)) report(file, lineOf(tag.index! + m.index!), text);
+		}
 	}
 }
 
@@ -89,7 +103,8 @@ function sweepTemplate(name: string): void {
  */
 function stripTemplateSyntax(src: string): string {
 	const blank = (s: string): string => s.replace(/[^\n]/g, ' ');
-	return src.replace(/\{#[\s\S]*?#\}|\{%[\s\S]*?%\}|\{\{[\s\S]*?\}\}|<(script|style|svg)\b[\s\S]*?<\/\1>/g, blank); // prettier-ignore
+	const syntax = new RegExp(String.raw`${NUNJUCKS_SYNTAX.source}|<(script|style|svg)\b[\s\S]*?<\/\1>`, 'g'); // prettier-ignore
+	return src.replace(syntax, blank);
 }
 
 /** Every client script the templates load through the asset manifest. */
