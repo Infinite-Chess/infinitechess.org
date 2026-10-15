@@ -171,6 +171,11 @@ function onCatchLoadingError(err: Error): void {
 	GameBus.dispatch('load-ended');
 }
 
+/** Shows a toast asking the user to wait for the game to finish loading. */
+function showPleaseWait(): void {
+	toast.show(t.gamegui.please_wait, { durationMultiplier: 0.5 });
+}
+
 /**
  * Concludes the game if it's over — whether it loaded that way, or a conclusion arrived mid-load
  * (gameslot.concludeGame() defers to here while loading). Call only AFTER the load has fully
@@ -202,5 +207,6 @@ export default {
 	setSessionGame,
 	markLoading,
 	loadGame,
+	showPleaseWait,
 	concludeGameIfOver,
 };

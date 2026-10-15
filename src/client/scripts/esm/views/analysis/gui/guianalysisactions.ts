@@ -134,7 +134,7 @@ function exportCurrentPosition(): { icn: string; variantOptions: VariantOptions 
 
 /** Hands the current position off to the board editor and navigates there. */
 async function openCurrentPositionInEditor(): Promise<void> {
-	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
 	const position = exportCurrentPosition();
 	if (!position) return;
 
@@ -144,7 +144,7 @@ async function openCurrentPositionInEditor(): Promise<void> {
 
 /** Copies the whole game's ICN to the clipboard. */
 async function exportIcnToClipboard(): Promise<void> {
-	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 	if (await docutil.copyToClipboard(getGameICN(gamefile))) {
@@ -156,7 +156,7 @@ async function exportIcnToClipboard(): Promise<void> {
 
 /** Opens the "Continue from here" sub-menu, provided the position can be exported. */
 function openContinueFromHereChoice(): void {
-	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
 	if (!exportCurrentPosition()) return;
 
 	element_ContinueChoiceMenu.classList.remove('hidden');
@@ -169,7 +169,7 @@ function openContinueFromHereChoice(): void {
  * any position errors surface there via the modal's own validation.
  */
 async function continueFromHereInLobby(mode: ModalMode): Promise<void> {
-	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
 	const position = exportCurrentPosition();
 	if (!position) return;
 

@@ -121,6 +121,7 @@ export interface ScriptTranslations {
 	gamegui: {
 		invalid_coords: string;
 		load_failed: string;
+		please_wait: string;
 		icons: {
 			on: string;
 			off: string;

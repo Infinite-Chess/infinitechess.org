@@ -47,13 +47,8 @@ let pauseStart: number | undefined;
 
 // Functions -------------------------------------------------------------------
 
+/** Shows a toast with the given text, replacing any toast already shown. */
 function show(text: string, options: ToastOptions = {}): void {
-	// Safety net in case `text` was provided by an undefined translation of the `any` type:
-	if (typeof text !== 'string') {
-		console.warn('Unable to show toast: Not a string.');
-		return;
-	}
-
 	const { error = false, durationMultiplier = 1 } = options;
 	const duration = (DURATION_BASE + text.length * DURATION_PER_CHAR) * durationMultiplier;
 
@@ -105,14 +100,8 @@ toastEl.addEventListener('mouseleave', () => {
 });
 closeBtn.addEventListener('click', dismiss);
 
-/** Shows a toast message stating to please wait to perform this task. */
-function showPleaseWaitForTask(): void {
-	show(translations.please_wait, { durationMultiplier: 0.5 });
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	show,
-	showPleaseWaitForTask,
 };

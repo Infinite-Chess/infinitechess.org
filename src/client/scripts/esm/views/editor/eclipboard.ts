@@ -7,7 +7,6 @@
  * selection tool transformations or the game notation actions.
  */
 
-import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
 import eactions from './actions/eactions.js';
 import gamesession from '../../game/chess/gamesession.js';
@@ -59,7 +58,7 @@ function onCut(): void {
 /** Custom Board Editor handler for the Paste event. */
 function onPaste(): void {
 	if (document.activeElement instanceof HTMLInputElement) return; // Don't paste if the user is typing in an input field
-	if (gamesession.isLoading()) return toast.showPleaseWaitForTask();
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
 		eactions.paste(); // Paste game notation from the clipboard

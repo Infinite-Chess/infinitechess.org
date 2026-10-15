@@ -27,6 +27,7 @@ spectators = "Spectators"
 [script]
 invalid_coords = "Invalid coordinate format. Please enter integers or e-notation (e.g., 1.23e4)."
 load_failed = "An error occurred while loading the game. Please refresh."
+please_wait = "Please wait a moment to perform this task." # Shown when an action is tried while the game is still loading.
 
 [script.icons] # The clickable piece icons shown when zoomed far out
 on = "Toggled on icon rendering."

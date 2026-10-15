@@ -363,7 +363,6 @@ move_counter = "Move:"
 constructing_mesh = "Constructing mesh"
 rotating_mesh = "Rotating mesh"
 lost_connection = "Lost connection."
-please_wait = "Please wait a moment to perform this task."
 bigints_unsupported = "BigInts are not supported. Please upgrade your browser.\nBigInts are needed to make the board infinite."
 # Checkmate Practice
 versus = "vs"
