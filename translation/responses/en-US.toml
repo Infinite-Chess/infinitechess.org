@@ -36,6 +36,9 @@ game_aborted = "Game aborted."
 you_cheated = "Oops! You played something illegal. Game has been aborted. If this was a mistake, please report this bug!"
 opponent_cheated = "We caught your opponent playing something illegal. Game has been aborted."
 cheat_detected = "An illegal move was detected. Game has been aborted." # Sent to spectators
+illegal_move = "Oops! That was an illegal move. If this is a bug, please report it!"
+move_too_far = "Move not accepted. Distance exceeds allowed limit for game duration."
+logging_failed = "A server error occurred while logging this game. It won't be available in your game history."
 
 [editor_saves] # Short reasons for why loading/saving a position failed
 must_be_signed_in = "You must be signed in."

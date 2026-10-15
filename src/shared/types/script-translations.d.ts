@@ -45,6 +45,98 @@ export interface ScriptTranslations {
 			reset_link_text: string;
 		};
 	};
+	game: {
+		your_move: string;
+		superseded: string;
+		disconnect: {
+			claim_in_one: string;
+			claim_in_other: string;
+			claimable: string;
+			self_disconnected: string;
+			self_reconnected: string;
+		};
+		chat: {
+			errors: {
+				window: string;
+				duplicate: string;
+				disconnected: string;
+			};
+			report: {
+				confirm: string;
+				sent: string;
+				failed: string;
+				reasons: {
+					harassment: string;
+					threats: string;
+					sexual: string;
+					scam: string;
+					'child-safety': string;
+					other: string;
+				};
+			};
+			notices: {
+				'draw-declined': string;
+				'draw-accepted': string;
+				'rematch-accepted': string;
+				'cheat-detected': string;
+				'draw-offered': {
+					self: string;
+					other: string;
+				};
+				'rematch-offered': {
+					self: string;
+					other: string;
+				};
+				'disconnect-voluntary': {
+					self: string;
+					other: string;
+				};
+				'disconnect-involuntary': {
+					self: string;
+					other: string;
+				};
+				reconnected: {
+					self: string;
+					other: string;
+				};
+				'postgame-left': {
+					self: string;
+					other: string;
+				};
+				'postgame-returned': {
+					self: string;
+					other: string;
+				};
+				'account-closed': {
+					self: string;
+					other: string;
+				};
+				'account-terminated': {
+					self: string;
+					other: string;
+				};
+			};
+		};
+	};
+	gamegui: {
+		invalid_coords: string;
+		load_failed: string;
+		icons: {
+			on: string;
+			off: string;
+		};
+		engine: {
+			load_failed: string;
+			resigned: string;
+			illegal_move: string;
+		};
+		arrows: {
+			off: string;
+			defense: string;
+			all: string;
+			hippogonals: string;
+		};
+	};
 	header: {
 		settings: {
 			appearance_dropdown: {
@@ -108,6 +200,9 @@ export interface ScriptTranslations {
 			you_cheated: string;
 			opponent_cheated: string;
 			cheat_detected: string;
+			illegal_move: string;
+			move_too_far: string;
+			logging_failed: string;
 		};
 		editor_saves: {
 			must_be_signed_in: string;
@@ -120,6 +215,7 @@ export interface ScriptTranslations {
 		errors: {
 			fallback: string;
 			network: string;
+			webgl_unsupported: string;
 		};
 		account: {
 			username_short: string;
@@ -133,6 +229,8 @@ export interface ScriptTranslations {
 		user_status: {
 			guest_indicator: string;
 			you_indicator: string;
+			deleted_indicator: string;
+			engine_level: string;
 		};
 		variant_selector: {
 			label: string;
@@ -226,6 +324,10 @@ export interface ScriptTranslations {
 			yellow: string;
 			green: string;
 			neutral: string;
+		};
+		engines: {
+			apeiron: string;
+			engineCheckmatePractice: string;
 		};
 		seek: {
 			owner_side_white: string;

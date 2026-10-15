@@ -17,16 +17,12 @@
 import type { DisconnectInfo } from '../../../../../../shared/transport/clientbound.js';
 
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
+import interpolate from '../../../../../../shared/util/interpolate.js';
 
 import gameslot from '../../../game/chess/gameslot.js';
 import { GameBus } from '../../../board/GameBus.js';
 import { SocketBus } from '../../../socket/SocketBus.js';
 import socketintents from '../../../socket/socketintents.js';
-
-// Constants -------------------------------------------------------------------
-
-/** How long the "Reconnected." confirmation lingers before the notice hides itself. */
-const RECONNECTED_LINGER_MS = 2000;
 
 // Elements --------------------------------------------------------------------
 
@@ -38,6 +34,11 @@ const element_ClaimVictory = document.getElementById(
 	'btn-claim-victory',
 ) as HTMLButtonElement | null;
 const element_ClaimDraw = document.getElementById('btn-claim-draw') as HTMLButtonElement | null;
+
+// Constants -------------------------------------------------------------------
+
+/** How long the "Reconnected." confirmation lingers before the notice hides itself. */
+const RECONNECTED_LINGER_MS = 2000;
 
 // State -----------------------------------------------------------------------
 
@@ -82,7 +83,9 @@ function onOpponentReturn(): void {
 function render(): void {
 	if (!element_DisconnectText || claimableAt === undefined) return;
 
-	const lead = voluntary ? 'Opponent disconnected.' : 'Opponent lost connection.';
+	const notice = voluntary ? 'disconnect-voluntary' : 'disconnect-involuntary';
+	const lead = t.game.chat.notices[notice].other;
+	const strings = t.game.disconnect;
 
 	// Before the game is resignable there's no victory/draw to claim — just inform.
 	const gamefile = gameslot.getGamefile();
@@ -90,11 +93,13 @@ function render(): void {
 	if (gamefile && moveutil.isGameResignable(gamefile)) {
 		const secsRemaining = Math.ceil((claimableAt - Date.now()) / 1000);
 		if (secsRemaining > 0) {
-			const unit = secsRemaining === 1 ? 'second' : 'seconds';
-			element_DisconnectText.textContent = `${lead} You can claim victory in ${secsRemaining} ${unit}.`;
+			const template = secsRemaining === 1 ? strings.claim_in_one : strings.claim_in_other;
+			element_DisconnectText.textContent = interpolate.interpolate(template, { lead, n: secsRemaining }); // prettier-ignore
 			element_DisconnectButtons?.classList.add('hidden');
 		} else {
-			element_DisconnectText.textContent = `${lead} You may claim victory, call a draw, or wait.`;
+			element_DisconnectText.textContent = interpolate.interpolate(strings.claimable, {
+				lead,
+			});
 			element_DisconnectButtons?.classList.remove('hidden');
 		}
 	} else {
@@ -142,7 +147,7 @@ function onSelfDisconnect(): void {
 	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
 	clearTimeout(reconnectedTimeoutID); // A fresh drop overrides a lingering "Reconnected."
 	reconnectedTimeoutID = undefined;
-	element_SelfDisconnectStatus.textContent = 'You have disconnected.';
+	element_SelfDisconnectStatus.textContent = t.game.disconnect.self_disconnected;
 	element_SelfDisconnectStatus.classList.remove('reconnected');
 	element_SelfDisconnectStatus.classList.remove('hidden');
 }
@@ -156,7 +161,7 @@ function onSelfReturn(): void {
 	if (!element_SelfDisconnectStatus) return; // Memory-evicted game: block absent.
 	// Also fires on the page-load sync and on desync recoveries, where we never dropped.
 	if (element_SelfDisconnectStatus.classList.contains('hidden')) return;
-	element_SelfDisconnectStatus.textContent = 'Reconnected.';
+	element_SelfDisconnectStatus.textContent = t.game.disconnect.self_reconnected;
 	element_SelfDisconnectStatus.classList.add('reconnected');
 	clearTimeout(reconnectedTimeoutID);
 	reconnectedTimeoutID = window.setTimeout(() => {

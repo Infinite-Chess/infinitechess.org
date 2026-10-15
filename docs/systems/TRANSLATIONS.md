@@ -188,6 +188,9 @@ Re-run `npm run generate:types` whenever you add a script-facing key.
     ```
 4. Run `npm run generate:types` so `t.<component>` becomes typed in client scripts.
 5. Restart the server (the loader runs once at boot — TOML changes require a restart).
+6. To check nothing was missed, temporarily set `PSEUDO_LOC = true` in
+   [componentTranslationLoader.ts](/src/server/config/componentTranslationLoader.ts): every
+   translated string renders wrapped in `⟦…⟧`, so any plain text left on the page is hardcoded.
 
 ## Fallback / missing-key semantics — quick reference
 

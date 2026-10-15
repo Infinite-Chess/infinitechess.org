@@ -11,6 +11,8 @@
 {% block head %}
 {# SSR→client channel: the game to auto-load, the side to view it from, and the engine's assets. #}
 <script>window.analysisPageData = {{ analysisPageData | json | safe }};</script>
+{# Ship the gamegui [script] strings to the browser, preserving window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { gamegui: {{ scriptT('gamegui') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
@@ -18,6 +20,8 @@
 {% from "components/gamegui.njk" import boardControls, gameMeta, playerBar, material, movesNav, movesTable, boardCanvas %}
 {% from "components/variantselector.njk" import variantSelector %}
 {% set tsIndex = scriptT('index') %}
+{% set tGamegui = templateT('gamegui') %}
+{% set tsGamegui = scriptT('gamegui') %}
 
 {# Shared codes-and-labels translations (variants, groups, modifiers, selector labels) #}
 {% set s = scriptT('shared') %}
@@ -63,10 +67,10 @@
 	{# ── Left side bar ─────────────────────────────────────────────────── #}
 	<aside class="sidebar scrollbar-thin">
 
-		{{ boardControls() }}
+		{{ boardControls(tGamegui, tsGamegui) }}
 
 		{% if meta %}
-		{% call gameMeta(meta) %}{{ reviewStats(false) }}{% endcall %}
+		{% call gameMeta(meta, tGamegui, s) %}{{ reviewStats(false) }}{% endcall %}
 		{% else %}
 		{# Variant + modifiers picker #}
 		<div class="variant-setup panel">
@@ -135,7 +139,7 @@
 						<div class="engine-lines" id="engine-lines"></div>
 					</div>
 					{{ movesTable() }}
-					{% call movesNav() %}
+					{% call movesNav(tGamegui) %}
 						<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="More actions" aria-expanded="false">
 							<svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
 						</button>

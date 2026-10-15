@@ -21,7 +21,7 @@ import chatEntriesManager from '../database/chatEntriesManager.js';
 
 /** Schema for validating the body of POST /api/game/:id/chat-report. */
 const ReportBodySchema = z.strictObject({
-	reason: z.enum(chatReport.REPORT_REASONS.map((r) => r.code)),
+	reason: z.enum(chatReport.REPORT_REASONS),
 });
 
 // API Endpoints ---------------------------------------------------------------

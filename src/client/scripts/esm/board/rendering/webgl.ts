@@ -70,7 +70,7 @@ function createContext(canvasElement: HTMLCanvasElement): WebGL2RenderingContext
 	}); // Stencil required for masking world border stuff
 	if (!newContext) {
 		// WebGL2 not supported
-		alert(translations.webgl_unsupported);
+		alert(t.shared.errors.webgl_unsupported);
 		throw new Error('WebGL2 not supported by browser.');
 	}
 
@@ -261,6 +261,8 @@ function executeWithInverseBlending(func: () => void, glCtx: WebGL2RenderingCont
 // 	// 	});
 // 	// }
 // }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Context Creation

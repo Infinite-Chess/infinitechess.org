@@ -23,6 +23,7 @@ import { attributesModule, classModule, h, init } from 'snabbdom';
 
 import gameurl from '../../../../../shared/chess/util/gameurl.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
+import playername from '../../../../../shared/components/playername.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
 import variantregistry from '../../../../../shared/chess/variants/variantregistry.js';
@@ -156,7 +157,7 @@ const trackNewSeeks = (() => {
 				idsToAnimate.add(seek.id);
 				continue;
 			}
-			const name = seek.player.username;
+			const name = playername.resolve(seek.player, false, t.shared); // Every guest is "(Guest)", so they share one cooldown
 			if (recentUsers[name]) continue;
 			recentUsers[name] = true;
 			setTimeout(() => delete recentUsers[name], COOLDOWN_SECS * 1000);
@@ -422,19 +423,16 @@ function createSeekListVNode(seeks: LobbySeek[], newSeekIds: Set<number>): VNode
  * @param isNew - Whether this seek just appeared in the list (for animation).
  */
 function createSeekRowVNode(seek: LobbySeek, isNew: boolean): VNode {
-	const playerRating = createPlayerRatingVNode(seek.player.rating);
+	const playerRating = createPlayerRatingVNode(
+		seek.player.type === 'player' ? seek.player.rating : undefined,
+	);
 	const sideDot = createSideDotVNode(seek.color);
 	const variantCode = seek.variant.group === 'custom' ? null : seek.variant.code;
 	const variantName = variantregistry.getDisplayName(variantCode, t.shared);
 	const speedIcon = clockutil.getSpeedIconId(seek.time);
 	const speedCategory = clockutil.getSpeedCategory(seek.time);
 	const speedTitle = t.shared.speeds[speedCategory];
-	const displayName =
-		seek.player.type === 'guest'
-			? seek.isOurs
-				? t.shared.user_status.you_indicator
-				: t.shared.user_status.guest_indicator
-			: seek.player.username;
+	const displayName = playername.resolve(seek.player, seek.isOurs, t.shared);
 
 	return h(
 		'div.seek-row',

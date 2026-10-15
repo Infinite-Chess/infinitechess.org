@@ -14,15 +14,6 @@ import socketsend from '../../../socket/socketsend.js';
 import pingmanager from '../pingmanager.js';
 import socketintents from '../../../socket/socketintents.js';
 
-// Constants -------------------------------------------------------------------
-
-/** The error shown above the input for each reason a send is refused. */
-const ERROR_TEXTS: Record<ChatRejection | 'disconnected', string> = {
-	window: 'Slow down, too many messages.',
-	duplicate: 'You just said that.',
-	disconnected: 'You are disconnected.',
-};
-
 // Elements --------------------------------------------------------------------
 
 // Every element here may be absent. SSR omits the whole panel for anyone who isn't a
@@ -76,7 +67,7 @@ function append(entry: ChatEntry): void {
 	if (entry.index !== renderedCount) return; // Already held, or past a gap we haven't filled.
 	renderedCount++;
 
-	const parts = chatentry.toParts(entry, window.gamePageData.role, window.gamePageData.playerNames); // prettier-ignore
+	const parts = chatentry.toParts(entry, window.gamePageData.role, window.gamePageData.playerNames, t.game); // prettier-ignore
 	const div = document.createElement('div');
 	div.className = parts.cssClass;
 	// A notice has no sender. Everything goes on as text — never `innerHTML`, since it's user input.
@@ -165,7 +156,7 @@ function submit(): void {
 /** Shows why the send was refused, above the input. It hides itself after the rate-limit window. */
 function showError(reason: ChatRejection | 'disconnected'): void {
 	if (!element_ChatError) return;
-	element_ChatError.textContent = ERROR_TEXTS[reason];
+	element_ChatError.textContent = t.game.chat.errors[reason];
 	element_ChatError.classList.remove('hidden');
 	clearTimeout(errorTimeoutID); // A fresh refusal restarts the wait.
 	errorTimeoutID = window.setTimeout(() => hideError(), chatlimits.WINDOW_MS);

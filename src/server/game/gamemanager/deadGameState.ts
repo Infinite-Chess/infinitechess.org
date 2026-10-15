@@ -18,7 +18,7 @@ import type {
 	DeadGameState,
 	EngineGamePageInfo,
 	GameStateCore,
-	ServerUsernameContainer,
+	Participant,
 	StaticGameState,
 } from '../../../shared/transport/domain.js';
 
@@ -26,7 +26,6 @@ import timeutil from '../../../shared/util/timeutil.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
 import { players } from '../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
-import engineregistry from '../../../shared/chess/util/engineregistry.js';
 
 import gamesManager from '../../database/gamesManager.js';
 import memberManager from '../../database/memberManager.js';
@@ -41,13 +40,9 @@ type EngineParticipant = {
 	color: Player;
 	engine: ValidEngine;
 	strengthLevel: number;
-	container: ServerUsernameContainer;
 };
 
 // Constants -------------------------------------------------------------------
-
-/** Display name for a player whose account was deleted (their `player_games` row remains, but no `members` row). */
-const DELETED_USER_DISPLAY_NAME = '(Deleted User)';
 
 /** The `games` columns needed to assemble a {@link GameStateCore}. */
 const STATIC_GAME_COLUMNS = ['variant', 'rated', 'date', 'base_time_seconds', 'increment_seconds', 'result', 'termination', 'mod_slide_limit'] as const; // prettier-ignore
@@ -144,13 +139,6 @@ function getEngineParticipant(game_id: number): EngineParticipant | undefined {
 		color: row.player_number as Player,
 		engine: row.engine as ValidEngine,
 		strengthLevel: row.strength_level,
-		container: {
-			type: 'engine',
-			username: engineregistry.getFormattedName(
-				row.engine as ValidEngine,
-				row.strength_level,
-			),
-		},
 	};
 }
 
@@ -182,38 +170,36 @@ function assembleStaticGameState(
 	playerRows: Pick<PlayerGamesRecord, (typeof STATIC_PLAYER_COLUMNS)[number]>[],
 	engineParticipant: EngineParticipant | undefined,
 ): StaticGameState {
-	/** Per-color username container; a color absent from `playerRows` -> guest. */
-	const playerContainers: PlayerGroup<ServerUsernameContainer> = {};
+	/** Per-color participant; a color absent from `playerRows` -> guest. */
+	const participants: PlayerGroup<Participant> = {};
 	for (const color of [players.WHITE, players.BLACK]) {
 		if (engineParticipant?.color === color) {
-			playerContainers[color] = engineParticipant.container;
+			const { engine, strengthLevel } = engineParticipant;
+			participants[color] = { type: 'engine', engine, strengthLevel };
 			continue;
 		}
 		const row = playerRows.find((r) => r.player_number === color);
 		if (row === undefined) {
 			// No row -> this color was a guest.
-			playerContainers[color] = {
-				type: 'guest',
-				username: metadatautil.GUEST_NAME_ICN_METADATA,
-			};
+			participants[color] = { type: 'guest' };
 			continue;
 		}
 
+		const rating =
+			row.elo_at_game !== null
+				? ratingCalculation.toRating(row.elo_at_game, row.rating_deviation_at_game)
+				: undefined;
 		// A deleted account keeps its row but loses its members lookup.
 		const member = memberManager.getDataByCriteria(['username'], 'user_id', row.user_id);
-		const container: ServerUsernameContainer = {
-			type: 'player',
-			username: member?.username ?? DELETED_USER_DISPLAY_NAME,
-		};
-		if (row.elo_at_game !== null)
-			container.rating = ratingCalculation.toRating(row.elo_at_game, row.rating_deviation_at_game); // prettier-ignore
-		playerContainers[color] = container;
+		participants[color] = member
+			? { type: 'player', username: member.username, rating }
+			: { type: 'deleted', rating };
 	}
 
 	return {
 		...assembleGameStateCore(game),
 		rated: Boolean(game.rated),
-		players: playerContainers,
+		players: participants,
 	};
 }
 

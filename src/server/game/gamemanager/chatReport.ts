@@ -4,8 +4,7 @@
  * Renders a report of a game chat: the reason list the whole system is built from, and
  * the log line and email one report becomes.
  *
- * The only place a report becomes words — edit the wording here. Nothing is stored:
- * the log line is the tally, and the inbox is the queue.
+ * Nothing is stored: the log line is the tally, and the inbox is the queue.
  */
 
 import type { ResolvedGameState } from './gameManager.js';
@@ -20,6 +19,7 @@ import timeutil from '../../../shared/util/timeutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import chatentry from '../../../shared/components/chatentry.js';
 import clockutil from '../../../shared/chess/util/clockutil.js';
+import playername from '../../../shared/components/playername.js';
 
 import tconfig from '../../config/translationConfig.js';
 import urlUtils from '../../utility/urlUtils.js';
@@ -37,7 +37,7 @@ import componentTranslationLoader from '../../config/componentTranslationLoader.
 // Types -----------------------------------------------------------------------
 
 /** A reason a chat may be reported for, as it travels the wire. */
-type ReportReasonCode = (typeof REPORT_REASONS)[number]['code'];
+type ReportReasonCode = (typeof REPORT_REASONS)[number];
 
 /** Everything one report is made of, gathered at the trust boundary before it comes in. */
 interface ChatReport {
@@ -68,17 +68,10 @@ interface ReportView extends AlertView {
 // Constants -------------------------------------------------------------------
 
 /**
- * Every reason the flag's menu offers, in the order it lists them. The single source of
- * both — the code rides the wire, the label heads the email — so neither can drift.
+ * Every reason the flag's menu offers, in the order it lists them.
+ * Each code's label is `t.game.chat.report.reasons[code]`, which also titles the email.
  */
-const REPORT_REASONS = [
-	{ code: 'harassment', label: 'Harassment or hate speech' },
-	{ code: 'threats', label: 'Threats or violence' },
-	{ code: 'sexual', label: 'Sexual content' },
-	{ code: 'scam', label: 'Scam or phishing' },
-	{ code: 'child-safety', label: 'Child safety' },
-	{ code: 'other', label: 'Other' },
-] as const;
+const REPORT_REASONS = ['harassment', 'threats', 'sexual', 'scam', 'child-safety', 'other'] as const satisfies readonly (keyof ScriptTranslations['game']['chat']['report']['reasons'])[]; // prettier-ignore
 
 // Submission ------------------------------------------------------------------
 
@@ -103,6 +96,7 @@ function buildView(report: ChatReport): ReportView {
 	const { reporterRole } = report;
 	// The report is read by Naviary alone, so it speaks the site's source language.
 	const sharedT = componentTranslationLoader.getScript('shared', tconfig.DEFAULT_LANGUAGE);
+	const gameT = componentTranslationLoader.getScript('game', tconfig.DEFAULT_LANGUAGE);
 
 	// Online games are strictly two-player, so the reported player is always the other one.
 	const reportedRole = typeutil.invertPlayer(reporterRole);
@@ -116,10 +110,10 @@ function buildView(report: ChatReport): ReportView {
 		{ heading: 'REPORTER', kind: 'rows', rows: buildPlayerRows(reporter, userIds[reporterRole], false) }, // prettier-ignore
 		{ heading: 'REPORTED PLAYER', kind: 'rows', rows: buildPlayerRows(reported, userIds[reportedRole], true) }, // prettier-ignore
 		{ heading: 'GAME', kind: 'rows', rows: buildGameRows(report, sharedT) },
-		{ heading: 'CHAT — as the reporter saw it', kind: 'mono', lines: buildTranscript(report, sharedT) }, // prettier-ignore
+		{ heading: 'CHAT — as the reporter saw it', kind: 'mono', lines: buildTranscript(report, sharedT, gameT) }, // prettier-ignore
 	];
 
-	const reason = REPORT_REASONS.find((r) => r.code === report.reason)!.label;
+	const reason = gameT.chat.report.reasons[report.reason];
 	return { title: `Chat Report: ${reason}`, reason, reporter, reported, sections };
 }
 
@@ -145,7 +139,7 @@ function describePlayer(
 	userIds: PlayerGroup<number>,
 	sharedT: ScriptTranslations['shared'],
 ): string {
-	const username = report.resolved.state.players[color]!.username;
+	const username = playername.resolve(report.resolved.state.players[color]!, false, sharedT);
 	const user_id = userIds[color];
 	const identity = user_id !== undefined ? `${username} (${user_id})` : username;
 	return `${identity} · ${sharedT.sides[typeutil.strcolors[color]]}`;
@@ -217,12 +211,16 @@ function isGamePrivate(report: ChatReport): boolean {
  * The chat from the reporter's point of view, so "You" throughout means the reporter.
  * Notices are kept: abuse usually follows a declined draw or a disconnect.
  */
-function buildTranscript(report: ChatReport, sharedT: ScriptTranslations['shared']): AlertLine[] {
+function buildTranscript(
+	report: ChatReport,
+	sharedT: ScriptTranslations['shared'],
+	gameT: ScriptTranslations['game'],
+): AlertLine[] {
 	const { reporterRole } = report;
 	const names = gameStateBuilder.resolvePlayerNames(report.resolved.state, reporterRole, sharedT);
 	return report.entries.map((record, i): AlertLine => {
 		const entry = chatEntryMapper.toEntry(record, i);
-		const parts = chatentry.toParts(entry, reporterRole, names);
+		const parts = chatentry.toParts(entry, reporterRole, names, gameT);
 		const time = format(record.sent_at, 'HH:mm:ss');
 		// Marked in the text itself, so the notice stands out in the `.txt` too.
 		if (parts.cssClass === 'chat-notice')

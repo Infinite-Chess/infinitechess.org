@@ -3,12 +3,11 @@
 /**
  * Turns one chat log entry into its display parts: the CSS class, the sender label,
  * and the line's text.
- *
- * TODO: Localize English strings here on the game page's localization pass.
  */
 
+import type { ChatEntry } from '../transport/clientbound.js';
+import type { ScriptTranslations } from '../types/script-translations.js';
 import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
-import type { ChatEntry, ChatNoticeCode } from '../transport/clientbound.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -27,33 +26,6 @@ export type ChatEntryParts =
 			body: string;
 	  };
 
-/** One sentence written twice: as the player it is about reads it, and as the other player does. */
-interface PerspectiveWordings {
-	self: string;
-	other: string;
-}
-
-// Constants -------------------------------------------------------------------
-
-/** Every notice code's English. A bare string reads the same for BOTH players, naming nobody. */
-const NOTICE_WORDINGS: Record<ChatNoticeCode, string | PerspectiveWordings> = {
-	'draw-offered': { self: 'You offered a draw.', other: 'Opponent offered a draw.' },
-	'draw-declined': 'Draw offer declined.',
-	'draw-accepted': 'Draw offer accepted.',
-	'rematch-offered': { self: 'You offered a rematch.', other: 'Opponent offered a rematch.' },
-	'rematch-accepted': 'Rematch accepted.',
-	'disconnect-voluntary': { self: 'You disconnected.', other: 'Opponent disconnected.' },
-	'disconnect-involuntary': { self: 'You lost connection.', other: 'Opponent lost connection.' },
-	reconnected: { self: 'You reconnected.', other: 'Opponent reconnected.' },
-	// Post-game wordings. Leaving once the game is over is normal, so these
-	// say nothing of a connection — they explain the Rematch button state.
-	'postgame-left': { self: 'You left.', other: 'Opponent left.' },
-	'postgame-returned': { self: 'You returned.', other: 'Opponent returned.' },
-	'cheat-detected': 'Illegal move detected. Game aborted.',
-	'account-closed': { self: 'You closed your account.', other: 'Opponent closed their account.' },
-	'account-terminated': { self: 'Your account was terminated.', other: "Opponent's account was terminated." }, // prettier-ignore
-};
-
 // Functions -------------------------------------------------------------------
 
 /**
@@ -61,11 +33,14 @@ const NOTICE_WORDINGS: Record<ChatNoticeCode, string | PerspectiveWordings> = {
  * @param readerRole - The viewer's color, deciding which side of a notice's wording they see.
  * @param playerNames - The display name of each color, resolved at render time so a renamed
  *   player's old messages carry their new name.
+ * @param gameT - The game page's translations, holding every notice's wording. A bare string
+ *   reads the same for BOTH players; a pair is worded for the player it's about, and the other.
  */
 function toParts(
 	entry: ChatEntry,
 	readerRole: Player | undefined,
 	playerNames: PlayerGroup<string>,
+	gameT: ScriptTranslations['game'],
 ): ChatEntryParts {
 	if (entry.kind === 'message') {
 		return {
@@ -74,7 +49,7 @@ function toParts(
 			body: entry.text,
 		};
 	} else {
-		const wording = NOTICE_WORDINGS[entry.code];
+		const wording = gameT.chat.notices[entry.code];
 		const body = typeof wording === 'string' ? wording : entry.player === readerRole ? wording.self : wording.other; // prettier-ignore
 		return { cssClass: 'chat-notice', body };
 	}

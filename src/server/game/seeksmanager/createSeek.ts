@@ -93,7 +93,7 @@ function getSeekFromWebsocketMessageContents(
 		rating = leaderboardsManager.getEloOfPlayer(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
-	const player = memberInfoUtil.buildServerUsernameContainer(owner, rating);
+	const player = memberInfoUtil.buildPublicIdentity(owner, rating);
 
 	// Invalid variant; error already sent to the client.
 	if (!validateVariant(ws, messageContents.variant, false, messageContents.modifiers)) return;

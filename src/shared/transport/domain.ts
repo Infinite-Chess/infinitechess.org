@@ -14,6 +14,7 @@
  * vocabulary it describes.
  */
 
+import type { Rating } from '../chess/util/metadatautil.js';
 import type { TimeControl } from '../chess/util/clockutil.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
 import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
@@ -34,14 +35,20 @@ import modutil, { GameModifier } from '../chess/util/modutil.js';
 export type GameMode = z.infer<typeof GameModeSchema>;
 const GameModeSchema = z.enum(['casual', 'rated']);
 
-/** The username container of an seek sent by the server. DIFFERENT FROM UsernameContainerProperties!!!! */
-export type ServerUsernameContainer = z.infer<typeof ServerUsernameContainerSchema>;
-const ServerUsernameContainerSchema = z.strictObject({
-	type: z.enum(['player', 'guest', 'engine']),
-	username: z.string(),
-	/** The rating of the user. Falls back to the INFINITY leaderboard. */
-	rating: metadatautil.RatingSchema.optional(),
-});
+/**
+ * A member or guest, as a seek or game shows them to others. Only a member carries a name:
+ * every other display name is derived per viewer, by `playername.ts`.
+ */
+export type PublicIdentity = z.infer<typeof PublicIdentitySchema>;
+const PublicIdentitySchema = z.discriminatedUnion('type', [
+	z.strictObject({
+		type: z.literal('player'),
+		username: z.string(),
+		/** The rating of the user. Falls back to the INFINITY leaderboard. */
+		rating: metadatautil.RatingSchema.optional(),
+	}),
+	z.strictObject({ type: z.literal('guest') }),
+]);
 
 // Game Helper Schemas ---------------------------------------------------------
 
@@ -78,11 +85,17 @@ export interface GameStateCore {
 	gameConclusion?: GameConclusion;
 }
 
+/** A game's participant: a {@link PublicIdentity}, a member whose account was since deleted, or an engine. */
+export type Participant =
+	| PublicIdentity
+	| { type: 'deleted'; rating?: Rating }
+	| { type: 'engine'; engine: ValidEngine; strengthLevel: number };
+
 /** A game's core state plus the display fields the SSR'd side bar renders. */
 export interface StaticGameState extends GameStateCore {
 	rated: boolean;
-	/** Per-color username container, with rating embedded per player. */
-	players: PlayerGroup<ServerUsernameContainer>;
+	/** Each color's participant, with their rating embedded. */
+	players: PlayerGroup<Participant>;
 }
 
 /**
@@ -104,7 +117,7 @@ export type BaseSeek = z.infer<typeof BaseSeekSchema>;
 const BaseSeekSchema = z.strictObject({
 	/** The id the game will have once the seek is accepted, reserved at creation. */
 	id: GameIDSchema,
-	player: ServerUsernameContainerSchema,
+	player: PublicIdentitySchema,
 	color: z.union([typeschemas.PlayerSchema, z.literal(null)]),
 	time: clockutil.TimeControlSchema,
 	mode: GameModeSchema,

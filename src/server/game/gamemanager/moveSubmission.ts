@@ -111,12 +111,7 @@ function submitMove(
 		// and resubmit it on every resync, desynced for the rest of the game.
 		gameSockets.sendGameState(servergame, role, 'full', true);
 		// Send toast-error last to override any previous toasts
-		socketSend.send(
-			ws,
-			'general',
-			'toast-error',
-			'Move not accepted. Distance exceeds allowed limit for game duration.',
-		);
+		socketSend.send(ws, 'general', 'toast-error', ws.t.responses.game.move_too_far);
 		return;
 	}
 
@@ -187,12 +182,7 @@ function applyServerValidatedMove(
 		// Send the sender the current game state to correct their board if a bug somehow caused this
 		gameSockets.sendGameState(servergame, role, 'full', true); // forceSync true to force their move list to match ours
 		// Send toast-error last to override any previous toasts
-		socketSend.send(
-			ws,
-			'general',
-			'toast-error',
-			'Oops! That was an illegal move. If this is a bug, please report it!',
-		);
+		socketSend.send(ws, 'general', 'toast-error', ws.t.responses.game.illegal_move);
 		return;
 	}
 

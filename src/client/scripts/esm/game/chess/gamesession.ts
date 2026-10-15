@@ -161,7 +161,7 @@ function centerView(): void {
 /** Displays an error toast saying the game failed to load, and discards the failed load. */
 function onCatchLoadingError(err: Error): void {
 	console.error('Error loading game: ', err);
-	toast.show('An error occurred while loading the game. Please refresh.', { error: true });
+	toast.show(t.gamegui.load_failed, { error: true });
 	// Discard the half-built game — loadLogical may have completed, leaving a gamefile the
 	// graphical half never gave a mesh. Clearing the flag lets a later load replace it,
 	// rather than wedging everything gated on isLoading() until a refresh.

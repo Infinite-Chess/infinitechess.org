@@ -285,7 +285,6 @@ export type TranslationKeys =
 	| 'play.javascript.rotating_mesh'
 	| 'play.javascript.lost_connection'
 	| 'play.javascript.please_wait'
-	| 'play.javascript.webgl_unsupported'
 	| 'play.javascript.bigints_unsupported'
 	| 'play.javascript.versus'
 	| 'play.javascript.easy'
@@ -796,7 +795,6 @@ export interface TranslationsObject {
 			rotating_mesh: string;
 			lost_connection: string;
 			please_wait: string;
-			webgl_unsupported: string;
 			bigints_unsupported: string;
 			versus: string;
 			easy: string;

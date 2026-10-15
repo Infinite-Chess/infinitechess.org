@@ -1,44 +1,45 @@
 {# An interactive board page's sidebar and canvas regions, one macro each, mirroring the client
    modules in src/client/scripts/esm/game/gui/ that drive them. Regions tagged "SSR-OWNED" are
    rendered from `meta` and must never be re-rendered by the client — it only writes live deltas
-   into them (clocks, `tempo`, `eloChange`). #}
+   into them (clocks, `tempo`, `eloChange`). Labels come from `t` (= templateT('gamegui')),
+   `ts` (= scriptT('gamegui')) and `s` (= scriptT('shared')). #}
 
 {% from "components/user.njk" import usernameEmbed %}
 {% from "components/seekproperties.njk" import seekProperties, seekRules %}
 
 {# Board-view navigation + view toggles. Managed by guiboardcontrols.ts #}
-{% macro boardControls() %}
+{% macro boardControls(t, ts) %}
 <div class="board-controls unselectable">
 	<div class="ctrl-row">
 		{# Board-view navigation #}
 		<div class="ctrl-group">
-			<button class="btn-bare icon-btn tooltip-d" id="btn-board-back" data-tooltip="Undo transition">
+			<button class="btn-bare icon-btn tooltip-d" id="btn-board-back" data-tooltip="{{ t.board_controls.undo_transition }}">
 				<svg><use href="#svg-board-back"/></svg>
 			</button>
-			<button class="btn-bare icon-btn tooltip-d" id="btn-board-expand" data-tooltip="Fit entire game">
+			<button class="btn-bare icon-btn tooltip-d" id="btn-board-expand" data-tooltip="{{ t.board_controls.fit_all }}">
 				<svg><use href="#svg-board-expand"/></svg>
 			</button>
-			<button class="btn-bare icon-btn tooltip-d" id="btn-board-recenter" data-tooltip="Recenter">
+			<button class="btn-bare icon-btn tooltip-d" id="btn-board-recenter" data-tooltip="{{ t.board_controls.recenter }}">
 				<svg><use href="#svg-board-recenter"/></svg>
 			</button>
 		</div>
 		{# Annotation tools - mobile only #}
 		<div class="ctrl-group mobile-only">
-			<button class="btn-bare icon-btn tooltip-d" id="btn-annotations" data-tooltip="Draw annotations">
+			<button class="btn-bare icon-btn tooltip-d" id="btn-annotations" data-tooltip="{{ t.board_controls.annotations }}">
 				<svg><use href="#svg-pencil"/></svg>
 			</button>
 			{# Erase / Collapse-rays share one slot (mutually exclusive) #}
-			<button class="btn-bare icon-btn tooltip-d" id="btn-erase" data-tooltip="Erase annotations">
+			<button class="btn-bare icon-btn tooltip-d" id="btn-erase" data-tooltip="{{ t.board_controls.erase }}">
 				<svg><use href="#svg-erase"/></svg>
 			</button>
-			<button class="btn-bare icon-btn tooltip-d hidden" id="btn-collapse" data-tooltip="Collapse rays">
+			<button class="btn-bare icon-btn tooltip-d hidden" id="btn-collapse" data-tooltip="{{ t.board_controls.collapse }}">
 				<svg><use href="#svg-collapse"/></svg>
 			</button>
 		</div>
 		{# View toggles #}
 		<div class="ctrl-group">
 			{# Arrow-indicators mode - cycles defense → all → all+hippogonals → off #}
-			<button class="btn-bare icon-btn tooltip-d" id="btn-arrows" data-tooltip="Arrow indicators: Defense (tab)">
+			<button class="btn-bare icon-btn tooltip-d" id="btn-arrows" data-tooltip="{{ ts.arrows.defense }}">
 				<svg>
 					<use href="#svg-arrows-off" class="hidden"/>
 					<use href="#svg-arrows-defense"/>
@@ -47,7 +48,7 @@
 				</svg>
 			</button>
 			{# Perspective - desktop-only #}
-			<button class="btn-bare icon-btn tooltip-d desktop-only" id="btn-perspective" data-tooltip="Toggle perspective view">
+			<button class="btn-bare icon-btn tooltip-d desktop-only" id="btn-perspective" data-tooltip="{{ t.board_controls.perspective }}">
 				<svg><use href="#svg-perspective"/></svg>
 			</button>
 		</div>
@@ -69,7 +70,7 @@
 
 {# Game metadata — all static information about a game. `spectators` renders the live
    spectator count. Called with `{% call %}`, the block's content closes the panel. #}
-{% macro gameMeta(meta, spectators=false) %}
+{% macro gameMeta(meta, t, s, spectators=false) %}
 <div class="game-meta panel">
 
 	{# Original seek's properties — SSR-OWNED. #}
@@ -81,7 +82,7 @@
 	<div class="meta-foot">
 		<time id="meta-started" data-created="{{ meta.timeCreated }}">{{ meta.startedAgo }}</time>
 		{% if spectators %}
-		<span class="meta-spectators hidden" title="Spectators">
+		<span class="meta-spectators hidden" title="{{ t.game_meta.spectators }}">
 			<svg class="meta-eye"><use href="#svg-eye"/></svg>
 			<span class="spectator-count unselectable"></span>
 		</span>
@@ -93,7 +94,7 @@
 		{% for color in [p.WHITE, p.BLACK] %}
 		{% set player = meta.players[color] %}
 		<div class="meta-player">
-			<span class="side-dot{{ ' black' if color == p.BLACK }}" title="{{ 'White' if color == p.WHITE else 'Black' }}"></span>
+			<span class="side-dot{{ ' black' if color == p.BLACK }}" title="{{ s.sides.white if color == p.WHITE else s.sides.black }}"></span>
 			{{ usernameEmbed(player.name, player.elo, player.eloDiff) }}
 		</div>
 		{% endfor %}
@@ -129,12 +130,12 @@
 
 {# Move-navigation buttons. Managed by guimoveslist.ts. Called with `{% call %}`, the block's
    content follows the buttons. #}
-{% macro movesNav() %}
+{% macro movesNav(t) %}
 <div class="moves-nav">
-	<button class="btn-bare move-btn" id="btn-move-first" title="Rewind to start" disabled><svg class="move-icon"><use href="#svg-move-first"/></svg></button>
-	<button class="btn-bare move-btn" id="btn-move-prev" title="Previous move" disabled><svg class="move-icon"><use href="#svg-move-prev"/></svg></button>
-	<button class="btn-bare move-btn" id="btn-move-next" title="Next move" disabled><svg class="move-icon"><use href="#svg-move-next"/></svg></button>
-	<button class="btn-bare move-btn" id="btn-move-last" title="Skip to latest" disabled><svg class="move-icon"><use href="#svg-move-last"/></svg></button>
+	<button class="btn-bare move-btn" id="btn-move-first" title="{{ t.moves_nav.first }}" disabled><svg class="move-icon"><use href="#svg-move-first"/></svg></button>
+	<button class="btn-bare move-btn" id="btn-move-prev" title="{{ t.moves_nav.previous }}" disabled><svg class="move-icon"><use href="#svg-move-prev"/></svg></button>
+	<button class="btn-bare move-btn" id="btn-move-next" title="{{ t.moves_nav.next }}" disabled><svg class="move-icon"><use href="#svg-move-next"/></svg></button>
+	<button class="btn-bare move-btn" id="btn-move-last" title="{{ t.moves_nav.last }}" disabled><svg class="move-icon"><use href="#svg-move-last"/></svg></button>
 	{% if caller %}{{ caller() }}{% endif %}
 </div>
 {% endmacro %}

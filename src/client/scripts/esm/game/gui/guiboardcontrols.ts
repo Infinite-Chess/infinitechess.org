@@ -52,15 +52,17 @@ const element_Recenter = document.getElementById('btn-board-recenter')!;
 const element_CoordsX = document.getElementById('coord-x') as HTMLInputElement;
 const element_CoordsY = document.getElementById('coord-y') as HTMLInputElement;
 
-// Tooltip shown on the arrows button for each mode, indexed by {@link arrows.getMode}. */
+// Constants -------------------------------------------------------------------
+
+/** Tooltip shown on the arrows button for each mode, indexed by {@link arrows.getMode}. */
 const ARROW_TOOLTIPS: { [mode in 0 | 1 | 2 | 3]: string } = {
-	0: 'Arrow indicators: Off (tab)',
-	1: 'Arrow indicators: Defense (tab)',
-	2: 'Arrow indicators: All (tab)',
-	3: 'Arrow indicators: All + Hippogonals (tab)',
+	0: t.gamegui.arrows.off,
+	1: t.gamegui.arrows.defense,
+	2: t.gamegui.arrows.all,
+	3: t.gamegui.arrows.hippogonals,
 };
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * Whether the annotations button is enabled.
@@ -113,6 +115,7 @@ function update_ArrowsButton(): void {
 
 // Annotation Tools ------------------------------------------------------------
 
+/** Toggles the annotations button, which makes left clicks draw like right clicks. */
 function callback_Annotations(): void {
 	annotationsEnabled = !annotationsEnabled;
 	listener_canvas.setTreatLeftasRight(annotationsEnabled);
@@ -124,6 +127,7 @@ function isAnnotationsButtonEnabled(): boolean {
 	return annotationsEnabled;
 }
 
+/** Erases every annotation, or collapses the drawn rays. */
 function callback_Collapse(): void {
 	annotations.Collapse();
 }
@@ -142,10 +146,12 @@ function hideCollapse(): void {
 
 // Board-View Navigation -------------------------------------------------------
 
+/** Undoes the last view transition. */
 function callback_Back(): void {
 	Transition.undoTransition();
 }
 
+/** Zooms out to fit every piece and square annotation. */
 function callback_Expand(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // Game not loaded yet
@@ -180,6 +186,7 @@ function callback_Expand(): void {
 	Transition.zoomToCoordsBox(definedBox);
 }
 
+/** Zooms to the starting position. */
 function callback_Recenter(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // Game not loaded yet
@@ -188,7 +195,7 @@ function callback_Recenter(): void {
 
 // Coordinate Fields -----------------------------------------------------------
 
-// Update the division on the screen displaying your current coordinates
+/** Updates the coordinate fields to the hovered square, or the board position. */
 function updateCoords(): void {
 	if (isCoordinateActive()) return; // Don't update the coordinates if the user is editing them
 
@@ -299,6 +306,7 @@ function callback_CoordsYChange(): void {
 	callback_CoordsChange(1);
 }
 
+/** Teleports the board to the coordinate entered in one field, or toasts why it can't. */
 function callback_CoordsChange(index: 0 | 1): void {
 	const target: HTMLInputElement = index === 0 ? element_CoordsX : element_CoordsY;
 
@@ -311,10 +319,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 		proposed = parseStringToBigInt(target.value);
 	} catch (_e) {
 		console.log(`Entered: ${target.value}`);
-		toast.show(
-			'Invalid coordinate format. Please enter integers or e-notation (e.g., 1.23e4).',
-			{ error: true },
-		);
+		toast.show(t.gamegui.invalid_coords, { error: true });
 		return;
 	}
 

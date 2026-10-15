@@ -45,7 +45,7 @@ interface GamePageState {
 	chat?: {
 		/** The whole log, already rendered into its display parts. */
 		entries: ChatEntryParts[];
-		/** The report flag's menu rows. Written once in `chatReport.ts`, looped here. */
+		/** The report flag's menu rows, as reason codes. Written once in `chatReport.ts`, looped here. */
 		reportReasons: typeof chatReport.REPORT_REASONS;
 		/** The chat input's attributes. Absent when the game can no longer be chatted in. */
 		input?: {
@@ -136,7 +136,7 @@ function getPageState(req: Request): GamePageState | undefined {
 		chat:
 			role !== undefined && engineGame === undefined
 				? {
-						entries: renderChatLog(id, role, playerNames),
+						entries: renderChatLog(id, role, playerNames, req),
 						reportReasons: chatReport.REPORT_REASONS,
 						// Only a live game can still be typed in, and only there is `private` knowable.
 						input: game
@@ -202,10 +202,11 @@ function renderChatLog(
 	id: number,
 	role: Player,
 	playerNames: PlayerGroup<string>,
+	req: Request,
 ): ChatEntryParts[] {
 	return chatEntriesManager.getOfGame(id).map((record, i) => {
 		const entry = chatEntryMapper.toEntry(record, i);
-		return chatentry.toParts(entry, role, playerNames);
+		return chatentry.toParts(entry, role, playerNames, req.t.game);
 	});
 }
 
@@ -225,12 +226,15 @@ function buildGameMetaViewModel(
 
 	const names = gameStateBuilder.resolvePlayerNames(state, role, req.t.shared);
 	const players: GameMetaViewModel['players'] = {};
-	for (const [strColor, container] of Object.entries(state.players)) {
+	for (const [strColor, participant] of Object.entries(state.players)) {
 		const color = Number(strColor) as Player;
 		const change = ratingChanges?.[color];
 		players[color] = {
 			name: names[color]!,
-			elo: container.rating ? metadatautil.getFormattedElo(container.rating) : undefined,
+			elo:
+				'rating' in participant && participant.rating
+					? metadatautil.getFormattedElo(participant.rating)
+					: undefined,
 			eloDiff:
 				change !== undefined
 					? {

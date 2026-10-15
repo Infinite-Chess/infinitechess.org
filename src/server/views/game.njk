@@ -1,6 +1,8 @@
 {% extends "layout.njk" %}
 
-{% set pageName = "Game" %}
+{% set t = templateT('game') %}
+{% set ts = scriptT('game') %}
+{% set pageName = t.title %}
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
@@ -9,6 +11,8 @@
 {% block head %}
 {# SSR→client channel: the game's setup, and the viewer's role in it. #}
 <script>window.gamePageData = {{ gamePageData | json | safe }};</script>
+{# Ship the game and gamegui [script] strings to the browser, preserving window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { game: {{ scriptT('game') | json | safe }}, gamegui: {{ scriptT('gamegui') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
@@ -16,12 +20,17 @@
 
 {% from "components/gamegui.njk" import boardControls, gameMeta, playerBar, material, movesNav, movesTable, boardCanvas %}
 
+{# Borrowed strings: the board pages' shared UI, and the shared codes-and-labels. #}
+{% set tGamegui = templateT('gamegui') %}
+{% set tsGamegui = scriptT('gamegui') %}
+{% set s = scriptT('shared') %}
+
 <main class="board-page game">
 
 	{# ── Left side bar ─────────────────────────────────────────────────── #}
 	<aside class="sidebar scrollbar-thin">
 
-		{{ boardControls() }}
+		{{ boardControls(tGamegui, tsGamegui) }}
 
 		{# Material bars + match panel #}
 		<div class="play-group">
@@ -34,7 +43,7 @@
 				{{ playerBar(meta, 'top') }}
 
 				<div class="moves unselectable">
-					{{ movesNav() }}
+					{{ movesNav(tGamegui) }}
 					{{ movesTable() }}
 				</div>
 
@@ -44,22 +53,22 @@
 					{% if not meta.result and gamePageData.role is defined %}
 					<div class="actions-live{{ '' if gamePageData.isLive else ' hidden' }}">
 						{% if not gamePageData.engineGame %}
-						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="Offer draw"{% if not meta.resignable %} disabled{% endif %}>
+						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="{{ t.actions.offer_draw }}"{% if not meta.resignable %} disabled{% endif %}>
 							<svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><text x="6" y="2" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">1</text><polygon points="15.375,2 17.875,2 7.875,22 5.375,22"/><text x="18" y="21.67" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="alphabetic">2</text></svg>
 						</button>
 						{% endif %}
 						{# Resign / Abort share one slot (mutually exclusive) #}
-						<button class="action-btn tooltip-d{{ '' if not meta.resignable else ' hidden'}}" id="btn-abort" data-tooltip="Abort">
+						<button class="action-btn tooltip-d{{ '' if not meta.resignable else ' hidden'}}" id="btn-abort" data-tooltip="{{ t.actions.abort }}">
 							<svg class="action-icon" viewBox="0 0 24 24"><use href="#svg-x"/></svg>
 						</button>
-						<button class="action-btn tooltip-d{{ '' if meta.resignable else ' hidden'}}" id="btn-resign" data-tooltip="Resign">
+						<button class="action-btn tooltip-d{{ '' if meta.resignable else ' hidden'}}" id="btn-resign" data-tooltip="{{ t.actions.resign }}">
 							<svg class="action-icon" viewBox="0 0 24 24"><use href="#svg-flag"/></svg>
 						</button>
 					</div>
 					{# Incoming draw offer #}
 					{% if not gamePageData.engineGame %}
 					<div class="actions-draw-offer hidden">
-						<span class="draw-offer-label">Accept draw offer?</span>
+						<span class="draw-offer-label">{{ t.actions.accept_draw }}</span>
 						<div class="draw-offer-buttons">
 							<button class="action-btn" id="btn-accept-draw">
 								<svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -72,11 +81,11 @@
 					{# Post-game actions: rematch and analysis board. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
 						{% if gamePageData.isLive and gamePageData.role is defined %}
-						<button class="action-btn" id="btn-rematch">Rematch</button>
+						<button class="action-btn" id="btn-rematch">{{ t.actions.rematch }}</button>
 						{% endif %}
 						{# A link, not a button, so ctrl/cmd/middle-click opens it in a new tab.
 						   Hidden with zero moves — guigameactions.ts reveals it at conclusion. #}
-						<a class="action-btn{{ ' hidden' if meta.moveCount == 0 }}" id="btn-analysis" href="{{ analysisUrl }}">Analysis</a>
+						<a class="action-btn{{ ' hidden' if meta.moveCount == 0 }}" id="btn-analysis" href="{{ analysisUrl }}">{{ t.actions.analysis }}</a>
 					</div>
 				</div>
 
@@ -93,8 +102,8 @@
 				<div class="disconnect-status hidden">
 					<span class="disconnect-text"></span>
 					<div class="disconnect-buttons hidden">
-						<button class="action-btn" id="btn-claim-victory">Claim victory</button>
-						<button class="action-btn" id="btn-claim-draw">Call a draw</button>
+						<button class="action-btn" id="btn-claim-victory">{{ t.disconnect.claim_victory }}</button>
+						<button class="action-btn" id="btn-claim-draw">{{ t.disconnect.claim_draw }}</button>
 					</div>
 				</div>
 				{% endif %}
@@ -111,7 +120,7 @@
 		   Desktop shows the game info above the play group (see game.css). #}
 		<div class="secondary-panels">
 
-			{{ gameMeta(meta, spectators=true) }}
+			{{ gameMeta(meta, tGamegui, s, spectators=true) }}
 
 			{# Chat window — participants of a non-engine game. Driven by guichat.ts. #}
 			{% if chat %}
@@ -120,25 +129,25 @@
 				<div class="chat-bar">
 					<button class="btn-bare chat-toggle" id="btn-toggle-chat">
 						<svg class="chat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-						<span class="chat-title">Chat</span>
+						<span class="chat-title">{{ t.chat.title }}</span>
 					</button>
 					{# The browser's own `title` tooltip, NOT our `data-tooltip` system: the native one
 					   appears far more slowly, so nobody clicks the flag out of impulse or curiosity. #}
-					<button class="btn-bare icon-btn" id="btn-report" title="Report the chat">
+					<button class="btn-bare icon-btn" id="btn-report" title="{{ t.chat.report.tooltip }}">
 						<svg><use href="#svg-flag"/></svg>
 					</button>
 					{# The flag's two menus. Driven by guichatreport.ts #}
 					<div class="popup-menu popup-menu-above report-menu hidden" id="report-reason-menu">
-						<div class="popup-menu-title report-menu-title">Report chat</div>
-						{% for reason in chat.reportReasons %}
-						<button type="button" data-reason="{{ reason.code }}">{{ reason.label }}</button>
+						<div class="popup-menu-title report-menu-title">{{ t.chat.report.menu_title }}</div>
+						{% for code in chat.reportReasons %}
+						<button type="button" data-reason="{{ code }}">{{ ts.chat.report.reasons[code] }}</button>
 						{% endfor %}
 					</div>
 					<div class="popup-menu popup-menu-above report-menu hidden" id="report-confirm-menu">
-						<div class="popup-menu-title report-menu-title">Report chat for "<span id="report-chosen-reason"></span>"?</div>
+						<div class="popup-menu-title report-menu-title" id="report-confirm-title"></div>
 						<div class="report-menu-actions">
-							<button type="button" id="btn-report-cancel">Cancel</button>
-							<button type="button" id="btn-report-submit">Report</button>
+							<button type="button" id="btn-report-cancel">{{ t.chat.report.cancel }}</button>
+							<button type="button" id="btn-report-submit">{{ t.chat.report.submit }}</button>
 						</div>
 					</div>
 				</div>
@@ -154,8 +163,8 @@
 				{# Why a predicted send was refused. #}
 				<div class="chat-error hidden"></div>
 				<input class="chat-input" type="text" maxlength="{{ chat.input.maxLength }}" id="chat-input"
-					{%- if not chat.input.disabled %} placeholder="Please be nice!"
-					{%- else %} disabled placeholder="Create an account to chat."{% endif %} />
+					{%- if not chat.input.disabled %} placeholder="{{ t.chat.placeholder }}"
+					{%- else %} disabled placeholder="{{ t.chat.guest_placeholder }}"{% endif %} />
 				{% endif %}
 			</div>
 			{% endif %}

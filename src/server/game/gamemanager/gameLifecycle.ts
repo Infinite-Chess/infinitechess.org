@@ -26,6 +26,7 @@ import chat from './chat.js';
 import drawOffers from './drawOffers.js';
 import disconnect from './disconnect.js';
 import gameLogger from './gameLogger.js';
+import socketSend from '../../socket/socketSend.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
 import ratingAbuse from '../ratingabuse/ratingAbuse.js';
@@ -195,9 +196,10 @@ function logConcludedGame(servergame: ServerGame): void {
 		}
 	} catch {
 		// Log failure already logged. The live game row is dropped either way.
-		const message =
-			"A server error occurred while logging this game. It won't be available in your game history.";
-		gameSockets.broadcastToParticipants(servergame, 'general', 'toast-error', message);
+		for (const { socket: ws } of Object.values(servergame.match.playerData)) {
+			if (ws)
+				socketSend.send(ws, 'general', 'toast-error', ws.t.responses.game.logging_failed);
+		}
 	}
 }
 

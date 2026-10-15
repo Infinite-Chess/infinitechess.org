@@ -9,14 +9,11 @@
 import type { Request } from 'express';
 import type { Player } from '../../shared/chess/util/typeutil.js';
 import type { SeekPropertiesViewModel } from './seekProperties.js';
-import type {
-	ChallengePageData,
-	ServerUsernameContainer,
-	StaticGameSetup,
-} from '../../shared/transport/domain.js';
+import type { ChallengePageData, StaticGameSetup } from '../../shared/transport/domain.js';
 
 import encodeQR from 'qr';
 
+import playername from '../../shared/components/playername.js';
 import metadatautil from '../../shared/chess/util/metadatautil.js';
 
 import urlUtils from '../utility/urlUtils.js';
@@ -85,25 +82,17 @@ function getPageState(req: Request): ChallengePageState | undefined {
 	return {
 		challengePageData: { id, variant: seek.variant },
 		owner: {
-			name: resolveOwnerName(seek.player, isOwner, req),
-			elo: seek.player.rating ? metadatautil.getFormattedElo(seek.player.rating) : undefined,
+			name: playername.resolve(seek.player, isOwner, req.t.shared),
+			elo:
+				seek.player.type === 'player' && seek.player.rating
+					? metadatautil.getFormattedElo(seek.player.rating)
+					: undefined,
 			side: seek.color ?? undefined,
 		},
 		properties: seekProperties.build(setup, seek.mode === 'rated', undefined, req),
 		share: isOwner ? buildShare(id) : undefined,
 		signinRequired: !memberInfo.signedIn && seek.mode === 'rated',
 	};
-}
-
-/** The owner's display name, as the lobby shows it: a guest owner is "(You)" to themselves, "(Guest)" to anyone else. */
-function resolveOwnerName(
-	player: ServerUsernameContainer,
-	viewerIsOwner: boolean,
-	req: Request,
-): string {
-	if (player.type !== 'guest') return player.username;
-	const userStatus = req.t.shared.user_status;
-	return viewerIsOwner ? userStatus.you_indicator : userStatus.guest_indicator;
 }
 
 /** Builds the canonical share link and its QR code, sized to whole CSS pixels per module. */

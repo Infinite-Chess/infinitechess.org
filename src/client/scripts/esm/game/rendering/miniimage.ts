@@ -39,13 +39,15 @@ import boardgeometry from '../../board/rendering/boardgeometry.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 import snapping, { ENTITY_WIDTH_VPIXELS } from './highlights/snapping.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The maximum distance in virtual pixels an animated mini image can travel before teleporting mid-animation near the end of its destination, so it doesn't move too rapidly on-screen. */
 const MAX_ANIM_DIST_VPIXELS = bd.fromBigInt(2300n);
 
+// State -----------------------------------------------------------------------
+
 /** True if we're disabled and not rendering mini images, such as when there's too many pieces. */
-let disabled: boolean = false; // Disabled when there's too many pieces
+let disabled: boolean = false;
 
 // Events ----------------------------------------------------------------------
 
@@ -56,24 +58,28 @@ GameBus.addEventListener('game-unloaded', () => {
 
 // Toggling --------------------------------------------------------------------
 
+/** Whether mini image rendering is turned off. */
 function isDisabled(): boolean {
 	return disabled;
 }
 
+/** Turns mini image rendering on. */
 function enable(): void {
 	disabled = false;
 }
 
+/** Turns mini image rendering off. */
 function disable(): void {
 	disabled = true;
 }
 
+/** Flips mini image rendering on or off, toasting its new state. */
 function toggle(): void {
 	disabled = !disabled;
 	frametracker.onVisualChange();
 
-	if (disabled) toast.show('Toggled off icon rendering.');
-	else toast.show('Toggled on icon rendering.');
+	if (disabled) toast.show(t.gamegui.icons.off);
+	else toast.show(t.gamegui.icons.on);
 }
 
 // Updating --------------------------------------------------------------------
@@ -322,6 +328,7 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 
 // Rendering -------------------------------------------------------------------
 
+/** Renders the mini images, while zoomed out far enough to show them. */
 function render(): void {
 	if (!boardpos.areZoomedOut()) return;
 

@@ -75,17 +75,19 @@ function flashTabNameYOUR_MOVE(parity: boolean): void {
 		return;
 	}
 
-	document.title = parity ? 'YOUR MOVE' : ORIGINAL_TITLE;
+	document.title = parity ? t.game.your_move : ORIGINAL_TITLE;
 	// Set a timer for the next toggle
 	timeoutID = setTimeout(flashTabNameYOUR_MOVE, FLASH_INTERVAL_MS, !parity);
 }
 
+/** Stops flashing, restoring the original tab title. */
 function cancelFlashTabTimer(): void {
 	document.title = ORIGINAL_TITLE;
 	clearTimeout(timeoutID);
 	timeoutID = undefined;
 }
 
+/** Schedules the reminder sound, if the page is hidden and the game is resignable. */
 function scheduleMoveSound_timeoutID(): void {
 	if (!document.hidden) return; // Don't schedule it if the page is already visible
 	if (!moveutil.isGameResignable(gameslot.getGamefile()!)) return;
@@ -95,6 +97,7 @@ function scheduleMoveSound_timeoutID(): void {
 	);
 }
 
+/** Cancels the pending reminder sound. */
 function cancelMoveSound(): void {
 	clearTimeout(moveSound_timeoutID);
 	moveSound_timeoutID = undefined;

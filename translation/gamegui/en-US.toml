@@ -1,0 +1,44 @@
+# Translation component: the UI every interactive board page shares (game, analysis, ...).
+# Source template: src/server/views/components/gamegui.njk
+# Its [script] strings serve src/client/scripts/esm/game/, which every board page ships.
+
+[board_controls] # Icon button tooltips
+undo_transition = "Undo transition"
+fit_all = "Fit entire game"
+recenter = "Recenter"
+annotations = "Draw annotations"
+erase = "Erase annotations"
+collapse = "Collapse rays" # Turns the drawn rays into squares at their starts and intersections
+perspective = "Toggle perspective view"
+
+[moves_nav] # Move-navigation button tooltips
+first = "Rewind to start"
+previous = "Previous move"
+next = "Next move"
+last = "Skip to latest"
+
+[game_meta]
+spectators = "Spectators"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Strings shipped to the browser. JS reads these from `t.gamegui.*`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[script]
+invalid_coords = "Invalid coordinate format. Please enter integers or e-notation (e.g., 1.23e4)."
+load_failed = "An error occurred while loading the game. Please refresh."
+
+[script.icons] # The clickable piece icons shown when zoomed far out
+on = "Toggled on icon rendering."
+off = "Toggled off icon rendering."
+
+[script.engine]
+load_failed = "The engine failed to load. Please refresh."
+resigned = "The engine failed to load and has resigned the game."
+illegal_move = 'Engine submitted an illegal move. Please report this bug! Move "{move}" is illegal for reason: {reason}'
+
+[script.arrows] # The arrow indicators button's tooltip, per mode. Tab is its keyboard shortcut.
+off = "Arrow indicators: Off (tab)"
+defense = "Arrow indicators: Defense (tab)"
+all = "Arrow indicators: All (tab)"
+hippogonals = "Arrow indicators: All + Hippogonals (tab)"

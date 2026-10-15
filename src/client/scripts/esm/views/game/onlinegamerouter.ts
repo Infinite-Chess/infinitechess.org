@@ -293,7 +293,7 @@ function handleDetached(): void {
  * This tab navigates home and displays a toast.
  */
 function handleSupersededByTab(): void {
-	flashtoast.queue('Another window connected to the game.');
+	flashtoast.queue(t.game.superseded);
 	navigate.assign('/');
 }
 

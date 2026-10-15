@@ -10,7 +10,6 @@
  */
 
 import type { Rating } from '../../../../shared/chess/util/metadatautil.js';
-import type { ServerUsernameContainer } from '../../../../shared/transport/domain.js';
 
 import memberurl from '../../../../shared/util/memberurl.js';
 import metadatautil from '../../../../shared/chess/util/metadatautil.js';
@@ -158,33 +157,33 @@ function createUsernameContainer(
 	return usernameContainer;
 }
 
-/**
- * Extracts the UsernameContainerProperties from a physical html element username container.
- * @param containerDiv - the HTMLDivElement to extract information from
- * @returns a freshly created UsernameContainer or undefined, if this failed
- */
-function extractPropertiesFromUsernameContainerElement(
-	containerDiv: HTMLDivElement,
-): ServerUsernameContainer {
-	if (!containerDiv.classList.contains('username-embed'))
-		throw Error('Cannot extract username container from element that is not a username embed!');
-
-	// Reconstruct type and username
-	const usernameElem = containerDiv.querySelector('.username')!;
-	const type = usernameElem.getAttribute('user-type') as 'player' | 'guest';
-	if (!type)
-		throw Error('Cannot extract username container from element that does not have a user-type attribute!'); // prettier-ignore
-	const result: ServerUsernameContainer = {
-		type,
-		username: usernameElem.textContent!,
-	};
-
-	// Reconstruct rating
-	const eloElem = containerDiv.querySelector('.elo');
-	if (eloElem) result.rating = JSON.parse(eloElem.getAttribute('rating')!) as RatingItem;
-
-	return result;
-}
+// /**
+//  * Extracts the UsernameContainerProperties from a physical html element username container.
+//  * @param containerDiv - the HTMLDivElement to extract information from
+//  * @returns a freshly created UsernameContainer or undefined, if this failed
+//  */
+// function extractPropertiesFromUsernameContainerElement(
+// 	containerDiv: HTMLDivElement,
+// ): ServerUsernameContainer {
+// 	if (!containerDiv.classList.contains('username-embed'))
+// 		throw Error('Cannot extract username container from element that is not a username embed!');
+//
+// 	// Reconstruct type and username
+// 	const usernameElem = containerDiv.querySelector('.username')!;
+// 	const type = usernameElem.getAttribute('user-type') as 'player' | 'guest';
+// 	if (!type)
+// 		throw Error('Cannot extract username container from element that does not have a user-type attribute!'); // prettier-ignore
+// 	const result: ServerUsernameContainer = {
+// 		type,
+// 		username: usernameElem.textContent!,
+// 	};
+//
+// 	// Reconstruct rating
+// 	const eloElem = containerDiv.querySelector('.elo');
+// 	if (eloElem) result.rating = JSON.parse(eloElem.getAttribute('rating')!) as RatingItem;
+//
+// 	return result;
+// }
 
 /**
  * Set child_element as the only content of parent_element, with the same classes and styling
@@ -399,7 +398,7 @@ function animateNumber(
 
 export default {
 	createUsernameContainer,
-	extractPropertiesFromUsernameContainerElement,
+	// extractPropertiesFromUsernameContainerElement,
 	embedUsernameContainerDisplayIntoParent,
 	wasEventClickInsideUsernameContainer,
 	createEloChangeItem,

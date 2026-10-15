@@ -6,19 +6,12 @@
  */
 
 import uuid from '../../../../../../shared/util/uuid.js';
+import interpolate from '../../../../../../shared/util/interpolate.js';
 
 import toast from '../../../components/toast.js';
 import guichat from './guichat.js';
 import validatorama from '../../../util/validatorama.js';
 import { serverfetch } from '../../../util/serverfetch.js';
-
-// Constants -------------------------------------------------------------------
-
-/** The one failure told apart from the rest, so hitting the cap doesn't disable the button. */
-const RATE_LIMITED_STATUS = 429;
-
-/** What every other failure reads as. Hardcoded — a network failure carries no server reply. */
-const FAILURE_TEXT = 'Failed to submit report.';
 
 // Elements --------------------------------------------------------------------
 
@@ -28,9 +21,14 @@ const FAILURE_TEXT = 'Failed to submit report.';
 const element_Report = document.getElementById('btn-report') as HTMLButtonElement | null;
 const element_ReasonMenu = document.getElementById('report-reason-menu');
 const element_ConfirmMenu = document.getElementById('report-confirm-menu');
-const element_ChosenReason = document.getElementById('report-chosen-reason');
+const element_ConfirmTitle = document.getElementById('report-confirm-title');
 const element_Cancel = document.getElementById('btn-report-cancel');
 const element_Submit = document.getElementById('btn-report-submit');
+
+// Constants -------------------------------------------------------------------
+
+/** The one failure told apart from the rest, so hitting the cap doesn't disable the button. */
+const RATE_LIMITED_STATUS = 429;
 
 // State -----------------------------------------------------------------------
 
@@ -49,7 +47,7 @@ function toggleMenu(): void {
 /** Replaces menu 1 with menu 2, quoting the chosen reason's label back. */
 function openConfirmation(code: string, label: string): void {
 	pendingReason = code;
-	if (element_ChosenReason) element_ChosenReason.textContent = label;
+	if (element_ConfirmTitle) element_ConfirmTitle.textContent = interpolate.interpolate(t.game.chat.report.confirm, { reason: label }); // prettier-ignore
 	element_ReasonMenu?.classList.add('hidden');
 	element_ConfirmMenu?.classList.remove('hidden');
 }
@@ -71,24 +69,24 @@ async function submit(): Promise<void> {
 
 	// A game of nothing but notices is nothing to report. The server refuses it too;
 	// this only spares an honest user the round trip.
-	if (!guichat.hasPlayerMessages()) return toast.show(FAILURE_TEXT, { error: true });
+	if (!guichat.hasPlayerMessages()) return toast.show(t.game.chat.report.failed, { error: true });
 
 	setFlagEnabled(false);
 
 	const response = await postReport(reason);
-	if (response === undefined) return failReport(FAILURE_TEXT); // The network never answered.
+	if (response === undefined) return failReport(t.game.chat.report.failed); // The network never answered.
 
 	if (response.ok) {
-		toast.show('Report sent.');
+		toast.show(t.game.chat.report.sent);
 		// Left disabled for the rest of the visit; the greying is the whole feedback.
-		if (element_Report) element_Report.title = 'Report sent';
+		if (element_Report) element_Report.title = t.game.chat.report.sent;
 		return;
 	}
 	if (response.status === RATE_LIMITED_STATUS) {
 		const body = (await response.json()) as { message: string };
 		return failReport(body.message);
 	}
-	failReport(FAILURE_TEXT);
+	failReport(t.game.chat.report.failed);
 }
 
 /** POSTs the report, or `undefined` if the request never reached a reply. */

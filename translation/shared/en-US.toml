@@ -2,8 +2,9 @@
 # Auto-injected sitewide via layout.njk. Contains display labels for "codes" used
 # across many pages — variant codes, variant group codes, time-control speed
 # categories, game modes, sides, win conditions, modifiers — plus the UI strings
-# more than one page shows: form errors, the variant selector, seek and preview
-# tooltip phrasing, etc.
+# unrelated pages show: form errors, the variant selector, seek and preview
+# tooltip phrasing, etc. Strings only one family of pages shares belong in that
+# family's own component instead (e.g. gamegui, for the board pages).
 script_only = true
 
 [errors]
@@ -11,6 +12,7 @@ script_only = true
 fallback = "Something went wrong. Please try again."
 # Shown client-side when a request fails to reach the server (network failure).
 network = "Network error. Please try again."
+webgl_unsupported = "Please upgrade your browser! It does not support WebGL2."
 
 # Account-field format errors shown client-side on the register / awaiting / resetpassword forms.
 # The server reads these too; server-only validation responses live in responses.account.
@@ -26,6 +28,8 @@ cookies_required = "Your browser does not support cookies. Unable to connect to 
 [user_status] # Identity placeholders shown in place of a real username.
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
+deleted_indicator = "(Deleted User)" # A player whose account was since deleted
+engine_level = "{name} (Level {level})" # An engine below its max strength. {name} comes from [engines].
 
 # Labels for the variant selector widget (game-options modal + analysis board setup).
 [variant_selector]
@@ -124,6 +128,10 @@ blue = "Blue"
 yellow = "Yellow"
 green = "Green"
 neutral = "Neutral"
+
+[engines] # Engine display names
+apeiron = "Apeiron" # A proper noun
+engineCheckmatePractice = "Practice Bot"
 
 [seek] # Descriptions of a seek's properties, shown on the lobby row and the challenge card.
 owner_side_white = "Invite owner chooses to be white"

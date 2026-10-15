@@ -6,10 +6,8 @@
  */
 
 import type { Rating } from '../../shared/chess/util/metadatautil.js';
-import type { ServerUsernameContainer } from '../../shared/transport/domain.js';
+import type { PublicIdentity } from '../../shared/transport/domain.js';
 import type { MemberInfo, AuthMemberInfo } from '../types.js';
-
-import metadatautil from '../../shared/chess/util/metadatautil.js';
 
 // Equality --------------------------------------------------------------------
 
@@ -36,19 +34,10 @@ function eqPartial(authed: AuthMemberInfo, other: MemberInfo): boolean {
 
 // Projection ------------------------------------------------------------------
 
-/**
- * Builds the public {@link ServerUsernameContainer} for a player from their auth identity.
- * Guests get the generic ICN guest name. Never exposes `browser_id`.
- */
-function buildServerUsernameContainer(
-	identifier: AuthMemberInfo,
-	rating?: Rating,
-): ServerUsernameContainer {
-	return {
-		type: identifier.signedIn ? 'player' : 'guest',
-		username: identifier.signedIn ? identifier.username : metadatautil.GUEST_NAME_ICN_METADATA,
-		rating,
-	};
+/** Builds the {@link PublicIdentity} of a player from their auth identity. Never exposes `browser_id`. */
+function buildPublicIdentity(identifier: AuthMemberInfo, rating?: Rating): PublicIdentity {
+	if (!identifier.signedIn) return { type: 'guest' };
+	return { type: 'player', username: identifier.username, rating };
 }
 
 // Exports ---------------------------------------------------------------------
@@ -58,5 +47,5 @@ export default {
 	eq,
 	eqPartial,
 	// Projection
-	buildServerUsernameContainer,
+	buildPublicIdentity,
 };

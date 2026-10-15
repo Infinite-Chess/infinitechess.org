@@ -17,6 +17,8 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 import toast from '../../components/toast.js';
 import onlinegame from './onlinegame.js';
 
+// Functions -------------------------------------------------------------------
+
 /** Fetches and loads the dead game named by the page URL. */
 async function load(): Promise<void> {
 	try {
@@ -27,7 +29,7 @@ async function load(): Promise<void> {
 		onlinegame.loadGameFromState(gameState, true, longformat);
 	} catch (e: unknown) {
 		console.error('Failed to fetch/parse dead game state:', e);
-		toast.show('Failed to load game. Please refresh.', { error: true });
+		toast.show(t.gamegui.load_failed, { error: true });
 	}
 }
 
@@ -58,5 +60,7 @@ function normalizeToGameState(deadState: DeadGameState, longformat: LongFormatOu
 
 	return state;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { load };

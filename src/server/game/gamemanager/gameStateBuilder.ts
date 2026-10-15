@@ -23,7 +23,7 @@ import type {
 import type {
 	StaticGameSetup,
 	StaticGameState,
-	ServerUsernameContainer,
+	Participant,
 } from '../../../shared/transport/domain.js';
 import type {
 	ChatLogEntry,
@@ -38,6 +38,7 @@ import type {
 import uuid from '../../../shared/util/uuid.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import playername from '../../../shared/components/playername.js';
 import winconutil from '../../../shared/chess/util/winconutil.js';
 import metadatautil from '../../../shared/chess/util/metadatautil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
@@ -115,20 +116,14 @@ function buildStaticState(servergame: ServerGame): StaticGameState {
 		}
 	}
 
-	const players: PlayerGroup<ServerUsernameContainer> = {};
+	const players: PlayerGroup<Participant> = {};
 	for (const [p, data] of Object.entries(match.playerData)) {
 		const color = Number(p) as Player;
-		players[color] = memberInfoUtil.buildServerUsernameContainer(
-			data.identifier,
-			ratings[color],
-		);
+		players[color] = memberInfoUtil.buildPublicIdentity(data.identifier, ratings[color]);
 	}
 	if (match.engineParticipant) {
 		const { color, engine, strengthLevel } = match.engineParticipant;
-		players[color] = {
-			type: 'engine',
-			username: engineregistry.getFormattedName(engine, strengthLevel),
-		};
+		players[color] = { type: 'engine', engine, strengthLevel };
 	}
 
 	const state: StaticGameState = {
@@ -164,12 +159,9 @@ function resolvePlayerNames(
 	sharedT: ScriptTranslations['shared'],
 ): PlayerGroup<string> {
 	const names: PlayerGroup<string> = {};
-	for (const [strColor, container] of Object.entries(state.players)) {
+	for (const [strColor, participant] of Object.entries(state.players)) {
 		const color = Number(strColor) as Player;
-		// A guest who is the viewer shows "(You)"; every other name is the container's own
-		// (members → username, other guests → the hardcoded "(Guest)" ICN name). Mirrors the lobby.
-		const isYouGuest = container.type === 'guest' && color === role;
-		names[color] = isYouGuest ? sharedT.user_status.you_indicator : container.username;
+		names[color] = playername.resolve(participant, color === role, sharedT);
 	}
 	return names;
 }
@@ -209,7 +201,7 @@ function buildMetadata(
 
 	const getPlayerName = (color: Player): string => {
 		if (match.engineParticipant?.color === color)
-			return engineregistry.getFormattedName(
+			return engineregistry.getEnglishName(
 				match.engineParticipant.engine,
 				match.engineParticipant.strengthLevel,
 			);

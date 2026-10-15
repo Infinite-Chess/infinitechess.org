@@ -1,0 +1,105 @@
+# Translation component: game page (/game/:id when it names a game, not an open challenge).
+# Source template: src/server/views/game.njk
+
+title = "Game" # The browser tab title
+
+[actions] # Game action buttons. Offer draw, abort and resign are icon tooltips.
+offer_draw = "Offer draw"
+abort = "Abort"
+resign = "Resign"
+accept_draw = "Accept draw offer?"
+rematch = "Rematch"
+analysis = "Analysis"
+
+[disconnect] # Shown once the disconnected opponent can be claimed against
+claim_victory = "Claim victory"
+claim_draw = "Call a draw"
+
+[chat]
+title = "Chat"
+placeholder = "Please be nice!"
+guest_placeholder = "Create an account to chat."
+
+[chat.report] # The report flag
+tooltip = "Report the chat"
+menu_title = "Report chat"
+cancel = "Cancel"
+submit = "Report"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Strings shipped to the browser. JS reads these from `t.game.*`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[script]
+your_move = "YOUR MOVE" # Flashes in the tab title while the player is in another tab
+superseded = "Another window connected to the game."
+
+[script.disconnect]
+# {lead} is the opponent's disconnect notice from [script.chat.notices] below.
+claim_in_one = "{lead} You can claim victory in {n} second."
+claim_in_other = "{lead} You can claim victory in {n} seconds."
+claimable = "{lead} You may claim victory, call a draw, or wait."
+self_disconnected = "You have disconnected."
+self_reconnected = "Reconnected."
+
+[script.chat.errors] # Why a chat message wasn't sent
+window = "Slow down, too many messages."
+duplicate = "You just said that."
+disconnected = "You are disconnected."
+
+[script.chat.report]
+confirm = 'Report chat for "{reason}"?' # {reason} comes from [script.chat.report.reasons]
+sent = "Report sent."
+failed = "Failed to submit report."
+
+[script.chat.report.reasons] # Rows of the report menu. The English also titles the report email.
+harassment = "Harassment or hate speech"
+threats = "Threats or violence"
+sexual = "Sexual content"
+scam = "Scam or phishing"
+child-safety = "Child safety"
+other = "Other"
+
+# Chat log notices. A pair is worded for the player it's about (self), and for their opponent (other).
+[script.chat.notices]
+draw-declined = "Draw offer declined."
+draw-accepted = "Draw offer accepted."
+rematch-accepted = "Rematch accepted."
+cheat-detected = "Illegal move detected. Game aborted."
+
+[script.chat.notices.draw-offered]
+self = "You offered a draw."
+other = "Opponent offered a draw."
+
+[script.chat.notices.rematch-offered]
+self = "You offered a rematch."
+other = "Opponent offered a rematch."
+
+[script.chat.notices.disconnect-voluntary]
+self = "You disconnected."
+other = "Opponent disconnected."
+
+[script.chat.notices.disconnect-involuntary]
+self = "You lost connection."
+other = "Opponent lost connection."
+
+[script.chat.notices.reconnected]
+self = "You reconnected."
+other = "Opponent reconnected."
+
+# Post-game: leaving once the game is over is normal, so these say nothing of a connection.
+[script.chat.notices.postgame-left]
+self = "You left."
+other = "Opponent left."
+
+[script.chat.notices.postgame-returned]
+self = "You returned."
+other = "Opponent returned."
+
+[script.chat.notices.account-closed]
+self = "You closed your account."
+other = "Opponent closed their account."
+
+[script.chat.notices.account-terminated]
+self = "Your account was terminated."
+other = "Opponent's account was terminated."

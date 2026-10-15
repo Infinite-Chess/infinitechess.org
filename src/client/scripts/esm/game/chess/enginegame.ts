@@ -19,6 +19,7 @@ import type {
 } from './engines/engineprotocol.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
+import interpolate from '../../../../../shared/util/interpolate.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -134,8 +135,8 @@ function failEngineLoad(error: Error): void {
 	console.error(error);
 	if (gamesession.getGameType() === 'online') {
 		resignFailedEngine();
-		toast.show('The engine failed to load and has resigned the game.', { error: true });
-	} else toast.show('The engine failed to load. Please refresh.', { error: true });
+		toast.show(t.gamegui.engine.resigned, { error: true });
+	} else toast.show(t.gamegui.engine.load_failed, { error: true });
 	terminate();
 }
 
@@ -185,6 +186,7 @@ function onMovePlayed(): void {
 	}
 }
 
+/** Routes a message from the engine worker: a move to play, or legal moves it generated. */
 function handleEngineMessage(data: EngineResponse): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) {
@@ -236,10 +238,11 @@ function makeEngineMove(tokenMove: string | null): void {
 		const moveValidationResults = movevalidation.isTokenMoveLegal(gamefile, tokenMove);
 
 		if (!moveValidationResults.valid) {
-			toast.show(
-				`Engine submitted an illegal move. Please report this bug! Move "${tokenMove}" is illegal for reason: ${moveValidationResults.reason}`,
-				{ error: true, durationMultiplier: 100 },
-			);
+			const vars = { move: tokenMove, reason: moveValidationResults.reason };
+			toast.show(interpolate.interpolate(t.gamegui.engine.illegal_move, vars), {
+				error: true,
+				durationMultiplier: 100,
+			});
 			if (gamesession.getGameType() === 'online') resignFailedEngine();
 			return false; // Don't physically play next premove
 		}
