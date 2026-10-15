@@ -195,10 +195,6 @@ message = "At least one piece is outside the engine's world border."
 label = "Too spread out"
 message = "The engine doesn't support pieces this far apart."
 
-[position_errors.engine.too_spread_out_for_huygens]
-label = "Too spread out for Huygens"
-message = "The engine doesn't support Huygens with pieces this far apart."
-
 [game_result] # Sentences shown when a game ends (the result banner).
 # {color} is filled in from [sides] above; {label} from [conditions] below.
 color_wins_by = "{color} wins by {label}." # Also reused in the variant preview tooltips to show how a specific color can win.

@@ -66,11 +66,8 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GI
 /** Most pieces a position may hold before the engine is too slow to be of any use. */
 const MAX_PIECES = 10_000;
 
-/**
- * The engine's own refusals: pieces too far apart to bring within its coordinates, or any need to
- * with Huygens in play (on the board or by promotion), which read exact distances.
- */
-const ENGINE_REFUSALS = ['too_spread_out', 'too_spread_out_for_huygens'] as const;
+/** The engine's own refusals: pieces too far apart to bring within its coordinates. */
+const ENGINE_REFUSALS = ['too_spread_out'] as const;
 
 // Individual rule checks ------------------------------------------------------
 
