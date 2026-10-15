@@ -11,12 +11,10 @@
 
 import type { Board } from './boardinit.js';
 import type { MoveFull } from './movepiece.js';
-import type { StateChange } from './state.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 
-import typeutil from '../util/typeutil.js';
 import boardchanges from './boardchanges.js';
-import { rawTypes as r } from '../util/typeutil.js';
+import typeutil, { rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -33,7 +31,7 @@ type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassa
 function detect(boardsim: Board): GameConclusion | undefined {
 	const moveList = boardsim.moves;
 	const turnOrderLength = boardsim.gameRules.turnOrder.length;
-	/** What index of the turn order whos turn it is at the front of the game.
+	/** What index of the turn order whose turn it is at the front of the game.
 	 * 0 => First player's turn in the turn order. */
 	const currentPlayerTurn = moveList.length % turnOrderLength;
 
@@ -46,27 +44,14 @@ function detect(boardsim: Board): GameConclusion | undefined {
 
 	const startIndex: number = moveList.length - 1;
 	let indexOfLastEqualPositionFound: number = startIndex + 1; // We need +1 because the first move we observe is the move that brought us to this move index.
-	outer: for (let index = startIndex; index >= 0; index--) {
-		// WILL BE -1 if we've reached the beginning of the game!
+	for (let index = startIndex; index >= 0; index--) {
 		const move: MoveFull = moveList[index]!;
 
-		// Did this move include a one-way action? Pawn push, special right loss..
-		// If so, no further equal positions, terminate the loop.
-		// 'capture' move changes are handled lower down, they are one-way too.
-		if (typeutil.getRawType(move.type) === r.PAWN) break; // Pawn pushes reset the repetition alg because we know they can't move back to their previous position.
-		if (
-			move.state.some(
-				(stateChange: StateChange) =>
-					stateChange.type === 'specialrights' && stateChange.future === false,
-			)
-		)
-			break; // specialright was lost, no way its equal to the current position, unless in the future it's possible to add specialrights mid-game.
+		// No position before a one-way move can equal the current one.
+		if (isOneWay(move)) break;
 
-		// Iterate through all move changes, adding the fluxes.
+		// Iterate through all move changes, adding the fluxes. All are two-way.
 		for (const change of move.changes) {
-			// Did this move change include a one-way action? (capture/deletion) If so, no further equal positions, terminate the loop.
-			if (boardchanges.ONE_WAY_ACTIONS.includes(change.action)) break outer; // One-way action, can't be undone, no further equal positions.
-			// The remaining actions are two-way, so we need to create fluxes for them..
 			if (change.action === 'move') {
 				// If this change was undo'd, there would be a DEFICIT on its endCoords
 				addDeficit(`${change.endCoords[0]},${change.endCoords[1]},${change.piece.type}`);
@@ -83,8 +68,8 @@ function detect(boardsim: Board): GameConclusion | undefined {
 		}
 
 		// Next, iterate through all enpassant state changes and add fluxes for them
-		move.state.forEach((state: StateChange) => {
-			if (state.type !== 'enpassant') return false; // Filter out non-enpassant states
+		for (const state of move.state) {
+			if (state.type !== 'enpassant') continue;
 			/**
 			 * If we reverse applied this enpassant state,
 			 * there would be a DEFICIT on the future value,
@@ -102,23 +87,10 @@ function detect(boardsim: Board): GameConclusion | undefined {
 				addSurplus(
 					`${state.current.square[0]},${state.current.square[1]},${state.current.pawn[0]},${state.current.pawn[1]},enpassant`,
 				);
-			return; // typescript needs this to not complain
-		});
-
-		function addSurplus(flux: Flux): void {
-			// If there is a DEFICIT with this exact same key, delete that instead! It's been cancelled-out.
-			if (deficit.has(flux)) deficit.delete(flux);
-			else surplus.add(flux);
-		}
-
-		function addDeficit(flux: Flux): void {
-			// If there is a SURPLUS with this exact same key, delete that instead! It's been cancelled-out.
-			if (surplus.has(flux)) surplus.delete(flux);
-			else deficit.add(flux);
 		}
 
 		checkEqualPosition: {
-			// Has a full turn cycle ocurred since the last increment of equalPositionsFound?
+			// Has a full turn cycle occurred since the last increment of equalPositionsFound?
 			// If so, we can't count this as an equal position, because it will break it in multiplayer games,
 			// or if we have multiple turns in a row.
 			const indexDiff = indexOfLastEqualPositionFound - index;
@@ -140,6 +112,27 @@ function detect(boardsim: Board): GameConclusion | undefined {
 	// Loop is finished. How many equal positions did we find?
 	if (equalPositionsFound === 2) return { victor: null, condition: 'repetition' };
 	else return undefined;
+
+	function addSurplus(flux: Flux): void {
+		// If there is a DEFICIT with this exact same key, delete that instead! It's been cancelled-out.
+		if (deficit.has(flux)) deficit.delete(flux);
+		else surplus.add(flux);
+	}
+
+	function addDeficit(flux: Flux): void {
+		// If there is a SURPLUS with this exact same key, delete that instead! It's been cancelled-out.
+		if (surplus.has(flux)) surplus.delete(flux);
+		else deficit.add(flux);
+	}
+}
+
+/** Whether no position before `move` can recur: a pawn push, capture or other deletion, or lost special right. */
+function isOneWay(move: MoveFull): boolean {
+	return (
+		typeutil.getRawType(move.type) === r.PAWN ||
+		move.changes.some((change) => boardchanges.ONE_WAY_ACTIONS.includes(change.action)) ||
+		move.state.some((state) => state.type === 'specialrights' && state.future === false)
+	);
 }
 
 // Exports ---------------------------------------------------------------------
