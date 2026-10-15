@@ -58,6 +58,8 @@ _doesn't_ follow said spec may be justified if the approach is better.
 Otherwise, before any line-level review, ask whether the change should exist in this shape at all:
 
 - Is it needed? Is the problem real?
+- Is it in the right place? Would it fit better elsewhere, such as in the engine instead of the
+  site?
 - Does it build a parallel system where an existing one should have been extended, or a new
   abstraction where an existing mechanism already fits?
 - Is it the correct fix at the root, or a symptom patch?
