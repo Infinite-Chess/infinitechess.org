@@ -188,7 +188,8 @@ followed, tell me.
 27. Before touching any system below, **read its doc in full first**. Each holds context about said
     system otherwise scattered across many scripts; without it, you may make wrong calls.
     - Any TOML or translation: `docs/systems/TRANSLATIONS.md`. Only maintain English TOMLs.
-    - The build system: `docs/systems/BUILD.md`. The build process does not change unless it must.
+    - The build system: `docs/systems/BUILD.md`. The build process does not change unless there's
+      good justification.
     - Render contexts, or adding graphics: `docs/systems/GRAPHICS.md`
     - Websockets, client or server: `docs/systems/WEBSOCKETS.md`
     - ICN (Infinite Chess Notation): `docs/systems/ICN.md`. Read before creating ICNs.
