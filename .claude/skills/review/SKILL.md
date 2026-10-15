@@ -14,6 +14,8 @@ regresses an existing invariant or convention.
 
 Never fabricate findings to have something to report. If the code is genuinely good, say so.
 
+Later reviews in the same session follow this copy; don't re-invoke the skill.
+
 ## 1. Pin down the target
 
 The user names one. If they don't, it's either the working tree, or the PR if it's an `@claude` run.
