@@ -97,7 +97,10 @@ flow:
 
 5. Client TS reads `t.<component>.<key>` — typed via the generated `ScriptTranslations` interface
    (see [Type generation](#type-generation)). The `t` symbol is declared globally, so no import is
-   needed.
+   needed. Its type claims every component, but a page only carries those it injects, so read only
+   components injected on every page your module's directory ships to
+   ([IMPORT_RULES.md](/docs/systems/IMPORT_RULES.md)): `gamegui` from `game/`, a page's own
+   component from `views/<page>/`.
 
 Because the data is baked into the HTML at request time, the user's language is already correct on
 first paint — no FOUC, no loading state, no round-trip. The trade-off is that adding or changing a
