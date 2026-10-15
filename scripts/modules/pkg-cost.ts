@@ -22,13 +22,43 @@ import esbuild from 'esbuild';
 
 import { ESMEntryPoints } from '../../build/client.js';
 
-function resolveSpec(from: string, spec: string): string | undefined {
-	const base = path.posix.join(path.posix.dirname(from), spec);
-	const cands = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`, `${base}/index.ts`];
-	return cands.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
+// Arguments -------------------------------------------------------------------
+
+const args = process.argv.slice(2);
+const why = args.includes('--why');
+const cost = args.includes('--cost');
+const pkg = args.find((a) => !a.startsWith('--'));
+if (pkg === undefined) {
+	console.error('Usage: npx tsx scripts/modules/pkg-cost.ts <pkg> [--why] [--cost]');
+	process.exit(1);
 }
 
+// State -----------------------------------------------------------------------
+
+/** file -> its runtime deps, split into first-party files and bare package specifiers. */
 const depCache = new Map<string, { local: string[]; bare: string[] }>();
+
+// Graph -----------------------------------------------------------------------
+
+/** BFS from an entry; returns the shortest path to a file importing `pkg`, or undefined. */
+function pathToPackage(entry: string, pkg: string): string[] | undefined {
+	const seen = new Set([entry]);
+	const queue: string[][] = [[entry]];
+	while (queue.length) {
+		const trail = queue.shift()!;
+		const f = trail[trail.length - 1]!;
+		const { local, bare } = depsOf(f);
+		if (bare.some((b) => b === pkg || b.startsWith(`${pkg}/`))) return trail;
+		for (const d of local) {
+			if (seen.has(d)) continue;
+			seen.add(d);
+			queue.push([...trail, d]);
+		}
+	}
+	return undefined;
+}
+
+/** A file's runtime imports, static and dynamic, with type-only ones dropped. */
 function depsOf(f: string): { local: string[]; bare: string[] } {
 	if (depCache.has(f)) return depCache.get(f)!;
 	const text = fs.readFileSync(f, 'utf8');
@@ -75,34 +105,14 @@ function depsOf(f: string): { local: string[]; bare: string[] } {
 	return r;
 }
 
-/** BFS from an entry; returns the shortest path to a file importing `pkg`, or undefined. */
-function pathToPackage(entry: string, pkg: string): string[] | undefined {
-	const seen = new Set([entry]);
-	const queue: string[][] = [[entry]];
-	while (queue.length) {
-		const trail = queue.shift()!;
-		const f = trail[trail.length - 1]!;
-		const { local, bare } = depsOf(f);
-		if (bare.some((b) => b === pkg || b.startsWith(`${pkg}/`))) return trail;
-		for (const d of local) {
-			if (seen.has(d)) continue;
-			seen.add(d);
-			queue.push([...trail, d]);
-		}
-	}
-	return undefined;
+/** Resolves a relative import specifier to the file it names, or undefined if none exists. */
+function resolveSpec(from: string, spec: string): string | undefined {
+	const base = path.posix.join(path.posix.dirname(from), spec);
+	const cands = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`, `${base}/index.ts`];
+	return cands.find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
 }
 
-/** Replaces `pkg` with an empty module, so its bytes drop out of the bundle. */
-function stubPackage(pkg: string): esbuild.Plugin {
-	return {
-		name: 'stub-pkg',
-		setup(build) {
-			build.onResolve({ filter: new RegExp(`^${pkg}(/|$)`) }, () => ({ path: pkg, namespace: 'stub' }));
-			build.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({ contents: '', loader: 'empty' }));
-		},
-	}; // prettier-ignore
-}
+// Cost ------------------------------------------------------------------------
 
 /** Minified byte size of one entry's bundle, optionally with `pkg` stubbed out. */
 async function sizeOf(entry: string, stub: string | undefined): Promise<number> {
@@ -121,15 +131,29 @@ async function sizeOf(entry: string, stub: string | undefined): Promise<number> 
 	return result.outputFiles!.reduce((n, f) => n + f.contents.byteLength, 0);
 }
 
-const args = process.argv.slice(2);
-const why = args.includes('--why');
-const cost = args.includes('--cost');
-const pkg = args.find((a) => !a.startsWith('--'));
-if (pkg === undefined) {
-	console.error('Usage: npx tsx scripts/modules/pkg-cost.ts <pkg> [--why] [--cost]');
-	process.exit(1);
+/** Replaces `pkg` with an empty module, so its bytes drop out of the bundle. */
+function stubPackage(pkg: string): esbuild.Plugin {
+	return {
+		name: 'stub-pkg',
+		setup(build) {
+			build.onResolve({ filter: new RegExp(`^${pkg}(/|$)`) }, () => ({
+				path: pkg,
+				namespace: 'stub',
+			}));
+			build.onLoad({ filter: /.*/, namespace: 'stub' }, () => ({
+				contents: '',
+				loader: 'empty',
+			}));
+		},
+	};
 }
-const kb = (n: number): string => `${(n / 1024).toFixed(1)} KB`;
+
+/** Formats a byte count as kilobytes. */
+function kb(n: number): string {
+	return `${(n / 1024).toFixed(1)} KB`;
+}
+
+// Report ----------------------------------------------------------------------
 
 const scripts = ESMEntryPoints.filter((e) => /\.(ts|js)$/.test(e));
 for (const e of scripts) {
