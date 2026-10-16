@@ -71,13 +71,12 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 	// The canvas may have resized since the last draw
 	ctx.camera.syncCanvasDimensions();
 
-	const { gameRules } = boardsim;
-
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
 	piecemodels.regenAll(ctx, boardsim, mesh);
 
-	const startBox = boardsim.startSnapshot.box;
-	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(startBox);
+	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(
+		boardsim.startSnapshot.box,
+	);
 	const centerArea = area.calculateFromUnpaddedBox(
 		ctx.camera,
 		boxFloating,
@@ -90,16 +89,7 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 	ctx.clearScreen();
 	ctx.maskedDraw.onFrameStart();
 
-	// Render board and promotion lines
-	ctx.maskedDraw.execute(
-		() => border.drawPlayableRegionMask(ctx, gameRules.worldBorder), // INCLUSION MASK: playable region
-		() => piecemodels.renderVoids(ctx, mesh), // EXCLUSION MASK: voids
-		() => {
-			ctx.boardtiles.render();
-			promotionlines.render(ctx, gameRules.promotion, startBox);
-		},
-		'and',
-	);
+	renderBoard(ctx, boardsim, mesh);
 	// Render pieces
 	if (
 		!ctx.boardpos.areZoomedOut() ||
@@ -110,6 +100,20 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 		const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim, []);
 		miniimagerenderer.render(ctx, boardsim.existingTypes, instanceData, {}, false, PREVIEW_ENTITY_WIDTH_VPIXELS); // prettier-ignore
 	}
+}
+
+/** Draws the board's tiles and promotion lines, masked to its playable region with voids cut out. */
+function renderBoard(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh): void {
+	const { gameRules } = boardsim;
+	ctx.maskedDraw.execute(
+		() => border.drawPlayableRegionMask(ctx, gameRules.worldBorder), // INCLUSION MASK: playable region
+		() => piecemodels.renderVoids(ctx, mesh), // EXCLUSION MASK: voids
+		() => {
+			ctx.boardtiles.render();
+			promotionlines.render(ctx, gameRules.promotion, boardsim.startSnapshot.box);
+		},
+		'and',
+	);
 }
 
 // Exports ---------------------------------------------------------------------

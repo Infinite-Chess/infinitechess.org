@@ -6,20 +6,15 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { EngineGamePageInfo } from '../../../../../shared/transport/domain.js';
-import type { LongFormatOut, PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js'; // prettier-ignore
-import type {
-	Additional,
-	DatedVariant,
-	GameFile,
-} from '../../../../../shared/chess/logic/gamefile.js';
 import type {
 	GameStateFull,
 	LeanParticipantState,
 	ParticipantState,
 } from '../../../../../shared/transport/clientbound.js';
 
-import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import servervalidation from '../../../../../shared/chess/variants/servervalidation.js';
@@ -144,56 +139,24 @@ function loadGameFromState(state: GameStateFull, dead: boolean, longformat?: Lon
 	const ourRole = gamesession.getRole();
 
 	// The static setup (variant/time control/creation time) is SSR'd
-	const { variant, timeControl, timeCreated, modifiers, engineGame, viewColor } =
-		window.gamePageData;
-	const slideLimit = modifiers?.find((m) => m.kind === 'slide-limit')?.value;
-	const additional: Additional = {
+	const { engineGame, viewColor } = window.gamePageData;
+	const progress = {
 		moves: state.moves,
 		gameConclusion: state.gameConclusion,
 		clockValues: state.clockValues,
-		slideLimit: slideLimit !== undefined ? BigInt(slideLimit) : undefined,
 	};
-
-	// A custom game has no variant code to build its position from — its ICN is the source of
-	// truth for the position, the gamerules, and which variant revision it's a position of.
-	// (Only the position-defining half of it: time control, moves, clocks and conclusion are the
-	// typed state's to declare, and the ICN's player/result tags are eyeball-only.)
-	let datedVariant: DatedVariant | undefined;
-	let presetAnnotes: PresetAnnotes | undefined;
-	if (variant.kind === 'preset') {
-		datedVariant = { code: variant.code, dateTimestamp: timeCreated };
-		// A preset's rules are rebuilt from its module, which knows nothing of the opponent — so
-		// the border an engine game is played inside is resolved separately. A finished game's ICN
-		// records the board it was actually played on, so it wins over deriving one now.
-		additional.worldBorder = longformat?.gameRules.worldBorder;
-		additional.engineGame = engineGame !== undefined;
-	} else {
-		let startFormat = longformat;
-		if (startFormat === undefined) {
-			if (variant.position === undefined)
-				throw new Error('Custom game page carries no start position.');
-			startFormat = icnconverter.ShortToLong_Format(variant.position);
-		}
-		// The sync half suffices: a custom game's ICN always carries an explicit position,
-		// so the variant-module fallback the async resolver adds has nothing left to resolve.
-		const resolved = gameformulator.constructionOptionsFromLongFormat(startFormat);
-		datedVariant = resolved.variant;
-		presetAnnotes = resolved.presetAnnotes;
-		additional.variantOptions = resolved.additional?.variantOptions;
-	}
 
 	gamesession.loadGame(
 		{
 			kind: 'construct',
-			timeControl,
-			variant: datedVariant,
-			// The game's own start time — NOT the variant revision, which a custom
-			// position lifted from an older game pins to its own, earlier date.
-			dateTimestamp: timeCreated,
-			presetAnnotes,
+			...gameformulator.constructionOptionsFromSetup(
+				window.gamePageData,
+				engineGame !== undefined,
+				progress,
+				longformat,
+			),
 			// Resolved server-side: the URL's color segment, else the side we played on.
 			viewWhitePerspective: viewColor === p.WHITE,
-			additional,
 		},
 		{
 			onLogicalLoaded: () => {

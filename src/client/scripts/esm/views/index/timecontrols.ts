@@ -41,7 +41,7 @@ let config: TimeControlsConfig;
 
 // Initialization --------------------------------------------------------------
 
-/** Wires both time sliders and the preset buttons, then syncs the section to the active markup. */
+/** Wires both time sliders and the preset buttons, then sets the section to the default time control. */
 function init(hostConfig: TimeControlsConfig): void {
 	config = hostConfig;
 
@@ -58,8 +58,10 @@ function init(hostConfig: TimeControlsConfig): void {
 			config.onCommit();
 		});
 	});
-	const activePreset = document.querySelector<HTMLElement>('.preset-btn.active');
-	if (activePreset) applyPreset(activePreset);
+	const { minutes, increment } = clockutil.getMinutesAndIncrementFromClock(
+		clockutil.DEFAULT_TIME_CONTROL,
+	)!;
+	setMinutesAndIncrement(minutes, increment);
 	onTimeToggle();
 }
 

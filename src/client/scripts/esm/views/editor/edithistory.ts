@@ -23,12 +23,13 @@ import arrows from '../../board/rendering/arrows/arrows.js';
 import gameslot from '../../game/chess/gameslot.js';
 import miniimage from '../../game/rendering/miniimage.js';
 import selection from '../../game/chess/selection.js';
+import gamescene from '../../game/rendering/gamescene.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import { GameBus } from '../../board/GameBus.js';
 import boardeditor from './boardeditor.js';
-import movesequence from '../../game/chess/movesequence.js';
 import guinavigation from './gui/guinavigation.js';
+import graphicalchanges from '../../board/rendering/graphicalchanges.js';
 import arrowinteraction from '../../game/rendering/arrows/arrowinteraction.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
@@ -92,7 +93,7 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
 	// Run graphical changes
-	movesequence.runMeshChanges(gamefile, mesh, edit, forward);
+	graphicalchanges.runMeshChanges(gamescene.getGameContext(), gamefile, mesh, edit, forward);
 
 	// If the piece count is now high enough, disable icons and arrows.
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);

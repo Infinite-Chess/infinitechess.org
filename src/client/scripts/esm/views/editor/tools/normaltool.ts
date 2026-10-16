@@ -18,14 +18,15 @@ import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 
 import selection from '../../../game/chess/selection.js';
+import gamescene from '../../../game/rendering/gamescene.js';
 import edithistory from '../edithistory.js';
 import { GameBus } from '../../../board/GameBus.js';
-import movesequence from '../../../game/chess/movesequence.js';
+import graphicalchanges from '../../../board/rendering/graphicalchanges.js';
 
 // Making Move Edits in the Game -----------------------------------------------
 
 /**
- * Similar to {@link movesequence.makeMove}, but doesn't push the move to the game's
+ * Similar to `movesequence.makeMove`, but doesn't push the move to the game's
  * moves list, nor update gui, clocks, or do game over checks, nor the moveIndex property updated.
  */
 function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: MoveCoords): Edit {
@@ -35,7 +36,8 @@ function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: Mo
 	GameBus.dispatch('physical-move');
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
-	if (mesh) movesequence.runMeshChanges(gamefile, mesh, edit, true);
+	if (mesh)
+		graphicalchanges.runMeshChanges(gamescene.getGameContext(), gamefile, mesh, edit, true);
 
 	edithistory.addEditToHistory(edit);
 

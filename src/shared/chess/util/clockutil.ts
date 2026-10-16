@@ -30,7 +30,14 @@ const VALID_INCREMENT_SECS = [
 	60,
 ]; // prettier-ignore
 
+/** The time control the game setup modal starts on, before the player picks one. */
+const DEFAULT_TIME_CONTROL: TimedControl = '480+3';
+
 // Schemas ---------------------------------------------------------------------
+
+/** A {@link TimeControl} that isn't untimed. */
+type TimedControl = z.infer<typeof TimedControlSchema>;
+const TimedControlSchema = z.templateLiteral([z.int().positive(), '+', z.int().nonnegative()]);
 
 /**
  * The clock value for the game, `s+s`, where the left side is
@@ -38,10 +45,7 @@ const VALID_INCREMENT_SECS = [
  * Untimed = `-`
  */
 export type TimeControl = z.infer<typeof TimeControlSchema>;
-const TimeControlSchema = z.union([
-	z.templateLiteral([z.int().positive(), '+', z.int().nonnegative()]),
-	z.literal('-'),
-]);
+const TimeControlSchema = z.union([TimedControlSchema, z.literal('-')]);
 
 /** The values of each color's clock, and which one is currently counting down, if any. */
 export type ClockValues = z.infer<typeof ClockValuesSchema>;
@@ -108,7 +112,7 @@ function getTextContentFromTimeRemain(time: number): string {
 }
 
 /** Whether the game is untimed, which is represented internally with a `"-"`. */
-function isClockValueInfinite(clock: TimeControl): boolean {
+function isClockValueInfinite(clock: TimeControl): clock is '-' {
 	return clock === '-';
 }
 
@@ -174,14 +178,16 @@ function buildTimeControl(
 	return `${baseTimeSeconds}+${incrementSeconds ?? 0}`;
 }
 
-/**
- * Estimates total game seconds as `base_time + 40 × increment`, matching
- * lichess's classification ranges, and returns the speed category.
- */
+/** Estimates a timed game's total seconds per side as `base_time + 40 × increment`, as lichess does. */
+function estimateGameSeconds(time_control: TimedControl): number {
+	const { baseTimeSeconds, incrementSeconds } = splitTimeControl(time_control);
+	return baseTimeSeconds! + 40 * incrementSeconds!;
+}
+
+/** Returns the speed category of a time control, using lichess's ranges over its estimated length. */
 function getSpeedCategory(time_control: TimeControl): SpeedCategory {
 	if (isClockValueInfinite(time_control)) return 'infinite';
-	const { baseTimeSeconds, incrementSeconds } = splitTimeControl(time_control);
-	const estimate = baseTimeSeconds! + 40 * incrementSeconds!;
+	const estimate = estimateGameSeconds(time_control);
 	// if (estimate < 30) return 'ultra-bullet'; // For now our shortest offered base time is 1 minute.
 	if (estimate < 180) return 'bullet';
 	if (estimate < 480) return 'blitz';
@@ -202,6 +208,7 @@ export default {
 	// Constants
 	VALID_BASE_MINUTES,
 	VALID_INCREMENT_SECS,
+	DEFAULT_TIME_CONTROL,
 	// Schemas
 	TimeControlSchema,
 	ClockValuesSchema,

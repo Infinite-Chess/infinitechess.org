@@ -134,7 +134,8 @@ function applyPremove(
 ): void {
 	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
 	movepiece.applyEdit(gamefile, premove, forward);
-	if (mesh) movesequence.runMeshChanges(gamefile, mesh, premove, forward);
+	if (mesh)
+		graphicalchanges.runMeshChanges(gamescene.getGameContext(), gamefile, mesh, premove, forward); // prettier-ignore
 }
 
 /** Similar to {@link movepiece.generateMove}, but generates the edit for a Premove. */

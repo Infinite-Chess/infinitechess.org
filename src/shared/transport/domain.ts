@@ -15,19 +15,19 @@
  */
 
 import type { Rating } from '../chess/util/metadatautil.js';
-import type { TimeControl } from '../chess/util/clockutil.js';
+import type { SeekVariant } from '../chess/util/variantselection.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
+import type { StaticGameSetup } from '../chess/game/gameformulator.js';
 import type { Player, PlayerGroup } from '../chess/util/typeutil.js';
 import type { EngineAssets, ValidEngine } from '../chess/util/engineregistry.js';
-import type { GameStateVariant, SeekVariant } from '../chess/util/variantselection.js';
 
 import * as z from 'zod';
 
+import modutil from '../chess/util/modutil.js';
 import clockutil from '../chess/util/clockutil.js';
 import typeschemas from '../chess/util/typeschemas.js';
 import metadatautil from '../chess/util/metadatautil.js';
 import variantselection from '../chess/util/variantselection.js';
-import modutil, { GameModifier } from '../chess/util/modutil.js';
 
 // Common Helper Schemas -------------------------------------------------------
 
@@ -59,21 +59,6 @@ const GameIDSchema = z.number().int().nonnegative();
 
 // Plain types, not schemas: these travel over HTTP and SSR, which the client casts
 // rather than validates — nothing ever parses them. See the note at the top of the file.
-
-/**
- * The static setup of a game: how it was configured at creation — variant, clock settings,
- * modifiers, creation time. Unchanging for the game's whole life. SSR'd into `gamePageData`
- * (and the `setup` of {@link GameStateCore} for the side bar / dead-game HTTP), so it is
- * never sent over the subscribe socket — the client already has it by game-load time.
- */
-export interface StaticGameSetup {
-	variant: GameStateVariant;
-	timeControl: TimeControl;
-	/** Epoch milliseconds the game was created. */
-	timeCreated: number;
-	/** The modifiers applied to this game. Absent if none. */
-	modifiers?: GameModifier[];
-}
 
 /**
  * A game's {@link StaticGameSetup} plus its conclusion. Everything here is

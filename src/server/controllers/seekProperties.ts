@@ -9,7 +9,7 @@
 import type { Request } from 'express';
 import type { GameRules } from '../../shared/chess/util/gamerules.js';
 import type { VariantIcon } from '../../shared/chess/variants/varianticons.js';
-import type { StaticGameSetup } from '../../shared/transport/domain.js';
+import type { StaticGameSetup } from '../../shared/chess/game/gameformulator.js';
 import type { GlobalGameState } from '../../shared/chess/logic/state.js';
 
 import clockutil from '../../shared/chess/util/clockutil.js';

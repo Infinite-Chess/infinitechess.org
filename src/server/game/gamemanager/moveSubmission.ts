@@ -120,6 +120,7 @@ function submitMove(
 		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, role)
 		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, role);
 	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
+	servergame.match.timeLastMove = Date.now();
 
 	onOfferDraw.decline(servergame, role); // Auto-decline any open draw offer on move submissions
 

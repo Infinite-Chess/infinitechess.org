@@ -8,8 +8,9 @@
 
 import type { Request } from 'express';
 import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { StaticGameSetup } from '../../shared/chess/game/gameformulator.js';
+import type { ChallengePageData } from '../../shared/transport/domain.js';
 import type { SeekPropertiesViewModel } from './seekProperties.js';
-import type { ChallengePageData, StaticGameSetup } from '../../shared/transport/domain.js';
 
 import encodeQR from 'qr';
 

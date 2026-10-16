@@ -320,6 +320,7 @@ function reconstructMatchInfo(
 		variant,
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
+		timeLastMove: Date.now(),
 		rated: Boolean(gameRow.rated),
 		private: Boolean(gameRow.private),
 		modifiers:
