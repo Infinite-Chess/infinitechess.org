@@ -1,16 +1,16 @@
-// src/client/scripts/esm/board/rendering/splines.ts
+// src/client/scripts/esm/board/rendering/animation/splines.ts
 
 /**
  * This script contains utility methods for working with splines.
  */
 
-import type { Color } from '../../../../../shared/types/color.js';
-import type RenderContext from './RenderContext.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
+import type { Color } from '../../../../../../shared/types/color.js';
+import type RenderContext from '../RenderContext.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import space from './space.js';
+import space from '../space.js';
 
 // Constants -------------------------------------------------------------------
 

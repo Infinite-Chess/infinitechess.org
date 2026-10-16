@@ -26,7 +26,7 @@ import guiclock from './gui/guiclock.js';
 import premoves from './chess/premoves.js';
 import keybinds from './keybinds.js';
 import listeners from './listeners.js';
-import animation from '../board/rendering/animation.js';
+import animation from '../board/rendering/animation/animation.js';
 import selection from './chess/selection.js';
 import boarddrag from './rendering/boarddrag.js';
 import IndexedDB from '../util/IndexedDB.js';

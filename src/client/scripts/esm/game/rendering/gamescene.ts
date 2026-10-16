@@ -24,7 +24,7 @@ import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from './highlights/snapping.js';
 import selection from '../chess/selection.js';
-import animation from '../../board/rendering/animation.js';
+import animation from '../../board/rendering/animation/animation.js';
 import starfield from './starfield.js';
 import LiveBoard from '../../board/rendering/LiveBoard.js';
 import boardview from './boardview.js';

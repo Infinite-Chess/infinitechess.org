@@ -27,7 +27,7 @@ import boardpos from '../../board/rendering/boardpos.js';
 import gameslot from './gameslot.js';
 import selection from './selection.js';
 import gamescene from '../rendering/gamescene.js';
-import animation from '../../board/rendering/animation.js';
+import animation from '../../board/rendering/animation/animation.js';
 import { Mouse } from '../input.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';

@@ -1,30 +1,30 @@
-// src/client/scripts/esm/board/rendering/animation.ts
+// src/client/scripts/esm/board/rendering/animation/animation.ts
 
 /**
  * This script handles the animation of pieces, on whichever live board they move on.
  * It also plays each move's landing effects, through moveeffects.
  */
 
-import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
-import type { Color } from '../../../../../shared/types/color.js';
-import type LiveBoard from './LiveBoard.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
+import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
+import type { Color } from '../../../../../../shared/types/color.js';
+import type LiveBoard from '../LiveBoard.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import math from '../../../../../shared/util/math/math.js';
-import bdcoords from '../../../../../shared/util/bdcoords.js';
-import coordutil from '../../../../../shared/util/coordutil.js';
-import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
-import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import math from '../../../../../../shared/util/math/math.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
+import piecethemes from '../../../../../../shared/chess/util/piecethemes.js';
+import vectors, { Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../../shared/chess/util/typeutil.js';
 
-import meshes from './meshes.js';
+import meshes from '../meshes.js';
 import splines from './splines.js';
 import moveeffects from './moveeffects.js';
-import arrowshifts from './arrows/arrowshifts.js';
-import piecemodels from './piecemodels.js';
-import instancedshapes from './instancedshapes.js';
+import arrowshifts from '../arrows/arrowshifts.js';
+import piecemodels from '../piecemodels.js';
+import instancedshapes from '../instancedshapes.js';
 
 // Types -----------------------------------------------------------------------
 

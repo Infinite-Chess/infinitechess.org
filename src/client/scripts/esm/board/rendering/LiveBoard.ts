@@ -11,7 +11,7 @@
  */
 
 import type { Ripples } from './WaterRipples.js';
-import type { Animation } from './animation.js';
+import type { Animation } from './animation/animation.js';
 import type { ArrowsState } from './arrows/arrows.js';
 import type { RenderContextParams } from './RenderContext.js';
 

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/board/rendering/moveeffects.ts
+// src/client/scripts/esm/board/rendering/animation/moveeffects.ts
 
 /**
  * Handles the effects of a piece landing: its sound (reverb, dampening, bell, ripple),
@@ -6,13 +6,13 @@
  * A silent board still ripples and shakes.
  */
 
-import type LiveBoard from './LiveBoard.js';
-import type { Coords } from '../../../../../shared/util/coordutil.js';
+import type LiveBoard from '../LiveBoard.js';
+import type { Coords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import gamesound from '../gamesound.js';
-import WaterRipples from './WaterRipples.js';
+import gamesound from '../../gamesound.js';
+import WaterRipples from '../WaterRipples.js';
 
 // Move Configs ----------------------------------------------------------------
 

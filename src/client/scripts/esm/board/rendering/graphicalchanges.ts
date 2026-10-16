@@ -20,7 +20,7 @@ import type {
 
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 
-import animation from './animation.js';
+import animation from './animation/animation.js';
 import piecemodels from './piecemodels.js';
 import preferences from '../../util/preferences.js';
 

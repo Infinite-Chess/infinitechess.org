@@ -24,7 +24,7 @@ import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import keybinds from '../../keybinds.js';
 import selection from '../../chess/selection.js';
-import animation from '../../../board/rendering/animation.js';
+import animation from '../../../board/rendering/animation/animation.js';
 import { Mouse } from '../../input.js';
 import gamescene from '../gamescene.js';
 import droparrows from './droparrows.js';

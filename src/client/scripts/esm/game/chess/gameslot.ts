@@ -32,7 +32,7 @@ import gamescene from '../rendering/gamescene.js';
 import miniimage from '../rendering/miniimage.js';
 import starfield from '../rendering/starfield.js';
 import gamesound from '../../board/gamesound.js';
-import animation from '../../board/rendering/animation.js';
+import animation from '../../board/rendering/animation/animation.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import gamesession from './gamesession.js';
 import piecemodels from '../../board/rendering/piecemodels.js';

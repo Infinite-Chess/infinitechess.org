@@ -21,7 +21,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
-import animation from '../../../board/rendering/animation.js';
+import animation from '../../../board/rendering/animation/animation.js';
 import gamescene from '../../../game/rendering/gamescene.js';
 import guimovetree from './guimovetree.js';
 import gamesession from '../../../game/chess/gamesession.js';

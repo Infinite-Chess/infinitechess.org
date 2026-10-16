@@ -18,7 +18,7 @@ import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.j
 import gameslot from './gameslot.js';
 import premoves from './premoves.js';
 import gamescene from '../rendering/gamescene.js';
-import animation from '../../board/rendering/animation.js';
+import animation from '../../board/rendering/animation/animation.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
 import frametracker from '../../board/rendering/frametracker.js';

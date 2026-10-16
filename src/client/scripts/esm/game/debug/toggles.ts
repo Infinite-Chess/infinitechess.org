@@ -13,7 +13,7 @@ import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import camera from '../../board/rendering/camera.js';
-import animation from '../../board/rendering/animation.js';
+import animation from '../../board/rendering/animation/animation.js';
 import miniimage from '../rendering/miniimage.js';
 import gamescene from '../rendering/gamescene.js';
 import piecemodels from '../../board/rendering/piecemodels.js';

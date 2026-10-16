@@ -6,7 +6,7 @@
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
-import type { Animation } from './animation.js';
+import type { Animation } from './animation/animation.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { BDCoords, CoordsKey } from '../../../../../shared/util/coordutil.js';
@@ -21,7 +21,7 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import { players as p, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 
 import space from './space.js';
-import animation from './animation.js';
+import animation from './animation/animation.js';
 import boardgeometry from './boardgeometry.js';
 import instancedshapes from './instancedshapes.js';
 import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
