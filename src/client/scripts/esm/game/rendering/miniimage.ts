@@ -69,7 +69,7 @@ function toggle(): void {
 	else toast.show(t.gamegui.icons.on);
 }
 
-// Updating --------------------------------------------------------------------
+// Enumeration -----------------------------------------------------------------
 
 /** Iterate over every renderable piece (static and animated) and invoke the callback with its board coords and type. */
 function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => void): void {
@@ -80,99 +80,6 @@ function forEachRenderablePiece(callback: (coords: BDCoords, type: number) => vo
 		board.animations,
 		callback,
 	);
-}
-
-/** Generates the instance data for the miniimages of the pieces this frame. */
-function getImageInstanceData(): {
-	instanceData: TypeGroup<number[]>;
-	instanceData_hovered: TypeGroup<number[]>;
-} {
-	const instanceData: TypeGroup<number[]> = {};
-	const instanceData_hovered: TypeGroup<number[]> = {};
-
-	const pointerWorlds = mouse.getAllPointerWorlds();
-
-	const boardsim = gameslot.getGamefile()!;
-
-	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
-	const boardPos = boardpos.getBoardPos();
-	const boardScale = boardpos.getBoardScale();
-	const areWatchingMousePosition: boolean =
-		!perspective.getEnabled() || perspective.isMouseLocked();
-
-	// Prepare empty arrays by type
-	boardsim.existingTypes.forEach((type: number) => {
-		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
-
-		instanceData[type] = [];
-		instanceData_hovered[type] = [];
-	});
-
-	if (!disabled) {
-		// Enabled => normal behavior
-		forEachRenderablePiece(processPiece); // Process each renderable piece
-	} else {
-		// Disabled (too many pieces) => Only process pieces on highlights or being animated
-		const piecesToRender = getPiecesShownWhenDisabled();
-		piecesToRender.forEach((p) => {
-			const coordsBD = bdcoords.fromCoords(p.coords);
-			processPiece(coordsBD, p.type);
-		}); // Calculate their instance data
-	}
-
-	/** Calculates and appends the instance data of the piece */
-	function processPiece(coords: BDCoords, type: number): void {
-		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
-		instanceData[type]!.push(...coordsWorld);
-
-		// Are we hovering over? If so, add the same data to instanceData_hovered
-		if (areWatchingMousePosition) {
-			for (const pointerWorld of pointerWorlds) {
-				if (vectors.chebyshevDistanceDoubles(coordsWorld, pointerWorld) < halfWorldWidth)
-					instanceData_hovered[type]!.push(...coordsWorld);
-			}
-		}
-	}
-
-	return { instanceData, instanceData_hovered };
-}
-
-/** Returns a list of mini image coordinates that are all being hovered over by the provided world coords. */
-function getImagesBelowWorld(
-	world: DoubleCoords,
-	trackDists: boolean,
-): { images: Coords[]; dists?: number[] } {
-	const imagesHovered: Coords[] = [];
-	const dists: number[] = [];
-
-	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
-	const boardPos = boardpos.getBoardPos();
-	const boardScale = boardpos.getBoardScale();
-
-	if (!disabled) {
-		// Enabled => normal behavior
-		// Check static and animated pieces for hover
-		forEachRenderablePiece(processPiece);
-	} else {
-		// Disabled (too many pieces) => Only process pieces on highlights or being animated
-		const piecesToConsider = getPiecesShownWhenDisabled();
-		piecesToConsider.forEach((p) => {
-			const coordsBD = bdcoords.fromCoords(p.coords);
-			processPiece(coordsBD);
-		}); // Calculate if their underneath the world coords
-	}
-
-	function processPiece(coords: BDCoords): void {
-		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
-		if (vectors.chebyshevDistanceDoubles(coordsWorld, world) < halfWorldWidth) {
-			const integerCoords = bdcoords.coordsToBigInt(coords);
-			imagesHovered.push(integerCoords);
-			// Upgrade the distance to euclidean
-			if (trackDists) dists.push(vectors.euclideanDistanceDoubles(coordsWorld, world));
-		}
-	}
-
-	return trackDists ? { images: imagesHovered, dists } : { images: imagesHovered };
 }
 
 /**
@@ -237,6 +144,103 @@ function getPiecesShownWhenDisabled(): Piece[] {
 	premoves.applyPremoves(gamefile, mesh);
 
 	return piecesToRender;
+}
+
+// Instance Data ---------------------------------------------------------------
+
+/** Generates the instance data for the miniimages of the pieces this frame. */
+function getImageInstanceData(): {
+	instanceData: TypeGroup<number[]>;
+	instanceData_hovered: TypeGroup<number[]>;
+} {
+	const instanceData: TypeGroup<number[]> = {};
+	const instanceData_hovered: TypeGroup<number[]> = {};
+
+	const pointerWorlds = mouse.getAllPointerWorlds();
+
+	const boardsim = gameslot.getGamefile()!;
+
+	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
+	const areWatchingMousePosition: boolean =
+		!perspective.getEnabled() || perspective.isMouseLocked();
+
+	// Prepare empty arrays by type
+	boardsim.existingTypes.forEach((type: number) => {
+		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
+
+		instanceData[type] = [];
+		instanceData_hovered[type] = [];
+	});
+
+	if (!disabled) {
+		// Enabled => normal behavior
+		forEachRenderablePiece(processPiece); // Process each renderable piece
+	} else {
+		// Disabled (too many pieces) => Only process pieces on highlights or being animated
+		const piecesToRender = getPiecesShownWhenDisabled();
+		piecesToRender.forEach((p) => {
+			const coordsBD = bdcoords.fromCoords(p.coords);
+			processPiece(coordsBD, p.type);
+		}); // Calculate their instance data
+	}
+
+	/** Calculates and appends the instance data of the piece */
+	function processPiece(coords: BDCoords, type: number): void {
+		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
+		instanceData[type]!.push(...coordsWorld);
+
+		// Are we hovering over? If so, add the same data to instanceData_hovered
+		if (areWatchingMousePosition) {
+			for (const pointerWorld of pointerWorlds) {
+				if (vectors.chebyshevDistanceDoubles(coordsWorld, pointerWorld) < halfWorldWidth)
+					instanceData_hovered[type]!.push(...coordsWorld);
+			}
+		}
+	}
+
+	return { instanceData, instanceData_hovered };
+}
+
+// Hovering --------------------------------------------------------------------
+
+/** Returns a list of mini image coordinates that are all being hovered over by the provided world coords. */
+function getImagesBelowWorld(
+	world: DoubleCoords,
+	trackDists: boolean,
+): { images: Coords[]; dists?: number[] } {
+	const imagesHovered: Coords[] = [];
+	const dists: number[] = [];
+
+	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
+
+	if (!disabled) {
+		// Enabled => normal behavior
+		// Check static and animated pieces for hover
+		forEachRenderablePiece(processPiece);
+	} else {
+		// Disabled (too many pieces) => Only process pieces on highlights or being animated
+		const piecesToConsider = getPiecesShownWhenDisabled();
+		piecesToConsider.forEach((p) => {
+			const coordsBD = bdcoords.fromCoords(p.coords);
+			processPiece(coordsBD);
+		}); // Calculate if their underneath the world coords
+	}
+
+	function processPiece(coords: BDCoords): void {
+		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
+		if (vectors.chebyshevDistanceDoubles(coordsWorld, world) < halfWorldWidth) {
+			const integerCoords = bdcoords.coordsToBigInt(coords);
+			imagesHovered.push(integerCoords);
+			// Upgrade the distance to euclidean
+			if (trackDists) dists.push(vectors.euclideanDistanceDoubles(coordsWorld, world));
+		}
+	}
+
+	return trackDists ? { images: imagesHovered, dists } : { images: imagesHovered };
 }
 
 // Rendering -------------------------------------------------------------------
