@@ -50,7 +50,7 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
 	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
 };
 
-// Functions -------------------------------------------------------------------
+// Enumeration -----------------------------------------------------------------
 
 /**
  * Iterates over every piece a board renders as a mini image, animated and static alike,
@@ -153,6 +153,8 @@ function getMaxAnimationDistance(ctx: RenderContext): BigDecimal {
 	return bd.divideFloating(MAX_ANIM_DIST_VPIXELS, tileWidthPixels);
 }
 
+// Instance Data ---------------------------------------------------------------
+
 /**
  * Builds instance data (world-space positions per type) for every piece a board renders
  * as a mini image, or only its moved pieces once it has too many. No hover.
@@ -187,6 +189,8 @@ function buildInstanceData(
 function isOverPieceCap(boardsim: BoardPreview): boolean {
 	return boardutil.getPieceCountOfGame(boardsim.pieces) > MAX_PIECE_COUNT;
 }
+
+// Rendering -------------------------------------------------------------------
 
 /**
  * Renders mini images from pre-built instance data.
@@ -270,11 +274,15 @@ function render(
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
 	MAX_PIECE_COUNT,
+	// Enumeration
 	forEachRenderablePiece,
 	forEachLastAndNextMovePiece,
 	forEachAnimatedPiece,
+	// Instance Data
 	buildInstanceData,
 	isOverPieceCap,
+	// Rendering
 	render,
 };
