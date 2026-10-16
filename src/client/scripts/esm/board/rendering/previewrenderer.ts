@@ -42,7 +42,7 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 	ctx.maskedDraw.onFrameStart();
 
 	standaloneboard.renderBoard(ctx, boardsim, mesh);
-	standaloneboard.renderPieces(ctx, boardsim, mesh, []);
+	standaloneboard.renderPieces(ctx, boardsim, mesh, [], []);
 }
 
 // Exports ---------------------------------------------------------------------

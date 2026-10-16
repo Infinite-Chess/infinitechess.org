@@ -16,7 +16,6 @@ import type { GameConstructionOptions } from '../../../../../shared/chess/game/g
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
@@ -157,9 +156,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 
 	viewColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
-	const pieceCount = boardutil.getPieceCountOfGame(game.pieces);
-	// Disable miniimages if there's too many pieces
-	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT) miniimage.disable();
+	if (miniimagerenderer.isOverPieceCap(game)) miniimage.disable();
 	if (arrows.isGameTooLarge(game)) arrowinteraction.forceModeOff();
 	else arrowinteraction.applyPreferredMode(); // A previous game may have forced them off, or lowered the mode
 

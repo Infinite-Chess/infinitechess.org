@@ -195,16 +195,15 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const mesh = gameslot.getMesh();
 	const board = gamescene.getGameContext();
 
+	/** Adds a piece the shared enumerations visit. */
+	const pushVisited = (coords: BDCoords, type: number): void =>
+		pushPieceNoDuplicatesOrVoids({ coords: bdcoords.coordsToBigInt(coords), type, index: -1 });
+
 	// 1. Add the animated pieces: each moving piece, and the captured pieces still shown
 	const activeHides = miniimagerenderer.forEachAnimatedPiece(
 		board,
 		board.animations,
-		(coords, type) =>
-			pushPieceNoDuplicatesOrVoids({
-				coords: bdcoords.coordsToBigInt(coords),
-				type,
-				index: -1,
-			}),
+		pushVisited,
 	);
 
 	// Queued premoves must be rewound BEFORE reading the pieces, so they are in the expected locations as the last and next move!
@@ -227,35 +226,12 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	if (pieceSelected) pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
 
 	// 4. Add pieces from the last and next moves
-	const moveIndex = gamefile.state.local.moveIndex;
-	// Last move's destination piece
-	const lastMove = gamefile.moves[moveIndex];
-	if (
-		lastMove &&
-		!board.animations.some((a) =>
-			coordutil.areCoordsEqual(lastMove.endCoords, a.path[a.path.length - 1]!),
-		)
-	) {
-		// SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
-		const lastMovedPiece = boardutil.getPieceFromCoords(pieces, lastMove.endCoords)!;
-		if (!lastMovedPiece)
-			throw new Error('Could not find last moved piece at its destination coords: ' + lastMove.endCoords); // prettier-ignore
-		pushPieceNoDuplicatesOrVoids(lastMovedPiece);
-	}
-	// Next move's starting piece
-	const nextMove = gamefile.moves[moveIndex + 1];
-	if (
-		nextMove &&
-		!board.animations.some((a) =>
-			coordutil.areCoordsEqual(nextMove.startCoords, a.path[a.path.length - 1]!),
-		)
-	) {
-		// SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
-		const nextToMovePiece = boardutil.getPieceFromCoords(pieces, nextMove.startCoords)!;
-		if (!nextToMovePiece)
-			throw new Error('Could not find next to move piece at its starting coords: ' + nextMove.startCoords); // prettier-ignore
-		pushPieceNoDuplicatesOrVoids(nextToMovePiece);
-	}
+	miniimagerenderer.forEachLastAndNextMovePiece(
+		gamefile,
+		gamefile.moves,
+		board.animations,
+		pushVisited,
+	);
 
 	premoves.applyPremoves(gamefile, mesh);
 

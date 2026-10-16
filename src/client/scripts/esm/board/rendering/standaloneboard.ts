@@ -8,12 +8,11 @@
 
 import type { Area } from './area.js';
 import type { Mesh } from './piecemodels.js';
+import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Animation } from './animation/animation.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { RenderContextParams } from './RenderContext.js';
-
-import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 
 import area from './area.js';
 import webgl from './webgl.js';
@@ -90,22 +89,23 @@ function renderBoard(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh): vo
 }
 
 /**
- * Draws the board's pieces: their models, or mini images once zoomed out, unless too many to.
+ * Draws the board's pieces: their models, or mini images once zoomed out. With too many pieces,
+ * the models stay, and only the moved pieces get mini images.
+ * @param moves - The board's moves, viewed at its move index. A static position has none.
  * @param animations - The pieces mid-animation, whose mini images draw where they are now.
  */
 function renderPieces(
 	ctx: RenderContext,
 	boardsim: BoardPreview,
 	mesh: Mesh,
+	moves: MoveFull[],
 	animations: Animation[],
 ): void {
-	const pieceCount = boardutil.getPieceCountOfGame(boardsim.pieces);
-	if (!ctx.boardpos.areZoomedOut() || pieceCount > miniimagerenderer.MAX_PIECE_COUNT) {
-		piecemodels.renderAll(ctx, mesh);
-	} else {
-		const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim, animations);
-		miniimagerenderer.render(ctx, boardsim.existingTypes, instanceData, {}, false, ENTITY_WIDTH_VPIXELS); // prettier-ignore
-	}
+	const zoomedOut = ctx.boardpos.areZoomedOut();
+	if (!zoomedOut || miniimagerenderer.isOverPieceCap(boardsim)) piecemodels.renderAll(ctx, mesh);
+	if (!zoomedOut) return;
+	const instanceData = miniimagerenderer.buildInstanceData(ctx, boardsim, moves, animations);
+	miniimagerenderer.render(ctx, boardsim.existingTypes, instanceData, {}, false, ENTITY_WIDTH_VPIXELS); // prettier-ignore
 }
 
 // Exports ---------------------------------------------------------------------

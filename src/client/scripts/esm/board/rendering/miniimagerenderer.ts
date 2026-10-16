@@ -1,15 +1,17 @@
 // src/client/scripts/esm/board/rendering/miniimagerenderer.ts
 
 /**
- * The core mini image rendering pipeline: which pieces a board shows as mini images,
- * animated ones included, and rendering pre-built instance data as instanced piece sprites.
+ * The core mini image rendering pipeline: which pieces a board shows as mini images, animated
+ * ones included, both normally and once it has too many pieces, and rendering pre-built instance
+ * data as instanced piece sprites.
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
+import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Animation } from './animation/animation.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
-import type { BDCoords, CoordsKey } from '../../../../../shared/util/coordutil.js';
+import type { BDCoords, Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -29,8 +31,8 @@ import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Rendera
 // Constants -------------------------------------------------------------------
 
 /**
- * The maximum number of pieces in a game before mini image rendering is disabled
- * for all pieces that aren't underneath an annotation, animated, or selected.
+ * The most pieces a board shows every mini image of. Past it, only its moved pieces keep theirs,
+ * plus, on the game page, those annotated or selected.
  */
 const MAX_PIECE_COUNT = 40_000;
 
@@ -84,6 +86,38 @@ function forEachRenderablePiece(
 }
 
 /**
+ * Invokes the callback for the pieces of the viewed position's last and next moves, which a board
+ * still shows as mini images, beside its animated pieces, once it has too many for the rest.
+ * @param moves - The board's moves, viewed at its move index. A static position has none.
+ */
+function forEachLastAndNextMovePiece(
+	boardsim: BoardPreview,
+	moves: MoveFull[],
+	animations: Animation[],
+	callback: (coords: BDCoords, type: number) => void,
+): void {
+	const { moveIndex } = boardsim.state.local;
+	const lastMove = moves[moveIndex];
+	if (lastMove) visitPieceAt(boardsim, animations, lastMove.endCoords, callback);
+	const nextMove = moves[moveIndex + 1];
+	if (nextMove) visitPieceAt(boardsim, animations, nextMove.startCoords, callback);
+}
+
+/** Invokes the callback for the piece on a square, unless an animation landing there already shows it. */
+function visitPieceAt(
+	boardsim: BoardPreview,
+	animations: Animation[],
+	coords: Coords,
+	callback: (coords: BDCoords, type: number) => void,
+): void {
+	if (animations.some((a) => coordutil.areCoordsEqual(coords, a.path[a.path.length - 1]!)))
+		return;
+	const piece = boardutil.getPieceFromCoords(boardsim.pieces, coords);
+	if (!piece) throw new Error('Could not find a moved piece at its square: ' + coords);
+	callback(bdcoords.fromCoords(coords), piece.type);
+}
+
+/**
  * Invokes the callback for every piece a board's animations show mid-flight: each moving piece,
  * and the captured pieces still shown. Returns the squares they hide, whose pieces aren't shown.
  */
@@ -121,26 +155,37 @@ function getMaxAnimationDistance(ctx: RenderContext): BigDecimal {
 
 /**
  * Builds instance data (world-space positions per type) for every piece a board renders
- * as a mini image. No hover.
+ * as a mini image, or only its moved pieces once it has too many. No hover.
  * @param ctx - The render context whose board position places the pieces.
+ * @param moves - The board's moves, viewed at its move index. A static position has none.
  * @param animations - The animations playing on the board. Their pieces are shown mid-flight.
  */
 function buildInstanceData(
 	ctx: RenderContext,
 	boardsim: BoardPreview,
+	moves: MoveFull[],
 	animations: Animation[],
 ): TypeGroup<number[]> {
 	const instanceData: TypeGroup<number[]> = {};
 
 	const boardPos = ctx.boardpos.getBoardPos();
 	const boardScale = ctx.boardpos.getBoardScale();
-
-	forEachRenderablePiece(ctx, boardsim, animations, (coords, type) => {
+	const callback = (coords: BDCoords, type: number): void => {
 		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
 		(instanceData[type] ??= []).push(...coordsWorld);
-	});
+	};
+
+	if (isOverPieceCap(boardsim)) {
+		forEachAnimatedPiece(ctx, animations, callback);
+		forEachLastAndNextMovePiece(boardsim, moves, animations, callback);
+	} else forEachRenderablePiece(ctx, boardsim, animations, callback);
 
 	return instanceData;
+}
+
+/** Whether a board has more than {@link MAX_PIECE_COUNT} pieces. */
+function isOverPieceCap(boardsim: BoardPreview): boolean {
+	return boardutil.getPieceCountOfGame(boardsim.pieces) > MAX_PIECE_COUNT;
 }
 
 /**
@@ -227,7 +272,9 @@ function render(
 export default {
 	MAX_PIECE_COUNT,
 	forEachRenderablePiece,
+	forEachLastAndNextMovePiece,
 	forEachAnimatedPiece,
 	buildInstanceData,
+	isOverPieceCap,
 	render,
 };

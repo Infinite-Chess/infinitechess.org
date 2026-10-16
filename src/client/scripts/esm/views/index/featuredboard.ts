@@ -243,7 +243,7 @@ function render(featuredBoard: FeaturedBoard): void {
 		positionhighlights.render(board, gamefile);
 		animation.renderTransparentSquares(board); // Hides the pieces mid-animation
 	});
-	standaloneboard.renderPieces(board, gamefile, mesh, board.animations);
+	standaloneboard.renderPieces(board, gamefile, mesh, gamefile.moves, board.animations);
 	board.executeWithDepthFunc_ALWAYS(() => {
 		animation.renderAnimations(board);
 		arrowsgraphics.render(board, []);
