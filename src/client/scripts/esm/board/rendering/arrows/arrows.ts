@@ -11,10 +11,13 @@
 
 import type LiveBoard from '../LiveBoard.js';
 import type { Shift } from './arrowshifts.js';
+import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { BoundingBox, BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
+
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 
 import arrowscalculator from './arrowscalculator.js';
 
@@ -213,6 +216,12 @@ function areArrowsActiveThisFrame(board: LiveBoard): boolean {
 	return board.arrows.mode !== 0 && arrowscalculator.areZoomedInEnoughForArrows(board);
 }
 
+/** Whether a game has too many pieces or lines to calculate arrow indicators for, so they must stay off. */
+function isGameTooLarge(boardsim: Board): boolean {
+	const pieceCount = boardutil.getPieceCountOfGame(boardsim.pieces);
+	return pieceCount > MAX_PIECES || boardsim.pieces.lines.size > MAX_LINES;
+}
+
 // Frame lifecycle -------------------------------------------------------------
 
 /**
@@ -254,12 +263,12 @@ function reset(board: LiveBoard): void {
 export default {
 	// Constants
 	MAX_PIECES,
-	MAX_LINES,
 	// Factory
 	createState,
 	// Getters
 	getAllArrows,
 	areArrowsActiveThisFrame,
+	isGameTooLarge,
 	// Frame lifecycle
 	update,
 	reset,

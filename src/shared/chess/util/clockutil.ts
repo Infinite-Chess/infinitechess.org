@@ -111,6 +111,19 @@ function getTextContentFromTimeRemain(time: number): string {
 	return `${minutes.toString().padStart(2, '0')}:${ss}`;
 }
 
+/**
+ * Stamps when the ticking color flags, in the receiver's own clock, from the remaining time
+ * the sender reported. Call at receipt, before the values can go stale.
+ * @param transitMs - How long the values took to arrive, deducted from the ticking color's time.
+ */
+function stampFlagDeadline(clockValues: ClockValues, transitMs: number): void {
+	const ticking = clockValues.ticking;
+	if (ticking === undefined) return; // No clock is ticking (< 2 moves, or the game is over)
+	const remaining = Math.max(0, clockValues.clocks[ticking.color]! - transitMs);
+	clockValues.clocks[ticking.color] = remaining;
+	ticking.losesAt = Date.now() + remaining;
+}
+
 /** Whether the game is untimed, which is represented internally with a `"-"`. */
 function isClockValueInfinite(clock: TimeControl): clock is '-' {
 	return clock === '-';
@@ -215,6 +228,7 @@ export default {
 	// Functions
 	isTimedControlValid,
 	getTextContentFromTimeRemain,
+	stampFlagDeadline,
 	isClockValueInfinite,
 	getMinutesAndIncrementFromClock,
 	getTimeControlLabel,

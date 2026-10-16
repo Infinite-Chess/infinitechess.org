@@ -36,6 +36,7 @@ import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
 import socketintents from '../../socket/socketintents.js';
+import featuredgames from './featuredgames.js';
 import gamesetupmodal from './gamesetupmodal.js';
 import seekpreviewcache from './seekpreviewcache.js';
 import variantpreviewtooltip from '../../board/variantselector/variantpreviewtooltip.js';
@@ -401,12 +402,13 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<number>()): voi
 }
 
 /**
- * Clears the seek display, tracked state, and viewer count, but preserves
+ * Clears the seek display, tracked state, viewer count and featured games, but preserves
  * the new-seek tracker so a reconnect doesn't replay arrival sounds.
  */
 function clearSeekList(): void {
 	onSeekListUpdate({ seekslist: [] }, true); // Don't clear seek tracker memory
 	element_lobbyViewerCount.textContent = 'ω';
+	featuredgames.clear();
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */

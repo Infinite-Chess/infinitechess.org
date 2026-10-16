@@ -93,6 +93,15 @@ class RenderContext {
 	executeWithInverseBlending(func: () => void): void {
 		webgl.executeWithInverseBlending(this.gl, func);
 	}
+
+	/**
+	 * Discards this context: detaches its listeners and loses its WebGL context at once,
+	 * since browsers cap how many stay alive. Never draw with it afterward.
+	 */
+	dispose(): void {
+		this.boardtiles.dispose();
+		this.gl.getExtension('WEBGL_lose_context')?.loseContext();
+	}
 }
 
 export default RenderContext;

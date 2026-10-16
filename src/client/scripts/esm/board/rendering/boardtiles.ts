@@ -6,8 +6,7 @@
  * The board's geometry queries (bounding box, tile width) live in {@link boardgeometry}.
  *
  * This is a FACTORY: {@link createBoardTiles} builds one tile renderer bound to a
- * {@link RenderContext}. The interactive game and each static preview own one, with
- * their own tile textures in their own gl context.
+ * {@link RenderContext}. Every board owns one, with its own tile textures in its own gl context.
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
@@ -40,6 +39,8 @@ export interface BoardTiles {
 	render(noiseTextures?: NoiseTextures, uniforms?: Record<string, UniformValue>): void;
 	/** Renders the solid grey cover behind the tiles. */
 	renderSolidCover(): void;
+	/** Stops reacting to theme changes, so a discarded board can be garbage collected. */
+	dispose(): void;
 }
 
 /**
@@ -87,13 +88,23 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	/** The most recent texture generation. Replaced by every theme change. */
 	let texturesReady: Promise<void> = Promise.resolve();
 
-	SettingsBus.addEventListener('theme-change', () => {
-		// console.log(`Board theme change event detected: ${preferences.getBoardColor()}`);
-		texturesReady = resetColor();
-	});
+	/** Detaches this renderer's settings listeners, on {@link dispose}. */
+	const listeners = new AbortController();
+
+	SettingsBus.addEventListener(
+		'theme-change',
+		() => {
+			texturesReady = resetColor();
+		},
+		{ signal: listeners.signal },
+	);
 
 	function ready(): Promise<void> {
 		return texturesReady;
+	}
+
+	function dispose(): void {
+		listeners.abort();
 	}
 
 	// Initialization --------------------------------------------------------------
@@ -328,7 +339,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		return ctx.renderable.createRenderable_GivenInfo(data, attributeInfo, 'TRIANGLES', 'board_uber_shader', textures); // prettier-ignore
 	}
 
-	return { init, ready, render, renderSolidCover };
+	return { init, ready, render, renderSolidCover, dispose };
 }
 
 export { createBoardTiles };

@@ -177,28 +177,32 @@ which draws through `GameBus`'s `render-below-pieces` / `render-above-pieces` ho
 
 ## Rendering Architecture: Render Contexts
 
-The game can draw independent boards at the same time: the interactive game, and static previews —
-the small board inside the variant-preview hover tooltip
-([`variantpreviewtooltip.ts`](/src/client/scripts/esm/board/variantselector/variantpreviewtooltip.ts)),
+The game can draw independent boards at the same time: the interactive game, static previews (the
+small board inside the variant-preview hover tooltip
+([`variantpreviewtooltip.ts`](/src/client/scripts/esm/board/variantselector/variantpreviewtooltip.ts))
 and the challenge page's board
-([`challengepreview.ts`](/src/client/scripts/esm/views/challenge/challengepreview.ts)). Each lives
-on its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs,
-textures, buffers/VAOs) can **never** be shared across contexts.
+([`challengepreview.ts`](/src/client/scripts/esm/views/challenge/challengepreview.ts))), and the
+home page's featured live games
+([`featuredboard.ts`](/src/client/scripts/esm/views/index/featuredboard.ts)). Each lives on its own
+`<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures,
+buffers/VAOs) can **never** be shared across contexts.
 
 A [`RenderContext`](/src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything
 bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale),
 piece `textures`, stencil `maskedDraw`, `frames` tracker (whether it needs a redraw), tile renderer
-(`boardtiles`), and a `renderable` factory for creating models in that context. Each preview builds
-one with
-[`previewrenderer.createContext()`](/src/client/scripts/esm/board/rendering/previewrenderer.ts).
-Shared drawing code is handed a `RenderContext` and draws for whichever board it's told, instead of
-reaching for a process-wide singleton.
+(`boardtiles`), and a `renderable` factory for creating models in that context. Every board outside
+the interactive game assembles its parts with
+[`standaloneboard.ts`](/src/client/scripts/esm/board/rendering/standaloneboard.ts), which also draws
+the layers they share. Shared drawing code is handed a `RenderContext` and draws for whichever board
+it's told, instead of reaching for a process-wide singleton. A board that comes and goes calls
+`dispose()`, as browsers cap how many WebGL contexts stay alive.
 
 A board that plays a game out is a
 [`LiveBoard`](/src/client/scripts/esm/board/rendering/LiveBoard.ts): a `RenderContext` that also
 holds its piece animations, arrow indicators, water ripples, and post-processing pipeline. The
-interactive game builds one in `gamescene.init()`. Live-board modules (animation, arrows, ripples,
-move effects) hold no state of their own and take the board they act on.
+interactive game builds one in `gamescene.init()`, and the home page one per featured game.
+Live-board modules (animation, arrows, ripples, move effects) hold no state of their own and take
+the board they act on.
 
 ### Choosing a shape for a new render module
 

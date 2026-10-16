@@ -10,6 +10,7 @@ import type { ClientboundLobbyMessage } from '../../../../../shared/transport/cl
 
 import lobby from './lobby.js';
 import flashtoast from '../../components/flashtoast.js';
+import featuredgames from './featuredgames.js';
 import socketintents from '../../socket/socketintents.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 
@@ -32,6 +33,7 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 	switch (contents.action) {
 		case 'lobbystate':
 			lobby.handleLobbyState(contents.value);
+			featuredgames.onSnapshot(contents.value.featured);
 			// The full lobby state is now applied — release any intents held through the outage.
 			socketintents.onRouteSynced('lobby');
 			break;
@@ -54,10 +56,13 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 			break;
 		// Featured games
 		case 'featured':
+			featuredgames.onSnapshot(contents.value);
+			break;
 		case 'featuredmove':
 		case 'featuredclock':
 		case 'featuredconclusion':
-			break; // TODO: Render the featured games.
+			featuredgames.onUpdate(contents);
+			break;
 		default:
 			console.error("Unknown action received from server in 'lobby' route.", contents satisfies never); // prettier-ignore
 	}

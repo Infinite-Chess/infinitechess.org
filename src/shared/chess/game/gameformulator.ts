@@ -235,6 +235,12 @@ function constructGame(options: GameConstructionOptions, validateMoves?: true): 
 	);
 }
 
+/** {@link constructGame}, loading the variant module it reads from first. */
+async function loadAndConstructGame(options: GameConstructionOptions): Promise<GameFile> {
+	if (options.variant !== undefined) await variantcache.ensureVariantLoaded(options.variant.code);
+	return constructGame(options);
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -244,4 +250,5 @@ export default {
 	constructionOptionsFromLongFormat,
 	constructionOptionsFromSetup,
 	constructGame,
+	loadAndConstructGame,
 };

@@ -9,17 +9,16 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConstructionOptions } from '../../../../../shared/chess/game/gameformulator.js';
-import type { GameFile, LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
-import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
@@ -153,7 +152,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	const game =
 		loadOptions.kind === 'prebuilt'
 			? loadOptions.gamefile
-			: await constructGamefile(loadOptions);
+			: await gameformulator.loadAndConstructGame(loadOptions);
 	loadedGamefile = game;
 
 	viewColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
@@ -161,9 +160,7 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	const pieceCount = boardutil.getPieceCountOfGame(game.pieces);
 	// Disable miniimages if there's too many pieces
 	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT) miniimage.disable();
-	// Disable arrows if there's too many pieces or lines in the game
-	if (pieceCount > arrows.MAX_PIECES || game.pieces.lines.size > arrows.MAX_LINES)
-		arrowinteraction.forceModeOff();
+	if (arrows.isGameTooLarge(game)) arrowinteraction.forceModeOff();
 	else arrowinteraction.applyPreferredMode(); // A previous game may have forced them off, or lowered the mode
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
@@ -171,21 +168,6 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 		drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
 	if (loadOptions.presetAnnotes?.rays)
 		drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
-}
-
-/** Builds the gamefile the options describe, loading the variant module it reads from first. */
-async function constructGamefile(options: GameConstructionOptions): Promise<GameFile> {
-	let variant: LoadedVariant | undefined;
-	if (options.variant !== undefined) {
-		await variantcache.ensureVariantLoaded(options.variant.code);
-		variant = { ...options.variant, mod: variantcache.getModule(options.variant.code) };
-	}
-	return gamefile.initGameFile(
-		options.timeControl,
-		options.dateTimestamp,
-		variant,
-		options.additional,
-	);
 }
 
 /** Loads all of the graphical components of a game */

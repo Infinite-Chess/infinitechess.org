@@ -756,6 +756,61 @@ svg.bg-omega {
 }
 
 /* ============================================================
+   Featured games
+   ============================================================ */
+
+/* Up to three boards in a row, left-aligned; fewer keep the size they'd have in a full row. */
+.featured-games {
+	--featured-gap: 1em;
+	display: flex;
+	gap: var(--featured-gap);
+	margin-top: var(--featured-gap);
+}
+
+/* One game: its board between its players' bars, sitting straight on the page, linking to the game. */
+.featured-card {
+	display: flex;
+	flex-direction: column;
+	width: calc((100% - 2 * var(--featured-gap)) / 3);
+	color: inherit;
+	text-decoration: none;
+}
+
+.featured-board {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1;
+	border-radius: 4px;
+}
+
+.featured-bar {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5em;
+	min-width: 0;
+	padding: 3px 2px;
+}
+
+/* A long name truncates rather than overflowing the bar. */
+.featured-bar .username-embed,
+.featured-bar .username {
+	min-width: 0;
+}
+
+.featured-bar .username {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.featured-clock {
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--c-text-strong);
+}
+
+/* ============================================================
    Responsive
    ============================================================ */
 
@@ -792,6 +847,13 @@ svg.bg-omega {
 	}
 	.lobby-btn {
 		min-height: 54px;
+	}
+	/* The featured boards stack, each at full width. */
+	.featured-games {
+		flex-direction: column;
+	}
+	.featured-card {
+		width: 100%;
 	}
 	main {
 		padding-left: 0;
