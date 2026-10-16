@@ -35,6 +35,7 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 			// The full lobby state is now applied — release any intents held through the outage.
 			socketintents.onRouteSynced('lobby');
 			break;
+		// Seeks and viewers
 		case 'seekslist':
 			lobby.onSeekListUpdate(contents.value);
 			break;
@@ -44,12 +45,19 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 		case 'challengecreated':
 			lobby.onChallengeCreated(contents.value);
 			break;
+		// In-game status
 		case 'ingame':
 			void lobby.onInGame(contents.value);
 			break;
 		case 'outgame':
 			lobby.onOutGame();
 			break;
+		// Featured games
+		case 'featured':
+		case 'featuredmove':
+		case 'featuredclock':
+		case 'featuredconclusion':
+			break; // TODO: Render the featured games.
 		default:
 			console.error("Unknown action received from server in 'lobby' route.", contents satisfies never); // prettier-ignore
 	}

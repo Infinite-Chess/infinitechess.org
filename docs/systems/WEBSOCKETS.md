@@ -28,7 +28,7 @@ omitted entirely for actions carrying none (never `null`).
 
 - **`general`** — protocol/UX traffic that belongs to no stream: heartbeat ping, protocol version,
   toasts and console relays, and the lobby sub/unsub verbs.
-- **`lobby`** — the seek list, viewer count, and in-game status.
+- **`lobby`** — the seek list, viewer count, in-game status, and the featured live games.
 - **`game`** — everything about one live game.
 - **`challenge`** — one private seek's page, until it is accepted/cancelled.
 
@@ -115,10 +115,13 @@ compile error rather than a silent no-op.
 | `general`   | `protocolversion`                          | Sent the instant the socket opens; mismatch → client reloads                                        |
 | `general`   | `toast` / `toast-error`                    | Toast. **Already translated server-side** (`ws.t`)                                                  |
 | `general`   | `print` / `print-error`                    | Console relay                                                                                       |
-| `lobby`     | `lobbystate`                               | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status                        |
+| `lobby`     | `lobbystate`                               | Full snapshot on subscribe: seeks, our seek id, viewer count, in-game status, featured games        |
 | `lobby`     | `seekslist` / `viewercount`                | Live deltas                                                                                         |
 | `lobby`     | `ingame` / `outgame`                       | We are (not) in a game. `ingame.navigate` decides _this tab_ goes there vs. shows the rejoin banner |
 | `lobby`     | `challengecreated`                         | Our private seek exists — navigate to challenge page                                                |
+| `lobby`     | `featured`                                 | The featured games, left to right, sent whole whenever which games they are changes                 |
+| `lobby`     | `featuredmove` / `featuredclock`           | A featured game's move, or its engine clock freezing or resuming. Keyed by game id                  |
+| `lobby`     | `featuredconclusion`                       | A featured game's non-move-triggered conclusion. Keyed by game id                                   |
 | `challenge` | `challengestate`                           | Full state on subscribe and on change: `open`, `gone`, or `game` (+ our role if playing)            |
 | `challenge` | `ingame` / `outgame`                       | We are (not) in another game, which bars accepting                                                  |
 | `game`      | `gamestate`                                | `full`: board + participant overlay — `subscribe` and any resync. `lean`: overlay + spectators      |
@@ -515,6 +518,7 @@ no difference whether they were one version behind or two.
 | Game socket attach/detach, send helpers, broadcast | [gameSockets.ts](/src/server/game/gamemanager/gameSockets.ts)                                                                                                                                                                                                                                                         |
 | Disconnect cushion + claim windows                 | [disconnect.ts](/src/server/game/gamemanager/disconnect.ts), [claimDisconnect.ts](/src/server/game/gamemanager/claimDisconnect.ts)                                                                                                                                                                                    |
 | Lobby subscriber set + broadcasts                  | [lobbySubscribers.ts](/src/server/game/seeksmanager/lobbySubscribers.ts), [lobbyManager.ts](/src/server/game/seeksmanager/lobbyManager.ts)                                                                                                                                                                            |
+| Featured games: selection + lobby broadcasts       | [featuredGames.ts](/src/server/game/featured/featuredGames.ts), [featuredSelection.ts](/src/server/game/featured/featuredSelection.ts)                                                                                                                                                                                |
 | Challenge-page subscribe, expiry, pushes           | [challengeManager.ts](/src/server/game/seeksmanager/challengeManager.ts), [activeSeeks.ts](/src/server/game/seeksmanager/activeSeeks.ts)                                                                                                                                                                              |
 | In-game status to lobby + challenge pages          | [inGameStatus.ts](/src/server/game/seeksmanager/inGameStatus.ts)                                                                                                                                                                                                                                                      |
 | **Client** — connection lifecycle, reconnect       | [socketconnection.ts](/src/client/scripts/esm/socket/socketconnection.ts)                                                                                                                                                                                                                                             |

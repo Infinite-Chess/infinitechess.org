@@ -220,6 +220,7 @@ export default {
 	getTimeControlLabel,
 	splitTimeControl,
 	buildTimeControl,
+	estimateGameSeconds,
 	getSpeedCategory,
 	getSpeedIconId,
 };

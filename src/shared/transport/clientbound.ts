@@ -17,8 +17,10 @@
 import * as z from 'zod';
 
 import domain from './domain.js';
+import modutil from '../chess/util/modutil.js';
 import clockutil from '../chess/util/clockutil.js';
 import typeschemas from '../chess/util/typeschemas.js';
+import variantselection from '../chess/util/variantselection.js';
 
 // Common Helper Schemas -------------------------------------------------------
 
@@ -31,6 +33,25 @@ const GameNavigationSchema = z.strictObject({
 	id: domain.GameIDSchema,
 	/** Our color in the game. Absent if we're not a participant (spectator). */
 	role: typeschemas.PlayerSchema.optional(),
+});
+
+/** A move just played in a game, as its opponent and every onlooker receive it. */
+export type OpponentsMoveMessage = z.infer<typeof OpponentsMoveMessageSchema>;
+const OpponentsMoveMessageSchema = z.strictObject({
+	/** The move played. In the most compact notation: `"5,2>5,4"`. */
+	move: typeschemas.MovePacketSchema,
+	gameConclusion: typeschemas.GameConclusionSchema.optional(),
+	/** The move's number, 1-based. */
+	moveNumber: z.number().int().positive(),
+	/** If the game is timed, this will be the current clock values. */
+	clockValues: clockutil.ClockValuesSchema.optional(),
+});
+
+/** A game's non-move-triggered conclusion. A move-triggered one rides on its move instead. */
+const ConclusionSchema = z.strictObject({
+	gameConclusion: typeschemas.GameConclusionSchema,
+	/** If the game is timed, the frozen final clock values. */
+	clockValues: clockutil.ClockValuesSchema.optional(),
 });
 
 // General Route ---------------------------------------------------------------
@@ -66,23 +87,62 @@ const InGameMessageSchema = GameNavigationSchema.extend({
 	navigate: z.boolean(),
 });
 
+/** A live game featured beneath the lobby: its setup, players, and everything played so far. */
+export type FeaturedGame = z.infer<typeof FeaturedGameSchema>;
+const FeaturedGameSchema = z.strictObject({
+	id: domain.GameIDSchema,
+	variant: variantselection.SeekVariantSchema,
+	timeControl: clockutil.TimeControlSchema,
+	/** Epoch milliseconds the game was created. */
+	timeCreated: z.number(),
+	modifiers: z.array(modutil.GameModifierSchema).optional(),
+	players: typeschemas.GenPlayerGroupSchema(domain.ParticipantSchema),
+	moves: z.array(typeschemas.MovePacketSchema),
+	/** Absent for untimed games. */
+	clockValues: clockutil.ClockValuesSchema.optional(),
+	gameConclusion: typeschemas.GameConclusionSchema.optional(),
+});
+
+/** The featured games, left to right. Sent whole whenever which games they are changes. */
+const FeaturedListSchema = z.array(FeaturedGameSchema);
+
 /** The payload of the `lobbystate` message — the full lobby snapshot, sent the moment we subscribe. */
 export type LobbyStateMessage = z.infer<typeof LobbyStateMessageSchema>;
 const LobbyStateMessageSchema = SeeksListMessageSchema.extend({
 	viewercount: ViewerCountSchema,
 	/** Present only if we're already in a game at the time we subscribe. */
 	ingame: InGameMessageSchema.optional(),
+	featured: FeaturedListSchema,
 });
 
 /** Every message the server may send on the 'lobby' route. */
 export type ClientboundLobbyMessage = z.infer<typeof ClientboundLobbySchema>;
 const ClientboundLobbySchema = z.discriminatedUnion('action', [
 	z.strictObject({ action: z.literal('lobbystate'), value: LobbyStateMessageSchema }),
+	// Seeks and viewers
 	z.strictObject({ action: z.literal('seekslist'), value: SeeksListMessageSchema }),
 	z.strictObject({ action: z.literal('viewercount'), value: ViewerCountSchema }),
 	z.strictObject({ action: z.literal('challengecreated'), value: domain.GameIDSchema }),
+	// In-game status
 	z.strictObject({ action: z.literal('ingame'), value: InGameMessageSchema }),
 	z.strictObject({ action: z.literal('outgame') }),
+	// Featured games
+	z.strictObject({ action: z.literal('featured'), value: FeaturedListSchema }),
+	z.strictObject({
+		action: z.literal('featuredmove'),
+		value: OpponentsMoveMessageSchema.extend({ id: domain.GameIDSchema }),
+	}),
+	z.strictObject({
+		action: z.literal('featuredclock'),
+		value: z.strictObject({
+			id: domain.GameIDSchema,
+			clockValues: clockutil.ClockValuesSchema,
+		}),
+	}),
+	z.strictObject({
+		action: z.literal('featuredconclusion'),
+		value: ConclusionSchema.extend({ id: domain.GameIDSchema }),
+	}),
 ]);
 
 // Challenge Route -------------------------------------------------------------
@@ -308,24 +368,9 @@ const GameStateMessageSchema = z.discriminatedUnion('kind', [
  * state resend. Move-triggered conclusions already reach them via `move`.
  */
 export type GameConclusionMessage = z.infer<typeof GameConclusionMessageSchema>;
-const GameConclusionMessageSchema = z.strictObject({
-	gameConclusion: typeschemas.GameConclusionSchema,
-	/** If the game is timed, the frozen final clock values. */
-	clockValues: clockutil.ClockValuesSchema.optional(),
+const GameConclusionMessageSchema = ConclusionSchema.extend({
 	/** The recipient's rematch overlay, born with this very conclusion — present only for a participant. */
 	rematch: RematchOfferInfoSchema.optional(),
-});
-
-/** The message contents of a server websocket `'move'` message — our opponent's move. */
-export type OpponentsMoveMessage = z.infer<typeof OpponentsMoveMessageSchema>;
-const OpponentsMoveMessageSchema = z.strictObject({
-	/** The move our opponent played. In the most compact notation: `"5,2>5,4"`. */
-	move: typeschemas.MovePacketSchema,
-	gameConclusion: typeschemas.GameConclusionSchema.optional(),
-	/** Our opponent's move number, 1-based. */
-	moveNumber: z.number().int().positive(),
-	/** If the game is timed, this will be the current clock values. */
-	clockValues: clockutil.ClockValuesSchema.optional(),
 });
 
 // --- Actions ---

@@ -25,6 +25,7 @@ import gameLogger from './gameLogger.js';
 import socketSend from '../../socket/socketSend.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
+import featuredGames from '../featured/featuredGames.js';
 import gameLifecycle from './gameLifecycle.js';
 import gameStateBuilder from './gameStateBuilder.js';
 
@@ -148,6 +149,7 @@ function concludeReportedGame(
 
 	// Spectators get the same state, minus the participant overlay.
 	gameSockets.broadcastToSpectators(servergame, 'gamestate', state);
+	featuredGames.onConclusion(servergame);
 
 	gameLifecycle.free(servergame);
 	gameLifecycle.finalize(servergame); // Max of one report per game.

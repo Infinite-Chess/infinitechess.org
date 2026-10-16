@@ -29,7 +29,6 @@ function getAll(): Iterable<CustomWebSocket> {
 
 /**
  * Broadcasts a message to all lobby subscribers.
- * KEEP. It will be used when spectating is added to the lobby.
  * @param action - The action of the socket message
  * @param message - The message contents
  */

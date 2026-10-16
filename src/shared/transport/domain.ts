@@ -14,7 +14,6 @@
  * vocabulary it describes.
  */
 
-import type { Rating } from '../chess/util/metadatautil.js';
 import type { SeekVariant } from '../chess/util/variantselection.js';
 import type { GameConclusion } from '../chess/util/typeschemas.js';
 import type { StaticGameSetup } from '../chess/game/gameformulator.js';
@@ -27,6 +26,7 @@ import modutil from '../chess/util/modutil.js';
 import clockutil from '../chess/util/clockutil.js';
 import typeschemas from '../chess/util/typeschemas.js';
 import metadatautil from '../chess/util/metadatautil.js';
+import engineregistry from '../chess/util/engineregistry.js';
 import variantselection from '../chess/util/variantselection.js';
 
 // Common Helper Schemas -------------------------------------------------------
@@ -55,6 +55,18 @@ const PublicIdentitySchema = z.discriminatedUnion('type', [
 /** The id of an online game. */
 const GameIDSchema = z.number().int().nonnegative();
 
+/** A game's participant: a {@link PublicIdentity}, a member whose account was since deleted, or an engine. */
+export type Participant = z.infer<typeof ParticipantSchema>;
+const ParticipantSchema = z.discriminatedUnion('type', [
+	...PublicIdentitySchema.options,
+	z.strictObject({ type: z.literal('deleted'), rating: metadatautil.RatingSchema.optional() }),
+	z.strictObject({
+		type: z.literal('engine'),
+		engine: z.literal(Object.keys(engineregistry.REGISTRY) as ValidEngine[]),
+		strengthLevel: z.int().min(1),
+	}),
+]);
+
 // Game State Types ------------------------------------------------------------
 
 // Plain types, not schemas: these travel over HTTP and SSR, which the client casts
@@ -69,12 +81,6 @@ export interface GameStateCore {
 	setup: StaticGameSetup;
 	gameConclusion?: GameConclusion;
 }
-
-/** A game's participant: a {@link PublicIdentity}, a member whose account was since deleted, or an engine. */
-export type Participant =
-	| PublicIdentity
-	| { type: 'deleted'; rating?: Rating }
-	| { type: 'engine'; engine: ValidEngine; strengthLevel: number };
 
 /** A game's core state plus the display fields the SSR'd side bar renders. */
 export interface StaticGameState extends GameStateCore {
@@ -170,6 +176,7 @@ export default {
 	GameModeSchema,
 	// Game Helper Schemas
 	GameIDSchema,
+	ParticipantSchema,
 	// Seek Schemas
 	OutSeekSchema,
 };

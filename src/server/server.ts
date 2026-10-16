@@ -20,6 +20,7 @@ import gameRestart from './game/gamemanager/gameRestart.js';
 import certOptions from './config/certOptions.js';
 import socketServer from './socket/socketServer.js';
 import databaseInit from './database/databaseInit.js';
+import featuredGames from './game/featured/featuredGames.js';
 import gameLifecycle from './game/gamemanager/gameLifecycle.js';
 import startupLogger from './utility/startupLogger.js';
 
@@ -92,6 +93,7 @@ await variantcache.loadAllVariants();
 // Restore live games from the database into memory before accepting new connections.
 gameRestart.restoreLiveGames();
 gameLifecycle.startPeriodicAbandonmentSweep();
+featuredGames.start();
 
 // Start the server
 const DEV_BUILD = env.NODE_ENV === 'development';

@@ -32,6 +32,7 @@ import ratingAbuse from '../ratingabuse/ratingAbuse.js';
 import activeGames from './activeGames.js';
 import inGameStatus from '../seeksmanager/inGameStatus.js';
 import gamesManager from '../../database/gamesManager.js';
+import featuredGames from '../featured/featuredGames.js';
 import activePlayers from './activePlayers.js';
 import liveGameValues from './liveGameValues.js';
 import gameStateBuilder from './gameStateBuilder.js';
@@ -73,6 +74,7 @@ function conclude(servergame: ServerGame, conclusion: GameConclusion): void {
 	const spectatorMessage = gameStateBuilder.buildConclusionMessage(servergame);
 	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'gameconclusion', opponentMessage); // prettier-ignore
 	gameSockets.broadcastToSpectators(servergame, 'gameconclusion', spectatorMessage);
+	featuredGames.onConclusion(servergame);
 
 	free(servergame);
 }

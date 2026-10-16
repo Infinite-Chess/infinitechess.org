@@ -64,8 +64,18 @@ function getRatingChanges(servergame: ServerGame): PlayerGroup<number> | undefin
 
 /** Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar and game info). */
 function buildStaticState(servergame: ServerGame): StaticGameState {
-	const match = servergame.match;
+	const state: StaticGameState = {
+		setup: buildStaticGameSetup(servergame),
+		rated: servergame.match.rated,
+		players: buildParticipants(servergame),
+	};
+	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
+	return state;
+}
 
+/** Each color's participant in a live game, with their rating embedded. */
+function buildParticipants(servergame: ServerGame): PlayerGroup<Participant> {
+	const match = servergame.match;
 	const players: PlayerGroup<Participant> = {};
 	for (const [p, data] of Object.entries(match.playerData)) {
 		const color = Number(p) as Player;
@@ -76,14 +86,7 @@ function buildStaticState(servergame: ServerGame): StaticGameState {
 		const { color, engine, strengthLevel } = match.engineParticipant;
 		players[color] = { type: 'engine', engine, strengthLevel };
 	}
-
-	const state: StaticGameState = {
-		setup: buildStaticGameSetup(servergame),
-		rated: match.rated,
-		players,
-	};
-	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
-	return state;
+	return players;
 }
 
 /**
@@ -344,6 +347,7 @@ export default {
 	getRatingChanges,
 	// SSR Page State
 	buildStaticState,
+	buildParticipants,
 	resolvePlayerNames,
 	// ICN Metadata
 	buildMetadata,

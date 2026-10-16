@@ -34,6 +34,7 @@ import onOfferDraw from './onOfferDraw.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
+import featuredGames from '../featured/featuredGames.js';
 import gameLifecycle from './gameLifecycle.js';
 import liveGameValues from './liveGameValues.js';
 import gameStateBuilder from './gameStateBuilder.js';
@@ -160,6 +161,7 @@ function broadcastMove(
 	if (!gameUtility.isEngineGame(servergame))
 		gameSockets.sendToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
 	gameSockets.broadcastToSpectators(servergame, 'move', moveMessage);
+	featuredGames.onMove(servergame, moveMessage);
 
 	// Free, finalize, and evict the game if it's concluded.
 	if (servergame.gameConclusion !== undefined) gameLifecycle.free(servergame);
