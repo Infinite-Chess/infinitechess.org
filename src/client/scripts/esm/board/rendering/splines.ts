@@ -303,8 +303,6 @@ function renderSplineDebug(
 // Exports ---------------------------------------------------------------------
 
 export default {
-	generateCubicSplineCoefficients,
-	evaluateSplineAt,
 	generateSplinePath,
 	renderSplineDebug,
 };

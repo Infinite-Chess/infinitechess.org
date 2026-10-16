@@ -42,11 +42,6 @@ let lastPointerCoords: Coords | undefined;
 
 // Methods ---------------------------------------------------------------------
 
-/** Returns whether we are currently filling. */
-function areWeFilling(): boolean {
-	return areFilling;
-}
-
 /**
  * Updates the logic that handles dragging the selection box from the edges.
  * ONLY CALL if there's an existing selection area, and we are not currently making a new selection!
@@ -220,7 +215,6 @@ function render(): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	areWeFilling,
 	update,
 	resetState,
 	render,

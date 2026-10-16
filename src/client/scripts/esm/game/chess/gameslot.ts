@@ -103,10 +103,6 @@ function getMesh(): Mesh | undefined {
 	return mesh;
 }
 
-function areInGame(): boolean {
-	return loadedGamefile !== undefined;
-}
-
 /** Whether a game is loaded and hasn't concluded (locally) yet. */
 function isGameLive(): boolean {
 	return loadedGamefile !== undefined && !gamefileutility.isGameOver(loadedGamefile);
@@ -286,7 +282,6 @@ function concludeGame(playSound = true): void {
 export default {
 	getGamefile,
 	getMesh,
-	areInGame,
 	isGameLive,
 	areViewingWhite,
 	flipView,

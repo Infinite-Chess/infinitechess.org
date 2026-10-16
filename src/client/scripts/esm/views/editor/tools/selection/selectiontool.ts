@@ -211,17 +211,6 @@ function convertIntBoxToWorldBox(intBox: BoundingBox): DoubleBoundingBox {
 }
 
 /**
- * Returns the corners of the current selection.
- * ONLY CALL if you know a selection exists!
- */
-function getSelectionCorners(): [Coords, Coords] {
-	if (!startPoint || !endPoint)
-		throw new Error("No current selection. Can't get selection corners.");
-
-	return [startPoint, endPoint];
-}
-
-/**
  * Sets the current selected area.
  * ONLY CALL if this is an overwriting of the existing
  * selection, NOT to set it when it does not have a value!
@@ -265,7 +254,6 @@ export default {
 	getSelectionIntBox,
 	getSelectionWorldBox,
 	convertIntBoxToWorldBox,
-	getSelectionCorners,
 	setSelection,
 	selectAll,
 };

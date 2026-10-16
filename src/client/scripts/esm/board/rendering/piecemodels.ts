@@ -119,23 +119,6 @@ function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undef
 }
 
 /**
- * MIGHT BE UNUSED, SOON??
- *
- * Regenerates the single model of the provided type.
- * Call externally after adding more undefined placeholders to a type list.
- * @param type - The type of piece to regen the model for (e.g. 'pawnsW')
- */
-function regenType(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh, type: number): void {
-	console.log(`Regenerating mesh of type ${type}.`);
-
-	if (typeutil.getRawType(type) === r.VOID)
-		mesh.types[type] = genVoidModel(ctx, boardsim, mesh, type); // Custom mesh generation logic for voids
-	else mesh.types[type] = genTypeModel(ctx, boardsim, mesh, type); // Normal generation logic for all pieces with a texture
-
-	ctx.frames.onVisualChange();
-}
-
-/**
  * Generates the mesh data for a specific piece type in the gamefile that has a texture. (not compatible with voids)
  * Must be called whenever we add more undefineds placeholders to the this piece list.
  *
@@ -454,7 +437,6 @@ export default {
 	ATTRIBUTE_INFO,
 
 	regenAll,
-	regenType,
 	castBigIntArrayToFloat32,
 	overwritebufferdata,
 	deletebufferdata,

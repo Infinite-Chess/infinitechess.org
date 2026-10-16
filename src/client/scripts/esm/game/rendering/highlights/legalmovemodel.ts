@@ -34,7 +34,6 @@ import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import boardview from '../boardview.js';
-import primitives from '../../../board/rendering/primitives.js';
 import preferences from '../../../util/preferences.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import perspective from '../perspective.js';
@@ -737,20 +736,6 @@ function renderOutlineOfRenderBox(): void {
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
 
-/**
- * [DEBUG] Renders an outline of the provided floating point bounding box.
- */
-function renderOutlineofFloatingBox(box: BoundingBoxBD): void {
-	const color: Color = [0.65, 0.15, 0, 1];
-	const { left, right, bottom, top } = meshes.applyWorldTransformationsToBoundingBox(
-		boardpos,
-		box,
-	);
-	const data = primitives.Rect(left, bottom, right, top, color);
-
-	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -764,5 +749,4 @@ export default {
 	genModelForRays,
 	// Rendering
 	renderOutlineOfRenderBox,
-	renderOutlineofFloatingBox,
 };

@@ -149,12 +149,10 @@ function unlockMouse(): void {
 export default {
 	getEnabled,
 	toggle,
-	enable,
 	disable,
 	relockMouse,
 	addRotation,
 	isMouseLocked,
 	renderCrosshair,
 	unlockMouse,
-	initCrosshairModel,
 };

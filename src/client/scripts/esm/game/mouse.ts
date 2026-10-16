@@ -148,13 +148,6 @@ function getAllPointerWorlds(): DoubleCoords[] {
 
 // Tiles -----------------------------------------------------------------------
 
-/** Returns the floating point tile the mouse is over. */
-function getTileMouseOver_Float(button: MouseButton = Mouse.LEFT): BDCoords | undefined {
-	const mouseWorld = getMouseWorld(button);
-	if (!mouseWorld) return undefined;
-	return space.convertWorldSpaceToCoords(boardpos, mouseWorld);
-}
-
 /** Returns the integer square the mouse is over. */
 function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | undefined {
 	const mouseWorld = getMouseWorld(button);
@@ -282,7 +275,6 @@ export default {
 	getPhysicalPointerWorld,
 	getAllPointerWorlds,
 	// Tiles
-	getTileMouseOver_Float,
 	getTileMouseOver_Integer,
 	getTilePointerOver_Float,
 	getTilePointerOver_Integer,

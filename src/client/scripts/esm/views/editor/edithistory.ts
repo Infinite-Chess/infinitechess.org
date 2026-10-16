@@ -79,12 +79,6 @@ function init(pawnDoublePush: boolean | undefined, castling: boolean | undefined
 	guinavigation.update_EditButtons();
 }
 
-/** Resets the edit history state when the board editor is closed. */
-function reset(): void {
-	edits = undefined;
-	indexOfThisEdit = undefined;
-}
-
 // Running Edits ---------------------------------------------------------------
 
 /** Runs both logical and graphical changes. */
@@ -237,7 +231,6 @@ function queueSpecialRights(gamefile: GameFile, edit: Edit, coords: Coords, add:
 export default {
 	// Initialization
 	init,
-	reset,
 	// Running Edits
 	runEdit,
 	addEditToHistory,

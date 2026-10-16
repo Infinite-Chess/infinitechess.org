@@ -100,11 +100,6 @@ function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	return gl;
 }
 
-/** Whether the game's WebGL context has been initialized via {@link init}. */
-function isInitialized(): boolean {
-	return gl !== undefined;
-}
-
 // Rendering State -------------------------------------------------------------
 
 /**
@@ -267,7 +262,6 @@ export default {
 	// Context Creation
 	createContext,
 	init,
-	isInitialized,
 	// Rendering State
 	clearScreen,
 	executeWithDepthFunc_ALWAYS,

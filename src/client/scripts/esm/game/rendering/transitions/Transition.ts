@@ -769,7 +769,6 @@ function terminate(): void {
 export default {
 	// Initiating Transitions
 	areTransitioning,
-	startZoomTransition,
 	startPanTransition,
 	zoomToCoordsBox,
 	singleZoomToCoordsList,
@@ -778,6 +777,5 @@ export default {
 	// Updating
 	update,
 	// Utility
-	eraseTelHist,
 	terminate,
 };
