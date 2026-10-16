@@ -771,7 +771,8 @@ svg.bg-omega {
 .featured-card {
 	display: flex;
 	flex-direction: column;
-	width: calc((100% - 2 * var(--featured-gap)) / 3);
+	/* Whole pixels: a fractional width stretches the board's pixel buffer onto it, blurring it. */
+	width: round(down, calc((100% - 2 * var(--featured-gap)) / 3), 1px);
 	color: inherit;
 	text-decoration: none;
 }
