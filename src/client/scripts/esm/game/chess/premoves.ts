@@ -138,7 +138,7 @@ function applyPremove(
 		graphicalchanges.runMeshChanges(gamescene.getGameContext(), gamefile, mesh, premove, forward); // prettier-ignore
 }
 
-/** Similar to {@link movepiece.generateMove}, but generates the edit for a Premove. */
+/** Similar to `movepiece.generateMove`, but generates the edit for a Premove. */
 function generatePremove(gamefile: GameFile, moveTagged: MoveTagged): Premove {
 	const piece = boardutil.getPieceFromCoords(gamefile.pieces, moveTagged.startCoords);
 	if (!piece)

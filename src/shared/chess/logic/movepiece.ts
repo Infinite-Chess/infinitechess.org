@@ -559,12 +559,10 @@ export default {
 	IllegalMoveError,
 	// Move Generating
 	generateAndMakeMove,
-	generateMove,
 	calcMovesChanges,
 	queueSpecialRightDeletionStateChanges,
 	hasCastlingPartner,
 	// Forwarding
-	makeMove,
 	applyMove,
 	applyEdit,
 	makeAllMovesInGame,

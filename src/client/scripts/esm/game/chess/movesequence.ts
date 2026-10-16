@@ -36,9 +36,7 @@ function commitMove(
 	moveTagged: MoveTagged,
 	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
-	const move = movepiece.generateMove(gamefile, moveTagged);
-
-	movepiece.makeMove(gamefile, move); // Logical changes
+	const move = movepiece.generateAndMakeMove(gamefile, moveTagged);
 
 	// Must run before announceMove(): a checkmate conclusion flags the move as mate, and the
 	// move list renders each ply's notation (# vs +) once, from the flags it sees then.

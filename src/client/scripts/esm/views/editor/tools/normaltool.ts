@@ -45,7 +45,7 @@ function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: Mo
 }
 
 /**
- * Similar to {@link movepiece.generateMove}, but specifically for editor moves,
+ * Similar to `movepiece.generateMove`, but specifically for editor moves,
  * which don't execute special moves, nor are appeneded to the game's moves list,
  * nor the gamefile's moveIndex property updated.
  */
