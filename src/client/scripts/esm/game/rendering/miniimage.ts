@@ -1,7 +1,8 @@
 // src/client/scripts/esm/game/rendering/miniimage.ts
 
 /**
- * This script handles the rendering of the mini images of our pieces when we're zoomed out
+ * The interactive game's mini images, the icons its pieces draw as once zoomed out: whether
+ * they're on, which pieces show, which the pointer hovers, and drawing them with their hover.
  */
 
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -112,7 +113,7 @@ function getImageInstanceData(): {
 		forEachRenderablePiece(processPiece); // Process each renderable piece
 	} else {
 		// Disabled (too many pieces) => Only process pieces on highlights or being animated
-		const piecesToRender = getAllPiecesBelowAnnotePoints();
+		const piecesToRender = getPiecesShownWhenDisabled();
 		piecesToRender.forEach((p) => {
 			const coordsBD = bdcoords.fromCoords(p.coords);
 			processPiece(coordsBD, p.type);
@@ -154,7 +155,7 @@ function getImagesBelowWorld(
 		forEachRenderablePiece(processPiece);
 	} else {
 		// Disabled (too many pieces) => Only process pieces on highlights or being animated
-		const piecesToConsider = getAllPiecesBelowAnnotePoints();
+		const piecesToConsider = getPiecesShownWhenDisabled();
 		piecesToConsider.forEach((p) => {
 			const coordsBD = bdcoords.fromCoords(p.coords);
 			processPiece(coordsBD);
@@ -179,7 +180,7 @@ function getImagesBelowWorld(
  * This includes pieces below an annotation snap point, the selected piece, all animated pieces,
  * and the pieces involved in the last and next moves.
  */
-function getAllPiecesBelowAnnotePoints(): Piece[] {
+function getPiecesShownWhenDisabled(): Piece[] {
 	/** Running list of all pieces to render. */
 	const piecesToRender: Piece[] = [];
 
@@ -261,10 +262,12 @@ function render(): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Toggling
 	isDisabled,
 	disable,
 	toggle,
-
+	// Hovering
 	getImagesBelowWorld,
+	// Rendering
 	render,
 };
