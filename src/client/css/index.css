@@ -440,31 +440,53 @@ svg.bg-omega {
    Seek pulse animation
    ============================================================ */
 
+/*
+ * A ring growing 14px past each edge of the row as it fades. Only transform and opacity keep
+ * animating while the main thread is busy, so each edge is its own 4px strip, moved out and
+ * stretched along its length alone; lobby.ts sets the row's size, unitless, for the stretch.
+ */
 .seek-pulse-overlay {
+	--pulse-color: rgb(255 88 0 / 90%);
 	position: fixed;
 	pointer-events: none;
 	z-index: 1;
 }
 
-.seek-pulse-box {
+.seek-pulse-overlay.ours {
+	--pulse-color: rgb(0 180 15 / 90%);
+}
+
+.seek-pulse-edge {
 	position: absolute;
-	inset: 0;
-	border: 4px solid rgb(255 88 0 / 90%);
-	box-sizing: border-box;
+	background: var(--pulse-color);
 	animation: seek-pulse 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.seek-pulse-box.ours {
-	border-color: rgb(0 180 15 / 90%);
+/* The side strips sit between the top and bottom ones, so the corners never overlap. */
+.seek-pulse-edge.top {
+	--pulse-end: translateY(-14px) scaleX(calc(1 + 28 / var(--pulse-row-width)));
+	inset: 0 0 auto;
+	height: 4px;
+}
+.seek-pulse-edge.bottom {
+	--pulse-end: translateY(14px) scaleX(calc(1 + 28 / var(--pulse-row-width)));
+	inset: auto 0 0;
+	height: 4px;
+}
+.seek-pulse-edge.left {
+	--pulse-end: translateX(-14px) scaleY(calc(1 + 28 / (var(--pulse-row-height) - 8)));
+	inset: 4px auto 4px 0;
+	width: 4px;
+}
+.seek-pulse-edge.right {
+	--pulse-end: translateX(14px) scaleY(calc(1 + 28 / (var(--pulse-row-height) - 8)));
+	inset: 4px 0 4px auto;
+	width: 4px;
 }
 
 @keyframes seek-pulse {
-	0% {
-		inset: 0;
-		opacity: 1;
-	}
-	100% {
-		inset: -14px;
+	to {
+		transform: var(--pulse-end);
 		opacity: 0;
 	}
 }

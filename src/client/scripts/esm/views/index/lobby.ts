@@ -516,20 +516,25 @@ function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 		// A clipped row's pulse would float over the page outside the list, anchored to nothing visible.
 		if (!isRowFullyVisible(row)) return;
 		const overlay = document.createElement('div');
-		overlay.className = 'seek-pulse-overlay';
-		const box = document.createElement('div');
-		box.className = isOurs ? 'seek-pulse-box ours' : 'seek-pulse-box';
-		overlay.appendChild(box);
+		overlay.className = isOurs ? 'seek-pulse-overlay ours' : 'seek-pulse-overlay';
+		for (const side of ['top', 'bottom', 'left', 'right']) {
+			const edge = document.createElement('div');
+			edge.className = `seek-pulse-edge ${side}`;
+			overlay.appendChild(edge);
+		}
 		document.body.appendChild(overlay);
-		box.addEventListener('animationend', () => overlay.remove(), { once: true });
+		// The edges all end together; the first end event to bubble up removes them.
+		overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
 
-		/** Resizes the overlay onto the row's current rect. */
+		/** Resizes the overlay onto the row's current rect, and gives the edges its size to stretch by. */
 		const updateBounds = (): void => {
 			const rect = row.getBoundingClientRect();
 			overlay.style.left = `${rect.left}px`;
 			overlay.style.top = `${rect.top}px`;
 			overlay.style.width = `${rect.width}px`;
 			overlay.style.height = `${rect.height}px`;
+			overlay.style.setProperty('--pulse-row-width', String(rect.width));
+			overlay.style.setProperty('--pulse-row-height', String(rect.height));
 		};
 		updateBounds();
 
