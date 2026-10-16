@@ -105,7 +105,8 @@ function create(canvas: HTMLCanvasElement, game: FeaturedGame): FeaturedBoard {
 /**
  * Loads a game onto the board in the background, superseding any load underway. The board keeps
  * drawing its current game until it's done, then switches and snaps onto the new one in a single
- * frame, and replays the updates that arrived meanwhile.
+ * frame, and replays the updates that arrived meanwhile. A failed load, as from a lost fetch,
+ * is left to the console as an unhandled rejection, the board staying on its current game.
  */
 async function load(featuredBoard: FeaturedBoard, game: FeaturedGame): Promise<void> {
 	const { board } = featuredBoard;
