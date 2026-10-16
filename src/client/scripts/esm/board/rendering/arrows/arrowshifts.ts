@@ -64,7 +64,7 @@ const ONE = bd.fromBigInt(1n);
  * Piece deleted from start coords
  * => Arrow line recalculated
  */
-export function deleteArrow(board: LiveBoard, start: Coords): void {
+function deleteArrow(board: LiveBoard, start: Coords): void {
 	if (!arrows.areArrowsActiveThisFrame(board)) return;
 	overwriteArrows(board, start);
 	board.arrows.shifts.push({ kind: 'delete', start });
@@ -74,7 +74,7 @@ export function deleteArrow(board: LiveBoard, start: Coords): void {
  * Piece deleted on start coords and added on end coords
  * => Arrow lines recalculated
  */
-export function moveArrow(board: LiveBoard, start: Coords, end: Coords): void {
+function moveArrow(board: LiveBoard, start: Coords, end: Coords): void {
 	if (!arrows.areArrowsActiveThisFrame(board)) return;
 	overwriteArrows(board, start);
 	board.arrows.shifts.push({ kind: 'move', start, end });
@@ -90,7 +90,7 @@ export function moveArrow(board: LiveBoard, start: Coords, end: Coords): void {
  * 				the piece is not guaranteed to be there. In Atomic Chess, the piece can
  * 				move, and then explode itself, leaving its destination square empty.
  */
-export function animateArrow(board: LiveBoard, start: Coords, end: BDCoords, type: number): void {
+function animateArrow(board: LiveBoard, start: Coords, end: BDCoords, type: number): void {
 	if (!arrows.areArrowsActiveThisFrame(board)) return;
 	overwriteArrows(board, start);
 	board.arrows.shifts.push({ kind: 'animate', start, end, type });
@@ -100,7 +100,7 @@ export function animateArrow(board: LiveBoard, start: Coords, end: BDCoords, typ
  * Piece added on end coords.
  * => Arrow lines recalculated
  */
-export function addArrow(board: LiveBoard, type: number, end: Coords): void {
+function addArrow(board: LiveBoard, type: number, end: Coords): void {
 	if (!arrows.areArrowsActiveThisFrame(board)) return;
 	board.arrows.shifts.push({ kind: 'add', type, end });
 }
@@ -134,7 +134,7 @@ function overwriteArrows(board: LiveBoard, start: Coords): void {
  * Execute any pending arrow shift modifications.
  * @param pointerWorlds - The world coordinates every existing pointer is over, for hovering.
  */
-export function executeArrowShifts(
+function executeArrowShifts(
 	board: LiveBoard,
 	gamefile: GameFile,
 	pointerWorlds: DoubleCoords[],

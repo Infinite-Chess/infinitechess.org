@@ -31,7 +31,7 @@ class LiveBoard extends RenderContext {
 	readonly sound: boolean;
 	/** The piece animations currently playing. */
 	readonly animations: Animation[] = [];
-	/** This frame's arrow indicators. */
+	/** Its arrow indicators: their mode, and this frame's arrows. */
 	readonly arrows: ArrowsState = arrows.createState();
 	readonly ripples: Ripples;
 	/** Draws the scene through any post-processing passes active this frame. */

@@ -205,9 +205,9 @@ function viewIndex(
 		// Dispatch ONCE for the whole navigation, not per-ply. Listeners only care about the final resting position.
 		GameBus.dispatch('view-move');
 		// Only clear any previous animations if we viewed a different index.
-		animation.clearAnimations(gamescene.getGameContext());
-		if (animateFinal && mesh)
-			graphicalchanges.animateMove(gamescene.getGameContext(), lastMove.changes, forward);
+		const board = gamescene.getGameContext();
+		animation.clearAnimations(board);
+		if (animateFinal && mesh) graphicalchanges.animateMove(board, lastMove.changes, forward);
 	}
 }
 

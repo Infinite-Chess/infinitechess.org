@@ -42,9 +42,9 @@ import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import draganimation from './draganimation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
+import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
 import arrowscalculator from '../../../board/rendering/arrows/arrowscalculator.js';
 import arrowinteraction from '../arrows/arrowinteraction.js';
-import { ARROW_SIZE_RATIO } from '../../../board/rendering/arrows/arrowsgraphics.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Types -----------------------------------------------------------------------
@@ -155,7 +155,6 @@ function updateActiveDrag(): void {
 		// Mouse moved back within threshold — deactivate the drag.
 		draganimation.setForceRankFileOutline(false);
 		isDragActive = false;
-		// console.log('Set isDragActive = false');
 		selection.unselectPiece(); // Fires 'piece-unselected' → draganimation.cancelDragging()
 		return;
 	}
@@ -172,7 +171,6 @@ function updateCandidate(): void {
 	if (!respectiveListener.isPointerHeld(candidate!.pointerId)) {
 		// Pointer released without crossing threshold — clear candidate, allow normal arrow click.
 		candidate = undefined;
-		// console.log('Set candidate = undefined');
 		return;
 	}
 
@@ -187,14 +185,12 @@ function updateCandidate(): void {
 	if (!piece) {
 		// Piece disappeared (shouldn't happen during candidate phase, but guard it).
 		candidate = undefined;
-		// console.log('Set candidate = undefined');
 		return;
 	}
 
 	selection.selectPiece(gamefile, gameslot.getMesh(), piece, true);
 	mouse.cancelMouseClick(Mouse.LEFT); // Prevent the eventual release from being treated as a click/teleport.
 	isDragActive = true;
-	// console.log('Set isDragActive = true');
 	draganimation.setForceRankFileOutline(true);
 	frametracker.onVisualChange();
 }
@@ -230,7 +226,6 @@ function detectCandidateArrow(): void {
 			direction: hoveredArrow.direction,
 			pointerId,
 		};
-		// console.log('Set candidate');
 
 		candidateAnimStartTime = performance.now();
 		break;
@@ -338,7 +333,6 @@ function updateOnScreenDrag(): void {
 
 /** Resets all drag arrow state. Called when the drag naturally completes or is force-cleared. */
 function reset(): void {
-	// console.error('Resetting state');
 	candidate = undefined;
 	isDragActive = false;
 	currentlyInSlideZone = false;
@@ -367,7 +361,7 @@ function renderCandidateArrows(): void {
 	if (!worldLocation) return;
 
 	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext());
-	const size = halfWidth * ARROW_SIZE_RATIO;
+	const size = halfWidth * arrowsgraphics.ARROW_SIZE_RATIO;
 
 	// Determine the perpendicular axis from the indicator's screen position by measuring
 	// the raw world-space distance to each edge pair. The indicator sits on whichever edge is closer.

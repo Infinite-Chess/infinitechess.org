@@ -1,7 +1,7 @@
 // src/client/scripts/esm/board/rendering/WaterRipples.ts
 
 /**
- * This scripts managers the animated water ripple effect for extremely large moves.
+ * This script manages the animated water ripple effect for extremely large moves.
  * Each live board owns its own ripples, threaded through every function here.
  */
 
@@ -60,7 +60,7 @@ function create(programManager: ProgramManager, width: number, height: number): 
 	};
 }
 
-/** Resizes the ripples to their board's new canvas dimensions. The post processing effect relies on them. */
+/** Resizes the ripples to their board's new canvas dimensions. */
 function resize(ripples: Ripples, width: number, height: number): void {
 	ripples.pass.setResolution(width, height);
 	ripples.lifetime = getLifetime(width, height);
@@ -162,7 +162,6 @@ function update(board: LiveBoard, suppressed: boolean): void {
 		if (now >= droplet.timeCreated + lifetime * 1000) {
 			// Convert seconds to milliseconds
 			droplets.splice(i, 1);
-			// console.log("Removed ripple droplet.");
 		}
 	}
 

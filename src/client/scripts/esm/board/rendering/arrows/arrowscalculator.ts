@@ -91,7 +91,7 @@ const IMAGE_EDGE_DIST: BigDecimal = bd.fromNumber(WIDTH / 2 + EDGE_GAP);
  * to multiple pieces on the same line, in percentage of 1 tile. */
 const STACK_PADDING = 0.35;
 /** Opacity of the mini images of the pieces and arrows. */
-export const OPACITY = 0.6;
+const OPACITY = 0.6;
 /** The smallest width squares can be in virtual pixels
  * before skipping rendering arrow indicators (too small). */
 const MIN_SQUARE_SIZE: BigDecimal = bd.fromBigInt(12n);
@@ -101,7 +101,7 @@ const HALF = bd.fromNumber(0.5);
 // Getters ---------------------------------------------------------------------
 
 /** Whether ANY arrow (piece or move hint) should be calculated and rendered this frame. */
-export function areZoomedInEnoughForArrows(board: LiveBoard): boolean {
+function areZoomedInEnoughForArrows(board: LiveBoard): boolean {
 	const tileWidth = boardgeometry.getTileWidthPixels(
 		board.camera,
 		board.boardpos.getBoardScale(),
@@ -114,14 +114,14 @@ export function areZoomedInEnoughForArrows(board: LiveBoard): boolean {
  * Returns the world-space half-width of each arrow indicator's square hitbox for the current frame.
  * This is the Chebyshev-distance radius used to detect hover/opacity changes.
  */
-export function getArrowIndicatorHalfWidth(board: LiveBoard): number {
+function getArrowIndicatorHalfWidth(board: LiveBoard): number {
 	return (WIDTH * board.boardpos.getBoardScaleAsNumber()) / 2;
 }
 
 // Main entry point ------------------------------------------------------------
 
 /** Calculates which piece arrows should be visible for a frame, once the bounding boxes are updated. */
-export function calculateArrows(
+function calculateArrows(
 	board: LiveBoard,
 	boardsim: GameFile,
 	pointerWorlds: DoubleCoords[],
@@ -139,7 +139,7 @@ export function calculateArrows(
  *
  * These boxes are used to test whether a piece is visible on-screen or not.
  * As if it's not, it should get an arrow.
- * @param boundingBoxFloat - The exact bounding box of the board visible on screen. Claimed: it is padded in place.
+ * @param boundingBoxFloat - The exact bounding box of the board visible on screen. Padded in place.
  */
 function updateBoundingBoxes(board: LiveBoard, boundingBoxFloat: BoundingBoxBD): void {
 	// If any part of the square is on screen, this box rounds outward to contain it.
@@ -210,7 +210,7 @@ function generateArrowsDraft(board: LiveBoard, gamefile: GameFile): SlideArrowsD
  * stacked on each other in the same line, since Huygens
  * can jump/skip over other pieces.
  */
-export function calcArrowsLineDraft(
+function calcArrowsLineDraft(
 	board: LiveBoard,
 	gamefile: GameFile,
 	slideDir: Vec2,
@@ -435,7 +435,7 @@ function removeUnnecessaryArrows(
 }
 
 /** Checks if a single animated arrow is needed, based on our current mode, and its direction. */
-export function isAnimatedArrowUnnecessary(
+function isAnimatedArrowUnnecessary(
 	boardsim: Board,
 	type: number,
 	direction: Vec2,
@@ -464,7 +464,7 @@ export function isAnimatedArrowUnnecessary(
  * Modes 0 & 1 return nothing, because retention depends on whether the
  * piece can slide into the direction of the vector, and onto our screen.
  */
-export function getSlideExceptions(gamefile: Board, mode: 0 | 1 | 2 | 3): Vec2Key[] {
+function getSlideExceptions(gamefile: Board, mode: 0 | 1 | 2 | 3): Vec2Key[] {
 	// Mode 3 retains every slide direction, whether orthogonal, diagonal, or hippogonal+.
 	if (mode === 3) return Array.from(gamefile.pieces.lines.keys());
 	// Mode 2 retains all orthogonals and diagonals, EVEN if they can't slide in that direction.
@@ -475,7 +475,8 @@ export function getSlideExceptions(gamefile: Board, mode: 0 | 1 | 2 | 3): Vec2Ke
 	return [];
 }
 
-export function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft): void {
+/** Drops each side's closest arrow when its piece can't slide onto the screen. */
+function removeTypesThatCantSlideOntoScreenFromLineDraft(line: ArrowsLineDraft): void {
 	// The only pieces in a line that WOULDN'T be able to slide onto the screen
 	// is the piece closest to us. ALL other pieces we wouldn't have added otherwise.
 	if (line.negDotProd.length > 0) {
@@ -529,7 +530,7 @@ function calculatePieceArrows(
  * resolving world-space positions and hover detection for each arrow.
  * @param appendHover - When true, also computes ownsSlide and collects hovered arrows.
  */
-export function convertLineDraftToLine(
+function convertLineDraftToLine(
 	board: LiveBoard,
 	boardsim: Board,
 	draft: ArrowsLineDraft,
@@ -584,7 +585,7 @@ export function convertLineDraftToLine(
  * @param worldHalfWidth
  * @param pointerWorlds - A list of all world coordinates every existing pointer is over.
  */
-export function processPiece(
+function processPiece(
 	board: LiveBoard,
 	piece: ArrowPiece,
 	vector: Vec2,

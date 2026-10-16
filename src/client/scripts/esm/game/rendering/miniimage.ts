@@ -100,6 +100,8 @@ function getImageInstanceData(): {
 	const boardsim = gameslot.getGamefile()!;
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
 	const areWatchingMousePosition: boolean =
 		!perspective.getEnabled() || perspective.isMouseLocked();
 
@@ -125,11 +127,7 @@ function getImageInstanceData(): {
 
 	/** Calculates and appends the instance data of the piece */
 	function processPiece(coords: BDCoords, type: number): void {
-		const coordsWorld = space.convertCoordToWorldSpace(
-			coords,
-			boardpos.getBoardPos(),
-			boardpos.getBoardScale(),
-		);
+		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
 		instanceData[type]!.push(...coordsWorld);
 
 		// Are we hovering over? If so, add the same data to instanceData_hovered
@@ -153,6 +151,8 @@ function getImagesBelowWorld(
 	const dists: number[] = [];
 
 	const halfWorldWidth: number = snapping.getEntityWidthWorld() / 2;
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
 
 	if (!disabled) {
 		// Enabled => normal behavior
@@ -168,11 +168,7 @@ function getImagesBelowWorld(
 	}
 
 	function processPiece(coords: BDCoords): void {
-		const coordsWorld = space.convertCoordToWorldSpace(
-			coords,
-			boardpos.getBoardPos(),
-			boardpos.getBoardScale(),
-		);
+		const coordsWorld = space.convertCoordToWorldSpace(coords, boardPos, boardScale);
 		if (vectors.chebyshevDistanceDoubles(coordsWorld, world) < halfWorldWidth) {
 			const integerCoords = bdcoords.coordsToBigInt(coords);
 			imagesHovered.push(integerCoords);
@@ -203,12 +199,13 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.pieces;
 	const mesh = gameslot.getMesh();
+	const board = gamescene.getGameContext();
 
 	// 1. Process all animations and add pieces relevant to the current move
-	const maxDistB4Teleport = miniimagerenderer.getMaxAnimationDistance(gamescene.getGameContext());
+	const maxDistB4Teleport = miniimagerenderer.getMaxAnimationDistance(board);
 	/** Pieces temporarily being hidden via transparent squares on their destination square. */
 	const activeHides: Set<CoordsKey> = new Set();
-	for (const a of gamescene.getGameContext().animations) {
+	for (const a of board.animations) {
 		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
 		const currentAnimationPosition = animation.getCurrentAnimationPosition(
 			a.segments,
@@ -255,11 +252,9 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const lastMove = gamefile.moves[moveIndex];
 	if (
 		lastMove &&
-		!gamescene
-			.getGameContext()
-			.animations.some((a) =>
-				coordutil.areCoordsEqual(lastMove.endCoords, a.path[a.path.length - 1]!),
-			)
+		!board.animations.some((a) =>
+			coordutil.areCoordsEqual(lastMove.endCoords, a.path[a.path.length - 1]!),
+		)
 	) {
 		// SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		const lastMovedPiece = boardutil.getPieceFromCoords(pieces, lastMove.endCoords)!;
@@ -271,11 +266,9 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const nextMove = gamefile.moves[moveIndex + 1];
 	if (
 		nextMove &&
-		!gamescene
-			.getGameContext()
-			.animations.some((a) =>
-				coordutil.areCoordsEqual(nextMove.startCoords, a.path[a.path.length - 1]!),
-			)
+		!board.animations.some((a) =>
+			coordutil.areCoordsEqual(nextMove.startCoords, a.path[a.path.length - 1]!),
+		)
 	) {
 		// SKIP PIECES that are currently being animated to this location!!! Those are already rendered.
 		const nextToMovePiece = boardutil.getPieceFromCoords(pieces, nextMove.startCoords)!;

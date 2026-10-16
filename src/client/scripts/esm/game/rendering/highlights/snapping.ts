@@ -473,7 +473,6 @@ function findClosestEntityOfGroup(
 					continue; // Chebyshev distance isn't even within the threshold, the euclidean distance won't be either.
 				const euclidDist = vectors.euclideanDistanceBD(intersection, mouseCoords);
 				// Is the intersection point closer to the mouse than the previous closest snap?
-				// const intersectionWorld = space.convertCoordToWorldSpace(intersection, boardpos.getBoardPos(), boardpos.getBoardScale());
 				if (
 					closestEntitySnap === undefined ||
 					bd.compare(euclidDist, closestEntitySnap.dist) < 0

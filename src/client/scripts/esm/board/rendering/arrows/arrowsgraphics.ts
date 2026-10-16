@@ -23,7 +23,7 @@ import arrowscalculator from './arrowscalculator.js';
 // Constants -------------------------------------------------------------------
 
 /** The size of arrow triangles as a fraction of the arrow indicator half-width. */
-export const ARROW_SIZE_RATIO = 0.3;
+const ARROW_SIZE_RATIO = 0.3;
 
 /** Attribute layout for the instanced piece-image renderable. */
 const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
@@ -53,7 +53,7 @@ const ATTRIB_INFO_ARROWS: AttributeInfoInstanced = {
  * Renders all the arrow indicators for this frame.
  * @param hintArrows - Arrows to the off-screen legal moves of a selected piece in check, if any.
  */
-export function render(board: LiveBoard, hintArrows: HintArrow[]): void {
+function render(board: LiveBoard, hintArrows: HintArrow[]): void {
 	const { slideArrows, animatedArrows } = board.arrows;
 	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth(board);
 	if (
@@ -229,6 +229,8 @@ function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Frame lifecycle
+	// Constants
+	ARROW_SIZE_RATIO,
+	// Functions
 	render,
 };

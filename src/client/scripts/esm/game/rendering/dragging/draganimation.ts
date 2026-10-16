@@ -144,14 +144,13 @@ function pickUpPiece(piece: Piece, resetParity: boolean): void {
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
+	const board = gamescene.getGameContext();
 	if (
-		gamescene
-			.getGameContext()
-			.animations.some((a) =>
-				coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!),
-			)
+		board.animations.some((a) =>
+			coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!),
+		)
 	)
-		animation.clearAnimations(gamescene.getGameContext(), true);
+		animation.clearAnimations(board, true);
 }
 
 /**

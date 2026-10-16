@@ -29,7 +29,7 @@ import arrowscalculator from './arrowscalculator.js';
  */
 export type Mode = 0 | 1 | 2 | 3;
 
-/** One board's arrow indicators, recalculated every frame. */
+/** One board's arrow indicators: their mode, and this frame's arrows. */
 export interface ArrowsState {
 	/** The mode the arrow indicators are in. */
 	mode: Mode;
@@ -173,7 +173,7 @@ const MAX_LINES = 8;
 /** The mode every board's arrow indicators start in. */
 const DEFAULT_MODE: Mode = 1;
 
-// State -----------------------------------------------------------------------
+// Factory ---------------------------------------------------------------------
 
 /** Creates a board's arrow indicator state, empty until its first update. */
 function createState(): ArrowsState {
@@ -250,7 +250,7 @@ export default {
 	// Constants
 	MAX_PIECES,
 	MAX_LINES,
-	// State
+	// Factory
 	createState,
 	// Getters
 	getAllArrows,

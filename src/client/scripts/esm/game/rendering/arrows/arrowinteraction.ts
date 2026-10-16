@@ -229,31 +229,8 @@ function executeArrowShifts(): void {
 
 // Teleporting -----------------------------------------------------------------
 
-/** If an arrow indicator was clicked this frame, pans toward what it points at. */
+/** If an arrow indicator was clicked this frame, claims the click and pans toward what it points at. */
 function transitionTowardClickedArrow(): void {
-	const board = gamescene.getGameContext();
-	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth(board);
-	const targets: { coords: BDCoords; direction: Vec2; worldLocation: DoubleCoords }[] = [
-		...hintArrows.map((ha) => ({ ...ha, coords: bdcoords.fromCoords(ha.targetSquare) })),
-		...[...arrows.getAllArrows(board), ...board.arrows.animatedArrows].map((a) => ({ ...a, coords: a.piece.coords })), // prettier-ignore
-	];
-	for (const target of targets) {
-		if (transitionTowardTargetIfClicked(target.coords, target.direction, target.worldLocation, worldHalfWidth)) return; // prettier-ignore
-	}
-}
-
-/**
- * If a recognized click falls within worldHalfWidth of
- * worldLocation, claims it and pans towards the target coordinates.
- * @param direction - Either way along the line to pan along.
- * @returns Whether the click was claimed.
- */
-function transitionTowardTargetIfClicked(
-	targetCoords: BDCoords,
-	direction: Vec2,
-	worldLocation: DoubleCoords,
-	worldHalfWidth: number,
-): boolean {
 	let button: MouseButton;
 	let listener: typeof mouse | InputListener;
 
@@ -269,16 +246,40 @@ function transitionTowardTargetIfClicked(
 	) {
 		button = Mouse.RIGHT;
 		listener = listener_canvas;
-	} else return false; // No recognized click
+	} else return; // No recognized click
 
 	const clickWorld = mouse.getMouseWorld(button);
-	if (!clickWorld) return false; // Maybe we're looking into sky?
-	if (vectors.chebyshevDistanceDoubles(worldLocation, clickWorld) >= worldHalfWidth) return false;
-	// Mouse is inside the picture bounding box...
+	if (!clickWorld) return; // Maybe we're looking into sky?
+
+	const board = gamescene.getGameContext();
+	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth(board);
+	const isClicked = (worldLocation: DoubleCoords): boolean =>
+		vectors.chebyshevDistanceDoubles(worldLocation, clickWorld) < worldHalfWidth;
+
+	let target: { coords: BDCoords; direction: Vec2 } | undefined;
+	const hintArrow = hintArrows.find((ha) => isClicked(ha.worldLocation));
+	if (hintArrow) {
+		target = {
+			coords: bdcoords.fromCoords(hintArrow.targetSquare),
+			direction: hintArrow.direction,
+		};
+	} else {
+		const pieceArrows = [...arrows.getAllArrows(board), ...board.arrows.animatedArrows];
+		const pieceArrow = pieceArrows.find((a) => isClicked(a.worldLocation));
+		if (pieceArrow)
+			target = { coords: pieceArrow.piece.coords, direction: pieceArrow.direction };
+	}
+	if (!target) return;
+
 	listener.claimMouseClick(button); // Don't let annotations erase/draw
+	panAlongLineToward(target.coords, target.direction);
+}
 
-	// Pan along parallel direction to the perpendicular foot of targetCoords, NOT straight to the piece.
-
+/**
+ * Pans along a line to the perpendicular foot of the target coordinates, NOT straight to them.
+ * @param direction - Either way along the line to pan along.
+ */
+function panAlongLineToward(targetCoords: BDCoords, direction: Vec2): void {
 	const startCoords = gamescene.getGameContext().boardpos.getBoardPos();
 	// The direction we will follow when teleporting
 	const line1GeneralForm = vectors.getLineGeneralFormFromCoordsAndVecBD(startCoords, direction);
@@ -295,7 +296,6 @@ function transitionTowardTargetIfClicked(
 	)!; // We know it will be defined because they are PERPENDICULAR
 
 	Transition.startPanTransition(telCoords, false);
-	return true;
 }
 
 // Exports ---------------------------------------------------------------------

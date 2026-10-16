@@ -109,6 +109,7 @@ function shiftArrows(): void {
 	if (!draganimation.areDraggingPiece()) return;
 
 	const selectedPiece = selection.getPieceSelected()!;
+	const board = gamescene.getGameContext();
 
 	// Modify the arrow indicators to reflect the potentialcapture
 
@@ -123,20 +124,16 @@ function shiftArrows(): void {
 		);
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
-		arrowshifts.deleteArrow(gamescene.getGameContext(), capturedPieceThisFrame.coords);
+		arrowshifts.deleteArrow(board, capturedPieceThisFrame.coords);
 		// Place the selected piece's arrow location on it
 		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
 	}
 
 	// Shift the arrow of the selected piece
 	if (newLocationOfSelectedPiece)
-		arrowshifts.moveArrow(
-			gamescene.getGameContext(),
-			selectedPiece.coords,
-			newLocationOfSelectedPiece,
-		);
+		arrowshifts.moveArrow(board, selectedPiece.coords, newLocationOfSelectedPiece);
 	// Or just delete if there's no new integer destination
-	else arrowshifts.deleteArrow(gamescene.getGameContext(), selectedPiece.coords);
+	else arrowshifts.deleteArrow(board, selectedPiece.coords);
 }
 
 /**

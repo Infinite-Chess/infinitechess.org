@@ -132,6 +132,7 @@ function render(): void {
 	if (!preferences.getCoordinatesEnabled()) return; // Not enabled in the setting dropdown
 	if (perspective.getEnabled()) return;
 
+	const boardPos = boardpos.getBoardPos();
 	const scale = boardpos.getBoardScale();
 	const labelSizePx = calcLabelSizePx();
 	const sizeWorld = space.convertPixelsToWorldSpace_Virtual(camera, labelSizePx);
@@ -201,8 +202,8 @@ function render(): void {
 		for (let file = firstFile; file <= tileBox.right; file += stepBig) {
 			let worldX = space.convertCoordToWorldSpace(
 				bdcoords.fromCoords([file, 0n]),
-				boardpos.getBoardPos(),
-				boardpos.getBoardScale(),
+				boardPos,
+				scale,
 			)[0];
 			if (isBlackPerspective) worldX = -worldX; // Invert world coords
 			// prettier-ignore
@@ -211,8 +212,8 @@ function render(): void {
 		for (let rank = firstRank; rank <= tileBox.top; rank += stepBig) {
 			let worldY = space.convertCoordToWorldSpace(
 				bdcoords.fromCoords([0n, rank]),
-				boardpos.getBoardPos(),
-				boardpos.getBoardScale(),
+				boardPos,
+				scale,
 			)[1];
 			if (isBlackPerspective) worldY = -worldY; // Invert world coords
 			// prettier-ignore
