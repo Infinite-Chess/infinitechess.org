@@ -1,9 +1,9 @@
 // src/client/scripts/esm/board/rendering/boardgeometry.ts
 
 /**
- * Board geometry queries: the bounding box of the board a camera sees at a given position
- * and scale, tile widths, and square-center helpers. Pure geometry — the actual drawing of
- * the tiles (its textures & shaders) lives in the per-context {@link boardtiles}.
+ * Pure board geometry: computes the bounding box of the board a camera sees at a given
+ * position and scale, tile widths, and square centers. The actual drawing of the tiles
+ * (its textures & shaders) lives in the per-context {@link boardtiles}.
  */
 
 import type { Camera } from './camera.js';

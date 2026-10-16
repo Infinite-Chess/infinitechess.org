@@ -230,18 +230,23 @@ function update(
 	boundingBoxFloat: BoundingBoxBD,
 	pointerWorlds: DoubleCoords[],
 ): void {
-	const state = board.arrows;
-	state.slideArrows = {};
-	state.animatedArrows = [];
-	state.hoveredArrows = [];
-	state.shifts.length = 0;
+	reset(board);
 
 	arrowscalculator.updateBoundingBoxes(board, boundingBoxFloat);
 	if (!areArrowsActiveThisFrame(board)) return; // Arrow indicators are off, nothing is visible.
 
 	const result = arrowscalculator.calculateArrows(board, boardsim, pointerWorlds);
-	state.slideArrows = result.slideArrows;
-	state.hoveredArrows = result.hoveredArrows;
+	board.arrows.slideArrows = result.slideArrows;
+	board.arrows.hoveredArrows = result.hoveredArrows;
+}
+
+/** Clears the board's arrows and pending shifts, in prep for the next frame. */
+function reset(board: LiveBoard): void {
+	const state = board.arrows;
+	state.slideArrows = {};
+	state.animatedArrows = [];
+	state.hoveredArrows = [];
+	state.shifts.length = 0;
 }
 
 // Exports ---------------------------------------------------------------------
@@ -257,4 +262,5 @@ export default {
 	areArrowsActiveThisFrame,
 	// Frame lifecycle
 	update,
+	reset,
 };

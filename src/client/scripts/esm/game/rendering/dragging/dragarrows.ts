@@ -361,7 +361,7 @@ function renderCandidateArrows(): void {
 	if (!worldLocation) return;
 
 	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext());
-	const size = halfWidth * arrowsgraphics.ARROW_SIZE_RATIO;
+	const size = halfWidth * arrowsgraphics.TRIANGLE_SIZE_RATIO;
 
 	// Determine the perpendicular axis from the indicator's screen position by measuring
 	// the raw world-space distance to each edge pair. The indicator sits on whichever edge is closer.

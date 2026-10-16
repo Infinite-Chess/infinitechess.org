@@ -38,7 +38,7 @@ export interface RenderContextParams {
 	textures: TextureCache;
 	/** The stencil masker for this context's gl. */
 	maskedDraw: MaskedDraw;
-	/** Whether this context's board needs redrawing. Its camera and board position flag it too. */
+	/** Tracks whether this context's board needs redrawing. Its camera and board position flag it too. */
 	frames: FrameTracker;
 }
 

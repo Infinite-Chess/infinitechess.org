@@ -313,14 +313,8 @@ function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 		// This also immediately terminates the opponent's move animation
 		// MUST READ the move's changes returned from movesequence.makeMove()
 		// instead of the premove's changes, as the changes need to be regenerated!
-		graphicalchanges.animateMove(
-			gamescene.getGameContext(),
-			move.changes,
-			true,
-			false,
-			false,
-			true,
-		); // true for force instant animation, even secondary pieces aren't animated!
+		// prettier-ignore
+		graphicalchanges.animateMove(gamescene.getGameContext(), move.changes, true, false, false, true); // true for force instant animation, even secondary pieces aren't animated!
 
 		// Apply remaining premove changes & visuals, but don't make them physically on the board
 		applyPremoves(gamefile, mesh);

@@ -277,7 +277,7 @@ function concludeGame(playSound = true): void {
 	guiclock.stopClocks(loadedGamefile);
 
 	GameBus.dispatch('game-concluded');
-	// Load-bearing: a resignation, flag or disconnect concludes the game without any move to redraw.
+	// Draws the conclusion's glyph. Load-bearing: a resignation, flag or disconnect has no move to trigger a redraw.
 	frametracker.onVisualChange();
 
 	if (playSound) gamesound.playNotify(true);

@@ -481,7 +481,7 @@ function findClosestEntityOfGroup(
 						coords: intersection,
 						color: highlightLine.line.color,
 						type: highlightLine.line.piece,
-						source: jsutil.deepCopyObject(entityCoords),
+						source: coordutil.copyBDCoords(entityCoords),
 					};
 					closestEntitySnap = { snap, dist: euclidDist };
 				}

@@ -62,14 +62,12 @@ function getMode(): Mode {
 
 /** Sets the current mode of the arrow indicators. */
 function setMode(value: Mode): void {
-	const state = gamescene.getGameContext().arrows;
-	if (value === state.mode) return;
+	const board = gamescene.getGameContext();
+	if (value === board.arrows.mode) return;
 
-	state.mode = value;
+	board.arrows.mode = value;
 	if (value === 0) {
-		state.slideArrows = {};
-		state.animatedArrows = [];
-		state.hoveredArrows = [];
+		arrows.reset(board);
 		hintArrows = [];
 		arrowlegalmovehighlights.reset(); // Erase, otherwise their legal move highlights continue to render
 	}

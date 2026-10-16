@@ -23,7 +23,7 @@ import arrowscalculator from './arrowscalculator.js';
 // Constants -------------------------------------------------------------------
 
 /** The size of arrow triangles as a fraction of the arrow indicator half-width. */
-const ARROW_SIZE_RATIO = 0.3;
+const TRIANGLE_SIZE_RATIO = 0.3;
 
 /** Attribute layout for the instanced piece-image renderable. */
 const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
@@ -217,7 +217,7 @@ function concatData(
  * @param halfWorldWidth - Half of the width of the arrow indicators for the current frame (dependant on scale).
  */
 function getVertexDataOfArrow(halfWorldWidth: number): number[] {
-	const size = halfWorldWidth * ARROW_SIZE_RATIO;
+	const size = halfWorldWidth * TRIANGLE_SIZE_RATIO;
 	// prettier-ignore
 	return [
 		halfWorldWidth,       -size,
@@ -230,7 +230,7 @@ function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 
 export default {
 	// Constants
-	ARROW_SIZE_RATIO,
+	TRIANGLE_SIZE_RATIO,
 	// Functions
 	render,
 };

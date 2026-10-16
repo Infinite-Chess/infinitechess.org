@@ -39,7 +39,7 @@ function testInGame(gamefile: GameFile, mesh: Mesh | undefined): void {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + estimateMemorySizeOf(gamefile));
 	}
-	if (listener_document.isKeyDown('Digit2')) animation.toggleDebug(); // Each animation slows down and renders continuous ribbon
+	if (listener_document.isKeyDown('Digit2')) animation.toggleDebug(); // Each animation slows down and renders a continuous ribbon
 	if (listener_document.isKeyDown('Digit4')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 
 	if (listener_document.isKeyDown('Tab')) guiboardcontrols.callback_Arrows();
