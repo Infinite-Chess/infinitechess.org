@@ -5,12 +5,7 @@
  */
 
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
-import type {
-	BDCoords,
-	Coords,
-	CoordsKey,
-	DoubleCoords,
-} from '../../../../../shared/util/coordutil.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
@@ -28,7 +23,6 @@ import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import premoves from '../chess/premoves.js';
 import gamescene from './gamescene.js';
-import animation from '../../board/rendering/animation.js';
 import selection from '../chess/selection.js';
 import perspective from './perspective.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -201,31 +195,17 @@ function getAllPiecesBelowAnnotePoints(): Piece[] {
 	const mesh = gameslot.getMesh();
 	const board = gamescene.getGameContext();
 
-	// 1. Process all animations and add pieces relevant to the current move
-	const maxDistB4Teleport = miniimagerenderer.getMaxAnimationDistance(board);
-	/** Pieces temporarily being hidden via transparent squares on their destination square. */
-	const activeHides: Set<CoordsKey> = new Set();
-	for (const a of board.animations) {
-		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
-		const currentAnimationPosition = animation.getCurrentAnimationPosition(
-			a.segments,
-			segmentInfo,
-		);
-		// Add the main animated piece
-		pushPieceNoDuplicatesOrVoids({
-			coords: bdcoords.coordsToBigInt(currentAnimationPosition),
-			type: a.type,
-			index: -1,
-		});
-		// Add the captured pieces being shown
-		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, (pieces) =>
-			pieces.forEach((p) => pushPieceNoDuplicatesOrVoids(p)),
-		);
-		// Construct the hidden pieces for below
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, (pieces) =>
-			pieces.map(coordutil.getKeyFromCoords).forEach((c) => activeHides.add(c)),
-		);
-	}
+	// 1. Add the animated pieces: each moving piece, and the captured pieces still shown
+	const activeHides = miniimagerenderer.forEachAnimatedPiece(
+		board,
+		board.animations,
+		(coords, type) =>
+			pushPieceNoDuplicatesOrVoids({
+				coords: bdcoords.coordsToBigInt(coords),
+				type,
+				index: -1,
+			}),
+	);
 
 	// Queued premoves must be rewound BEFORE reading the pieces, so they are in the expected locations as the last and next move!
 	premoves.rewindPremoves(gamefile, mesh);

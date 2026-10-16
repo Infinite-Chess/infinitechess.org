@@ -61,32 +61,11 @@ function forEachRenderablePiece(
 	animations: Animation[],
 	callback: (coords: BDCoords, type: number) => void,
 ): void {
-	const pieces = boardsim.pieces;
-
 	// Animated pieces
-	const maxDistB4Teleport = getMaxAnimationDistance(ctx);
-	/** Pieces temporarily being hidden via transparent squares on their destination square. */
-	const activeHides: Set<CoordsKey> = new Set();
-	for (const a of animations) {
-		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
-		const currentAnimationPosition = animation.getCurrentAnimationPosition(
-			a.segments,
-			segmentInfo,
-		);
-		callback(currentAnimationPosition, a.type);
-		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, (pieces) =>
-			pieces.forEach((p) => {
-				const pieceBDCoords = bdcoords.fromCoords(p.coords);
-				callback(pieceBDCoords, p.type);
-			}),
-		);
-		// Construct the hidden pieces for below
-		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, (pieces) =>
-			pieces.map(coordutil.getKeyFromCoords).forEach((c) => activeHides.add(c)),
-		);
-	}
+	const activeHides = forEachAnimatedPiece(ctx, animations, callback);
 
 	// Static pieces
+	const pieces = boardsim.pieces;
 	boardsim.existingTypes.forEach((type: number) => {
 		if (piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(type))) return; // Skip voids
 
@@ -102,6 +81,30 @@ function forEachRenderablePiece(
 			callback(coordsBD, type);
 		});
 	});
+}
+
+/**
+ * Invokes the callback for every piece a board's animations show mid-flight: each moving piece,
+ * and the captured pieces still shown. Returns the squares they hide, whose pieces aren't shown.
+ */
+function forEachAnimatedPiece(
+	ctx: RenderContext,
+	animations: Animation[],
+	callback: (coords: BDCoords, type: number) => void,
+): Set<CoordsKey> {
+	const maxDistB4Teleport = getMaxAnimationDistance(ctx);
+	const activeHides: Set<CoordsKey> = new Set();
+	for (const a of animations) {
+		const segmentInfo = animation.getCurrentSegment(a, maxDistB4Teleport);
+		callback(animation.getCurrentAnimationPosition(a.segments, segmentInfo), a.type);
+		animation.forEachActiveKeyframe(a.showKeyframes, segmentInfo.segmentNum, (pieces) =>
+			pieces.forEach((p) => callback(bdcoords.fromCoords(p.coords), p.type)),
+		);
+		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, (pieces) =>
+			pieces.map(coordutil.getKeyFromCoords).forEach((c) => activeHides.add(c)),
+		);
+	}
+	return activeHides;
 }
 
 /**
@@ -224,7 +227,7 @@ function render(
 export default {
 	MAX_PIECE_COUNT,
 	forEachRenderablePiece,
-	getMaxAnimationDistance,
+	forEachAnimatedPiece,
 	buildInstanceData,
 	render,
 };
