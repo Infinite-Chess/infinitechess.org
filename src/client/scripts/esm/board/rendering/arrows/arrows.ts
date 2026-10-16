@@ -263,6 +263,7 @@ function reset(board: LiveBoard): void {
 export default {
 	// Constants
 	MAX_PIECES,
+	DEFAULT_MODE,
 	// Factory
 	createState,
 	// Getters

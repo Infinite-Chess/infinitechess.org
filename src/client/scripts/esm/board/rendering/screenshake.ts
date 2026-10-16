@@ -28,6 +28,8 @@ export interface ScreenShake {
 	 * @param amount The amount of trauma to add (usually between 0.1 and 1.0).
 	 */
 	trigger(amount: number): void;
+	/** Clears all trauma, stopping any shake immediately. */
+	clear(): void;
 	/** Decays the trauma level. Call once per frame. */
 	update(): void;
 	/**
@@ -72,7 +74,6 @@ function createScreenShake(hooks: ScreenShakeHooks = {}): ScreenShake {
 		onTraumaChange?.();
 	}
 
-	/** Clears all trauma, stopping any shake immediately. */
 	function clear(): void {
 		if (trauma === 0) return;
 		trauma = 0.0;
@@ -132,6 +133,7 @@ function createScreenShake(hooks: ScreenShakeHooks = {}): ScreenShake {
 
 	return {
 		trigger,
+		clear,
 		update,
 		getShakeMatrix,
 		wireGlobalListeners,

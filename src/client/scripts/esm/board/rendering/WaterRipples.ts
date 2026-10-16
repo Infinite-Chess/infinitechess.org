@@ -147,6 +147,11 @@ function addRipple(board: LiveBoard, sourceCoords: Coords): void {
 	board.ripples.droplets.push({ center: [u, v], timeCreated: Date.now() + elapsedTimeOffset });
 }
 
+/** Removes every droplet, ending the board's ripples at once. */
+function clear(board: LiveBoard): void {
+	board.ripples.droplets.length = 0;
+}
+
 /**
  * Drops expired droplets and feeds the rest to the pass.
  * @param suppressed - Whether to hide every ripple this frame. Perspective mode does, as the
@@ -185,6 +190,7 @@ export default {
 	create,
 	resize,
 	addRipple,
+	clear,
 	update,
 	getPass,
 };

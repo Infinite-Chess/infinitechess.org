@@ -1,8 +1,9 @@
 // src/client/scripts/esm/views/index/featuredboard.ts
 
 /**
- * One featured game's live board: building its game from the lobby's snapshot, playing each
- * incoming move, clock change and conclusion onto it, and updating and drawing it every frame.
+ * One featured card's live board: loading each game it shows from the lobby's snapshot, the next
+ * while it still draws the last, playing each incoming move, clock change and conclusion onto it,
+ * and updating and drawing it every frame.
  */
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
@@ -47,49 +48,70 @@ export type FeaturedUpdate = Extract<
 	{ action: 'featuredmove' | 'featuredclock' | 'featuredconclusion' }
 >;
 
-/** One featured game's board. */
-export interface FeaturedBoard {
-	board: LiveBoard;
-	state:
-		| {
-				kind: 'loading';
-				/** Updates that arrived mid-load, replayed in order once it finishes. */
-				queue: FeaturedUpdate[];
-		  }
-		| { kind: 'loaded'; gamefile: GameFile; mesh: Mesh; framing: Framing }
-		| { kind: 'disposed' };
-	/** Keeps the canvas's pixel buffer, and the framing that depends on it, matched to its size. */
-	resizeObserver: ResizeObserver;
-	/** Ends its watch on the pixel density, which the resize observer can't see, on dispose. */
-	densityWatch: AbortController;
+/** A game loaded onto a featured board, as it's drawn. */
+interface Shown {
+	/** The snapshot it was loaded from. */
+	game: FeaturedGame;
+	gamefile: GameFile;
+	mesh: Mesh;
+	framing: Framing;
 }
 
-/** The loaded state of a {@link FeaturedBoard}. */
-type Loaded = Extract<FeaturedBoard['state'], { kind: 'loaded' }>;
+/** A featured board loading its next game. */
+interface Loading {
+	kind: 'loading';
+	/** The game drawn until the load finishes. Undefined during the board's first. */
+	shown: Shown | undefined;
+	/** Updates to the game loading that arrived mid-load, replayed in order once it finishes. */
+	queue: FeaturedUpdate[];
+}
+
+/** One featured card's board. */
+export interface FeaturedBoard {
+	board: LiveBoard;
+	state: Loading | { kind: 'loaded'; shown: Shown };
+	/** Its tile textures' generation, run once at creation. */
+	tilesReady: Promise<void>;
+	/** Keeps the canvas's pixel buffer, and the framing that depends on it, matched to its size. */
+	resizeObserver: ResizeObserver;
+	/**
+	 * Aborted on dispose: ends any load underway, and its watch on the pixel density, which the
+	 * resize observer can't see.
+	 */
+	lifetime: AbortController;
+}
 
 // Lifecycle -------------------------------------------------------------------
 
 /**
- * Builds a featured game's board on its canvas, which must already be in the page.
- * It loads in the background, and draws nothing until it has.
+ * Builds a board on its canvas, which must already be in the page, and loads its first game.
+ * It draws nothing until that has loaded.
  */
 function create(canvas: HTMLCanvasElement, game: FeaturedGame): FeaturedBoard {
 	const board = new LiveBoard({ ...standaloneboard.createContextParams(canvas), sound: false });
 	const featuredBoard: FeaturedBoard = {
 		board,
-		state: { kind: 'loading', queue: [] },
+		state: { kind: 'loading', shown: undefined, queue: [] },
+		tilesReady: board.boardtiles.init(),
 		resizeObserver: new ResizeObserver(() => syncCanvasSize(featuredBoard)),
-		densityWatch: new AbortController(),
+		lifetime: new AbortController(),
 	};
 	featuredBoard.resizeObserver.observe(canvas);
-	docutil.onPixelDensityChange(() => syncCanvasSize(featuredBoard), featuredBoard.densityWatch.signal); // prettier-ignore
+	docutil.onPixelDensityChange(() => syncCanvasSize(featuredBoard), featuredBoard.lifetime.signal); // prettier-ignore
 	void load(featuredBoard, game);
 	return featuredBoard;
 }
 
-/** Builds the game, its images and its mesh, then replays any updates that arrived meanwhile. */
+/**
+ * Loads a game onto the board in the background, superseding any load underway. The board keeps
+ * drawing its current game until it's done, then switches and snaps onto the new one in a single
+ * frame, and replays the updates that arrived meanwhile.
+ */
 async function load(featuredBoard: FeaturedBoard, game: FeaturedGame): Promise<void> {
 	const { board } = featuredBoard;
+	const loading: Loading = { kind: 'loading', shown: featuredBoard.state.shown, queue: [] };
+	featuredBoard.state = loading;
+
 	const engineGame = Object.values(game.players).some((p) => p?.type === 'engine');
 	const progress = {
 		moves: game.moves,
@@ -97,28 +119,28 @@ async function load(featuredBoard: FeaturedBoard, game: FeaturedGame): Promise<v
 		clockValues: game.clockValues,
 	};
 	const options = gameformulator.constructionOptionsFromSetup(game, engineGame, progress);
-	const [gamefile] = await Promise.all([
-		gameformulator.loadAndConstructGame(options),
-		board.boardtiles.init(),
-	]);
-	await standaloneboard.load(board, gamefile);
-	if (featuredBoard.state.kind !== 'loading') return; // Disposed mid-load
+	const gamefile = await gameformulator.loadAndConstructGame(options);
+	await Promise.all([standaloneboard.load(board, gamefile), featuredBoard.tilesReady]);
+	// Disposed, or replaced again, mid-load
+	if (featuredBoard.lifetime.signal.aborted || featuredBoard.state !== loading) return;
 
-	if (arrows.isGameTooLarge(gamefile)) board.arrows.mode = 0;
+	// The previous game's effects
+	animation.clearAnimations(board);
+	WaterRipples.clear(board);
+	board.camera.shake.clear();
+	board.arrows.mode = arrows.isGameTooLarge(gamefile) ? 0 : arrows.DEFAULT_MODE;
 	const framing = featuredframing.create(board, gamefile); // Before the mesh, which is offset from the camera
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
 	piecemodels.regenAll(board, gamefile, mesh);
 
-	const { queue } = featuredBoard.state;
-	featuredBoard.state = { kind: 'loaded', gamefile, mesh, framing };
-	for (const update of queue) apply(featuredBoard, update);
+	featuredBoard.state = { kind: 'loaded', shown: { game, gamefile, mesh, framing } };
+	for (const update of loading.queue) apply(featuredBoard, update);
 }
 
 /** Stops the board, and releases its WebGL context. */
 function dispose(featuredBoard: FeaturedBoard): void {
-	featuredBoard.state = { kind: 'disposed' };
 	featuredBoard.resizeObserver.disconnect();
-	featuredBoard.densityWatch.abort();
+	featuredBoard.lifetime.abort();
 	animation.clearAnimations(featuredBoard.board); // Cancels their pending timers
 	featuredBoard.board.dispose();
 }
@@ -126,30 +148,29 @@ function dispose(featuredBoard: FeaturedBoard): void {
 /** Resizes the pixel buffer to the canvas's size and pixel density, and reframes to its new shape. */
 function syncCanvasSize(featuredBoard: FeaturedBoard): void {
 	const { board, state } = featuredBoard;
-	if (state.kind === 'disposed') return;
 	board.camera.syncCanvasDimensions();
 	board.resize(board.canvas.width, board.canvas.height);
-	if (state.kind === 'loaded') featuredframing.retarget(board, state.gamefile, state.framing);
+	if (state.shown) featuredframing.retarget(board, state.shown.gamefile, state.shown.framing);
 }
 
 // Updates ---------------------------------------------------------------------
 
-/** Plays an update onto the board, or queues it if the board is still loading. */
+/** Plays an update onto the board, or queues it for the game loading, if one is. */
 function apply(featuredBoard: FeaturedBoard, update: FeaturedUpdate): void {
 	const { board, state } = featuredBoard;
-	if (state.kind === 'disposed') return;
 	if (state.kind === 'loading') return void state.queue.push(update);
+	const { shown } = state;
 
 	switch (update.action) {
 		case 'featuredmove':
-			applyMove(board, state, update.value);
+			applyMove(board, shown, update.value);
 			break;
 		case 'featuredclock':
-			applyClockValues(state.gamefile, update.value.clockValues);
+			applyClockValues(shown.gamefile, update.value.clockValues);
 			break;
 		case 'featuredconclusion':
-			wincondition.setGameConclusion(state.gamefile, update.value.gameConclusion);
-			applyClockValues(state.gamefile, update.value.clockValues);
+			wincondition.setGameConclusion(shown.gamefile, update.value.gameConclusion);
+			applyClockValues(shown.gamefile, update.value.clockValues);
 			break;
 		default:
 			throw new Error(`Unknown featured update: ${JSON.stringify(update satisfies never)}`);
@@ -162,8 +183,8 @@ function apply(featuredBoard: FeaturedBoard, update: FeaturedUpdate): void {
  * adopted as is. A move out of sequence, or one our board finds illegal, is dropped, leaving
  * the board behind until its game is replaced or the lobby resubscribes.
  */
-function applyMove(board: LiveBoard, loaded: Loaded, message: OpponentsMoveMessage): void {
-	const { gamefile, mesh, framing } = loaded;
+function applyMove(board: LiveBoard, shown: Shown, message: OpponentsMoveMessage): void {
+	const { gamefile, mesh, framing } = shown;
 	if (message.moveNumber !== gamefile.moves.length + 1) return;
 	const parsed = icnmoves.parseTokenMove(message.move.token);
 	// Attaches the move's special tags, which only a legal move can be found to have.
@@ -190,24 +211,25 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 /** Advances the board one frame, in the game page's update order. */
 function update(featuredBoard: FeaturedBoard): void {
 	const { board, state } = featuredBoard;
-	if (state.kind !== 'loaded') return;
+	const { shown } = state;
+	if (shown === undefined) return;
 	const { boardpos } = board;
 
 	board.camera.shake.update();
-	featuredframing.glide(board, state.framing);
+	featuredframing.glide(board, shown.framing);
 	const boundingBox = boardgeometry.getBoundingBoxOfBoard(board.camera, boardpos.getBoardPos(), boardpos.getBoardScale()); // prettier-ignore
-	arrows.update(board, state.gamefile, boundingBox, []);
+	arrows.update(board, shown.gamefile, boundingBox, []);
 	WaterRipples.update(board, false);
 	animation.update(board);
-	arrowshifts.executeArrowShifts(board, state.gamefile, []);
-	clock.update(state.gamefile);
+	arrowshifts.executeArrowShifts(board, shown.gamefile, []);
+	clock.update(shown.gamefile);
 }
 
 /** Draws the board, if anything on it changed since its last draw. */
 function render(featuredBoard: FeaturedBoard): void {
 	const { board, state } = featuredBoard;
-	if (state.kind !== 'loaded' || !board.frames.doWeRenderNextFrame()) return;
-	const { gamefile, mesh } = state;
+	if (state.shown === undefined || !board.frames.doWeRenderNextFrame()) return;
+	const { gamefile, mesh } = state.shown;
 
 	const passes = WaterRipples.getPass(board);
 	board.pipeline.setPasses(passes);
@@ -235,14 +257,20 @@ function render(featuredBoard: FeaturedBoard): void {
 
 // Display ---------------------------------------------------------------------
 
+/** The game drawn, once the board's first has loaded. */
+function getShownGame(featuredBoard: FeaturedBoard): FeaturedGame | undefined {
+	return featuredBoard.state.shown?.game;
+}
+
 /**
  * What a player's bar shows beside their name: their score once the game has ended
- * (1, 0, or ½ each for a draw), otherwise their clock. Undefined while loading, or untimed.
+ * (1, 0, or ½ each for a draw), otherwise their clock. Of the game drawn, so undefined until
+ * the board's first has loaded, or when untimed.
  */
 function getClockOrScore(featuredBoard: FeaturedBoard, color: Player): string | undefined {
-	const { state } = featuredBoard;
-	if (state.kind !== 'loaded') return undefined;
-	const { gamefile } = state;
+	const { shown } = featuredBoard.state;
+	if (shown === undefined) return undefined;
+	const { gamefile } = shown;
 	const conclusion = gamefile.gameConclusion;
 	if (conclusion !== undefined && conclusion.condition !== 'aborted') {
 		return conclusion.victor === null ? '½' : conclusion.victor === color ? '1' : '0';
@@ -256,6 +284,7 @@ function getClockOrScore(featuredBoard: FeaturedBoard, color: Player): string | 
 export default {
 	// Lifecycle
 	create,
+	load,
 	dispose,
 	// Updates
 	apply,
@@ -263,5 +292,6 @@ export default {
 	update,
 	render,
 	// Display
+	getShownGame,
 	getClockOrScore,
 };
