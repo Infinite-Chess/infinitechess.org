@@ -39,8 +39,6 @@
 	display: flex;
 	justify-content: center;
 	padding: 48px 16px 64px;
-	/* Anchored to the top, so the checkerboard holds still as panels resize the page. */
-	background-position: center top;
 }
 
 .validator-column {

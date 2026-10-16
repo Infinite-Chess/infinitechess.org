@@ -83,9 +83,10 @@ body {
 	/* Hover-state overlay: brightens on dark, darkens on light. */
 	--c-hover: rgba(255, 255, 255, 0.08);
 
-	/* Tiled checkerboard backdrop pattern (home, login, game side bar, …). */
+	/* Tiled checkerboard backdrop pattern (home, login, game side bar, …). Anchored to the
+	   top, so it holds still as content changes the height of what it fills. */
 	--checkerboard: repeating-conic-gradient(rgb(255, 217, 168) 0% 25%, rgb(222, 173, 117) 0% 50%)
-		50% / 200px 200px;
+		50% 0 / 200px 200px;
 	--c-checkerboard-dim: rgba(0, 0, 0, 0.88);
 
 	/* Text */
@@ -136,7 +137,7 @@ body {
 	--c-surface-inset: rgb(235, 235, 235);
 	--c-hover: rgba(0, 0, 0, 0.06);
 
-	--checkerboard: repeating-conic-gradient(rgb(255 200 128) 0% 25%, rgb(191 114 0) 0% 50%) 50% /
+	--checkerboard: repeating-conic-gradient(rgb(255 200 128) 0% 25%, rgb(191 114 0) 0% 50%) 50% 0 /
 		200px 200px;
 	--c-checkerboard-dim: rgba(255, 255, 255, 0.68);
 
