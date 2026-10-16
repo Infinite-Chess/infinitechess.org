@@ -1,4 +1,4 @@
-// src/client/scripts/esm/board/rendering/movesound.ts
+// src/client/scripts/esm/board/rendering/moveeffects.ts
 
 /**
  * Handles the effects of a piece landing: its sound (reverb, dampening, bell, ripple),

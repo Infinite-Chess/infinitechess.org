@@ -2,7 +2,7 @@
 
 /**
  * This script handles the animation of pieces, on whichever live board they move on.
- * It also plays the sounds.
+ * It also plays each move's landing effects, through moveeffects.
  */
 
 import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
@@ -21,7 +21,7 @@ import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/t
 
 import meshes from './meshes.js';
 import splines from './splines.js';
-import movesound from './movesound.js';
+import moveeffects from './moveeffects.js';
 import arrowshifts from './arrows/arrowshifts.js';
 import piecemodels from './piecemodels.js';
 import instancedshapes from './instancedshapes.js';
@@ -190,7 +190,7 @@ function animatePiece(
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
 	if (instant)
-		return movesound.playMove(
+		return moveeffects.playMove(
 			board,
 			totalDistance,
 			showKeyframes.size !== 0,
@@ -324,7 +324,7 @@ function scheduleAnimationRemoval(board: LiveBoard, animation: Animation): void 
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(board: LiveBoard, animation: Animation): void {
-	movesound.playMove(
+	moveeffects.playMove(
 		board,
 		animation.totalDistance,
 		animation.showKeyframes.size !== 0,
