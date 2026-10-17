@@ -217,7 +217,7 @@ function render(): void {
 	// (the canvas stays visibility-hidden until then).
 	if (!gameslot.getGamefile() || gamesession.isLoading()) return;
 
-	gamescene.getGameContext().clearScreen(); // Clear the color + depth + stencil buffers
+	gamescene.getGameContext().clearScreen(); // BEFORE pipeline.begin(), whose clear needs the full stencil mask this restores
 	maskeddraw.onFrameStart(); // Reset stencil bit-pair index for this frame
 
 	gamescene.render();

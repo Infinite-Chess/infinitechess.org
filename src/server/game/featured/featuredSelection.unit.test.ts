@@ -102,8 +102,8 @@ describe('select', () => {
 		expect(ids).toEqual(shown.map((c) => c.id));
 	});
 	it('displaces the lowest board in place for a far better game', () => {
-		const shown = fullSlots();
+		const shown = fullSlots().reverse(); // Lowest first, so an append can't pass for in place
 		const ids = featuredSelection.select(shown, [contender(-1, 100_000)]);
-		expect(ids).toEqual([...shown.slice(0, -1).map((c) => c.id), -1]);
+		expect(ids).toEqual([-1, ...shown.slice(1).map((c) => c.id)]);
 	});
 });

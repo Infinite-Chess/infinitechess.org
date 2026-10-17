@@ -16,6 +16,7 @@ import bd from '@naviary/bigdecimal';
 
 import bounds from '../../../../../../shared/util/math/bounds.js';
 import bimath from '../../../../../../shared/util/math/bimath.js';
+import vectors from '../../../../../../shared/util/math/vectors.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
 import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 
@@ -112,12 +113,13 @@ function calcTarget(board: LiveBoard, gamefile: GameFile, outsiders: Map<CoordsK
 	return target;
 }
 
-/** How many squares a square outside a box lies beyond it, by its furthest axis. */
+/** The chebyshev distance from a square to the nearest square of a box. */
 function distanceOutside(box: BoundingBox, coords: Coords): bigint {
-	const [x, y] = coords;
-	const dx = bimath.max(box.left - x, x - box.right);
-	const dy = bimath.max(box.bottom - y, y - box.top);
-	return bimath.max(dx, dy);
+	const nearest: Coords = [
+		bimath.clamp(coords[0], box.left, box.right),
+		bimath.clamp(coords[1], box.bottom, box.top),
+	];
+	return vectors.chebyshevDistance(coords, nearest);
 }
 
 // Gliding ---------------------------------------------------------------------

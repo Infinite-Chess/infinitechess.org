@@ -516,10 +516,11 @@ function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 		// A clipped row's pulse would float over the page outside the list, anchored to nothing visible.
 		if (!isRowFullyVisible(row)) return;
 		const overlay = document.createElement('div');
-		overlay.className = isOurs ? 'seek-pulse-overlay ours' : 'seek-pulse-overlay';
+		overlay.classList.add('seek-pulse-overlay');
+		overlay.classList.toggle('ours', isOurs);
 		for (const side of ['top', 'bottom', 'left', 'right']) {
 			const edge = document.createElement('div');
-			edge.className = `seek-pulse-edge ${side}`;
+			edge.classList.add('seek-pulse-edge', side);
 			overlay.appendChild(edge);
 		}
 		document.body.appendChild(overlay);

@@ -179,18 +179,15 @@ function apply(featuredBoard: FeaturedBoard, update: FeaturedUpdate): void {
 	board.frames.onVisualChange();
 }
 
-/**
- * Plays a move onto the board, animated. The server is authoritative, so its conclusion is
- * adopted as is. A move out of sequence, or one our board finds illegal, is dropped, leaving
- * the board behind until its game is replaced or the lobby resubscribes.
- */
+/** Plays a move onto the board, animated, adopting the server's conclusion as authoritative. */
 function applyMove(board: LiveBoard, shown: Shown, message: OpponentsMoveMessage): void {
 	const { gamefile, mesh, framing } = shown;
+	// Out of sequence only once an illegal move was dropped below
 	if (message.moveNumber !== gamefile.moves.length + 1) return;
 	const parsed = icnmoves.parseTokenMove(message.move.token);
 	// Attaches the move's special tags, which only a legal move can be found to have.
 	const result = movevalidation.isOpponentsMoveLegal(gamefile, parsed, 'trusted');
-	if (!result.valid) return;
+	if (!result.valid) return; // Leaves the board behind until its game is replaced or the lobby resubscribes
 
 	const move = movepiece.generateAndMakeMove(gamefile, result.tagged);
 	wincondition.setGameConclusion(gamefile, message.gameConclusion);
@@ -232,12 +229,13 @@ function render(featuredBoard: FeaturedBoard): void {
 	if (state.shown === undefined || !board.frames.doWeRenderNextFrame()) return;
 	const { gamefile, mesh } = state.shown;
 
+	board.clearScreen(); // BEFORE pipeline.begin(), whose clear needs the full stencil mask this restores
+	board.maskedDraw.onFrameStart();
+
 	const passes = WaterRipples.getPass(board);
 	board.pipeline.setPasses(passes);
 	if (passes.length > 0) board.pipeline.begin();
 
-	board.clearScreen();
-	board.maskedDraw.onFrameStart();
 	standaloneboard.renderBoard(board, gamefile, mesh);
 	board.executeWithDepthFunc_ALWAYS(() => {
 		positionhighlights.render(board, gamefile);
