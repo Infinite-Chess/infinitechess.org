@@ -1074,8 +1074,12 @@
 			display: none;
 		}
 
-		/* Moves strip — the moves list reflows into one sideways-scrolling strip between the jump buttons. */
+		/* Moves strip — the moves list reflows into one sideways-scrolling strip between the jump buttons.
+		   Stacked above the board controls, or Android Chrome sends a swipe over it to a glowing toggle's
+		   filter layer, and it won't scroll. */
 		.moves {
+			position: relative;
+			z-index: 1;
 			flex-direction: row;
 			min-height: var(--strip-height);
 			font-size: calc(1em * var(--ui-zoom));
