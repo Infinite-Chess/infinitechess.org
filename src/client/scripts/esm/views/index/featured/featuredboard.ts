@@ -22,6 +22,7 @@ import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import clockutil from '../../../../../../shared/chess/util/clockutil.js';
 import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
 import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
+import gameresultutil from '../../../../../../shared/chess/util/gameresultutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gameformulator from '../../../../../../shared/chess/game/gameformulator.js';
 
@@ -262,18 +263,16 @@ function getShownGame(featuredBoard: FeaturedBoard): FeaturedGame | undefined {
 }
 
 /**
- * What a player's bar shows beside their name: their score once the game has ended
- * (1, 0, or ½ each for a draw), otherwise their clock. Of the game drawn, so undefined until
- * the board's first has loaded, or when untimed.
+ * What a player's bar shows beside their name: their score once the game has ended, otherwise
+ * their clock. Of the game drawn, so undefined until the board's first has loaded, or when untimed.
  */
 function getClockOrScore(featuredBoard: FeaturedBoard, color: Player): string | undefined {
 	const { shown } = featuredBoard.state;
 	if (shown === undefined) return undefined;
 	const { gamefile } = shown;
 	const conclusion = gamefile.gameConclusion;
-	if (conclusion !== undefined && conclusion.condition !== 'aborted') {
-		return conclusion.victor === null ? '½' : conclusion.victor === color ? '1' : '0';
-	}
+	const score = conclusion && gameresultutil.getScore(conclusion, color);
+	if (score !== undefined) return score;
 	if (gamefile.untimed) return undefined;
 	return clockutil.getTextContentFromTimeRemain(gamefile.clocks.currentTime[color]!);
 }
