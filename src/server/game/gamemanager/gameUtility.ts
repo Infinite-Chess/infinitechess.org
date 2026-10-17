@@ -8,7 +8,6 @@
  * `gameStateBuilder.ts`, and the life cycle in `gameManager.ts` / `gameLifecycle.ts`.
  */
 
-import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
@@ -35,8 +34,6 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import variantrules from '../../../shared/chess/logic/variantrules.js';
-import apeironborder from '../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
@@ -74,7 +71,6 @@ function resolveGameConstruction(
 	engineGame: boolean,
 ): GameConstruction {
 	let loaded: LoadedVariant | undefined;
-	let gameRules: GameRules;
 	let variantOptions: VariantOptions | undefined;
 	let presetAnnotes: PresetAnnotes | undefined;
 
@@ -84,11 +80,6 @@ function resolveGameConstruction(
 			mod: variantcache.getModule(variant.code),
 			dateTimestamp,
 		};
-		gameRules = variantrules.getGameRulesOfVariant(loaded); // Already a fresh copy
-		// The board an engine game is played on.
-		if (engineGame && gameRules.worldBorder === undefined) {
-			gameRules.worldBorder = apeironborder.forVariant(loaded);
-		}
 	} else {
 		// The ICN is the source of truth for the position, the gamerules, and which variant
 		// revision it's a position of. Parsing can't fail here — a position only becomes a
@@ -101,22 +92,21 @@ function resolveGameConstruction(
 			...resolved.variant,
 			mod: variantcache.getModule(resolved.variant.code), // Every module is preloaded at startup
 		};
-		gameRules = variantOptions.gameRules;
 	}
 
-	const construction: GameConstruction = {
+	const gameRules = gamefile.resolveGameRules(loaded, {
+		variantOptions,
+		slideLimit: slideLimit !== undefined ? BigInt(slideLimit) : undefined,
+		engineGame,
+	});
+
+	return {
 		variant: loaded,
 		gameRules,
 		variantOptions,
 		presetAnnotes,
 		validateMoves: servervalidation.isGameValidated(variant, loaded),
 	};
-
-	// Slide Limit modifier override. Must precede boardinit.init(),
-	// which reads gameRules.slideLimit to narrow the sliding movesets.
-	if (slideLimit !== undefined) construction.gameRules.slideLimit = BigInt(slideLimit);
-
-	return construction;
 }
 
 /**
