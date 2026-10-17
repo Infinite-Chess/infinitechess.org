@@ -66,9 +66,6 @@ body {
 	/* Error/danger red. */
 	--c-error: #e05555;
 
-	/* Eye-catching orange: calls to action, and what's new or live on the home page. */
-	--c-highlight: rgb(255 88 0);
-
 	/* The raised face as one gradient. Needs no per-theme copy — its two colors are themed. */
 	--raised-gradient: linear-gradient(180deg, var(--c-raised-top) 0%, var(--c-raised-bottom) 100%);
 }

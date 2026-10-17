@@ -2,6 +2,13 @@
 
 /* The home page, containing the lobby and spectating sections. */
 
+:root {
+	/* The home page's accent: calls to action, and what's new or live. */
+	--accent-orange: rgb(255 88 0);
+	/* Green marking what's yours: your seek. */
+	--ours-color: rgb(0 180 15);
+}
+
 /* ============================================================
    Page layout
    ============================================================ */
@@ -141,7 +148,7 @@ main {
 }
 
 .new-prompt-btn.primary {
-	background: color-mix(in srgb, var(--c-highlight) 70%, transparent);
+	background: color-mix(in srgb, var(--accent-orange) 70%, transparent);
 	border-color: transparent;
 }
 
@@ -374,11 +381,11 @@ svg.bg-omega {
 
 .seek-row:hover:not([aria-disabled='true']) {
 	color: var(--c-text-strong);
-	background: color-mix(in srgb, var(--c-highlight) 40%, transparent);
+	background: color-mix(in srgb, var(--accent-orange) 40%, transparent);
 }
 
 .seek-row.ours {
-	background: rgba(0, 180, 15, 0.37);
+	background: color-mix(in srgb, var(--ours-color) 37%, transparent);
 	color: var(--c-text-strong);
 }
 
@@ -445,7 +452,7 @@ svg.bg-omega {
  * each moved out diagonally; the fade is on the overlay, so their overlaps don't darken.
  */
 .seek-pulse-overlay {
-	--pulse-color: var(--c-highlight);
+	--pulse-color: var(--accent-orange);
 	position: fixed;
 	pointer-events: none;
 	z-index: 1;
@@ -454,7 +461,7 @@ svg.bg-omega {
 }
 
 .seek-pulse-overlay.ours {
-	--pulse-color: rgb(0 180 15);
+	--pulse-color: var(--ours-color);
 }
 
 .seek-pulse-corner {
@@ -848,7 +855,7 @@ svg.featured-clock {
 
 /* The clock of the player on the move. */
 .featured-clock.tempo {
-	color: var(--c-highlight);
+	color: var(--accent-orange);
 }
 
 /* ============================================================
