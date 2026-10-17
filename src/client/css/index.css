@@ -442,52 +442,55 @@ svg.bg-omega {
 
 /*
  * A ring growing 14px past each edge of the row as it fades. Only transform and opacity keep
- * animating while the main thread is busy, so each edge is its own 4px strip, moved out and
- * stretched along its length alone; lobby.ts sets the row's size, unitless, for the stretch.
+ * animating while the main thread is busy, so the ring is four overlapping row-sized corners,
+ * each moved out diagonally; the fade is on the overlay, so their overlaps don't darken.
  */
 .seek-pulse-overlay {
-	--pulse-color: rgb(255 88 0 / 90%);
+	--pulse-color: rgb(255 88 0);
 	position: fixed;
 	pointer-events: none;
 	z-index: 1;
+	opacity: 0.9;
+	animation: seek-pulse-fade 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .seek-pulse-overlay.ours {
-	--pulse-color: rgb(0 180 15 / 90%);
+	--pulse-color: rgb(0 180 15);
 }
 
-.seek-pulse-edge {
+.seek-pulse-corner {
 	position: absolute;
-	background: var(--pulse-color);
-	animation: seek-pulse 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	inset: 0;
+	border: 0 solid var(--pulse-color);
+	animation: seek-pulse-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* The side strips sit between the top and bottom ones, so the corners never overlap. */
-.seek-pulse-edge.top {
-	--pulse-end: translateY(-14px) scaleX(calc(1 + 28 / var(--pulse-row-width)));
-	inset: 0 0 auto;
-	height: 4px;
+.seek-pulse-corner.top-left {
+	--pulse-end: translate(-14px, -14px);
+	border-width: 4px 0 0 4px;
 }
-.seek-pulse-edge.bottom {
-	--pulse-end: translateY(14px) scaleX(calc(1 + 28 / var(--pulse-row-width)));
-	inset: auto 0 0;
-	height: 4px;
+.seek-pulse-corner.top-right {
+	--pulse-end: translate(14px, -14px);
+	border-width: 4px 4px 0 0;
 }
-.seek-pulse-edge.left {
-	--pulse-end: translateX(-14px) scaleY(calc(1 + 28 / (var(--pulse-row-height) - 8)));
-	inset: 4px auto 4px 0;
-	width: 4px;
+.seek-pulse-corner.bottom-left {
+	--pulse-end: translate(-14px, 14px);
+	border-width: 0 0 4px 4px;
 }
-.seek-pulse-edge.right {
-	--pulse-end: translateX(14px) scaleY(calc(1 + 28 / (var(--pulse-row-height) - 8)));
-	inset: 4px 0 4px auto;
-	width: 4px;
+.seek-pulse-corner.bottom-right {
+	--pulse-end: translate(14px, 14px);
+	border-width: 0 4px 4px 0;
 }
 
-@keyframes seek-pulse {
+@keyframes seek-pulse-fade {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes seek-pulse-grow {
 	to {
 		transform: var(--pulse-end);
-		opacity: 0;
 	}
 }
 
