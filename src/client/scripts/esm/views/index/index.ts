@@ -3,8 +3,8 @@
 /**
  * Entry point for the index (home) page.
  *
- * Subscribes to lobby updates and resubscribes after socket reconnections. The lobby stays up
- * through a quick reconnect, and clears only once the connection is truly lost.
+ * Subscribes to the lobby, resubscribing after reconnects, and routes its messages to
+ * the seek list and featured games, clearing them once the connection is truly lost.
  */
 
 import type { ClientboundLobbyMessage } from '../../../../../shared/transport/clientbound.js';
@@ -21,7 +21,7 @@ import './gamesetup/gamesetupmodal.js';
 
 // State -----------------------------------------------------------------------
 
-/** Clears the lobby once a closed socket hasn't resynced in time, as it's no longer trusted. */
+/** Clears the lobby once we've been desynced for a given time. */
 let clearTimer: number | undefined;
 
 // Initial setup ---------------------------------------------------------------

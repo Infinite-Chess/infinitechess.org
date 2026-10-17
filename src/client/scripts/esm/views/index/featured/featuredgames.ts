@@ -80,7 +80,7 @@ function onSubscribed(list: FeaturedGame[]): void {
  * Shows the featured games, left to right. The server replaces a game in its exact slot, so a new
  * game at the index of one that left takes over its card, whose board loads it while still
  * drawing the old.
- * @param reloadKept - Whether boards of games still featured reload theirs too.
+ * @param reloadKept - Whether boards keeping their game reload it too, in case they're behind the list.
  */
 function setCards(list: FeaturedGame[], reloadKept: boolean): void {
 	for (const game of list) stampFlagDeadline(game.clockValues);
