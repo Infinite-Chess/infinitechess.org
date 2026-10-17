@@ -239,11 +239,16 @@ function resubAll(): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	TIME_TO_WAIT_FOR_HTTP_MS,
+	// Socket Access
 	getSocket,
+	// Socket Lifecycle
 	establishSocket,
 	syncIdleCloseTimer,
 	closeSocket,
 	dropSocket,
 	scheduleReconnect,
+	// Resubscription
 	resubAll,
 };

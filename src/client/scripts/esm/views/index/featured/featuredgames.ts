@@ -63,26 +63,48 @@ let cardsText = '';
 
 // Messages --------------------------------------------------------------------
 
-/**
- * Shows the featured games, left to right. Boards of games still featured carry on untouched.
- * The server replaces a game in its exact slot, so a new game at the index of one that left takes
- * over its card, whose board loads it while still drawing the old.
- */
+/** Shows the featured games as their list changes. Boards of games still featured carry on. */
 function onSnapshot(list: FeaturedGame[]): void {
+	setCards(list, false);
+}
+
+/**
+ * Shows the featured games sent as the lobby (re)subscribes. Boards of games still featured
+ * reload theirs in place, as they may have missed updates while the socket was down.
+ */
+function onSubscribed(list: FeaturedGame[]): void {
+	setCards(list, true);
+}
+
+/**
+ * Shows the featured games, left to right. The server replaces a game in its exact slot, so a new
+ * game at the index of one that left takes over its card, whose board loads it while still
+ * drawing the old.
+ * @param reloadKept - Whether boards of games still featured reload theirs too.
+ */
+function setCards(list: FeaturedGame[], reloadKept: boolean): void {
 	for (const game of list) stampFlagDeadline(game.clockValues);
 	const previous = cards;
 	cards = list.map((game, i) => {
 		const kept = previous.find((c) => c.game.id === game.id);
-		if (kept !== undefined) return { key: kept.key, game };
+		if (kept !== undefined) {
+			if (reloadKept) loadOnto(kept.key, game);
+			return { key: kept.key, game };
+		}
 		const replaced = previous[i];
 		if (replaced === undefined || list.some((g) => g.id === replaced.game.id)) {
 			return { key: nextKey++, game };
 		}
-		const board = boards.get(replaced.key);
-		if (board !== undefined) void featuredboard.load(board, game); // Never built: no WebGL2
+		loadOnto(replaced.key, game);
 		return { key: replaced.key, game };
 	});
 	renderCards();
+}
+
+/** Loads a game onto a card's board, which keeps drawing its current one until it's done. */
+function loadOnto(key: number, game: FeaturedGame): void {
+	const board = boards.get(key);
+	if (board !== undefined) void featuredboard.load(board, game); // Never built: no WebGL2
 }
 
 /** Plays an update onto its game's board. */
@@ -95,9 +117,9 @@ function onUpdate(update: FeaturedUpdate): void {
 	featuredboard.apply(board, update);
 }
 
-/** Removes every featured game, as when the lobby unsubscribes or the socket closes. */
+/** Removes every featured game, as when the lobby unsubscribes or the connection is lost. */
 function clear(): void {
-	onSnapshot([]);
+	setCards([], false);
 }
 
 /** Stamps the clocks' flag deadline at receipt. Display-only, so not adjusted for ping. */
@@ -219,6 +241,7 @@ function createBarVNode(card: Card, game: FeaturedGame, color: Player): VNode {
 
 export default {
 	onSnapshot,
+	onSubscribed,
 	onUpdate,
 	clear,
 };

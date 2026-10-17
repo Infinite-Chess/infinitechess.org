@@ -3,7 +3,8 @@
 /**
  * Entry point for the index (home) page.
  *
- * Subscribes to lobby updates and resubscribes after socket reconnections.
+ * Subscribes to lobby updates and resubscribes after socket reconnections. The lobby stays up
+ * through a quick reconnect, and clears only once the connection is truly lost.
  */
 
 import type { ClientboundLobbyMessage } from '../../../../../shared/transport/clientbound.js';
@@ -13,27 +14,44 @@ import flashtoast from '../../components/flashtoast.js';
 import featuredgames from './featured/featuredgames.js';
 import socketintents from '../../socket/socketintents.js';
 import { SocketBus } from '../../socket/SocketBus.js';
+import socketconnection from '../../socket/socketconnection.js';
 
 import './newprompt.js';
 import './gamesetup/gamesetupmodal.js';
 
+// State -----------------------------------------------------------------------
+
+/** Clears the lobby once a closed socket hasn't resynced in time, as it's no longer trusted. */
+let clearTimer: number | undefined;
+
 // Initial setup ---------------------------------------------------------------
 
-// Show any toast queued before a redirect here (e.g. "Account activated!" after registering or "Your password was reset!").
+// Show any toast queued before a redirect here
+// (e.g. "Account activated!" after registering or "Your password was reset!").
 flashtoast.consume();
 
 lobby.subscribe();
 SocketBus.addEventListener('reconnect', () => lobby.subscribe());
-SocketBus.addEventListener('closed', () => lobby.clearSeekList());
+SocketBus.addEventListener('closed', () => armClearTimer());
 
 SocketBus.addEventListener('lobby', (e) => onLobbyMessage(e.detail));
+
+/** Counts down to clearing the lobby from the first close: every failed reconnect closes again. */
+function armClearTimer(): void {
+	clearTimer ??= window.setTimeout(() => {
+		clearTimer = undefined;
+		lobby.clearSeekList();
+	}, socketconnection.TIME_TO_WAIT_FOR_HTTP_MS);
+}
 
 /** Routes incoming lobby messages to the lobby controls. */
 function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 	switch (contents.action) {
 		case 'lobbystate':
+			clearTimeout(clearTimer);
+			clearTimer = undefined;
 			lobby.handleLobbyState(contents.value);
-			featuredgames.onSnapshot(contents.value.featured);
+			featuredgames.onSubscribed(contents.value.featured);
 			// The full lobby state is now applied — release any intents held through the outage.
 			socketintents.onRouteSynced('lobby');
 			break;
