@@ -17,8 +17,6 @@ main {
 .main-inner {
 	max-width: 1200px;
 	margin: 20px auto;
-	flex-direction: column;
-	gap: 32px;
 }
 
 /* ============================================================
