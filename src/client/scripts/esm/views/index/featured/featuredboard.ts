@@ -257,7 +257,6 @@ function render(featuredBoard: FeaturedBoard): void {
 
 	if (passes.length > 0) board.pipeline.end();
 	board.frames.onFrameRender();
-	board.canvas.classList.remove('visibility-hidden');
 }
 
 // Display ---------------------------------------------------------------------

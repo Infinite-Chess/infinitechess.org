@@ -799,6 +799,12 @@ svg.bg-omega {
 	flex-wrap: wrap;
 	gap: var(--featured-gap);
 	margin-top: 1em;
+	position: relative;
+}
+
+/* No card revealed yet: the section takes no space. */
+.featured-games.empty {
+	margin-top: 0;
 }
 
 /* One game: its board between its players' bars, sitting straight on the page, linking to the game. */
@@ -811,6 +817,12 @@ svg.bg-omega {
 	color: inherit;
 	text-decoration: none;
 	-webkit-tap-highlight-color: transparent;
+}
+
+/* Held back: still sized as in the row, which its board frames to, but out of it and unseen. */
+.featured-card.pending {
+	position: absolute;
+	visibility: hidden;
 }
 
 .featured-board {

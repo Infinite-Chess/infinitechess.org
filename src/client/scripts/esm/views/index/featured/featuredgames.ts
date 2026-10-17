@@ -2,9 +2,9 @@
 
 /**
  * The featured games beneath the lobby: one card per game, each a link to it showing its live
- * board between its players' bars. Keeps the cards in the server's order, hands a replaced game's
- * card to its replacement, routes each game's updates to its board, and runs the one frame loop
- * all the boards share.
+ * board between its players' bars. Keeps the cards in the server's order, revealing them left to
+ * right as their boards first draw, hands a replaced game's card to its replacement, routes each
+ * game's updates to its board, and runs the one frame loop all the boards share.
  */
 
 import type { VNode } from 'snabbdom';
@@ -135,7 +135,7 @@ function onCanvasInserted(card: Card, canvas: HTMLCanvasElement): void {
 	try {
 		card.board = featuredboard.create(canvas, card.game);
 	} catch (error) {
-		// No WebGL2: the card keeps its bars. Thrown out of this hook, it would abort the patch.
+		// No WebGL2: the card stays pending. Thrown out of this hook, it would abort the patch.
 		console.error(error);
 		return;
 	}
@@ -168,11 +168,11 @@ function onFrame(runtime: number): void {
 	frameRequest = requestAnimationFrame(onFrame);
 }
 
-/** Every card's shown game id, bars' clock or score text and player on the move, in card order. */
+/** Every card's drawn game id, bars' clock or score text and player on the move, in card order. */
 function getCardsSignature(): string {
 	return cards
 		.flatMap((card) => [
-			getShownGame(card).id,
+			featuredboard.getShownGame(card.board)?.id ?? '',
 			...BAR_COLORS.map((color) => featuredboard.getClockOrScore(card.board, color) ?? ''),
 			featuredboard.getPlayerOnTheMove(card.board) ?? '',
 		])
@@ -186,26 +186,31 @@ function getShownGame(card: Card): FeaturedGame {
 
 // Rendering -------------------------------------------------------------------
 
-/** Patches the section with its cards, hiding it while there are none. */
+/** Patches the section with its cards, holding back each from the first whose board hasn't drawn a game. */
 function renderCards(): void {
+	const firstUndrawn = cards.findIndex(
+		(card) => featuredboard.getShownGame(card.board) === undefined,
+	);
+	const firstPending = firstUndrawn === -1 ? cards.length : firstUndrawn;
 	sectionVNode = patch(
 		sectionVNode,
 		h(
 			'section#featured-games.featured-games',
-			{ class: { hidden: cards.length === 0 } },
-			cards.map((card) => createCardVNode(card)),
+			{ class: { empty: firstPending === 0 } },
+			cards.map((card, i) => createCardVNode(card, i >= firstPending)),
 		),
 	);
 	cardsSignature = getCardsSignature();
 }
 
 /** One card: a link to the game it shows, with its board between its players' bars. */
-function createCardVNode(card: Card): VNode {
+function createCardVNode(card: Card, pending: boolean): VNode {
 	const { key } = card;
 	const game = getShownGame(card);
-	return h('a.featured-card', { key, attrs: { href: gameurl.getGameUrl(game.id) } }, [
+	const data = { key, class: { pending }, attrs: { href: gameurl.getGameUrl(game.id) } };
+	return h('a.featured-card', data, [
 		createBarVNode(card, game, BAR_COLORS[0]),
-		h('canvas.featured-board.visibility-hidden', {
+		h('canvas.featured-board', {
 			hook: {
 				insert: (vnode) => onCanvasInserted(card, vnode.elm as HTMLCanvasElement),
 				destroy: () => onCanvasDestroyed(card),
