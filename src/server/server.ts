@@ -18,6 +18,8 @@ import setupDev from './setupDev.js';
 import logEvents from './utility/logEvents.js';
 import gameRestart from './game/gamemanager/gameRestart.js';
 import certOptions from './config/certOptions.js';
+import contributors from './api/contributors.js';
+import requestMeter from './utility/requestMeter.js';
 import socketServer from './socket/socketServer.js';
 import databaseInit from './database/databaseInit.js';
 import featuredGames from './game/featured/featuredGames.js';
@@ -94,6 +96,8 @@ await variantcache.loadAllVariants();
 gameRestart.restoreLiveGames();
 gameLifecycle.startPeriodicAbandonmentSweep();
 featuredGames.start();
+requestMeter.start();
+contributors.start();
 
 // Start the server
 const DEV_BUILD = env.NODE_ENV === 'development';
