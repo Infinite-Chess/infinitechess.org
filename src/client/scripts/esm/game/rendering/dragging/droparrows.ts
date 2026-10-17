@@ -37,6 +37,7 @@ const LEGAL_CAPTURE_PULSATE = {
 
 // State -----------------------------------------------------------------------
 
+/** The piece that letting go of the dragged piece this frame would capture, if any. */
 let capturedPieceThisFrame: Piece | undefined;
 /** Timestamp when the current drag started, used to anchor the pulsation phase to 0. */
 let dragStartTime: number | undefined;
@@ -63,10 +64,9 @@ function updateCapturedPiece(): void {
 
 	let hoveredArrows = arrowinteraction.getHoveredArrows();
 
-	// Filter out the selected piece, and floating point arrows (animated ones)
+	// Filter out the selected piece
 
 	hoveredArrows = hoveredArrows.filter((arrow) => {
-		if (arrow.piece.floating) return false; // Filter animated arrows
 		const integerCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
 		return !coordutil.areCoordsEqual(integerCoords, selectedPiece.coords);
 	});
@@ -87,8 +87,6 @@ function updateCapturedPiece(): void {
 
 	const legalCapturePiece = legalCaptureHoveredArrows[0]!.piece;
 
-	// console.log(JSON.stringify(legalCaptureHoveredArrows));
-
 	capturedPieceThisFrame = {
 		type: legalCapturePiece.type,
 		coords: bdcoords.coordsToBigInt(legalCapturePiece.coords),
@@ -96,6 +94,7 @@ function updateCapturedPiece(): void {
 	};
 }
 
+/** The coords of the piece letting go now would capture, if any. */
 function getCaptureCoords(): Coords | undefined {
 	return capturedPieceThisFrame?.coords;
 }
@@ -158,16 +157,10 @@ function updateLegalCaptureArrows(): void {
 
 	let hasCapturable = false;
 	for (const arrow of arrows.getAllArrows(gamescene.getGameContext())) {
-		if (arrow.piece.floating) continue;
+		// Judged by the piece the arrow shows, which shifts can make differ from the board's: the
+		// dragged piece's own arrow moved onto a pending capture, or a piece mid-capture shown in place.
+		if (typeutil.getColorFromType(arrow.piece.type) === selectedPieceColor) continue;
 		const intCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
-		if (coordutil.areCoordsEqual(intCoords, selectedPiece.coords)) continue;
-		// When a capture is pending, the arrows at the capture destination have been replaced
-		// by the dragged piece's own arrows — skip them so they don't pulsate.
-		if (
-			capturedPieceThisFrame !== undefined &&
-			coordutil.areCoordsEqual(intCoords, capturedPieceThisFrame.coords)
-		)
-			continue;
 		if (
 			legalmoves.checkIfMoveLegal(
 				gamefile,
@@ -185,10 +178,13 @@ function updateLegalCaptureArrows(): void {
 	if (hasCapturable) frametracker.onVisualChange();
 }
 
+/** Clears the pending capture and the pulsation's start, once a drag ends. */
 function onDragTermination(): void {
 	capturedPieceThisFrame = undefined;
 	dragStartTime = undefined;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	updateCapturedPiece,
