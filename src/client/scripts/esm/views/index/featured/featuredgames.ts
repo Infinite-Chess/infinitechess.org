@@ -28,11 +28,13 @@ const patch = init([attributesModule, classModule]);
 
 // Types -----------------------------------------------------------------------
 
-/** One card: a featured game, under a key that keeps its element and board across replacements. */
+/** One card: a featured game and its board, both handed on to a game replacing it. */
 interface Card {
 	key: number;
 	/** The latest game received for its slot. Shown once its board has loaded it. */
 	game: FeaturedGame;
+	/** Built once its canvas is in the page. */
+	board: FeaturedBoard | undefined;
 }
 
 // Elements --------------------------------------------------------------------
@@ -53,8 +55,6 @@ let sectionVNode: VNode | Element = element_section;
 let cards: Card[] = [];
 /** The key the next new card takes. */
 let nextKey = 0;
-/** Each card's board, by card key. Built once its canvas is in the page. */
-const boards = new Map<number, FeaturedBoard>();
 
 /** The pending animation frame, while any board exists. */
 let frameRequest: number | undefined;
@@ -88,23 +88,24 @@ function setCards(list: FeaturedGame[], reloadKept: boolean): void {
 	cards = list.map((game, i) => {
 		const kept = previous.find((c) => c.game.id === game.id);
 		if (kept !== undefined) {
-			if (reloadKept) loadOnto(kept.key, game);
-			return { key: kept.key, game };
+			if (reloadKept) loadOnto(kept, game);
+			kept.game = game;
+			return kept;
 		}
 		const replaced = previous[i];
 		if (replaced === undefined || list.some((g) => g.id === replaced.game.id)) {
-			return { key: nextKey++, game };
+			return { key: nextKey++, game, board: undefined };
 		}
-		loadOnto(replaced.key, game);
-		return { key: replaced.key, game };
+		loadOnto(replaced, game);
+		replaced.game = game;
+		return replaced;
 	});
 	renderCards();
 }
 
 /** Loads a game onto a card's board, which keeps drawing its current one until it's done. */
-function loadOnto(key: number, game: FeaturedGame): void {
-	const board = boards.get(key);
-	if (board !== undefined) void featuredboard.load(board, game); // Never built: no WebGL2
+function loadOnto(card: Card, game: FeaturedGame): void {
+	if (card.board !== undefined) void featuredboard.load(card.board, game); // Never built: no WebGL2
 }
 
 /** Plays an update onto its game's board. */
@@ -112,7 +113,7 @@ function onUpdate(update: FeaturedUpdate): void {
 	stampFlagDeadline(update.value.clockValues);
 	const card = cards.find((c) => c.game.id === update.value.id);
 	// An update sent before we unsubscribed can still arrive after the cards were cleared.
-	const board = card && boards.get(card.key);
+	const board = card?.board;
 	if (board === undefined) return;
 	featuredboard.apply(board, update);
 }
@@ -132,7 +133,7 @@ function stampFlagDeadline(clockValues: ClockValues | undefined): void {
 /** Builds a card's board once its canvas is in the page, and starts the frame loop if it isn't running. */
 function onCanvasInserted(card: Card, canvas: HTMLCanvasElement): void {
 	try {
-		boards.set(card.key, featuredboard.create(canvas, card.game));
+		card.board = featuredboard.create(canvas, card.game);
 	} catch (error) {
 		// No WebGL2: the card keeps its bars. Thrown out of this hook, it would abort the patch.
 		console.error(error);
@@ -142,11 +143,10 @@ function onCanvasInserted(card: Card, canvas: HTMLCanvasElement): void {
 }
 
 /** Disposes of a card's board once the card leaves the page. */
-function onCanvasDestroyed(key: number): void {
-	const board = boards.get(key);
-	if (board === undefined) return; // Never built: no WebGL2
-	featuredboard.dispose(board);
-	boards.delete(key);
+function onCanvasDestroyed(card: Card): void {
+	if (card.board === undefined) return; // Never built: no WebGL2
+	featuredboard.dispose(card.board);
+	card.board = undefined;
 }
 
 /**
@@ -155,10 +155,12 @@ function onCanvasDestroyed(key: number): void {
  */
 function onFrame(runtime: number): void {
 	frameRequest = undefined;
-	if (boards.size === 0) return; // Every card is gone: the loop stops until a new one arrives.
+	// Every board is gone: the loop stops until a new one is built.
+	if (!cards.some((card) => card.board !== undefined)) return;
 
 	frameprofiler.update(runtime);
-	for (const board of boards.values()) {
+	for (const { board } of cards) {
+		if (board === undefined) continue;
 		featuredboard.update(board);
 		featuredboard.render(board);
 	}
@@ -172,28 +174,15 @@ function getCardsSignature(): string {
 	return cards
 		.flatMap((card) => [
 			getShownGame(card).id,
-			...BAR_COLORS.map((color) => getClockOrScore(card, color) ?? ''),
-			getPlayerOnTheMove(card) ?? '',
+			...BAR_COLORS.map((color) => featuredboard.getClockOrScore(card.board, color) ?? ''),
+			featuredboard.getPlayerOnTheMove(card.board) ?? '',
 		])
 		.join('|');
 }
 
 /** The game a card shows: its board's once one has loaded, else the latest received. */
 function getShownGame(card: Card): FeaturedGame {
-	const board = boards.get(card.key);
-	return (board && featuredboard.getShownGame(board)) ?? card.game;
-}
-
-/** A bar's clock or score text, of the game its card's board draws. */
-function getClockOrScore(card: Card, color: Player): string | undefined {
-	const board = boards.get(card.key);
-	return board && featuredboard.getClockOrScore(board, color);
-}
-
-/** The player on the move, in the game its card's board draws. */
-function getPlayerOnTheMove(card: Card): Player | undefined {
-	const board = boards.get(card.key);
-	return board && featuredboard.getPlayerOnTheMove(board);
+	return featuredboard.getShownGame(card.board) ?? card.game;
 }
 
 // Rendering -------------------------------------------------------------------
@@ -220,7 +209,7 @@ function createCardVNode(card: Card): VNode {
 		h('canvas.featured-board.visibility-hidden', {
 			hook: {
 				insert: (vnode) => onCanvasInserted(card, vnode.elm as HTMLCanvasElement),
-				destroy: () => onCanvasDestroyed(key),
+				destroy: () => onCanvasDestroyed(card),
 			},
 		}),
 		createBarVNode(card, game, BAR_COLORS[1]),
@@ -249,10 +238,10 @@ function createBarVNode(card: Card, game: FeaturedGame, color: Player): VNode {
  * marked while its player is on the move.
  */
 function createClockVNode(card: Card, game: FeaturedGame, color: Player): VNode | null {
-	const data = { class: { tempo: getPlayerOnTheMove(card) === color } };
-	const clockOrScore = getClockOrScore(card, color);
+	const data = { class: { tempo: featuredboard.getPlayerOnTheMove(card.board) === color } };
+	const clockOrScore = featuredboard.getClockOrScore(card.board, color);
 	if (clockOrScore !== undefined) return h('span.featured-clock', data, clockOrScore);
-	if (!clockutil.isClockValueInfinite(game.timeControl)) return null; // Its board hasn't loaded yet
+	if (!clockutil.isClockValueInfinite(game.timeControl)) return null; // No board, or not loaded yet
 	const icon = clockutil.getSpeedIconId(game.timeControl);
 	return h('svg.meta-icon.featured-clock', data, [h('use', { attrs: { href: `#${icon}` } })]);
 }

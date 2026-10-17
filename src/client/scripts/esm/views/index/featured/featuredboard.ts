@@ -258,17 +258,21 @@ function render(featuredBoard: FeaturedBoard): void {
 
 // Display ---------------------------------------------------------------------
 
-/** The game drawn, once the board's first has loaded. */
-function getShownGame(featuredBoard: FeaturedBoard): FeaturedGame | undefined {
-	return featuredBoard.state.shown?.game;
+/** The game drawn, once the board exists and its first has loaded. */
+function getShownGame(featuredBoard: FeaturedBoard | undefined): FeaturedGame | undefined {
+	return featuredBoard?.state.shown?.game;
 }
 
 /**
  * What a player's bar shows beside their name: their score once the game has ended, otherwise
- * their clock. Of the game drawn, so undefined until the board's first has loaded, or when untimed.
+ * their clock. Of the game drawn, so undefined until the board exists and its first has loaded,
+ * or when untimed.
  */
-function getClockOrScore(featuredBoard: FeaturedBoard, color: Player): string | undefined {
-	const { shown } = featuredBoard.state;
+function getClockOrScore(
+	featuredBoard: FeaturedBoard | undefined,
+	color: Player,
+): string | undefined {
+	const shown = featuredBoard?.state.shown;
 	if (shown === undefined) return undefined;
 	const { gamefile } = shown;
 	const conclusion = gamefile.gameConclusion;
@@ -278,9 +282,9 @@ function getClockOrScore(featuredBoard: FeaturedBoard, color: Player): string | 
 	return clockutil.getTextContentFromTimeRemain(gamefile.clocks.currentTime[color]!);
 }
 
-/** The player on the move in the game drawn, once the board's first has loaded. */
-function getPlayerOnTheMove(featuredBoard: FeaturedBoard): Player | undefined {
-	const { shown } = featuredBoard.state;
+/** The player on the move in the game drawn, once the board exists and its first has loaded. */
+function getPlayerOnTheMove(featuredBoard: FeaturedBoard | undefined): Player | undefined {
+	const shown = featuredBoard?.state.shown;
 	return shown && gamefileutility.getPlayerOnTheMove(shown.gamefile);
 }
 
