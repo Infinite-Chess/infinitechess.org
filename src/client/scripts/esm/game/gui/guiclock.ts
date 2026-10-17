@@ -166,8 +166,7 @@ function updateTempo(basegame: GameFile): void {
 function getTempoPlayer(basegame: GameFile): Player | undefined {
 	if (gamesession.getGameType() === 'analysis')
 		return gamerules.getWhosTurnAtMoveIndex(basegame.gameRules, basegame.moves.length - 1);
-	if (gamefileutility.isGameOver(basegame)) return undefined;
-	return basegame.clocks?.ticking?.color ?? basegame.whosTurn;
+	return gamefileutility.getPlayerOnTheMove(basegame);
 }
 
 // Low Time --------------------------------------------------------------------

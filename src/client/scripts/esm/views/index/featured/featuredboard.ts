@@ -25,6 +25,7 @@ import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
 import gameresultutil from '../../../../../../shared/chess/util/gameresultutil.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import gameformulator from '../../../../../../shared/chess/game/gameformulator.js';
+import gamefileutility from '../../../../../../shared/chess/logic/gamefileutility.js';
 
 import arrows from '../../../board/rendering/arrows/arrows.js';
 import docutil from '../../../util/docutil.js';
@@ -277,6 +278,12 @@ function getClockOrScore(featuredBoard: FeaturedBoard, color: Player): string | 
 	return clockutil.getTextContentFromTimeRemain(gamefile.clocks.currentTime[color]!);
 }
 
+/** The player on the move in the game drawn, once the board's first has loaded. */
+function getPlayerOnTheMove(featuredBoard: FeaturedBoard): Player | undefined {
+	const { shown } = featuredBoard.state;
+	return shown && gamefileutility.getPlayerOnTheMove(shown.gamefile);
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -292,4 +299,5 @@ export default {
 	// Display
 	getShownGame,
 	getClockOrScore,
+	getPlayerOnTheMove,
 };

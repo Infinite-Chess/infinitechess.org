@@ -58,8 +58,8 @@ const boards = new Map<number, FeaturedBoard>();
 
 /** The pending animation frame, while any board exists. */
 let frameRequest: number | undefined;
-/** Every card's shown game and bar text as last drawn, to tell when the cards need redrawing. */
-let cardsText = '';
+/** The {@link getCardsSignature} as last drawn, to tell when the cards need redrawing. */
+let cardsSignature = '';
 
 // Messages --------------------------------------------------------------------
 
@@ -150,8 +150,8 @@ function onCanvasDestroyed(key: number): void {
 }
 
 /**
- * Advances and draws every board, then redraws the cards if any switched game, or any clock or
- * score changed. A board's switch thus reaches its card in the same frame.
+ * Advances and draws every board, then redraws the cards if any switched game, or any clock,
+ * score or player on the move changed. A board's switch thus reaches its card in the same frame.
  */
 function onFrame(runtime: number): void {
 	frameRequest = undefined;
@@ -162,17 +162,18 @@ function onFrame(runtime: number): void {
 		featuredboard.update(board);
 		featuredboard.render(board);
 	}
-	if (getCardsText() !== cardsText) renderCards();
+	if (getCardsSignature() !== cardsSignature) renderCards();
 
 	frameRequest = requestAnimationFrame(onFrame);
 }
 
-/** Every card's shown game id and bars' clock or score text, joined, in card order. */
-function getCardsText(): string {
+/** Every card's shown game id, bars' clock or score text and player on the move, in card order. */
+function getCardsSignature(): string {
 	return cards
 		.flatMap((card) => [
 			getShownGame(card).id,
 			...BAR_COLORS.map((color) => getClockOrScore(card, color) ?? ''),
+			getPlayerOnTheMove(card) ?? '',
 		])
 		.join('|');
 }
@@ -189,6 +190,12 @@ function getClockOrScore(card: Card, color: Player): string | undefined {
 	return board && featuredboard.getClockOrScore(board, color);
 }
 
+/** The player on the move, in the game its card's board draws. */
+function getPlayerOnTheMove(card: Card): Player | undefined {
+	const board = boards.get(card.key);
+	return board && featuredboard.getPlayerOnTheMove(board);
+}
+
 // Rendering -------------------------------------------------------------------
 
 /** Patches the section with its cards, hiding it while there are none. */
@@ -201,7 +208,7 @@ function renderCards(): void {
 			cards.map((card) => createCardVNode(card)),
 		),
 	);
-	cardsText = getCardsText();
+	cardsSignature = getCardsSignature();
 }
 
 /** One card: a link to the game it shows, with its board between its players' bars. */
@@ -227,14 +234,27 @@ function createCardVNode(card: Card): VNode {
 function createBarVNode(card: Card, game: FeaturedGame, color: Player): VNode {
 	const participant = game.players[color]!; // Every featured game has both seats
 	const rating = participant.type === 'player' ? participant.rating : undefined;
-	const clockOrScore = getClockOrScore(card, color);
+	const clock = createClockVNode(card, game, color);
 	return h('div.featured-bar', [
 		h('span.username-embed', [
 			h('span.username', playername.resolve(participant, false, t.shared)),
 			...(rating ? [h('span.elo', metadatautil.getFormattedElo(rating))] : []),
 		]),
-		...(clockOrScore !== undefined ? [h('span.featured-clock', clockOrScore)] : []),
+		...(clock ? [clock] : []),
 	]);
+}
+
+/**
+ * A bar's clock or score, or the infinity icon standing in for an untimed game's clock,
+ * marked while its player is on the move.
+ */
+function createClockVNode(card: Card, game: FeaturedGame, color: Player): VNode | null {
+	const data = { class: { tempo: getPlayerOnTheMove(card) === color } };
+	const clockOrScore = getClockOrScore(card, color);
+	if (clockOrScore !== undefined) return h('span.featured-clock', data, clockOrScore);
+	if (!clockutil.isClockValueInfinite(game.timeControl)) return null; // Its board hasn't loaded yet
+	const icon = clockutil.getSpeedIconId(game.timeControl);
+	return h('svg.meta-icon.featured-clock', data, [h('use', { attrs: { href: `#${icon}` } })]);
 }
 
 // Exports ---------------------------------------------------------------------

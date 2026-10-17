@@ -7,6 +7,7 @@
 import type { Board } from './boardinit.js';
 import type { Coords } from '../../util/coordutil.js';
 import type { Player } from '../util/typeutil.js';
+import type { GameFile } from './gamefile.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
@@ -22,6 +23,15 @@ import gamerules from '../util/gamerules.js';
  */
 function isGameOver(basegame: { gameConclusion?: GameConclusion }): boolean {
 	return basegame.gameConclusion !== undefined;
+}
+
+/**
+ * The player on the move: whoever's clock the server last had running, else whose turn it is.
+ * Undefined once the game is over.
+ */
+function getPlayerOnTheMove(basegame: GameFile): Player | undefined {
+	if (isGameOver(basegame)) return undefined;
+	return basegame.clocks?.ticking?.color ?? basegame.whosTurn;
 }
 
 /** Returns true if the currently-viewed position of the game file is in check. */
@@ -62,6 +72,7 @@ function getPlayerCount(game: { gameRules: GameRules }): number {
 
 export default {
 	isGameOver,
+	getPlayerOnTheMove,
 	isCurrentViewedPositionInCheck,
 	getCheckCoordsOfCurrentViewedPosition,
 	isOpponentUsingWinCondition,

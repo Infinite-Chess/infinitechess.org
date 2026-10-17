@@ -17,6 +17,7 @@ main {
 .main-inner {
 	max-width: 1200px;
 	margin: 20px auto;
+	container-type: inline-size;
 }
 
 /* ============================================================
@@ -140,7 +141,7 @@ main {
 }
 
 .new-prompt-btn.primary {
-	background: rgb(255 88 0 / 70%);
+	background: color-mix(in srgb, var(--c-highlight) 70%, transparent);
 	border-color: transparent;
 }
 
@@ -373,7 +374,7 @@ svg.bg-omega {
 
 .seek-row:hover:not([aria-disabled='true']) {
 	color: var(--c-text-strong);
-	background: rgb(255 88 0 / 40%);
+	background: color-mix(in srgb, var(--c-highlight) 40%, transparent);
 }
 
 .seek-row.ours {
@@ -444,7 +445,7 @@ svg.bg-omega {
  * each moved out diagonally; the fade is on the overlay, so their overlaps don't darken.
  */
 .seek-pulse-overlay {
-	--pulse-color: rgb(255 88 0);
+	--pulse-color: var(--c-highlight);
 	position: fixed;
 	pointer-events: none;
 	z-index: 1;
@@ -782,12 +783,15 @@ svg.bg-omega {
    Featured games
    ============================================================ */
 
-/* Up to three boards in a row, left-aligned; fewer keep the size they'd have in a full row. */
+/* Rows of three, two or one boards by screen width, left-aligned; a short row keeps full-row sizes.
+   The gap is a share of the row's width, so it shrinks with the boards. */
 .featured-games {
-	--featured-gap: 1em;
+	--featured-columns: 2;
+	--featured-gap: 2cqi;
 	display: flex;
+	flex-wrap: wrap;
 	gap: var(--featured-gap);
-	margin-top: var(--featured-gap);
+	margin-top: 1em;
 }
 
 /* One game: its board between its players' bars, sitting straight on the page, linking to the game. */
@@ -795,15 +799,21 @@ svg.bg-omega {
 	display: flex;
 	flex-direction: column;
 	/* Whole pixels: a fractional width stretches the board's pixel buffer onto it, blurring it. */
-	width: round(down, calc((100% - 2 * var(--featured-gap)) / 3), 1px);
+	/* prettier-ignore */
+	width: round(down, calc((100% - (var(--featured-columns) - 1) * var(--featured-gap)) / var(--featured-columns)), 1px);
 	color: inherit;
 	text-decoration: none;
+	-webkit-tap-highlight-color: transparent;
 }
 
 .featured-board {
 	width: 100%;
 	aspect-ratio: 1;
 	border-radius: 4px;
+}
+
+[data-theme='light'] .featured-board {
+	box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
 }
 
 .featured-bar {
@@ -827,9 +837,18 @@ svg.bg-omega {
 }
 
 .featured-clock {
-	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 	color: var(--c-text-strong);
+}
+
+/* An untimed game's infinity icon has no text baseline to share, so it centers in the bar. */
+svg.featured-clock {
+	align-self: center;
+}
+
+/* The clock of the player on the move. */
+.featured-clock.tempo {
+	color: var(--c-highlight);
 }
 
 /* ============================================================
@@ -858,6 +877,10 @@ svg.bg-omega {
 	.lobby {
 		flex: 2;
 	}
+
+	.featured-games {
+		--featured-columns: 3;
+	}
 }
 
 /* Narrow screens: the lobby buttons stack, and the page drops its side padding. */
@@ -870,12 +893,8 @@ svg.bg-omega {
 	.lobby-btn {
 		min-height: 54px;
 	}
-	/* The featured boards stack, each at full width. */
 	.featured-games {
-		flex-direction: column;
-	}
-	.featured-card {
-		width: 100%;
+		--featured-columns: 1;
 	}
 	main {
 		padding-left: 0;
