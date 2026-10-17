@@ -21,6 +21,9 @@ variant = "Variant"
 time = "Time"
 mode = "Mode"
 
+[featured]
+title = "Games in play"
+
 [modal]
 title = "Game options"
 

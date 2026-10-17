@@ -110,8 +110,14 @@
 			</section>
 		</div>{# .lobby-home #}
 
-		{# -- Featured live games. Cards are rendered by featuredgames.ts. ------- #}
-		<section id="featured-games" class="featured-games empty"></section>
+		{# -- Games in play: their count, and featured cards by featuredgames.ts. #}
+		<section class="featured-games">
+			<h2>
+				<span>{{ t.featured.title }}</span>
+				<span id="featured-game-count">ω</span>
+			</h2>
+			<div id="featured-cards" class="featured-cards"></div>
+		</section>
 	</div>{# .main-inner #}
 </main>
 

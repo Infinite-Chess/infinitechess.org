@@ -1,8 +1,9 @@
 // src/server/game/featured/featuredGames.ts
 
 /**
- * The live games featured beneath the lobby, the same for every viewer: which games hold the
- * slots, kept current as games are created, played and concluded, and broadcast to the lobby.
+ * The live games beneath the lobby, the same for every viewer: how many are in play, and which
+ * hold the featured slots, kept current as games are created, played and concluded, and
+ * broadcast to the lobby.
  *
  * `featuredSelection.ts` decides which games those are. This module holds them and tells the lobby.
  */
@@ -49,6 +50,7 @@ function onGameCreated(servergame: ServerGame, rematchOf?: ServerGame): void {
 	const index = rematchOf === undefined ? -1 : slots.indexOf(rematchOf);
 	if (index !== -1) slots[index] = servergame;
 	reselect(previousKey);
+	broadcastGameCount();
 }
 
 /** A move was accepted: the game's viewers receive it, then the slots are re-decided, as it may have ended the game. */
@@ -59,17 +61,19 @@ function onMove(servergame: ServerGame, moveMessage: OpponentsMoveMessage): void
 			...moveMessage,
 		});
 	reselect();
+	if (moveMessage.gameConclusion !== undefined) broadcastGameCount();
 }
 
 /** A game concluded other than by a move. If it's still shown afterward, its viewers receive the result. */
 function onConclusion(servergame: ServerGame): void {
 	reselect(); // An aborted game is released at once, and has no result to show.
-	if (!slots.includes(servergame)) return;
-	lobbySubscribers.broadcastToAll('featuredconclusion', {
-		id: servergame.match.id,
-		gameConclusion: servergame.gameConclusion!,
-		clockValues: servergame.untimed ? undefined : gameUtility.getClockValues(servergame),
-	});
+	if (slots.includes(servergame))
+		lobbySubscribers.broadcastToAll('featuredconclusion', {
+			id: servergame.match.id,
+			gameConclusion: servergame.gameConclusion!,
+			clockValues: servergame.untimed ? undefined : gameUtility.getClockValues(servergame),
+		});
+	broadcastGameCount();
 }
 
 /** A game's clocks changed without a move: an engine's was frozen or resumed. */
@@ -77,6 +81,18 @@ function onClock(servergame: ServerGame & { untimed: false }): void {
 	if (!slots.includes(servergame)) return;
 	const clockValues = gameUtility.getClockValues(servergame);
 	lobbySubscribers.broadcastToAll('featuredclock', { id: servergame.match.id, clockValues });
+}
+
+// Game Count ------------------------------------------------------------------
+
+/** Broadcasts how many games are in play, as a game just started or ended. */
+function broadcastGameCount(): void {
+	lobbySubscribers.broadcastToAll('gamecount', getGameCount());
+}
+
+/** How many games are in play, finished ones excluded. */
+function getGameCount(): number {
+	return activeGames.getAll().filter((g) => !gamefileutility.isGameOver(g)).length;
 }
 
 // Selection -------------------------------------------------------------------
@@ -158,6 +174,8 @@ export default {
 	onMove,
 	onConclusion,
 	onClock,
+	// Game Count
+	getGameCount,
 	// Snapshot
 	getSnapshot,
 };

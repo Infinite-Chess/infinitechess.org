@@ -253,7 +253,8 @@ html[data-home-prompt='dismissed'] .new-prompt {
    Lobby
    ============================================================ */
 
-.lobby h2 {
+.lobby h2,
+.featured-games h2 {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -790,21 +791,19 @@ svg.bg-omega {
    Featured games
    ============================================================ */
 
+.featured-games {
+	margin-top: 1em;
+}
+
 /* Rows of three, two or one boards by screen width, left-aligned; a short row keeps full-row sizes.
    The gap is a share of the row's width, so it shrinks with the boards. */
-.featured-games {
+.featured-cards {
 	--featured-columns: 2;
 	--featured-gap: 2cqi;
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--featured-gap);
-	margin-top: 1em;
 	position: relative;
-}
-
-/* No card revealed yet: the section takes no space. */
-.featured-games.empty {
-	margin-top: 0;
 }
 
 /* One game: its board between its players' bars, sitting straight on the page, linking to the game. */
@@ -897,7 +896,7 @@ svg.featured-clock {
 		flex: 2;
 	}
 
-	.featured-games {
+	.featured-cards {
 		--featured-columns: 3;
 	}
 }
@@ -912,7 +911,7 @@ svg.featured-clock {
 	.lobby-btn {
 		min-height: 54px;
 	}
-	.featured-games {
+	.featured-cards {
 		--featured-columns: 1;
 	}
 	main {

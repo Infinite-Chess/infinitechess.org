@@ -1,10 +1,11 @@
 // src/client/scripts/esm/views/index/featured/featuredgames.ts
 
 /**
- * The featured games beneath the lobby: one card per game, each a link to it showing its live
- * board between its players' bars. Keeps the cards in the server's order, revealing them left to
- * right as their boards first draw, hands a replaced game's card to its replacement, routes each
- * game's updates to its board, and runs the one frame loop all the boards share.
+ * The featured games beneath the lobby, headed by how many games are in play: one card per game,
+ * each a link to it showing its live board between its players' bars. Keeps the cards in the
+ * server's order, revealing them left to right as their boards first draw, hands a replaced
+ * game's card to its replacement, routes each game's updates to its board, and runs the one
+ * frame loop all the boards share.
  */
 
 import type { VNode } from 'snabbdom';
@@ -39,7 +40,8 @@ interface Card {
 
 // Elements --------------------------------------------------------------------
 
-const element_section = document.getElementById('featured-games')!;
+const element_gameCount = document.getElementById('featured-game-count')!;
+const element_cards = document.getElementById('featured-cards')!;
 
 // Constants -------------------------------------------------------------------
 
@@ -48,8 +50,8 @@ const BAR_COLORS = [players.BLACK, players.WHITE] as const;
 
 // State -----------------------------------------------------------------------
 
-/** The section's snabbdom tree, replaced by each patch. Starts as the empty element it renders into. */
-let sectionVNode: VNode | Element = element_section;
+/** The cards' snabbdom tree, replaced by each patch. Starts as the empty element it renders into. */
+let cardsVNode: VNode | Element = element_cards;
 
 /** A card per featured game, left to right, as last received. */
 let cards: Card[] = [];
@@ -62,6 +64,11 @@ let frameRequest: number | undefined;
 let cardsSignature = '';
 
 // Messages --------------------------------------------------------------------
+
+/** Updates how many games are in play. */
+function onGameCount(count: number): void {
+	element_gameCount.textContent = String(count);
+}
 
 /** Shows the featured games as their list changes. Boards of games still featured carry on. */
 function onSnapshot(list: FeaturedGame[]): void {
@@ -118,8 +125,12 @@ function onUpdate(update: FeaturedUpdate): void {
 	featuredboard.apply(board, update);
 }
 
-/** Removes every featured game, as when the lobby unsubscribes or the connection is lost. */
+/**
+ * Resets the game count to unknown and removes every featured game, as when the lobby
+ * unsubscribes or the connection is lost.
+ */
 function clear(): void {
+	element_gameCount.textContent = 'ω';
 	setCards([], false);
 }
 
@@ -186,17 +197,16 @@ function getShownGame(card: Card): FeaturedGame {
 
 // Rendering -------------------------------------------------------------------
 
-/** Patches the section with its cards, holding back each from the first whose board hasn't drawn a game. */
+/** Patches in the cards, holding back each from the first whose board hasn't drawn a game. */
 function renderCards(): void {
 	const firstUndrawn = cards.findIndex(
 		(card) => featuredboard.getShownGame(card.board) === undefined,
 	);
 	const firstPending = firstUndrawn === -1 ? cards.length : firstUndrawn;
-	sectionVNode = patch(
-		sectionVNode,
+	cardsVNode = patch(
+		cardsVNode,
 		h(
-			'section#featured-games.featured-games',
-			{ class: { empty: firstPending === 0 } },
+			'div#featured-cards.featured-cards',
 			cards.map((card, i) => createCardVNode(card, i >= firstPending)),
 		),
 	);
@@ -253,6 +263,7 @@ function createClockVNode(card: Card, game: FeaturedGame, color: Player): VNode 
 // Exports ---------------------------------------------------------------------
 
 export default {
+	onGameCount,
 	onSnapshot,
 	onSubscribed,
 	onUpdate,

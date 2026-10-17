@@ -8,9 +8,9 @@
  * `activeSeeks.ts` owns the seeks themselves, and `lobbySubscribers.ts` the socket set.
  * Everything here is a side-effect on top of those two.
  *
- * Each module broadcasts its own state: the seek list from `activeSeeks.ts`, the featured
- * games from `featuredGames.ts`, everything else from here. No `gameSockets.ts` equivalent
- * — one audience means nothing to address.
+ * Each module broadcasts its own state: the seek list from `activeSeeks.ts`, the game count and
+ * featured games from `featuredGames.ts`, everything else from here. No `gameSockets.ts`
+ * equivalent — one audience means nothing to address.
  */
 
 import type { AuthMemberInfo } from '../../types.js';
@@ -118,9 +118,9 @@ function deleteSeeksIfNotConnected(info: AuthMemberInfo): void {
 // Broadcasts ------------------------------------------------------------------
 
 /**
- * Sends the full lobby state (seeks list, viewer count, whether they're already in a game,
- * and the featured games) to a single client. Called once when a socket first subscribes —
- * everything the client needs to be fully in sync arrives in this one message.
+ * Sends the full lobby state (seeks list, viewer count, whether they're already in a game, the
+ * game count and the featured games) to a single client. Called once when a socket first
+ * subscribes — everything the client needs to be fully in sync arrives in this one message.
  * @param ws - The socket of the player to send the state to.
  */
 function sendClientLobbyState(ws: CustomWebSocket): void {
@@ -142,6 +142,7 @@ function sendClientLobbyState(ws: CustomWebSocket): void {
 		ourseekid: activeSeeks.getIDOfUser(ws.metadata.memberInfo),
 		viewercount,
 		ingame,
+		gamecount: featuredGames.getGameCount(),
 		featured: featuredGames.getSnapshot(),
 	};
 	socketSend.send(ws, 'lobby', 'lobbystate', message); // In order: socket, sub, action, value

@@ -402,8 +402,8 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<number>()): voi
 }
 
 /**
- * Clears the seek display, tracked state, viewer count and featured games, but preserves
- * the new-seek tracker so a reconnect doesn't replay arrival sounds.
+ * Clears the seek display, tracked state, viewer count, game count and featured games, but
+ * preserves the new-seek tracker so a reconnect doesn't replay arrival sounds.
  */
 function clearSeekList(): void {
 	onSeekListUpdate({ seekslist: [] }, true); // Don't clear seek tracker memory

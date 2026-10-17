@@ -87,6 +87,9 @@ const InGameMessageSchema = GameNavigationSchema.extend({
 	navigate: z.boolean(),
 });
 
+/** How many games are in play, finished ones excluded. */
+const GameCountSchema = z.number().nonnegative();
+
 /** A live game featured beneath the lobby: its setup, players, and everything played so far. */
 export type FeaturedGame = z.infer<typeof FeaturedGameSchema>;
 const FeaturedGameSchema = z.strictObject({
@@ -112,6 +115,7 @@ const LobbyStateMessageSchema = SeeksListMessageSchema.extend({
 	viewercount: ViewerCountSchema,
 	/** Present only if we're already in a game at the time we subscribe. */
 	ingame: InGameMessageSchema.optional(),
+	gamecount: GameCountSchema,
 	featured: FeaturedListSchema,
 });
 
@@ -126,7 +130,8 @@ const ClientboundLobbySchema = z.discriminatedUnion('action', [
 	// In-game status
 	z.strictObject({ action: z.literal('ingame'), value: InGameMessageSchema }),
 	z.strictObject({ action: z.literal('outgame') }),
-	// Featured games
+	// Games in play
+	z.strictObject({ action: z.literal('gamecount'), value: GameCountSchema }),
 	z.strictObject({ action: z.literal('featured'), value: FeaturedListSchema }),
 	z.strictObject({
 		action: z.literal('featuredmove'),

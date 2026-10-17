@@ -51,6 +51,7 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 			clearTimeout(clearTimer);
 			clearTimer = undefined;
 			lobby.handleLobbyState(contents.value);
+			featuredgames.onGameCount(contents.value.gamecount);
 			featuredgames.onSubscribed(contents.value.featured);
 			// The full lobby state is now applied — release any intents held through the outage.
 			socketintents.onRouteSynced('lobby');
@@ -72,7 +73,10 @@ function onLobbyMessage(contents: ClientboundLobbyMessage): void {
 		case 'outgame':
 			lobby.onOutGame();
 			break;
-		// Featured games
+		// Games in play
+		case 'gamecount':
+			featuredgames.onGameCount(contents.value);
+			break;
 		case 'featured':
 			featuredgames.onSnapshot(contents.value);
 			break;
