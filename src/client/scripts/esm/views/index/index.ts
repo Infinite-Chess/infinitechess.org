@@ -10,12 +10,12 @@ import type { ClientboundLobbyMessage } from '../../../../../shared/transport/cl
 
 import lobby from './lobby.js';
 import flashtoast from '../../components/flashtoast.js';
-import featuredgames from './featuredgames.js';
+import featuredgames from './featured/featuredgames.js';
 import socketintents from '../../socket/socketintents.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 
 import './newprompt.js';
-import './gamesetupmodal.js';
+import './gamesetup/gamesetupmodal.js';
 
 // Initial setup ---------------------------------------------------------------
 

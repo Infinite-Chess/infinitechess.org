@@ -36,8 +36,8 @@ import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
 import socketintents from '../../socket/socketintents.js';
-import featuredgames from './featuredgames.js';
-import gamesetupmodal from './gamesetupmodal.js';
+import featuredgames from './featured/featuredgames.js';
+import gamesetupmodal from './gamesetup/gamesetupmodal.js';
 import seekpreviewcache from './seekpreviewcache.js';
 import variantpreviewtooltip from '../../board/variantselector/variantpreviewtooltip.js';
 

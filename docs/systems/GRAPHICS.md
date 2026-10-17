@@ -183,9 +183,9 @@ small board inside the variant-preview hover tooltip
 and the challenge page's board
 ([`challengepreview.ts`](/src/client/scripts/esm/views/challenge/challengepreview.ts))), and the
 home page's featured live games
-([`featuredboard.ts`](/src/client/scripts/esm/views/index/featuredboard.ts)). Each lives on its own
-`<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures,
-buffers/VAOs) can **never** be shared across contexts.
+([`featuredboard.ts`](/src/client/scripts/esm/views/index/featured/featuredboard.ts)). Each lives on
+its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs,
+textures, buffers/VAOs) can **never** be shared across contexts.
 
 A [`RenderContext`](/src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything
 bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale),

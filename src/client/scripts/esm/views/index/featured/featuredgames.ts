@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/index/featuredgames.ts
+// src/client/scripts/esm/views/index/featured/featuredgames.ts
 
 /**
  * The featured games beneath the lobby: one card per game, each a link to it showing its live
@@ -8,21 +8,21 @@
  */
 
 import type { VNode } from 'snabbdom';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { ClockValues } from '../../../../../shared/chess/util/clockutil.js';
-import type { FeaturedGame } from '../../../../../shared/transport/clientbound.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { ClockValues } from '../../../../../../shared/chess/util/clockutil.js';
+import type { FeaturedGame } from '../../../../../../shared/transport/clientbound.js';
 import type { FeaturedBoard, FeaturedUpdate } from './featuredboard.js';
 
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
-import gameurl from '../../../../../shared/chess/util/gameurl.js';
-import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import playername from '../../../../../shared/components/playername.js';
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+import gameurl from '../../../../../../shared/chess/util/gameurl.js';
+import clockutil from '../../../../../../shared/chess/util/clockutil.js';
+import playername from '../../../../../../shared/components/playername.js';
+import { players } from '../../../../../../shared/chess/util/typeutil.js';
+import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 
 import featuredboard from './featuredboard.js';
-import frameprofiler from '../../board/frameprofiler.js';
+import frameprofiler from '../../../board/frameprofiler.js';
 
 const patch = init([attributesModule, classModule]);
 

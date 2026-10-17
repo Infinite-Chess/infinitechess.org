@@ -1,28 +1,28 @@
-// src/client/scripts/esm/views/index/featuredframing.ts
+// src/client/scripts/esm/views/index/featured/featuredframing.ts
 
 /**
  * Frames a featured game's board: a camera target fitting as many of its pieces as it can within
  * a zoom-out limit, kept current from its moves alone, and the glide that eases the camera there.
  */
 
-import type { Area } from '../../board/rendering/area.js';
-import type LiveBoard from '../../board/rendering/LiveBoard.js';
-import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
-import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { BoundingBox } from '../../../../../shared/util/math/bounds.js';
-import type { Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
+import type { Area } from '../../../board/rendering/area.js';
+import type LiveBoard from '../../../board/rendering/LiveBoard.js';
+import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { BoundingBox } from '../../../../../../shared/util/math/bounds.js';
+import type { Coords, CoordsKey } from '../../../../../../shared/util/coordutil.js';
 
 import bd from '@naviary/bigdecimal';
 
-import bounds from '../../../../../shared/util/math/bounds.js';
-import bimath from '../../../../../shared/util/math/bimath.js';
-import coordutil from '../../../../../shared/util/coordutil.js';
-import boardutil from '../../../../../shared/chess/logic/boardutil.js';
+import bounds from '../../../../../../shared/util/math/bounds.js';
+import bimath from '../../../../../../shared/util/math/bimath.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 
-import area from '../../board/rendering/area.js';
-import meshes from '../../board/rendering/meshes.js';
-import deltatime from '../../board/deltatime.js';
-import standaloneboard from '../../board/rendering/standaloneboard.js';
+import area from '../../../board/rendering/area.js';
+import meshes from '../../../board/rendering/meshes.js';
+import deltatime from '../../../board/deltatime.js';
+import standaloneboard from '../../../board/rendering/standaloneboard.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-// src/client/scripts/esm/views/index/featuredboard.ts
+// src/client/scripts/esm/views/index/featured/featuredboard.ts
 
 /**
  * One featured card's live board: loading each game it shows from the lobby's snapshot, the next
@@ -6,39 +6,39 @@
  * and updating and drawing it every frame.
  */
 
-import type { Mesh } from '../../board/rendering/piecemodels.js';
-import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { Mesh } from '../../../board/rendering/piecemodels.js';
+import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
 import type { Framing } from './featuredframing.js';
-import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
-import type { ClockValues } from '../../../../../shared/chess/util/clockutil.js';
+import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
+import type { ClockValues } from '../../../../../../shared/chess/util/clockutil.js';
 import type {
 	ClientboundLobbyMessage,
 	FeaturedGame,
 	OpponentsMoveMessage,
-} from '../../../../../shared/transport/clientbound.js';
+} from '../../../../../../shared/transport/clientbound.js';
 
-import clock from '../../../../../shared/chess/logic/clock.js';
-import icnmoves from '../../../../../shared/chess/logic/icn/icnmoves.js';
-import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import wincondition from '../../../../../shared/chess/logic/wincondition.js';
-import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
-import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
+import clock from '../../../../../../shared/chess/logic/clock.js';
+import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
+import clockutil from '../../../../../../shared/chess/util/clockutil.js';
+import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
+import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
+import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
+import gameformulator from '../../../../../../shared/chess/game/gameformulator.js';
 
-import arrows from '../../board/rendering/arrows/arrows.js';
-import docutil from '../../util/docutil.js';
-import LiveBoard from '../../board/rendering/LiveBoard.js';
-import animation from '../../board/rendering/animation/animation.js';
-import piecemodels from '../../board/rendering/piecemodels.js';
-import arrowshifts from '../../board/rendering/arrows/arrowshifts.js';
-import WaterRipples from '../../board/rendering/WaterRipples.js';
-import boardgeometry from '../../board/rendering/boardgeometry.js';
-import arrowsgraphics from '../../board/rendering/arrows/arrowsgraphics.js';
+import arrows from '../../../board/rendering/arrows/arrows.js';
+import docutil from '../../../util/docutil.js';
+import LiveBoard from '../../../board/rendering/LiveBoard.js';
+import animation from '../../../board/rendering/animation/animation.js';
+import piecemodels from '../../../board/rendering/piecemodels.js';
+import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
+import WaterRipples from '../../../board/rendering/WaterRipples.js';
+import boardgeometry from '../../../board/rendering/boardgeometry.js';
+import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
 import featuredframing from './featuredframing.js';
-import standaloneboard from '../../board/rendering/standaloneboard.js';
-import graphicalchanges from '../../board/rendering/graphicalchanges.js';
-import conclusionglyphs from '../../board/rendering/glyphs/conclusionglyphs.js';
-import positionhighlights from '../../board/rendering/positionhighlights.js';
+import standaloneboard from '../../../board/rendering/standaloneboard.js';
+import graphicalchanges from '../../../board/rendering/graphicalchanges.js';
+import conclusionglyphs from '../../../board/rendering/glyphs/conclusionglyphs.js';
+import positionhighlights from '../../../board/rendering/positionhighlights.js';
 
 // Types -----------------------------------------------------------------------
 

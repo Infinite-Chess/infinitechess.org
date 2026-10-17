@@ -1,19 +1,19 @@
-// src/client/scripts/esm/views/index/gameoptionsstore.ts
+// src/client/scripts/esm/views/index/gamesetup/gameoptionsstore.ts
 
 /**
  * Device-local persistence of the home page's game setup options, so every choice
  * the player made is still set the next time they open the lobby.
  */
 
-import type { DisplaySelection } from '../../board/variantselector/variantselector.js';
+import type { DisplaySelection } from '../../../board/variantselector/variantselector.js';
 
 import * as z from 'zod';
 
-import modutil from '../../../../../shared/chess/util/modutil.js';
-import clockutil from '../../../../../shared/chess/util/clockutil.js';
-import { VARIANT_CODES } from '../../../../../shared/chess/util/variantcodes.js';
+import modutil from '../../../../../../shared/chess/util/modutil.js';
+import clockutil from '../../../../../../shared/chess/util/clockutil.js';
+import { VARIANT_CODES } from '../../../../../../shared/chess/util/variantcodes.js';
 
-import IndexedDB from '../../util/IndexedDB.js';
+import IndexedDB from '../../../util/IndexedDB.js';
 
 // Constants -------------------------------------------------------------------
 
