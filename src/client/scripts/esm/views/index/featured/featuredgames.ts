@@ -146,7 +146,6 @@ function onCanvasInserted(card: Card, canvas: HTMLCanvasElement): void {
 function onCanvasDestroyed(card: Card): void {
 	if (card.board === undefined) return; // Never built: no WebGL2
 	featuredboard.dispose(card.board);
-	card.board = undefined;
 }
 
 /**
