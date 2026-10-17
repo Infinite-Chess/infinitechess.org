@@ -148,12 +148,16 @@ function dispose(featuredBoard: FeaturedBoard): void {
 	featuredBoard.board.dispose();
 }
 
-/** Resizes the pixel buffer to the canvas's size and pixel density, and reframes to its new shape. */
+/**
+ * Resizes the pixel buffer to the canvas's size and pixel density, reframes to its new shape, and
+ * redraws at once: resizing wipes the buffer black, which would otherwise show until the next frame.
+ */
 function syncCanvasSize(featuredBoard: FeaturedBoard): void {
 	const { board, state } = featuredBoard;
 	board.camera.syncCanvasDimensions();
 	board.resize(board.canvas.width, board.canvas.height);
 	if (state.shown) featuredframing.retarget(board, state.shown.gamefile, state.shown.framing);
+	render(featuredBoard);
 }
 
 // Updates ---------------------------------------------------------------------
