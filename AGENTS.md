@@ -257,11 +257,11 @@ followed, tell me.
     as I review them, so expect your changes to move into the index mid-session — a clean `git diff`
     doesn't mean your edits vanished.
 
-39. When I _do_ ask you to commit, split unrelated changes into their own commits, then `git push`
-    immediately after. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from
-    `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch from
-    `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly:
-    `git push <remote> HEAD:<branch>`.
+39. When I _do_ ask you to commit, split unrelated changes into their own commits (unless they are
+    all tiny), then `git push` immediately after. On a branch whose name won't match its remote's
+    (`pr/<author>/<number>`, from `gh pr checkout` of a fork PR), bare `git push` aborts — read the
+    remote and branch from `branch.<current>.remote` and `branch.<current>.merge` in `git config`,
+    then push explicitly: `git push <remote> HEAD:<branch>`.
 
 40. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these
     commands. Create it in `.worktrees/`, branched from the branch I have checked out, never from
