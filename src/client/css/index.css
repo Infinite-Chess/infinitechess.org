@@ -800,7 +800,6 @@ svg.bg-omega {
 }
 
 .featured-board {
-	display: block;
 	width: 100%;
 	aspect-ratio: 1;
 	border-radius: 4px;
@@ -811,7 +810,6 @@ svg.bg-omega {
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 0.5em;
-	min-width: 0;
 	padding: 3px 2px;
 }
 
