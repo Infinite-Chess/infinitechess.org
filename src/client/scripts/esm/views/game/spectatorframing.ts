@@ -29,7 +29,7 @@ type Mode = 'following' | 'returning' | 'off';
 // Elements --------------------------------------------------------------------
 
 /** Rendered only for a spectator of a game still in progress when the page loaded. */
-const element_Follow = document.getElementById('toggle-follow') as HTMLInputElement | null;
+const element_Follow = document.getElementById('btn-follow') as HTMLButtonElement | null;
 
 // Constants -------------------------------------------------------------------
 
@@ -63,11 +63,11 @@ if (element_Follow)
 // Lifecycle -------------------------------------------------------------------
 
 /** Frames the game the moment it appears, then follows it. */
-function start(toggle: HTMLInputElement): void {
+function start(toggle: HTMLButtonElement): void {
 	reframe();
 	boardframing.snap(gamescene.getGameContext(), framing);
 
-	toggle.addEventListener('change', () => onToggle(toggle));
+	toggle.addEventListener('click', () => onToggle(toggle));
 	GameBus.addEventListener('position-board', () => steer(toggle));
 	GameBus.addEventListener('view-move', () => reframeIfOn());
 	GameBus.addEventListener('canvas-resize', () => reframeIfOn()); // The fit depends on the canvas
@@ -79,12 +79,11 @@ function start(toggle: HTMLInputElement): void {
 }
 
 /**
- * Follows from the current view, recorded so undoing a transition returns to it, transitioning
- * back first if it's far from the game. Or stops.
+ * Stops following, or follows from the current view, recorded so undoing a transition returns to
+ * it, transitioning back first if it's far from the game.
  */
-function onToggle(toggle: HTMLInputElement): void {
-	toggle.blur(); // Space zooms, and would otherwise flip it straight back
-	if (!toggle.checked) return void (mode = 'off');
+function onToggle(toggle: HTMLButtonElement): void {
+	if (mode !== 'off') return switchOff(toggle);
 	// Anything still carrying the camera would count as the viewer moving it
 	Transition.terminate();
 	gamescene.getGameContext().boardpos.eraseMomentum();
@@ -96,12 +95,18 @@ function onToggle(toggle: HTMLInputElement): void {
 		Transition.recordView();
 		mode = 'following';
 	}
+	renderToggle(toggle);
 }
 
-/** Stops following, showing it on the toggle. */
-function switchOff(toggle: HTMLInputElement): void {
+/** Stops following. */
+function switchOff(toggle: HTMLButtonElement): void {
 	mode = 'off';
-	toggle.checked = false;
+	renderToggle(toggle);
+}
+
+/** Shows on the toggle whether following is on. */
+function renderToggle(toggle: HTMLButtonElement): void {
+	toggle.classList.toggle('enabled', mode !== 'off');
 }
 
 // Targeting -------------------------------------------------------------------
@@ -126,7 +131,7 @@ function reframe(): void {
  * Eases the camera toward the game. While the viewer moves it instead, switches off the moment
  * they take it far from the game.
  */
-function steer(toggle: HTMLInputElement): void {
+function steer(toggle: HTMLButtonElement): void {
 	if (mode === 'off') return;
 	if (mode === 'returning') {
 		if (Transition.areTransitioning()) return; // Our own, back to the game

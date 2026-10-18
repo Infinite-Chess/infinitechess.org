@@ -648,16 +648,43 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 0.4em;
+	gap: 12px;
 	min-height: 40px;
 	padding-inline: 16px;
 	font-size: 14px;
 	color: var(--c-text-muted);
 }
 
+.spectating-label {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+}
+
 .spectating-eye {
 	width: 1.2em;
 	height: 1.2em;
+}
+
+/* The follow toggle: a viewfinder around a dot, the dot swapped for a slash while off. */
+.follow-icon {
+	width: 24px;
+	height: 24px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.follow-dot {
+	fill: currentColor;
+	stroke: none;
+}
+
+#btn-follow.enabled .follow-slash,
+#btn-follow:not(.enabled) .follow-dot {
+	display: none;
 }
 
 /* =================================
