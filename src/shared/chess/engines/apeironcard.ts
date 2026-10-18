@@ -79,6 +79,25 @@ const ENGINE_REFUSALS = ['too_spread_out'] as const;
 
 // Individual rule checks ------------------------------------------------------
 
+/**
+ * Game-level support that's independent of any single position's piece set: the variant's custom
+ * piece movement (4D) the engine can't replay, modifiers, turn order, and win conditions. Unlike
+ * {@link isPlaySupported} these require no bounded board — the engine takes coordinates of any
+ * size itself.
+ */
+function checkGameRules(gamefile: GameFile): SupportedResult {
+	if (variantmodule.hasCustomMovement(gamefile.variant?.mod))
+		return { supported: false, reason: 'unsupported_variant' };
+
+	const modifiersResult = checkModifiers(gamefile.gameRules);
+	if (!modifiersResult.supported) return modifiersResult;
+
+	const turnOrderResult = checkTurnOrder(gamefile.gameRules);
+	if (!turnOrderResult.supported) return turnOrderResult;
+
+	return checkWinConditions(gamefile.gameRules);
+}
+
 /** Only modifiers in {@link SUPPORTED_MODIFIERS}. */
 function checkModifiers(gameRules: GameRules): SupportedResult {
 	for (const code of modutil.getActiveModifiers(gameRules)) {
@@ -162,25 +181,6 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 		allRawTypes.add(rawType);
 	}
 	return checkPieceTypes(allRawTypes);
-}
-
-/**
- * Game-level support that's independent of any single position's piece set: the variant's custom
- * piece movement (4D) the engine can't replay, modifiers, turn order, and win conditions. Unlike
- * {@link isPlaySupported} these require no bounded board — the engine takes coordinates of any
- * size itself.
- */
-function checkGameRules(gamefile: GameFile): SupportedResult {
-	if (variantmodule.hasCustomMovement(gamefile.variant?.mod))
-		return { supported: false, reason: 'unsupported_variant' };
-
-	const modifiersResult = checkModifiers(gamefile.gameRules);
-	if (!modifiersResult.supported) return modifiersResult;
-
-	const turnOrderResult = checkTurnOrder(gamefile.gameRules);
-	if (!turnOrderResult.supported) return turnOrderResult;
-
-	return checkWinConditions(gamefile.gameRules);
 }
 
 /**
