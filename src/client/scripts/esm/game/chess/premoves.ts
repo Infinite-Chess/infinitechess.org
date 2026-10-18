@@ -74,11 +74,7 @@ GameBus.addEventListener('game-concluded', () => {
 
 	const originalApplied = applied; // Save the original applied state
 
-	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh();
-
-	if (applied) rewindPremoves(gamefile, mesh);
-	clearPremoves();
+	discardPremoves(gameslot.getGamefile()!, gameslot.getMesh());
 
 	// Restore the original applied state, as the rest of the code will have expected it not to change.
 	applied = originalApplied;
@@ -182,8 +178,7 @@ function cancelPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	// console.log("Clearing premoves");
 	const hadAtleastOnePremove = hasAtleastOnePremove();
 
-	rewindPremoves(gamefile, mesh);
-	clearPremoves();
+	discardPremoves(gamefile, mesh);
 
 	if (selection.arePremoving()) {
 		// Unselect in the case where the premoves are being rewound
@@ -195,6 +190,14 @@ function cancelPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	// If there were any animations, this should ensure they're only cancelled if they are for premoves,
 	// and not for the opponent's move. After all cancelPremoves() can be called at any time.
 	if (hadAtleastOnePremove) animation.clearAnimations(gamescene.getGameContext());
+}
+
+/** Unapplies (if applied) and clears all premoves. */
+function discardPremoves(gamefile: GameFile, mesh?: Mesh): void {
+	const changesBoard = applied && hasAtleastOnePremove();
+	if (applied) rewindPremoves(gamefile, mesh);
+	clearPremoves();
+	if (changesBoard) GameBus.dispatch('view-move');
 }
 
 /** Unapplies all pending premoves by undoing their changes on the board. */
