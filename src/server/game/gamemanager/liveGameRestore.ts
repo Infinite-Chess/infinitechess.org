@@ -18,9 +18,9 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { ValidEngine } from '../../../shared/chess/util/engineregistry.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
+import type { GameModifier } from '../../../shared/chess/util/modutil.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { LiveGamesRecord } from '../../database/liveGamesManager.js';
-import type { SlideLimitValue } from '../../../shared/chess/util/modutil.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { LivePlayerGamesRecord } from '../../database/livePlayerGamesManager.js';
 import type { LiveEngineGamesRecord } from '../../database/liveEngineGamesManager.js';
@@ -34,6 +34,7 @@ import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 import logEvents from '../../utility/logEvents.js';
 import gameUtility from './gameUtility.js';
 import memberManager from '../../database/memberManager.js';
+import modifierColumns from './modifierColumns.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
@@ -162,10 +163,11 @@ function restoreSingleGame(
 
 	// 3. Create the game (also computes gameRules).
 	const variant = reconstructVariant(gameRow);
+	const modifiers = modifierColumns.fromColumns(gameRow);
 	const construction = gameUtility.resolveGameConstruction(
 		variant,
 		gameRow.time_created,
-		gameRow.mod_slide_limit ?? undefined,
+		modifiers,
 		engineRow !== undefined,
 	);
 	// The column wins over what the variant resolves to now: a game keeps the
@@ -184,7 +186,7 @@ function restoreSingleGame(
 	// by clock.edit() inside initGame() via the clockValues we pass in.
 
 	// 4. Reconstruct MatchInfo
-	const match = reconstructMatchInfo(gameRow, variant, playerRows, playerIdentities, engineRow);
+	const match = reconstructMatchInfo(gameRow, variant, modifiers, playerRows, playerIdentities, engineRow); // prettier-ignore
 
 	// 5. Parse & replay moves, conditionally constructing the board state
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
@@ -291,6 +293,7 @@ function reconstructVariant(gameRow: LiveGamesRecord): SeekVariant {
 function reconstructMatchInfo(
 	gameRow: LiveGamesRecord,
 	variant: SeekVariant,
+	modifiers: GameModifier[] | undefined,
 	playerRows: LivePlayerGamesRecord[],
 	playerIdentities: PlayerGroup<AuthMemberInfo>,
 	engineRow: LiveEngineGamesRecord | undefined,
@@ -318,10 +321,7 @@ function reconstructMatchInfo(
 		timeLastMove: Date.now(),
 		rated: Boolean(gameRow.rated),
 		private: Boolean(gameRow.private),
-		modifiers:
-			gameRow.mod_slide_limit !== null
-				? [{ kind: 'slide-limit', value: gameRow.mod_slide_limit as SlideLimitValue }]
-				: undefined,
+		modifiers,
 		clock: gameRow.clock as TimeControl,
 		playerData,
 		engineParticipant: engineRow

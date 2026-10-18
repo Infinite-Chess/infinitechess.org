@@ -79,7 +79,7 @@ function createGame(
 	const construction = gameUtility.resolveGameConstruction(
 		setup.variant,
 		dateTimestamp,
-		setup.modifiers?.find((m) => m.kind === 'slide-limit')?.value,
+		setup.modifiers,
 		setup.engineParticipant !== undefined,
 	);
 

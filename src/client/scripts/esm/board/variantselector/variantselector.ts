@@ -20,7 +20,6 @@ import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
-import modutil from '../../../../../shared/chess/util/modutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import interpolate from '../../../../../shared/util/interpolate.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
@@ -806,7 +805,7 @@ function validateSavedPosition(judged: SaveSelectionState, variantOptions: Varia
 	let rejection = positionRejection;
 	let gamefile: GameFile | undefined;
 	if (rejection === null) {
-		gamefile = gameformulator.constructPosition(played, undefined, selectedSlideLimit());
+		gamefile = gameformulator.constructPosition(played, undefined, selectedModifiers());
 		rejection = playabilityRejection(gamefile);
 	}
 
@@ -901,9 +900,9 @@ function playabilityRejection(judged: GameFile): PositionRejection | null {
 	});
 }
 
-/** The Slide Limit the game will be built with, read from the modifier selector beside us. */
-function selectedSlideLimit(): bigint | undefined {
-	return modutil.slideLimitOf(modifierselector.getGameModifiers());
+/** The modifiers the game will be built with, read from the modifier selector beside us. */
+function selectedModifiers(): GameModifier[] {
+	return modifierselector.getGameModifiers();
 }
 
 /**
@@ -959,9 +958,9 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 	// Atleast the ICN is valid syntax, now let's check position, gamerules, and moves...
 
 	// Resolved apart from building, so a result the user typed past is dropped before paying for the
-	// board. The slide limit needs to ride along it rebuilds the movesets, which can change judgement.
+	// board. The modifiers ride along, as a slide limit rebuilds the movesets, changing judgement.
 	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
-		slideLimit: selectedSlideLimit(),
+		modifiers: selectedModifiers(),
 	});
 	// Awaiting the variant module let the user keep typing, or pick something else — discard a
 	// result they've moved past.
@@ -993,7 +992,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 		// A seek starts a FRESH game from the flattened position, so it judges that board. Outside a
 		// seek the only check reads the board's front, so the moves-applied game analysis loads will do.
 		const judged = config.isSeekContext
-			? gameformulator.constructPosition(played, constructed.variant, selectedSlideLimit())
+			? gameformulator.constructPosition(played, constructed.variant, selectedModifiers())
 			: constructed;
 		rejection = playabilityRejection(judged);
 	}

@@ -16,7 +16,6 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { MetaData, Rating } from '../../../shared/chess/util/metadatautil.js';
 import type { CreateSeekMessage } from '../../../shared/transport/serverbound.js';
 
-import modutil from '../../../shared/chess/util/modutil.js';
 import icnimport from '../../../shared/chess/logic/icn/icnimport.js';
 import gamelimits from '../../../shared/chess/util/gamelimits.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
@@ -167,11 +166,7 @@ function validateIcnSeekContent(
 
 	// Legal, but the game still has to be playable from here. Built on the board the real game
 	// gets — the ICN's own world border, which an engine game must carry, and the modifiers — then discarded.
-	const constructed = gameformulator.constructPosition(
-		variantOptions,
-		undefined,
-		modutil.slideLimitOf(modifiers),
-	);
+	const constructed = gameformulator.constructPosition(variantOptions, undefined, modifiers);
 	return playability.getRejection(constructed, { seek: true, engine: engineGame });
 }
 

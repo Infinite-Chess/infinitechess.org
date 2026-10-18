@@ -7,6 +7,7 @@
  */
 
 import type { VariantCode } from '../../../../../shared/chess/util/variantcodes.js';
+import type { GameModifier } from '../../../../../shared/chess/util/modutil.js';
 import type { DeadGameState } from '../../../../../shared/transport/domain.js';
 import type { LongFormatOut } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
@@ -18,7 +19,6 @@ import type {
 } from '../../../../../shared/chess/logic/gamefile.js';
 
 import uuid from '../../../../../shared/util/uuid.js';
-import modutil from '../../../../../shared/chess/util/modutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
@@ -67,9 +67,9 @@ async function loadGameById(gameId: number): Promise<void> {
 		const state: DeadGameState = await response.json();
 		const viewWhitePerspective = window.analysisPageData.viewColor === p.WHITE;
 		const longFormat = icnconverter.ShortToLong_Format(state.icn);
-		// The slide limit comes from the game's stored config, the ICN carries no modifiers.
-		const slideLimit = modutil.slideLimitOf(state.setup.modifiers);
-		await pasteGame(longFormat, state.gameConclusion, viewWhitePerspective, slideLimit);
+		// The modifiers come from the game's stored config, the ICN carries none.
+		const { modifiers } = state.setup;
+		await pasteGame(longFormat, state.gameConclusion, viewWhitePerspective, modifiers);
 		// Only a game fetched from the server gets a result banner. Deliberately NOT done for the other load paths.
 		gamesession.concludeGameIfOver();
 		guianalysisview.syncClockDisplayToViewedMove(true);
@@ -85,10 +85,10 @@ async function loadGameById(gameId: number): Promise<void> {
 
 /**
  * Loads a fresh board of the given variant, replacing the current game.
- * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
+ * @param modifiers - The modifiers to play it with (see the variant setup panel).
  */
-function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
-	lastLoad = { replay: () => loadVariant(variant, slideLimit), recordMetadata: {} };
+function loadVariant(variant: VariantCode, modifiers?: GameModifier[]): Promise<void> {
+	lastLoad = { replay: () => loadVariant(variant, modifiers), recordMetadata: {} };
 	const dateTimestamp = Date.now();
 	return gamesession.loadGame({
 		kind: 'construct',
@@ -96,7 +96,7 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
 		variant: { code: variant, dateTimestamp },
 		dateTimestamp,
 		viewWhitePerspective: true,
-		additional: slideLimit !== undefined ? { slideLimit } : undefined,
+		additional: { modifiers },
 	});
 }
 
@@ -104,13 +104,16 @@ function loadVariant(variant: VariantCode, slideLimit?: bigint): Promise<void> {
  * Loads a pre-resolved custom position (VariantOptions) onto the board, replacing
  * the current one. Skips the longformat resolution {@link pasteGame} performs.
  * Requires an active 'analysis' session.
- * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
+ * @param modifiers - The modifiers to play it with (see the variant setup panel).
  */
-function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint): Promise<void> {
-	recordOptions(variantOptions, slideLimit);
+function loadVariantOptions(
+	variantOptions: VariantOptions,
+	modifiers?: GameModifier[],
+): Promise<void> {
+	recordOptions(variantOptions, modifiers);
 	const additional: Additional = {
 		variantOptions,
-		slideLimit,
+		modifiers,
 	};
 
 	return gamesession.loadGame({
@@ -133,18 +136,18 @@ function loadVariantOptions(variantOptions: VariantOptions, slideLimit?: bigint)
  * @param gameConclusion - The game's conclusion, if it ended.
  * @param viewWhitePerspective - Board orientation override; defaults to retaining
  * the current game's perspective, or white's if this is the initial load.
- * @param slideLimit - Optional Slide Limit modifier override (see the variant setup panel).
+ * @param modifiers - The modifiers to play it with (see the variant setup panel).
  */
 async function pasteGame(
 	longFormat: LongFormatOut,
 	gameConclusion?: GameConclusion,
 	viewWhitePerspective?: boolean,
-	slideLimit?: bigint,
+	modifiers?: GameModifier[],
 ): Promise<void> {
-	recordPaste(longFormat, gameConclusion, viewWhitePerspective, slideLimit);
+	recordPaste(longFormat, gameConclusion, viewWhitePerspective, modifiers);
 	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
 		gameConclusion,
-		slideLimit,
+		modifiers,
 	});
 
 	// Returned so callers can await the load (the gamefile only exists once it resolves).
@@ -161,13 +164,13 @@ async function pasteGame(
  * it from here, so the selector must have dropped its own reference.
  * Requires an active 'analysis' session.
  * @param source - What the game was built from, recorded so {@link reloadPristine} can rebuild it.
- * @param slideLimit - The Slide Limit the game was BUILT with. Not applied here — the game
- * already carries it — only kept so a rebuild reaches the same board.
+ * @param modifiers - The modifiers the game was BUILT with. Not applied here — the game
+ * already carries them — only kept so a rebuild reaches the same board.
  */
 function pastePrebuiltGame(
 	gamefile: GameFile,
 	source: PrebuiltSource,
-	slideLimit?: bigint,
+	modifiers?: GameModifier[],
 ): Promise<void> {
 	if (source.kind === 'icn') {
 		// The moves decide any ending they can show. The tags only add one they can't, like a resignation.
@@ -178,8 +181,8 @@ function pastePrebuiltGame(
 			!winconutil.isConclusionMoveTriggered(tagged.condition)
 		)
 			gamefile.gameConclusion = tagged;
-		recordPaste(source.longFormat, gamefile.gameConclusion, undefined, slideLimit);
-	} else recordOptions(source.options, slideLimit);
+		recordPaste(source.longFormat, gamefile.gameConclusion, undefined, modifiers);
+	} else recordOptions(source.options, modifiers);
 
 	return gamesession.loadGame({
 		kind: 'prebuilt',
@@ -195,8 +198,8 @@ function pastePrebuiltGame(
  * Records a custom position's options so {@link reloadPristine} can rebuild it through
  * {@link loadVariantOptions}. Saved positions carry no record metadata.
  */
-function recordOptions(variantOptions: VariantOptions, slideLimit?: bigint): void {
-	lastLoad = { replay: () => loadVariantOptions(variantOptions, slideLimit), recordMetadata: {} };
+function recordOptions(variantOptions: VariantOptions, modifiers?: GameModifier[]): void {
+	lastLoad = { replay: () => loadVariantOptions(variantOptions, modifiers), recordMetadata: {} };
 }
 
 /**
@@ -209,12 +212,12 @@ function recordPaste(
 	longFormat: LongFormatOut,
 	gameConclusion?: GameConclusion,
 	viewWhitePerspective?: boolean,
-	slideLimit?: bigint,
+	modifiers?: GameModifier[],
 ): void {
 	// English display name, or dropped if unrecognized, so a rebuild carries canonical metadata.
 	clientmetadatautil.resolveAndNormalizeVariantFromMetadata(longFormat.metadata);
 	lastLoad = {
-		replay: () => pasteGame(longFormat, gameConclusion, viewWhitePerspective, slideLimit),
+		replay: () => pasteGame(longFormat, gameConclusion, viewWhitePerspective, modifiers),
 		recordMetadata: metadatautil.trimTo(longFormat.metadata, metadatautil.RECORD_METADATA),
 	};
 }

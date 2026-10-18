@@ -12,7 +12,6 @@ import type { ClockValues, TimeControl } from '../util/clockutil.js';
 import type { LongFormatOut, PresetAnnotes } from '../logic/icn/icnconverter.js';
 import type { Additional, DatedVariant, GameFile, VariantOptions } from '../logic/gamefile.js';
 
-import modutil from '../util/modutil.js';
 import gamefile from '../logic/gamefile.js';
 import icnimport from '../logic/icn/icnimport.js';
 import icnconverter from '../logic/icn/icnconverter.js';
@@ -62,8 +61,8 @@ interface PositionedConstructionOptions extends GameConstructionOptions {
 interface ConstructionOverrides {
 	/** See {@link Additional.gameConclusion}. */
 	gameConclusion?: GameConclusion;
-	/** See {@link Additional.slideLimit}. */
-	slideLimit?: bigint;
+	/** See {@link Additional.modifiers}. */
+	modifiers?: GameModifier[];
 	/** See {@link Additional.clockValues}. */
 	clockValues?: ClockValues;
 }
@@ -90,19 +89,19 @@ async function formulateGame(
  * inspect the game it produces (its computed conclusion, its engine support).
  * @param variant - The variant the position is of, when one is known — supplying its
  *   movesets, so the inspection sees how the pieces truly move. REQUIRES its module preloaded.
- * @param slideLimit - The Slide Limit modifier the game will be played with, when one is
- * selected. It rebuilds the movesets, affecting validation.
+ * @param modifiers - The modifiers the game will be played with. A Slide Limit rebuilds the
+ * movesets, affecting validation.
  */
 function constructPosition(
 	variantOptions: VariantOptions,
 	variant?: DatedVariant,
-	slideLimit?: bigint,
+	modifiers?: GameModifier[],
 ): GameFile {
 	return constructGame({
 		timeControl: '-',
 		variant,
 		dateTimestamp: Date.now(),
-		additional: { variantOptions, slideLimit },
+		additional: { variantOptions, modifiers },
 	});
 }
 
@@ -173,7 +172,7 @@ function constructionOptionsFromSetup(
 	longformat?: LongFormatOut,
 ): GameConstructionOptions {
 	const { variant, timeControl, timeCreated, modifiers } = setup;
-	const additional: Additional = { ...progress, slideLimit: modutil.slideLimitOf(modifiers) };
+	const additional: Additional = { ...progress, modifiers };
 
 	// A custom game has no variant code to build its position from — its ICN is the source of
 	// truth for the position, the gamerules, and which variant revision it's a position of.

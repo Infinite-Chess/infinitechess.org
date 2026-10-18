@@ -19,6 +19,7 @@ import type {
 import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 
 import db from '../../database/database.js';
+import modifierColumns from './modifierColumns.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
 import liveEngineGamesManager from '../../database/liveEngineGamesManager.js';
@@ -131,7 +132,7 @@ function onGameCreated(servergame: ServerGame): void {
 		draw_offer_state: null,
 		validate_moves: servergame.validateMoves ? 1 : 0,
 		empty_since: null,
-		mod_slide_limit: match.modifiers?.find((m) => m.kind === 'slide-limit')?.value ?? null,
+		...modifierColumns.toColumns(match.modifiers),
 	};
 
 	// Build one record per player (pure) before touching the database.

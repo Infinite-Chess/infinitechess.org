@@ -12,6 +12,7 @@ import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { ClockValues } from '../../../shared/chess/util/clockutil.js';
+import type { GameModifier } from '../../../shared/chess/util/modutil.js';
 import type { PresetAnnotes } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
@@ -60,14 +61,13 @@ function getVariantCode(variant: SeekVariant): VariantCode | null {
  * on the board — which they must not, since every move is validated against ours.
  * @param dateTimestamp - The game's start time, pinning a PRESET variant's revision. A custom
  *   position pins its own with the source-variant tags in its ICN.
- * @param slideLimit - The value of the Slide Limit modifier, if it's active.
  * @param engineGame - Whether the engine is a participant. A preset carries no world border over
  *   the wire, so an engine game's is resolved here; a custom position's arrives in its ICN.
  */
 function resolveGameConstruction(
 	variant: SeekVariant,
 	dateTimestamp: number,
-	slideLimit: number | undefined,
+	modifiers: GameModifier[] | undefined,
 	engineGame: boolean,
 ): GameConstruction {
 	let loaded: LoadedVariant | undefined;
@@ -94,11 +94,7 @@ function resolveGameConstruction(
 		};
 	}
 
-	const gameRules = gamefile.resolveGameRules(loaded, {
-		variantOptions,
-		slideLimit: slideLimit !== undefined ? BigInt(slideLimit) : undefined,
-		engineGame,
-	});
+	const gameRules = gamefile.resolveGameRules(loaded, { variantOptions, modifiers, engineGame });
 
 	return {
 		variant: loaded,

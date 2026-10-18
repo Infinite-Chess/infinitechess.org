@@ -11,7 +11,6 @@ import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { GamesRecord } from '../../database/gamesManager.js';
 import type { ValidEngine } from '../../../shared/chess/util/engineregistry.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
-import type { SlideLimitValue } from '../../../shared/chess/util/modutil.js';
 import type { PlayerGamesRecord } from '../../database/playerGamesManager.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type {
@@ -29,6 +28,7 @@ import metadatautil from '../../../shared/chess/util/metadatautil.js';
 
 import gamesManager from '../../database/gamesManager.js';
 import memberManager from '../../database/memberManager.js';
+import modifierColumns from './modifierColumns.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import engineGamesManager from '../../database/engineGamesManager.js';
@@ -155,10 +155,7 @@ function assembleGameStateCore(
 					: { kind: 'custom' },
 			timeControl: clockutil.buildTimeControl(game.base_time_seconds, game.increment_seconds),
 			timeCreated: timeutil.sqliteToTimestamp(game.date),
-			modifiers:
-				game.mod_slide_limit !== null
-					? [{ kind: 'slide-limit', value: game.mod_slide_limit as SlideLimitValue }]
-					: undefined,
+			modifiers: modifierColumns.fromColumns(game),
 		},
 		gameConclusion: decodeConclusion(game),
 	};

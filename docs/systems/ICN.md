@@ -335,8 +335,8 @@ Piecewise helpers, for when you hold one segment rather than a whole ICN:
 
 ICN is not a lossless mirror of a gamefile. What does not survive:
 
-- **`slideLimit`** — a gamerule, but it has no ICN field at all. It travels separately (the
-  `mod_slide_limit` column, and the `Additional` construction options).
+- **`slideLimit`** — a gamerule, but it has no ICN field at all. It travels separately, as the Slide
+  Limit modifier (the `mod_slide_limit` column, and `Additional.modifiers`).
 - **En passant more than one rank away** (4D variants) — skipped by the writer.
 - **Move comments** — they write out fine and parse back into `MoveParsed.comment`, but nothing
   transfers them onto the gamefile's moves (`gameformulator` has the FUTURE note), so the next

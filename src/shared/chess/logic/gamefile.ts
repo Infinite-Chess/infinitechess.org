@@ -11,6 +11,7 @@ import type { GameRules } from '../util/gamerules.js';
 import type { ClockData } from './clock.js';
 import type { MovePacket } from '../../chess/util/typeschemas.js';
 import type { VariantCode } from '../util/variantcodes.js';
+import type { GameModifier } from '../util/modutil.js';
 import type { VariantModule } from './variantmodule.js';
 import type { GameConclusion } from '../util/typeschemas.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
@@ -18,6 +19,7 @@ import type { BoundingBox, UnboundedRectangle } from '../../util/math/bounds.js'
 import type { GlobalGameState, ReadonlyGlobalGameState } from './state.js';
 
 import clock from './clock.js';
+import modutil from '../util/modutil.js';
 import movepiece from './movepiece.js';
 import gamerules from '../util/gamerules.js';
 import boardinit from './boardinit.js';
@@ -118,8 +120,8 @@ export interface Additional {
 	moves?: MovePacket[];
 	/** If a custom position is needed, for instance, when pasting a game, then these options should be included. */
 	variantOptions?: VariantOptions;
-	/** Adds the `slideLimit` gamerule. */
-	slideLimit?: bigint;
+	/** The modifiers the game is played with, applied onto its gamerules. */
+	modifiers?: GameModifier[];
 	/**
 	 * The `worldBorder` gamerule the game is played inside, where it isn't the variant's own — read
 	 * off the ICN of a game already played, which records the board it was really played on. Only
@@ -247,19 +249,18 @@ function initGameFile(
 }
 
 /**
- * The rules a game is played by: its explicit ones, else its variant's, with the Slide Limit
- * modifier and an engine game's world border applied. Never mutates the caller's rules.
+ * The rules a game is played by: its explicit ones, else its variant's, with its modifiers and an
+ * engine game's world border applied. Never mutates the caller's rules.
  * @param variant - The variant with its module already resolved, or undefined for a custom position.
  */
 function resolveGameRules(variant: LoadedVariant | undefined, additional: Additional): GameRules {
 	let gameRules: GameRules =
 		additional.variantOptions?.gameRules ?? variantrules.getGameRulesOfVariant(variant);
 
-	// Slide Limit modifier override. Onto a shallow copy, so the caller's rules stay untouched —
-	// boardinit.init deep-copies from here, so the gamefile shares no nested objects with them either.
-	// Must precede boardinit.init, which builds the movesets from the slide limit.
-	if (additional.slideLimit !== undefined)
-		gameRules = { ...gameRules, slideLimit: additional.slideLimit };
+	// Onto shallow copies, so the caller's rules stay untouched — boardinit.init deep-copies from
+	// here, so the gamefile shares no nested objects with them either. Must precede boardinit.init,
+	// which builds the movesets from the slide limit.
+	gameRules = modutil.applyModifiers(gameRules, additional.modifiers);
 
 	// The board an engine game is played on, for a preset variant declaring no border of its own.
 	// A finished game's ICN records the border it was really played with, so it beats deriving;

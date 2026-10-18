@@ -66,12 +66,19 @@ function getModifierIconId(code: ModifierCode): string {
 	return MODIFIER_ICONS[code];
 }
 
-/** The Slide Limit modifier's distance as the gamerule it becomes, or undefined if unselected. */
-function slideLimitOf(modifiers: GameModifier[] | undefined): bigint | undefined {
-	for (const modifier of modifiers ?? []) {
-		if (modifier.kind === 'slide-limit') return BigInt(modifier.value);
+/** The gamerules with the given modifiers applied. Never mutates the given rules. */
+function applyModifiers(gameRules: GameRules, modifiers: GameModifier[] | undefined): GameRules {
+	let applied = gameRules;
+	for (const modifier of modifiers ?? []) applied = applyModifier(applied, modifier);
+	return applied;
+}
+
+/** The gamerules with one modifier applied, onto a shallow copy. */
+function applyModifier(gameRules: GameRules, modifier: GameModifier): GameRules {
+	switch (modifier.kind) {
+		case 'slide-limit':
+			return { ...gameRules, slideLimit: BigInt(modifier.value) };
 	}
-	return undefined;
 }
 
 /** The modifiers active in the given gamerules. */
@@ -103,7 +110,7 @@ export default {
 	GameModifierSchema,
 	// Functions
 	getModifierIconId,
-	slideLimitOf,
+	applyModifiers,
 	getActiveModifiers,
 	getModifierDescriptionVars,
 };

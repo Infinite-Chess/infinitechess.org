@@ -30,6 +30,7 @@ import db from '../../database/database.js';
 import logEvents from '../../utility/logEvents.js';
 import gameUtility from './gameUtility.js';
 import gamesManager from '../../database/gamesManager.js';
+import modifierColumns from './modifierColumns.js';
 import gameStateBuilder from './gameStateBuilder.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
 import ratingCalculation from '../../utility/ratingCalculation.js';
@@ -192,7 +193,7 @@ function addGameRecordsInTransaction(
 		move_count: servergame.moves.length,
 		time_duration_millis: match.timeEnded ? match.timeEnded - match.timeCreated : null,
 		icn, // Use the pre-generated ICN
-		mod_slide_limit: match.modifiers?.find((m) => m.kind === 'slide-limit')?.value ?? null,
+		...modifierColumns.toColumns(match.modifiers),
 	});
 
 	// 2. Loop through players and insert records into the 'player_games' table.

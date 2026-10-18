@@ -9,8 +9,6 @@
  * dynamically so its variant-selector imports never run where the widget DOM is absent.
  */
 
-import modutil from '../../../../../shared/chess/util/modutil.js';
-
 import docutil from '../../util/docutil.js';
 import gamesession from '../../game/chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -63,18 +61,18 @@ function loadSelection(): void {
 		return;
 	}
 
-	const slideLimit = modutil.slideLimitOf(modifierselector.getGameModifiers());
+	const modifiers = modifierselector.getGameModifiers();
 	const selection = variantselector.getSelection();
 
 	if (selection.kind === 'preset') {
-		void analysisloader.loadVariant(selection.code, slideLimit);
+		void analysisloader.loadVariant(selection.code, modifiers);
 	} else {
 		// Custom (saved position or ICN) — only load once it resolves to a legal position.
 		const custom = variantselector.getCustomPosition();
 		if (custom === null) return;
 		// Put the very game the validation gate built onto the board, rather than
-		// building an identical second one. It was built with this same slide limit.
-		void analysisloader.pastePrebuiltGame(custom.gamefile, custom.source, slideLimit);
+		// building an identical second one. It was built with these same modifiers.
+		void analysisloader.pastePrebuiltGame(custom.gamefile, custom.source, modifiers);
 	}
 
 	// Remember what's now loaded, so a later board move can revert the display to it.
