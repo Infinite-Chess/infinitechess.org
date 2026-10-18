@@ -16,6 +16,7 @@ import type { GameruleWinCondition } from '../util/winconutil.js';
 import type { ReadonlyGlobalGameState } from '../logic/state.js';
 
 import modutil from '../util/modutil.js';
+import gamerules from '../util/gamerules.js';
 import piecethemes from '../util/piecethemes.js';
 import interpolate from '../../util/interpolate.js';
 import variantregistry from './variantregistry.js';
@@ -62,12 +63,9 @@ export function summarizeGameRules(
 	}
 
 	// Turn order — show if not standard [White, Black]
-	const defaultTurnOrder = [players.WHITE, players.BLACK];
 	const blackFirstTurnOrder = [players.BLACK, players.WHITE];
-	const turnOrderIsDefault = matchesTurnOrder(gameRules, defaultTurnOrder);
-	if (!turnOrderIsDefault) {
-		const isBlackFirst = matchesTurnOrder(gameRules, blackFirstTurnOrder);
-		if (isBlackFirst) {
+	if (!gamerules.isTurnOrder(gameRules, gamerules.DEFAULT_TURN_ORDER)) {
+		if (gamerules.isTurnOrder(gameRules, blackFirstTurnOrder)) {
 			pushText(tp.black_moves_first);
 		} else {
 			const order = gameRules.turnOrder.map((p) => sharedT.sides[typeutil.strcolors[p]]).join(', '); // prettier-ignore
@@ -160,12 +158,4 @@ export function summarizeGameRules(
 	}
 
 	return items;
-}
-
-/** Whether the turn order in gameRules matches the given order. */
-function matchesTurnOrder(gameRules: GameRules, order: Player[]): boolean {
-	return (
-		gameRules.turnOrder.length === order.length &&
-		gameRules.turnOrder.every((p, i) => p === order[i])
-	);
 }

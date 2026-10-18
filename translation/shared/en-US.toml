@@ -175,6 +175,10 @@ message = "The engine doesn't support this variant."
 label = "Unsupported modifier"
 message = "The engine doesn't support this modifier."
 
+[position_errors.engine.unsupported_turn_order]
+label = "Unsupported turn order"
+message = "The engine doesn't support this turn order."
+
 [position_errors.engine.unsupported_win_rule]
 label = "Unsupported win rule"
 message = "The engine doesn't support this win condition."

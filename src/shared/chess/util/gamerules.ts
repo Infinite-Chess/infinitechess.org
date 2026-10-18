@@ -128,6 +128,14 @@ function getUniquePlayersInTurnOrder(turnOrder: Player[]): Player[] {
 	return [...new Set(turnOrder)];
 }
 
+/** Whether the turn order in gameRules is exactly the given order. */
+function isTurnOrder(gameRules: GameRules, order: Player[]): boolean {
+	return (
+		gameRules.turnOrder.length === order.length &&
+		gameRules.turnOrder.every((player, i) => player === order[i])
+	);
+}
+
 /** Returns the color whose turn it is after the specified move index was played. */
 function getWhosTurnAtMoveIndex(gameRules: GameRules, moveIndex: number): Player {
 	return getColorThatPlayedMoveIndex(gameRules, moveIndex + 1);
@@ -182,6 +190,7 @@ export default {
 	usesCheckmate,
 	// Turn Order
 	getUniquePlayersInTurnOrder,
+	isTurnOrder,
 	getWhosTurnAtMoveIndex,
 	getColorThatPlayedMoveIndex,
 	doesAnyPlayerGet2TurnsInARow,

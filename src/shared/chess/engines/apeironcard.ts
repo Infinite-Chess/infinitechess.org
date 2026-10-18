@@ -7,7 +7,6 @@
  */
 
 import type { GameFile } from '../logic/gamefile.js';
-import type { GameRules } from '../util/gamerules.js';
 import type { VariantCode } from '../util/variantcodes.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
@@ -16,8 +15,9 @@ import bounds from '../../util/math/bounds.js';
 import boardutil from '../logic/boardutil.js';
 import apeironborder from '../logic/apeironborder.js';
 import variantmodule from '../logic/variantmodule.js';
+import gamerules, { GameRules } from '../util/gamerules.js';
 import modutil, { ModifierCode } from '../util/modutil.js';
-import typeutil, { RawType, rawTypes as r } from '../util/typeutil.js';
+import typeutil, { Player, RawType, players as p, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -28,6 +28,7 @@ export type EngineRefusal = (typeof ENGINE_REFUSALS)[number];
 export type EngineSupportCode =
 	| 'unsupported_variant'
 	| 'unsupported_modifier'
+	| 'unsupported_turn_order'
 	| 'unsupported_win_rule'
 	| 'too_many_pieces'
 	| 'unsupported_piece'
@@ -58,6 +59,12 @@ const UNSUPPORTED_VARIANTS: Set<VariantCode> = new Set([
  */
 const SUPPORTED_MODIFIERS: Set<ModifierCode> = new Set([]);
 
+/** Turn orders the engine understands. It reads only who moves first, then alternates. */
+const SUPPORTED_TURN_ORDERS: Player[][] = [
+	[p.WHITE, p.BLACK],
+	[p.BLACK, p.WHITE],
+];
+
 /** Win conditions the engine understands; anything else may crash it. */
 const SUPPORTED_WIN_CONDITIONS: GameruleWinCondition[] = ['checkmate', 'royalcapture', 'allroyalscaptured', 'allpiecescaptured']; // prettier-ignore
 
@@ -78,6 +85,13 @@ function checkModifiers(gameRules: GameRules): SupportedResult {
 		if (!SUPPORTED_MODIFIERS.has(code))
 			return { supported: false, reason: 'unsupported_modifier' };
 	}
+	return { supported: true };
+}
+
+/** Only turn orders in {@link SUPPORTED_TURN_ORDERS}. */
+function checkTurnOrder(gameRules: GameRules): SupportedResult {
+	if (!SUPPORTED_TURN_ORDERS.some((order) => gamerules.isTurnOrder(gameRules, order)))
+		return { supported: false, reason: 'unsupported_turn_order' };
 	return { supported: true };
 }
 
@@ -116,6 +130,9 @@ function checkPieceTypes(rawTypes: Iterable<RawType>): SupportedResult {
  * Judged on the CURRENT position, since that's what an engine game plays on from here.
  */
 function isPlaySupported(gamefile: GameFile): SupportedResult {
+	const turnOrderResult = checkTurnOrder(gamefile.gameRules);
+	if (!turnOrderResult.supported) return turnOrderResult;
+
 	const winConsResult = checkWinConditions(gamefile.gameRules);
 	if (!winConsResult.supported) return winConsResult;
 
@@ -149,7 +166,7 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 
 /**
  * Game-level support that's independent of any single position's piece set: the variant's custom
- * piece movement (4D) the engine can't replay, modifiers, and win conditions. Unlike
+ * piece movement (4D) the engine can't replay, modifiers, turn order, and win conditions. Unlike
  * {@link isPlaySupported} these require no bounded board — the engine takes coordinates of any
  * size itself.
  */
@@ -159,6 +176,9 @@ function checkGameRules(gamefile: GameFile): SupportedResult {
 
 	const modifiersResult = checkModifiers(gamefile.gameRules);
 	if (!modifiersResult.supported) return modifiersResult;
+
+	const turnOrderResult = checkTurnOrder(gamefile.gameRules);
+	if (!turnOrderResult.supported) return turnOrderResult;
 
 	return checkWinConditions(gamefile.gameRules);
 }

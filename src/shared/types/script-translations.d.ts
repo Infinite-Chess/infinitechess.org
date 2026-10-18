@@ -371,6 +371,10 @@ export interface ScriptTranslations {
 					label: string;
 					message: string;
 				};
+				unsupported_turn_order: {
+					label: string;
+					message: string;
+				};
 				unsupported_win_rule: {
 					label: string;
 					message: string;
