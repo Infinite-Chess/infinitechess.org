@@ -6,12 +6,13 @@
  *
  * - `.actions-over` (rematch / analysis) once the game is concluded;
  * - `.actions-draw-offer` (accept / reject) while an incoming draw offer is open;
- * - `.actions-live` (offer-draw / resign-abort) otherwise during live play.
+ * - `.actions-live` (offer-draw / resign-abort) otherwise during live play,
+ *   or `.actions-spectating` in its place for spectators.
  *
- * SSR omits both live-only blocks (`.actions-live`, `.actions-draw-offer`) when
- * they can't apply — once a game loads concluded (it can't return to live), or
- * for spectators (never participants) — so they're absent from the DOM here.
- * Spectators also get `#btn-rematch` SSR-hidden, leaving only Analysis once over.
+ * SSR renders only the live-only blocks the viewer can use — `.actions-live` and
+ * `.actions-draw-offer` for participants, `.actions-spectating` for spectators —
+ * and none once a game loads concluded (it can't return to live). Spectators also
+ * get `#btn-rematch` SSR-hidden, leaving only Analysis once over.
  *
  * It also wires every action button. Within `.actions-live`, resign and abort
  * share one slot: abort shows before the game is resignable (0–1 plies), resign
@@ -31,9 +32,10 @@ import socketintents from '../../../socket/socketintents.js';
 
 // Elements --------------------------------------------------------------------
 
-// Action blocks. The live-only blocks are absent from the DOM when the game loaded concluded, or for spectators.
+// Action blocks. The live-only blocks are absent from the DOM when the game loaded concluded, and per role.
 const element_ActionsLive = document.querySelector('.actions-live');
 const element_ActionsDrawOffer = document.querySelector('.actions-draw-offer');
+const element_ActionsSpectating = document.querySelector('.actions-spectating');
 const element_ActionsOver = document.querySelector('.actions-over')!;
 
 // Live actions (present only alongside `.actions-live`).
@@ -89,12 +91,17 @@ function refresh(): void {
 	}
 	// Live game: an incoming draw offer trumps the default live actions.
 	else if (drawoffers.areWeAcceptingDraw()) showOnly(element_ActionsDrawOffer);
-	else showOnly(element_ActionsLive);
+	else showOnly(element_ActionsLive ?? element_ActionsSpectating);
 }
 
 /** Reveals `target`, hiding the other action blocks. Blocks absent from the DOM are skipped. */
 function showOnly(target: Element | null): void {
-	for (const block of [element_ActionsLive, element_ActionsDrawOffer, element_ActionsOver]) {
+	for (const block of [
+		element_ActionsLive,
+		element_ActionsDrawOffer,
+		element_ActionsSpectating,
+		element_ActionsOver,
+	]) {
 		const wasHidden = block?.classList.contains('hidden');
 		block?.classList.toggle('hidden', block !== target);
 		// Block just revealed: briefly disable its buttons so a click landing
@@ -105,14 +112,14 @@ function showOnly(target: Element | null): void {
 
 /** Disables the offer-draw button whenever extending a draw offer would be illegal. */
 function updateOfferDrawButton(): void {
-	if (!element_OfferDraw) return; // Concluded game: live block absent.
+	if (!element_OfferDraw) return; // Absent: spectator, engine game, or loaded concluded.
 	element_OfferDraw.disabled = !drawoffers.isOfferingDrawLegal();
 }
 
 /** Shows resign once the game is resignable (2+ plies), abort before then. */
 function updateResignAbortButtons(): void {
 	const gamefile = gameslot.getGamefile();
-	if (!gamefile || !element_Abort || !element_Resign) return; // Concluded game: live block absent.
+	if (!gamefile || !element_Abort || !element_Resign) return; // Live block absent: spectator, or loaded concluded.
 
 	const resignable = moveutil.isGameResignable(gamefile);
 	element_Resign.classList.toggle('hidden', !resignable);

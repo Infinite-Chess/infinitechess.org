@@ -51,7 +51,7 @@
 				<div class="game-actions unselectable">
 					{# Live-only actions (actions-live + the incoming draw-offer prompt) #}
 					{% if not meta.result and gamePageData.role is defined %}
-					<div class="actions-live{{ '' if gamePageData.isLive else ' hidden' }}">
+					<div class="actions-live">
 						{% if not gamePageData.engineGame %}
 						<button class="action-btn tooltip-d" id="btn-offer-draw" data-tooltip="{{ t.actions.offer_draw }}"{% if not meta.resignable %} disabled{% endif %}>
 							<svg class="action-icon" viewBox="0 0 24 24" fill="currentColor"><text x="6" y="2" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">1</text><polygon points="15.375,2 17.875,2 7.875,22 5.375,22"/><text x="18" y="21.67" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" dominant-baseline="alphabetic">2</text></svg>
@@ -77,6 +77,12 @@
 						</div>
 					</div>
 					{% endif %}
+					{% elif not meta.result %}
+					{# Spectators: tells them they aren't playing #}
+					<div class="actions-spectating">
+						<svg class="spectating-eye"><use href="#svg-eye"/></svg>
+						{{ t.actions.spectating }}
+					</div>
 					{% endif %}
 					{# Post-game actions: rematch and analysis board. #}
 					<div class="actions-over{{ '' if meta.result else ' hidden' }}">
