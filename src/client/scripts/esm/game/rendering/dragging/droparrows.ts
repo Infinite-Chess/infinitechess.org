@@ -12,6 +12,7 @@ import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import space from '../../../board/rendering/space.js';
@@ -157,10 +158,11 @@ function updateLegalCaptureArrows(): void {
 
 	let hasCapturable = false;
 	for (const arrow of arrows.getAllArrows(gamescene.getGameContext())) {
-		// Judged by the piece the arrow shows, which shifts can make differ from the board's: the
-		// dragged piece's own arrow moved onto a pending capture, or a piece mid-capture shown in place.
-		if (typeutil.getColorFromType(arrow.piece.type) === selectedPieceColor) continue;
+		// Shifts can show a piece the board doesn't hold there: the dragged piece's own arrow moved
+		// onto a pending capture, a piece mid-capture shown in place, or one animating in flight.
 		const intCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
+		if (boardutil.getPieceFromCoords(gamefile.pieces, intCoords)?.type !== arrow.piece.type)
+			continue;
 		if (
 			legalmoves.checkIfMoveLegal(
 				gamefile,
