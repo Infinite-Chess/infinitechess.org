@@ -76,12 +76,27 @@ describe('select', () => {
 		const waiting = [contender(1, 2000, { stale: true }), contender(2, 1500)];
 		expect(featuredSelection.select([], waiting)).toEqual([2]);
 	});
-	it('replaces a stale board in place', () => {
-		const shown = [contender(1, 1500, { stale: true }), contender(2, 1500)];
-		expect(featuredSelection.select(shown, [contender(3, 1400)])).toEqual([3, 2]);
+	it('replaces a stale board in place when there is no room', () => {
+		const shown = fullSlots();
+		shown[0] = { ...shown[0]!, stale: true };
+		const ids = featuredSelection.select(shown, [contender(-1, 1000)]);
+		expect(ids).toEqual([-1, ...shown.slice(1).map((c) => c.id)]);
 	});
 	it('keeps a stale board when nothing is waiting', () => {
 		expect(featuredSelection.select([contender(1, 1500, { stale: true })], [])).toEqual([1]);
+	});
+	it('keeps a stale board while there is room for the newcomer', () => {
+		const shown = [contender(1, 1500, { stale: true }), contender(2, 1500)];
+		expect(featuredSelection.select(shown, [contender(3, 1400)])).toEqual([1, 2, 3]);
+	});
+	it('places the better of two newcomers further left', () => {
+		const shown = [
+			contender(1, 1500, { stale: true }),
+			contender(2, 1500, { released: true }),
+			...fullSlots().slice(2),
+		];
+		const ids = featuredSelection.select(shown, [contender(-1, 1400), contender(-2, 1800)]);
+		expect(ids).toEqual([-2, -1, ...shown.slice(2).map((c) => c.id)]);
 	});
 	it('refills a released board in place', () => {
 		const shown = [contender(1, 1500, { released: true }), contender(2, 1500)];

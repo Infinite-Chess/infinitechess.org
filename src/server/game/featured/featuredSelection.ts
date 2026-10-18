@@ -77,9 +77,10 @@ function releaseTime(conclusion: GameConclusion, timeEnded: number): number {
 // Selection -------------------------------------------------------------------
 
 /**
- * Decides which games hold the slots, left to right. Boards never re-sort: a replacement takes the
- * exact place of the board it replaces, and only an unfilled vacancy makes the boards right of it
- * slide left. A stale game is never a candidate, or it would win back the slot it just gave up.
+ * Decides which games hold the slots, left to right. Boards never re-sort: newcomers take the exact
+ * places of the boards they replace, the best leftmost, and only an unfilled vacancy makes the
+ * boards right of it slide left. A stale game is never a candidate, or it would win back the slot
+ * it just gave up.
  * @param shown - The games currently in the slots, left to right.
  * @param waiting - Every other live game.
  * @returns The ids of the games that should now hold the slots, left to right.
@@ -88,16 +89,17 @@ function select(shown: Contender[], waiting: Contender[]): number[] {
 	const candidates = waiting.filter((c) => !c.stale).sort((a, b) => compare(a, b));
 	const places: (Contender | undefined)[] = shown.map((c) => (c.released ? undefined : c));
 
-	// A stale board gives up its place to the best candidate, if there is one.
-	for (let i = 0; i < places.length; i++) {
-		if (places[i]?.stale && candidates.length > 0) places[i] = candidates.shift();
-	}
 	// A released board's place is refilled, leftmost first. Unfilled ones close up.
 	for (let i = 0; i < places.length; i++) places[i] ??= candidates.shift();
 	const slots = places.filter((c) => c !== undefined);
 
 	while (slots.length < MAX_SLOTS && candidates.length > 0) slots.push(candidates.shift()!);
+	// A stale board gives up its place only to a candidate there was no room for.
+	for (let i = 0; i < slots.length && candidates.length > 0; i++) {
+		if (slots[i]!.stale) slots[i] = candidates.shift()!;
+	}
 	displaceWithWayBetter(slots, candidates);
+	arrangeNewcomers(slots, shown);
 
 	return slots.map((c) => c.id);
 }
@@ -116,6 +118,13 @@ function displaceWithWayBetter(slots: Contender[], candidates: Contender[]): voi
 		if (candidates[0]!.score <= WAY_BETTER * slots[lowest]!.score) return;
 		slots[lowest] = candidates.shift()!;
 	}
+}
+
+/** Reorders the games new to the slots among the places they took, best first, left to right. */
+function arrangeNewcomers(slots: Contender[], shown: Contender[]): void {
+	const isNew = (c: Contender): boolean => !shown.includes(c);
+	const newcomers = slots.filter((c) => isNew(c)).sort((a, b) => compare(a, b));
+	for (let i = 0; i < slots.length; i++) if (isNew(slots[i]!)) slots[i] = newcomers.shift()!;
 }
 
 // Exports ---------------------------------------------------------------------
