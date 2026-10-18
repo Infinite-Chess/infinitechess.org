@@ -23,13 +23,13 @@ import camera from '../../board/rendering/camera.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import premoves from '../chess/premoves.js';
+import snapping from './highlights/snapping.js';
 import gamescene from './gamescene.js';
 import selection from '../chess/selection.js';
 import perspective from './perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
-import snapping, { ENTITY_WIDTH_VPIXELS } from './highlights/snapping.js';
 
 // State -----------------------------------------------------------------------
 
@@ -259,7 +259,7 @@ function render(): void {
 		instanceData,
 		instanceData_hovered,
 		inverted,
-		ENTITY_WIDTH_VPIXELS,
+		snapping.ENTITY_WIDTH_VPIXELS,
 	);
 }
 

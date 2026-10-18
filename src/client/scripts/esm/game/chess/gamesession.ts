@@ -16,11 +16,11 @@ import thread from '../../util/thread.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
+import snapping from '../rendering/highlights/snapping.js';
 import listeners from '../listeners.js';
 import Transition from '../rendering/transitions/Transition.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
-import { ENTITY_WIDTH_VPIXELS } from '../rendering/highlights/snapping.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -153,7 +153,7 @@ function centerView(): void {
 	const centerArea = area.calculateFromStartPosition(
 		camera,
 		gameslot.getGamefile()!,
-		ENTITY_WIDTH_VPIXELS,
+		snapping.ENTITY_WIDTH_VPIXELS,
 	);
 	boardpos.setBoardPos(centerArea.coords);
 	boardpos.setBoardScale(centerArea.scale);

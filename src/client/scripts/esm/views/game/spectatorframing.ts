@@ -12,6 +12,7 @@ import type { Framing, FramingConfig } from '../../board/rendering/boardframing.
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import gameslot from '../../game/chess/gameslot.js';
+import snapping from '../../game/rendering/highlights/snapping.js';
 import gamescene from '../../game/rendering/gamescene.js';
 import boarddrag from '../../game/rendering/boarddrag.js';
 import Transition from '../../game/rendering/transitions/Transition.js';
@@ -19,7 +20,6 @@ import perspective from '../../game/rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 import boardframing from '../../board/rendering/boardframing.js';
 import boardgeometry from '../../board/rendering/boardgeometry.js';
-import { ENTITY_WIDTH_VPIXELS } from '../../game/rendering/highlights/snapping.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ const FRAMING_CONFIG: FramingConfig = {
 	maxZoomOut: 2.5,
 	glideHalfLifeSecs: 0.1,
 	snapEpsilon: 1e-3,
-	entityWidthVPixels: ENTITY_WIDTH_VPIXELS,
+	entityWidthVPixels: snapping.ENTITY_WIDTH_VPIXELS,
 };
 
 /**

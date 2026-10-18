@@ -29,13 +29,13 @@ import space from '../../../board/rendering/space.js';
 import meshes from '../../../board/rendering/meshes.js';
 import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
+import snapping from '../highlights/snapping.js';
 import boardview from '../boardview.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../../board/GameBus.js';
 import preferences from '../../../util/preferences.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import area, { Area } from '../../../board/rendering/area.js';
-import { ENTITY_WIDTH_VPIXELS } from '../highlights/snapping.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -424,7 +424,11 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 		// If our current screen isn't within the final area, create new area to teleport to first
 		if (!bounds.boxContainsSquareBD(thisAreaBox, startCoords)) {
 			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
-			firstArea = area.calculateFromUnpaddedBox(camera, thisAreaBox, ENTITY_WIDTH_VPIXELS);
+			firstArea = area.calculateFromUnpaddedBox(
+				camera,
+				thisAreaBox,
+				snapping.ENTITY_WIDTH_VPIXELS,
+			);
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!bounds.boxContainsBoxBD(thisAreaBox, currentBoardBoundingBox)) {
@@ -435,7 +439,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 		// zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
 		if (!bounds.boxContainsSquareBD(currentBoardBoundingBox, endCoords)) {
 			bounds.expandBDBoxToContainSquare(currentBoardBoundingBox, endCoords); // Unpadded
-			firstArea = area.calculateFromUnpaddedBox(camera, currentBoardBoundingBox, ENTITY_WIDTH_VPIXELS); // prettier-ignore
+			firstArea = area.calculateFromUnpaddedBox(camera, currentBoardBoundingBox, snapping.ENTITY_WIDTH_VPIXELS); // prettier-ignore
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!bounds.boxContainsBoxBD(currentBoardBoundingBox, thisAreaBox)) {
@@ -462,7 +466,11 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
  */
 function zoomToCoordsBox(box: BoundingBox): void {
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
-	const thisArea = area.calculateFromUnpaddedBox(camera, boxFloating, ENTITY_WIDTH_VPIXELS);
+	const thisArea = area.calculateFromUnpaddedBox(
+		camera,
+		boxFloating,
+		snapping.ENTITY_WIDTH_VPIXELS,
+	);
 	initTransitionFromArea(thisArea, false);
 }
 
@@ -474,7 +482,7 @@ function singleZoomToCoordsList(coordsList: Coords[]): void {
 	const transitionArea: Area = area.calculateFromCoordsList(
 		camera,
 		coordsList,
-		ENTITY_WIDTH_VPIXELS,
+		snapping.ENTITY_WIDTH_VPIXELS,
 	);
 	zoomTransitionToArea(transitionArea);
 }
@@ -495,7 +503,7 @@ function singleZoomToBDCoords(coords: BDCoords): void {
 	const transitionArea: Area = area.calculateFromUnpaddedBox(
 		camera,
 		boxFloating,
-		ENTITY_WIDTH_VPIXELS,
+		snapping.ENTITY_WIDTH_VPIXELS,
 	);
 	zoomTransitionToArea(transitionArea);
 }
