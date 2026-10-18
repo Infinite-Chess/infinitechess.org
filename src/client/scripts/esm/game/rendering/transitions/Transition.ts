@@ -519,6 +519,15 @@ function pushToTelHistory(trans: Transition): void {
 	if (teleportHistory.length > HISTORY_CAP) teleportHistory.shift(); // Trim excess
 }
 
+/** Records the current view in the history, so the next undo returns to it. */
+function recordView(): void {
+	pushToTelHistory({
+		isZoom: true,
+		destinationCoords: boardpos.getBoardPos(),
+		destinationScale: boardpos.getBoardScale(),
+	});
+}
+
 /** Undos the last transition by transitioning to that transition's  */
 function undoTransition(): void {
 	const previousTrans = teleportHistory.pop();
@@ -773,6 +782,8 @@ export default {
 	zoomToCoordsBox,
 	singleZoomToCoordsList,
 	singleZoomToBDCoords,
+	initTransitionFromArea,
+	recordView,
 	undoTransition,
 	// Updating
 	update,

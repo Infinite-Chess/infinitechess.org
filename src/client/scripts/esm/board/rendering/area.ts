@@ -6,6 +6,7 @@
  */
 
 import type { Camera } from './camera.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { BDCoords, Coords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -80,6 +81,16 @@ function calculateFromCoordsList(
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
 
 	return calculateFromUnpaddedBox(cam, boxFloating, entityWidthVPixels);
+}
+
+/** Calculates the area framing a board's starting position, *with padding added*. */
+function calculateFromStartPosition(
+	cam: Camera,
+	boardsim: BoardPreview,
+	entityWidthVPixels: number,
+): Area {
+	const box = meshes.expandTileBoundingBoxToEncompassWholeSquare(boardsim.startSnapshot.box);
+	return calculateFromUnpaddedBox(cam, box, entityWidthVPixels);
 }
 
 /**
@@ -238,5 +249,6 @@ function calcPaddingPixels(
 
 export default {
 	calculateFromCoordsList,
+	calculateFromStartPosition,
 	calculateFromUnpaddedBox,
 };

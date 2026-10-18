@@ -17,6 +17,7 @@ import conclusionglyphs from '../../board/rendering/glyphs/conclusionglyphs.js';
 
 import './gui/guichat.js';
 import './onlinegamerouter.js';
+import './spectatorframing.js';
 import './gui/guichatreport.js';
 import './gui/guigameactions.js';
 import '../../game/gui/guigamemeta.js';

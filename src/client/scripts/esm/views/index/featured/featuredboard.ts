@@ -8,9 +8,9 @@
 
 import type { Mesh } from '../../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { Framing } from './featuredframing.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { ClockValues } from '../../../../../../shared/chess/util/clockutil.js';
+import type { Framing, FramingConfig } from '../../../board/rendering/boardframing.js';
 import type {
 	ClientboundLobbyMessage,
 	FeaturedGame,
@@ -34,9 +34,9 @@ import animation from '../../../board/rendering/animation/animation.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
 import WaterRipples from '../../../board/rendering/WaterRipples.js';
+import boardframing from '../../../board/rendering/boardframing.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
-import featuredframing from './featuredframing.js';
 import standaloneboard from '../../../board/rendering/standaloneboard.js';
 import graphicalchanges from '../../../board/rendering/graphicalchanges.js';
 import conclusionglyphs from '../../../board/rendering/glyphs/conclusionglyphs.js';
@@ -82,6 +82,16 @@ export interface FeaturedBoard {
 	 */
 	lifetime: AbortController;
 }
+
+// Constants -------------------------------------------------------------------
+
+/** How each board frames its game. */
+const FRAMING_CONFIG: FramingConfig = {
+	maxZoomOut: 2.5,
+	glideHalfLifeSecs: 0.1,
+	snapEpsilon: 1e-3,
+	entityWidthVPixels: standaloneboard.ENTITY_WIDTH_VPIXELS,
+};
 
 // Lifecycle -------------------------------------------------------------------
 
@@ -132,7 +142,8 @@ async function load(featuredBoard: FeaturedBoard, game: FeaturedGame): Promise<v
 	WaterRipples.clear(board);
 	board.camera.shake.clear();
 	board.arrows.mode = arrows.isGameTooLarge(gamefile) ? 0 : arrows.DEFAULT_MODE;
-	const framing = featuredframing.create(board, gamefile); // Before the mesh, which is offset from the camera
+	const framing = boardframing.create(board, gamefile, FRAMING_CONFIG);
+	boardframing.snap(board, framing); // Before the mesh, which is offset from the camera
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
 	piecemodels.regenAll(board, gamefile, mesh);
 
@@ -156,7 +167,7 @@ function syncCanvasSize(featuredBoard: FeaturedBoard): void {
 	const { board, state } = featuredBoard;
 	board.camera.syncCanvasDimensions();
 	board.resize(board.canvas.width, board.canvas.height);
-	if (state.shown) featuredframing.retarget(board, state.shown.gamefile, state.shown.framing);
+	if (state.shown) boardframing.retarget(board, state.shown.gamefile, state.shown.framing);
 	render(featuredBoard);
 }
 
@@ -201,7 +212,7 @@ function applyMove(board: LiveBoard, shown: Shown, message: OpponentsMoveMessage
 	graphicalchanges.runMeshChanges(board, gamefile, mesh, move, true);
 	graphicalchanges.animateMove(board, move.changes, true);
 	applyClockValues(gamefile, message.clockValues);
-	featuredframing.onMove(board, gamefile, framing, move);
+	boardframing.onMove(board, gamefile, framing, move);
 }
 
 /** Sets the game's clocks to the server's. Their flag deadline was stamped at receipt. */
@@ -220,7 +231,7 @@ function update(featuredBoard: FeaturedBoard): void {
 	const { boardpos } = board;
 
 	board.camera.shake.update();
-	featuredframing.glide(board, shown.framing);
+	boardframing.glide(board, shown.framing);
 	const boundingBox = boardgeometry.getBoundingBoxOfBoard(board.camera, boardpos.getBoardPos(), boardpos.getBoardScale()); // prettier-ignore
 	arrows.update(board, shown.gamefile, boundingBox, []);
 	WaterRipples.update(board, false);

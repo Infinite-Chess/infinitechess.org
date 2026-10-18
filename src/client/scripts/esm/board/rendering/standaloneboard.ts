@@ -6,7 +6,6 @@
  * drawing the layers every such board shares.
  */
 
-import type { Area } from './area.js';
 import type { Mesh } from './piecemodels.js';
 import type { MoveFull } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Animation } from './animation/animation.js';
@@ -14,9 +13,7 @@ import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { RenderContextParams } from './RenderContext.js';
 
-import area from './area.js';
 import webgl from './webgl.js';
-import meshes from './meshes.js';
 import border from './border.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import piecemodels from './piecemodels.js';
@@ -64,14 +61,6 @@ async function load(ctx: RenderContext, boardsim: BoardPreview): Promise<void> {
 	ctx.textures.initTexturesForGame(ctx.gl, boardsim);
 }
 
-// Framing ---------------------------------------------------------------------
-
-/** The camera position and scale framing the board's starting position on its canvas. */
-function calcStartArea(ctx: RenderContext, boardsim: BoardPreview): Area {
-	const box = meshes.expandTileBoundingBoxToEncompassWholeSquare(boardsim.startSnapshot.box);
-	return area.calculateFromUnpaddedBox(ctx.camera, box, ENTITY_WIDTH_VPIXELS);
-}
-
 // Drawing ---------------------------------------------------------------------
 
 /** Draws the board's tiles and promotion lines, masked to its playable region with voids cut out. */
@@ -116,8 +105,6 @@ export default {
 	// Building
 	createContextParams,
 	load,
-	// Framing
-	calcStartArea,
 	// Drawing
 	renderBoard,
 	renderPieces,

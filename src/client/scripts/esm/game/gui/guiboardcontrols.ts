@@ -149,6 +149,7 @@ function hideCollapse(): void {
 /** Undoes the last view transition. */
 function callback_Back(): void {
 	Transition.undoTransition();
+	GameBus.dispatch('board-nav');
 }
 
 /** Zooms out to fit every piece and square annotation. */
@@ -184,6 +185,7 @@ function callback_Expand(): void {
 			: (box as BoundingBox);
 
 	Transition.zoomToCoordsBox(definedBox);
+	GameBus.dispatch('board-nav');
 }
 
 /** Zooms to the starting position. */
@@ -191,6 +193,7 @@ function callback_Recenter(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // Game not loaded yet
 	Transition.zoomToCoordsBox(gamefile.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
+	GameBus.dispatch('board-nav');
 }
 
 // Coordinate Fields -----------------------------------------------------------
@@ -335,6 +338,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 
 	const newPos: BDCoords = [teleportX, teleportY];
 	boardpos.setBoardPos(newPos);
+	GameBus.dispatch('board-nav');
 }
 
 // Listeners -------------------------------------------------------------------

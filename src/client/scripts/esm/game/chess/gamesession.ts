@@ -13,7 +13,6 @@ import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.j
 import area from '../../board/rendering/area.js';
 import toast from '../../components/toast.js';
 import thread from '../../util/thread.js';
-import meshes from '../../board/rendering/meshes.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
@@ -151,10 +150,11 @@ function markLoadingDone(): void {
 
 /** Sets the camera to the recentered position. */
 function centerView(): void {
-	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(
-		gameslot.getGamefile()!.startSnapshot.box,
+	const centerArea = area.calculateFromStartPosition(
+		camera,
+		gameslot.getGamefile()!,
+		ENTITY_WIDTH_VPIXELS,
 	);
-	const centerArea = area.calculateFromUnpaddedBox(camera, boxFloating, ENTITY_WIDTH_VPIXELS);
 	boardpos.setBoardPos(centerArea.coords);
 	boardpos.setBoardScale(centerArea.scale);
 }

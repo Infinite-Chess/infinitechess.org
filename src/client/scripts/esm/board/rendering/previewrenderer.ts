@@ -10,6 +10,7 @@
 import type { Mesh } from './piecemodels.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 
+import area from './area.js';
 import piecemodels from './piecemodels.js';
 import RenderContext from './RenderContext.js';
 import standaloneboard from './standaloneboard.js';
@@ -34,7 +35,11 @@ function render(ctx: RenderContext, boardsim: BoardPreview): void {
 	const mesh: Mesh = { offset: [0n, 0n], inverted: false, types: {} };
 	piecemodels.regenAll(ctx, boardsim, mesh);
 
-	const startArea = standaloneboard.calcStartArea(ctx, boardsim);
+	const startArea = area.calculateFromStartPosition(
+		ctx.camera,
+		boardsim,
+		standaloneboard.ENTITY_WIDTH_VPIXELS,
+	);
 	ctx.boardpos.setBoardPos(startArea.coords);
 	ctx.boardpos.setBoardScale(startArea.scale);
 

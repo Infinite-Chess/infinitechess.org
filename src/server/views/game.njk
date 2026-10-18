@@ -82,6 +82,8 @@
 					<div class="actions-spectating">
 						<svg class="spectating-eye"><use href="#svg-eye"/></svg>
 						{{ t.actions.spectating }}
+						{# Keeps the camera on the game. Driven by spectatorframing.ts #}
+						<input type="checkbox" id="toggle-follow" title="{{ t.actions.follow }}" checked/>
 					</div>
 					{% endif %}
 					{# Post-game actions: rematch and analysis board. #}

@@ -147,6 +147,7 @@ function update(): void {
 	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After boardnav.update(), boardpos.update()
 	// BEFORE boardview.recalcVariables(), as that needs to be called after the board position is updated.
 	Transition.update();
+	GameBus.dispatch('position-board'); // AFTER everything above moves the board, BEFORE boardview.recalcVariables()
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER transition.update() since that updates the board position
 	boardview.recalcVariables();

@@ -76,6 +76,13 @@ interface GameBusEvents {
 	'arrow-mode-change': void;
 	/** Dispatched when a board transition (the animated pan/zoom to a target area) begins. */
 	'transition-start': void;
+	/** Dispatched when a board control moves the view: undo, fit all, recenter, or an entered coordinate. */
+	'board-nav': void;
+	/**
+	 * Dispatched every frame after input, momentum and transitions have moved the board, and
+	 * before its visible region is recalculated, so a listener may further reposition it.
+	 */
+	'position-board': void;
 
 	// =========== Annotations ============
 
