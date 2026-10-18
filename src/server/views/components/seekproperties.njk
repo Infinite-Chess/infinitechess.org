@@ -17,7 +17,7 @@
 	•
 	<span class="meta-item" title="{{ props.speed.name }}">
 		<svg class="meta-icon {{ props.speed.iconId }}"><use href="#{{ props.speed.iconId }}"/></svg>
-		<span>{{ props.timeControl }}</span>
+		{% if props.timeControl %}<span>{{ props.timeControl }}</span>{% endif %}
 	</span>
 	•
 	<span>{{ props.mode }}</span>
