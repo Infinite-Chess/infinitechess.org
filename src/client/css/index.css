@@ -821,6 +821,7 @@ svg.bg-omega {
 	flex-wrap: wrap;
 	gap: var(--featured-gap);
 	position: relative;
+	overflow-y: clip; /* Held-back cards hanging below it would otherwise lengthen the page */
 }
 
 /* One game: its board between its players' bars, sitting straight on the page, linking to the game. */
