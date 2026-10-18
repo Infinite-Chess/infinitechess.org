@@ -265,12 +265,10 @@ html[data-home-prompt='dismissed'] .new-prompt {
 	color: var(--c-text);
 	letter-spacing: 0.07em;
 	text-align: center;
-	white-space: nowrap; /* The lines shrink instead */
+	white-space: nowrap; /* The featured header's lines shrink instead */
 }
 
 /* A line either side, fading out away from the text. */
-.lobby h2::before,
-.lobby h2::after,
 .featured-games h2::before,
 .featured-games h2::after {
 	/* Its full length, shrinking only when the header is too narrow to fit it. */
@@ -281,7 +279,6 @@ html[data-home-prompt='dismissed'] .new-prompt {
 	background: linear-gradient(to right, var(--c-text-muted), transparent);
 }
 
-.lobby h2::before,
 .featured-games h2::before {
 	transform: scaleX(-1);
 }
