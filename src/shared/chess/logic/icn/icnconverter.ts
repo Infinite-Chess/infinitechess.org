@@ -110,6 +110,13 @@ const PLAYER_CODES_INVERTED = jsutil.invertObj(PLAYER_CODES);
 
 type PlayerCode = (typeof PLAYER_CODES)[keyof typeof PLAYER_CODES];
 
+/** Turn orders written as their first player's code alone. */
+const TURN_ORDER_SHORTHANDS: Record<string, string> = {
+	'w:b': 'w',
+	'b:w': 'b',
+};
+const TURN_ORDER_SHORTHANDS_INVERTED = jsutil.invertObj(TURN_ORDER_SHORTHANDS);
+
 // Constants -------------------------------------------------------------------
 
 /** The desired ordering metadata should be placed in the ICN */
@@ -293,8 +300,6 @@ function LongToShort_Format(
 		move_numbers: boolean;
 	},
 ): string {
-	// console.log("Converting longformat to shortform ICN:", jsutil.deepCopyObject(longformat));
-
 	/** Will contain the Metadata, Positon, and Move sections. */
 	const segments: string[] = [];
 
@@ -352,11 +357,8 @@ function LongToShort_Format(
 			throw new Error(`No player code found for player (${player})!`);
 		return PLAYER_CODES[player];
 	});
-	let turn_order = turnOrderArray.join(':'); // 'w:b'
-	if (turn_order === 'w:b')
-		turn_order = 'w'; // Short for 'w:b'
-	else if (turn_order === 'b:w') turn_order = 'b'; // Short for 'b:w'
-	positionSegments.push(turn_order);
+	const turn_order = turnOrderArray.join(':'); // 'w:b'
+	positionSegments.push(TURN_ORDER_SHORTHANDS[turn_order] ?? turn_order);
 
 	// En passant
 	if (longformat.state_global.enpassant) {
@@ -529,8 +531,6 @@ function LongToShort_Format(
  * @throws If the ICN is invalid.
  */
 function ShortToLong_Format(icn: string): LongFormatOut {
-	// console.log("====== Parsing ICN ======");
-
 	const metadata: Record<string, string> = {}; // Required
 	let turnOrder: Player[]; // Required
 	let enpassant: EnPassant | undefined;
@@ -577,21 +577,14 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 			metadata[match[1]!] = match[2]!;
 		}
 
-		// console.log("Parsed metadata:", jsutil.deepCopyObject(metadata));
-
 		lastIndex = metadataMatch.nextIndex;
 	}
 
 	// Turn order
 	const turnOrderMatch = matchField(TURN_ORDER_REGEX, icn, lastIndex);
 	if (turnOrderMatch) {
-		const turnOrderGroup = turnOrderMatch.groups['turnOrder']!; // 'w:b'
-		// console.log(`Turn Order: "${turnOrderGroup}"`);
-		// Substitues
-		let turnOrderString = turnOrderGroup;
-		if (turnOrderString === 'w')
-			turnOrderString = 'w:b'; // 'w' is short for 'w:b'
-		else if (turnOrderString === 'b') turnOrderString = 'b:w'; // 'b' is short for 'b:w'
+		const turnOrderGroup = turnOrderMatch.groups['turnOrder']!; // 'w' | 'w:b'
+		const turnOrderString = TURN_ORDER_SHORTHANDS_INVERTED[turnOrderGroup] ?? turnOrderGroup;
 		const turnOrderArray = turnOrderString.split(':'); // ['w','b']
 		turnOrder = turnOrderArray.map((p_code) => {
 			if (!(p_code in PLAYER_CODES_INVERTED))
@@ -817,9 +810,6 @@ function ShortToLong_Format(icn: string): LongFormatOut {
 		if (presetRays) longFormatOut.presetAnnotes.rays = presetRays;
 	}
 
-	// console.log("Finished parcing ICN!");
-	// console.log("Parsed longformat:", jsutil.deepCopyObject(longFormatOut));
-
 	return longFormatOut;
 }
 
@@ -884,9 +874,6 @@ function matchMovesSection(
 function parsePresetSquares(presetSquares: string): Coords[] {
 	const coordsKeys = presetSquares.split('|') as CoordsKey[];
 	const squares: Coords[] = coordsKeys.map((key) => coordutil.getCoordsFromKey(key));
-
-	// console.log("Parsed squares:", squares);
-
 	return squares;
 }
 
@@ -904,9 +891,6 @@ function parsePresetRays(presetRays: string): BaseRay[] {
 
 		return { start, vector };
 	});
-
-	// console.log("Parsed rays:", rays);
-
 	return rays;
 }
 
