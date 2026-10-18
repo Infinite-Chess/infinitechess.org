@@ -47,7 +47,7 @@ interface KeyDownInfo {
 }
 
 export interface InputListener {
-	/** Whether this input listener has experience at least one input event the past frame. */
+	/** Whether this input listener heard input this frame that may change what the board shows. */
 	atleastOneInput: () => boolean;
 	/** Whether the given mouse button experienced a click-down this frame. */
 	isMouseDown(button: MouseButton): boolean;
@@ -297,7 +297,7 @@ function CreateInputListener(
 		};
 	}
 
-	/** Whether there has been any input this frame. */
+	/** Whether there has been input this frame that may change what the board shows. */
 	let atleastOneInputThisFrame = false;
 
 	const clickInfo: Record<MouseButton, ClickInfo> = {
@@ -343,7 +343,6 @@ function CreateInputListener(
 	GameBus.addEventListener('reset-listener-events', () => {
 		// console.log("Resetting events");
 		// We can continuously hold a key without triggering more events, so held keys should still count as an input that frame.
-		// atleastOneInputThisFrame = keyHelds.length > 0 || Object.values(clickInfo).some(clickInfo => clickInfo.isHeld);
 		atleastOneInputThisFrame = keyHelds.length > 0;
 		// console.log("Atleast one input this frame: ", atleastOneInputThisFrame);
 		// For each mouse button, reset its state
@@ -547,7 +546,12 @@ function CreateInputListener(
 
 		// Mouse position tracking
 		addListener(element, 'mousemove', ((e: MouseEvent): void => {
-			atleastOneInputThisFrame = true;
+			// The document hears moves over the whole page, so only drags count as input there.
+			if (
+				element instanceof HTMLElement ||
+				Object.values(clickInfo).some((info) => info.isHeld)
+			)
+				atleastOneInputThisFrame = true;
 			const physicalPointer = physicalPointers['mouse'];
 			if (!physicalPointer) return; // Sometimes the 'mousemove' event is fired from touch events, even though the mouse pointer does not exist.
 			physicalPointer.position = getRelativeMousePosition([e.clientX, e.clientY], element);
@@ -568,12 +572,22 @@ function CreateInputListener(
 			// console.log("Mouse relative position: ", targetPointer.position);
 		}) as EventListener);
 
+		// Counts as input so the frame after leaving isn't left showing a stale hover.
+		if (element instanceof HTMLElement) {
+			addListener(element, 'mouseleave', (): void => {
+				atleastOneInputThisFrame = true;
+			});
+		}
+
 		// Scroll wheel tracking
 		addListener(element, 'wheel', ((e: WheelEvent): void => {
-			if (element instanceof HTMLElement && e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
-			// The board zooms itself, so a scrollable page mustn't scroll too.
-			if (element instanceof HTMLElement) e.preventDefault();
-			atleastOneInputThisFrame = true;
+			if (element instanceof HTMLElement) {
+				if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
+				// The board zooms itself, so a scrollable page mustn't scroll too.
+				e.preventDefault();
+				// The document hears scrolls over the whole page, so only the element's count as input.
+				atleastOneInputThisFrame = true;
+			}
 			wheelDelta = e.deltaY;
 		}) as EventListener);
 
@@ -622,12 +636,12 @@ function CreateInputListener(
 		}) as EventListener);
 
 		addListener(element, 'touchmove', ((e: TouchEvent): void => {
-			atleastOneInputThisFrame = true;
 			for (let i = 0; i < e.changedTouches.length; i++) {
 				const touch: Touch = e.changedTouches[i]!;
 				const touchId = getPhysicalPointerId(touch);
 				const physicalPointer = physicalPointers[touchId];
 				if (!physicalPointer) continue; // This touch likely started outside the element, so we ignored adding it.
+				atleastOneInputThisFrame = true;
 
 				const relativeTouchPos = getRelativeMousePosition(
 					[touch.clientX, touch.clientY],
