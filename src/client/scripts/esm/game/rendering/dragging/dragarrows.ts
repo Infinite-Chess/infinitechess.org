@@ -188,7 +188,7 @@ function updateCandidate(): void {
 		return;
 	}
 
-	selection.selectPiece(gamefile, gameslot.getMesh(), piece, true);
+	selection.selectPiece(gamefile, piece, true);
 	mouse.cancelMouseClick(Mouse.LEFT); // Prevent the eventual release from being treated as a click/teleport.
 	isDragActive = true;
 	draganimation.setForceRankFileOutline(true);

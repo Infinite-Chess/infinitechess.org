@@ -21,6 +21,7 @@ import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import typeutil, { rawTypes, players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
+import premoves from '../chess/premoves.js';
 import svgcache from '../../chess/rendering/svgcache.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -133,23 +134,26 @@ interface MaterialSurplus {
 	pointLead: number;
 }
 
-/** Computes each side's surplus and the point lead from the live piece counts at the viewed move. */
+/** Computes each side's surplus and the point lead from the piece counts at the viewed move. */
 function computeSurplus(): MaterialSurplus {
 	const gamefile = gameslot.getGamefile()!;
-	const white = new Map<RawType, number>();
-	const black = new Map<RawType, number>();
-	let pointLead = 0;
+	// Premoves must not affect the surplus
+	return premoves.readUnapplied(gamefile, () => {
+		const white = new Map<RawType, number>();
+		const black = new Map<RawType, number>();
+		let pointLead = 0;
 
-	for (const raw of gamefile.existingRawTypes) {
-		const whiteCount = boardutil.getPieceCountOfType(gamefile.pieces, typeutil.buildType(raw, p.WHITE)); // prettier-ignore
-		const blackCount = boardutil.getPieceCountOfType(gamefile.pieces, typeutil.buildType(raw, p.BLACK)); // prettier-ignore
-		const diff = whiteCount - blackCount;
-		if (diff > 0) white.set(raw, diff);
-		else if (diff < 0) black.set(raw, -diff);
-		pointLead += diff * (RAW_PIECE_VALUES[raw] ?? 0);
-	}
+		for (const raw of gamefile.existingRawTypes) {
+			const whiteCount = boardutil.getPieceCountOfType(gamefile.pieces, typeutil.buildType(raw, p.WHITE)); // prettier-ignore
+			const blackCount = boardutil.getPieceCountOfType(gamefile.pieces, typeutil.buildType(raw, p.BLACK)); // prettier-ignore
+			const diff = whiteCount - blackCount;
+			if (diff > 0) white.set(raw, diff);
+			else if (diff < 0) black.set(raw, -diff);
+			pointLead += diff * (RAW_PIECE_VALUES[raw] ?? 0);
+		}
 
-	return { white, black, pointLead };
+		return { white, black, pointLead };
+	});
 }
 
 /** Rebuilds both bars from the material surplus at the currently-viewed move. */

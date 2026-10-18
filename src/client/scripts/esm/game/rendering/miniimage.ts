@@ -100,7 +100,6 @@ function getPiecesShownWhenDisabled(): Piece[] {
 
 	const gamefile = gameslot.getGamefile()!;
 	const pieces = gamefile.pieces;
-	const mesh = gameslot.getMesh();
 	const board = gamescene.getGameContext();
 
 	/** Adds a piece the shared enumerations visit. */
@@ -114,34 +113,32 @@ function getPiecesShownWhenDisabled(): Piece[] {
 		pushVisited,
 	);
 
-	// Queued premoves must be rewound BEFORE reading the pieces, so they are in the expected locations as the last and next move!
-	premoves.rewindPremoves(gamefile, mesh);
+	// Queued premoves must be unapplied while reading the pieces, so they are in the expected locations as the last and next move!
+	premoves.readUnapplied(gamefile, () => {
+		// 2. Get pieces on top of highlights (ray starts, intersections, etc.)
+		const annotePoints: Coords[] = snapping
+			.getAnnoteSnapPoints(true)
+			.map((p) => bdcoords.coordsToBigInt(p));
+		annotePoints.forEach((ap) => {
+			const piece = boardutil.getPieceFromCoords(pieces, ap);
+			if (!piece) return; // No piece beneath this highlight
+			const coordsKey = coordutil.getKeyFromCoords(ap);
+			if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
+			pushPieceNoDuplicatesOrVoids(piece);
+		});
 
-	// 2. Get pieces on top of highlights (ray starts, intersections, etc.)
-	const annotePoints: Coords[] = snapping
-		.getAnnoteSnapPoints(true)
-		.map((p) => bdcoords.coordsToBigInt(p));
-	annotePoints.forEach((ap) => {
-		const piece = boardutil.getPieceFromCoords(pieces, ap);
-		if (!piece) return; // No piece beneath this highlight
-		const coordsKey = coordutil.getKeyFromCoords(ap);
-		if (activeHides.has(coordsKey)) return; // Skip pieces that are being hidden due to animations
-		pushPieceNoDuplicatesOrVoids(piece);
+		// 3. Add the selected piece, if any
+		const pieceSelected = selection.getPieceSelected();
+		if (pieceSelected) pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
+
+		// 4. Add pieces from the last and next moves
+		miniimagerenderer.forEachLastAndNextMovePiece(
+			gamefile,
+			gamefile.moves,
+			board.animations,
+			pushVisited,
+		);
 	});
-
-	// 3. Add the selected piece, if any
-	const pieceSelected = selection.getPieceSelected();
-	if (pieceSelected) pushPieceNoDuplicatesOrVoids(jsutil.deepCopyObject(pieceSelected));
-
-	// 4. Add pieces from the last and next moves
-	miniimagerenderer.forEachLastAndNextMovePiece(
-		gamefile,
-		gamefile.moves,
-		board.animations,
-		pushVisited,
-	);
-
-	premoves.applyPremoves(gamefile, mesh);
 
 	return piecesToRender;
 }

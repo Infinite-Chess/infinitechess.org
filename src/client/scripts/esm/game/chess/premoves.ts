@@ -49,18 +49,9 @@ interface Premove extends Edit, MoveTagged {
 let premoves: Premove[] = [];
 
 /**
- * Whether the premoves board and state changes have been applied to the board.
- * This is purely for DEBUGGING so you don't accidentally call these
- * methods at the wrong times.
- *
- * When premove's changes have to be reapplied, we have to recalculate all
- * of their changes, since for all we know they could end up capturing a
- * piece when they didn't when we originally premoved, or vice versa.
- *
- * THIS SHOULD ONLY TEMPORARILY ever be false!! If it is, it means we just
- * need to do something like calculating legal moves, then reapply the premoves.
- *
- * This can even be true when there's no premoves queued.
+ * Whether the premoves' board and state changes are applied to the board.
+ * Only ever false temporarily, while the real game state is read or changed.
+ * True when no premoves are queued.
  */
 let applied: boolean = true;
 
@@ -406,6 +397,19 @@ function performWithUnapplied(
 	}
 }
 
+/** Returns the result of reading the board with all premoves unapplied, restoring them afterward. */
+function readUnapplied<T>(gamefile: GameFile, read: () => T): T {
+	if (!applied) return read(); // Reached by listeners of a move made within performWithUnapplied()
+
+	rewindPremoves(gamefile);
+	const result = read();
+	// A read leaves the board untouched, so the premoves' existing changes still apply.
+	for (const premove of premoves) applyPremove(gamefile, undefined, premove, true);
+	applied = true;
+
+	return result;
+}
+
 // Updating Premoves -----------------------------------------------------------
 
 /** Clears premoves if right mouse is down and Lingering Annotations mode is off. */
@@ -450,9 +454,8 @@ export default {
 	hasAtleastOnePremove,
 	addPremove,
 	cancelPremoves,
-	rewindPremoves,
-	applyPremoves,
 	performWithUnapplied,
+	readUnapplied,
 	update,
 	render,
 };

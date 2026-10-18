@@ -286,7 +286,7 @@ function testIfPieceSelected(gamefile: GameFile, mesh: Mesh | undefined): void {
 		mouse.claimMouseClick(mouseKeybind); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
-		selectPiece(gamefile, mesh, pieceClicked!, false); // Select, but don't start dragging
+		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(mouseKeybind)) {
 		// Can DRAG this piece type
 		/** Just quickly make sure that, if we already have selected a piece,
@@ -296,7 +296,7 @@ function testIfPieceSelected(gamefile: GameFile, mesh: Mesh | undefined): void {
 		mouse.claimMouseDown(mouseKeybind); // Claim the mouse down so board dragging doesn't use it
 		mouse.cancelMouseClick(mouseKeybind); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
-		selectPiece(gamefile, mesh, pieceClicked!, true); // Select, AND start dragging if that's enabled.
+		selectPiece(gamefile, pieceClicked!, true); // Select, AND start dragging if that's enabled.
 	}
 }
 
@@ -407,12 +407,7 @@ function isOpponentType(gamefile: GameFile, type: number): boolean {
  * @param piece
  * @param drag - If true, the piece starts being dragged. This also means it won't be deselected if you clicked the selected piece again.
  */
-function selectPiece(
-	gamefile: GameFile,
-	mesh: Mesh | undefined,
-	piece: Piece,
-	drag: boolean,
-): void {
+function selectPiece(gamefile: GameFile, piece: Piece, drag: boolean): void {
 	hoverSquareLegal = false; // Reset the hover square legal flag so that it doesn't remain true for the remainer of the update loop.
 
 	const alreadySelected =
@@ -429,7 +424,7 @@ function selectPiece(
 		if (alreadySelected) return unselectPiece();
 	}
 
-	initSelectedPieceInfo(gamefile, mesh, piece);
+	initSelectedPieceInfo(gamefile, piece);
 }
 
 /**
@@ -440,7 +435,6 @@ function selectPiece(
 function reselectPiece(): void {
 	if (!pieceSelected) return; // No piece to reselect.
 	const gamefile = gameslot.getGamefile()!;
-	const mesh = gameslot.getMesh();
 	// Test if the piece is no longer there
 	// This will work for us long as it is impossible to capture friendly's
 	const pieceTypeOnCoords = boardutil.getTypeFromCoords(gamefile.pieces, pieceSelected.coords);
@@ -454,7 +448,7 @@ function reselectPiece(): void {
 
 	// Reselect! Recalc its legal moves, and recolor.
 	const pieceToReselect = boardutil.getPieceFromCoords(gamefile.pieces, pieceSelected.coords)!;
-	initSelectedPieceInfo(gamefile, mesh, pieceToReselect);
+	initSelectedPieceInfo(gamefile, pieceToReselect);
 
 	// FIXES BUG where if you premove a promotion, but leave the promotion UI open,
 	// then your opponent moves, resulting in that promotion being illegal,
@@ -499,7 +493,7 @@ function unselectPiece(): void {
 }
 
 /** Initializes the selected piece, and calculates its legal moves. */
-function initSelectedPieceInfo(gamefile: GameFile, mesh: Mesh | undefined, piece: Piece): void {
+function initSelectedPieceInfo(gamefile: GameFile, piece: Piece): void {
 	// Initiate
 	pieceSelected = piece;
 
@@ -515,10 +509,9 @@ function initSelectedPieceInfo(gamefile: GameFile, mesh: Mesh | undefined, piece
 		// your premoved pawn will be able to double push again past their 8th rank.
 		legalMoves = legalmoves.calculateAllPremoves(gamefile, piece);
 	} else {
-		premoves.performWithUnapplied(gamefile, mesh, () => {
-			legalMoves = legalmoves.calculateAll(gamefile, piece);
-			return false; // Do NOT attempt to physically play the next premove when they're re-applied
-		});
+		legalMoves = premoves.readUnapplied(gamefile, () =>
+			legalmoves.calculateAll(gamefile, piece),
+		);
 	}
 
 	// console.log('Selected Legal Moves:', legalMoves);
