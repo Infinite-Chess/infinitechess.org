@@ -14,9 +14,12 @@
 
 /** One independent frame tracker, as returned by {@link createFrameTracker}. */
 export interface FrameTracker {
-	/** The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen. */
-	onVisualChange(): void;
-	/** true if there has been a visual change on-screen since last frame. */
+	/**
+	 * The next frame will be rendered. Compute can be saved if nothing has visibly changed on-screen.
+	 * @param frames - How many consecutive frames to render, starting with the next.
+	 */
+	onVisualChange(frames?: number): void;
+	/** true if the next frame is owed a render. */
 	doWeRenderNextFrame(): boolean;
 	/** Prepares for the next frame. Call right after we finish a render frame. */
 	onFrameRender(): void;
@@ -26,16 +29,16 @@ export interface FrameTracker {
 
 /** Creates one independent frame tracker, starting out due for a render. */
 function createFrameTracker(): FrameTracker {
-	/** Whether there has been a visual change on-screen the past frame. */
-	let hasBeenVisualChange: boolean = true;
+	/** How many upcoming frames are owed a render. */
+	let framesOwed: number = 1;
 
 	return {
-		onVisualChange: (): void => {
-			hasBeenVisualChange = true;
+		onVisualChange: (frames = 1): void => {
+			framesOwed = Math.max(framesOwed, frames);
 		},
-		doWeRenderNextFrame: (): boolean => hasBeenVisualChange,
+		doWeRenderNextFrame: (): boolean => framesOwed > 0,
 		onFrameRender: (): void => {
-			hasBeenVisualChange = false;
+			framesOwed--;
 		},
 	};
 }

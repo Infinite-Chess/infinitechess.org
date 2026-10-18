@@ -130,8 +130,9 @@ function update(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile || gamesession.isLoading()) return; // If the game isn't totally finished loading, nothing is visible, only the background.
 
-	// Any input should trigger the next frame to render.
-	if (listeners.atleastOneInput()) frametracker.onVisualChange();
+	// Input renders its frame AND the next: clicking to cancel premoves happens after this frame's
+	// arrows are calculated, so only the next frame's arrows reflect the board without them.
+	if (listeners.atleastOneInput()) frametracker.onVisualChange(2);
 
 	const mesh = gameslot.getMesh()!;
 
