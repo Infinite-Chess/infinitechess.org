@@ -260,10 +260,30 @@ html[data-home-prompt='dismissed'] .new-prompt {
 	justify-content: center;
 	gap: 0.667em;
 	padding: 0.693em 1.067em;
-	font-size: 15px;
-	color: var(--c-text-muted);
+	font-size: 16px;
+	font-weight: normal;
+	color: var(--c-text);
 	letter-spacing: 0.07em;
 	text-align: center;
+	white-space: nowrap; /* The lines shrink instead */
+}
+
+/* A line either side, fading out away from the text. */
+.lobby h2::before,
+.lobby h2::after,
+.featured-games h2::before,
+.featured-games h2::after {
+	/* Its full length, shrinking only when the header is too narrow to fit it. */
+	--line-length: 8em;
+	content: '';
+	flex: 0 1 var(--line-length);
+	height: 1.5px;
+	background: linear-gradient(to right, var(--c-text-muted), transparent);
+}
+
+.lobby h2::before,
+.featured-games h2::before {
+	transform: scaleX(-1);
 }
 
 .lobby-viewers {

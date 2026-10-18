@@ -21,9 +21,6 @@ variant = "Variant"
 time = "Time"
 mode = "Mode"
 
-[featured]
-title = "Games in play"
-
 [modal]
 title = "Game options"
 
@@ -55,3 +52,7 @@ play_computer = "Play against computer"
 [script.lobby]
 cancel_seek = "Cancel seek"
 accept_seek = "Accept seek"
+
+[script.featured]
+active_games_one = "{n} Active Game"
+active_games_other = "{n} Active Games"

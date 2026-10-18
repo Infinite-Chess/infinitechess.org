@@ -19,6 +19,7 @@ import { attributesModule, classModule, h, init } from 'snabbdom';
 import gameurl from '../../../../../../shared/chess/util/gameurl.js';
 import clockutil from '../../../../../../shared/chess/util/clockutil.js';
 import playername from '../../../../../../shared/components/playername.js';
+import interpolate from '../../../../../../shared/util/interpolate.js';
 import { players } from '../../../../../../shared/chess/util/typeutil.js';
 import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 
@@ -67,7 +68,14 @@ let cardsSignature = '';
 
 /** Updates how many games are in play. */
 function onGameCount(count: number): void {
-	element_gameCount.textContent = String(count);
+	renderGameCount(count);
+}
+
+/** Writes the game count into the header, ω while it's unknown. */
+function renderGameCount(count: number | undefined): void {
+	const strings = t.index.featured;
+	const template = count === 1 ? strings.active_games_one : strings.active_games_other;
+	element_gameCount.textContent = interpolate.interpolate(template, { n: count ?? 'ω' });
 }
 
 /** Shows the featured games as their list changes. Boards of games still featured carry on. */
@@ -130,7 +138,7 @@ function onUpdate(update: FeaturedUpdate): void {
  * unsubscribes or the connection is lost.
  */
 function clear(): void {
-	element_gameCount.textContent = 'ω';
+	renderGameCount(undefined);
 	setCards([], false);
 }
 
