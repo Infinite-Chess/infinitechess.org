@@ -9,6 +9,8 @@
  * Obstocean (infinite obstacles), Drawback Chess, Progressive Chess.
  */
 
+import type { GameRules } from './gamerules.js';
+
 import * as z from 'zod';
 
 // Types -----------------------------------------------------------------------
@@ -30,6 +32,11 @@ type ModifierDescriptionVars = Record<string, string | number>;
 /** The SVG symbol each modifier is shown by. Its keys are the modifier registry. */
 const MODIFIER_ICONS: Record<GameModifier['kind'], string> = {
 	'slide-limit': 'svg-slide-limit',
+};
+
+/** Whether each modifier is active, read off the gamerules it became. */
+const MODIFIER_PRESENCE: Record<GameModifier['kind'], (gameRules: GameRules) => boolean> = {
+	'slide-limit': (gameRules) => gameRules.slideLimit !== undefined,
 };
 
 /** Valid slide-limit distances in squares, matching the game setup modal's slider ticks. */
@@ -67,6 +74,12 @@ function slideLimitOf(modifiers: GameModifier[] | undefined): bigint | undefined
 	return undefined;
 }
 
+/** The modifiers active in the given gamerules. */
+function getActiveModifiers(gameRules: GameRules): ModifierCode[] {
+	const codes = Object.keys(MODIFIER_PRESENCE) as ModifierCode[];
+	return codes.filter((code) => MODIFIER_PRESENCE[code](gameRules));
+}
+
 /**
  * Returns the variables used to interpolate the description of a modifier.
  * They MUST match the variables in the respective translation template
@@ -91,5 +104,6 @@ export default {
 	// Functions
 	getModifierIconId,
 	slideLimitOf,
+	getActiveModifiers,
 	getModifierDescriptionVars,
 };

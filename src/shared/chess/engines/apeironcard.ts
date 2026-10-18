@@ -9,7 +9,6 @@
 import type { GameFile } from '../logic/gamefile.js';
 import type { GameRules } from '../util/gamerules.js';
 import type { VariantCode } from '../util/variantcodes.js';
-import type { ModifierCode } from '../util/modutil.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
 import bimath from '../../util/math/bimath.js';
@@ -17,6 +16,7 @@ import bounds from '../../util/math/bounds.js';
 import boardutil from '../logic/boardutil.js';
 import apeironborder from '../logic/apeironborder.js';
 import variantmodule from '../logic/variantmodule.js';
+import modutil, { ModifierCode } from '../util/modutil.js';
 import typeutil, { RawType, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
@@ -27,6 +27,7 @@ export type EngineRefusal = (typeof ENGINE_REFUSALS)[number];
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
 export type EngineSupportCode =
 	| 'unsupported_variant'
+	| 'unsupported_modifier'
 	| 'unsupported_win_rule'
 	| 'too_many_pieces'
 	| 'unsupported_piece'
@@ -52,8 +53,8 @@ const UNSUPPORTED_VARIANTS: Set<VariantCode> = new Set([
 /**
  * Game modifiers the engine can play (none at the moment).
  *
- * Adding one here obliges `CreateEngineGameMessageSchema` to carry
- * modifiers, and engine game creation to validate the variant with them.
+ * Adding one here obliges `CreateEngineGameMessageSchema` to carry modifiers, engine game
+ * creation to validate the variant with them, and every engine-bound ICN to carry them.
  */
 const SUPPORTED_MODIFIERS: Set<ModifierCode> = new Set([]);
 
@@ -70,6 +71,15 @@ const MAX_PIECES = 10_000;
 const ENGINE_REFUSALS = ['too_spread_out'] as const;
 
 // Individual rule checks ------------------------------------------------------
+
+/** Only modifiers in {@link SUPPORTED_MODIFIERS}. */
+function checkModifiers(gameRules: GameRules): SupportedResult {
+	for (const code of modutil.getActiveModifiers(gameRules)) {
+		if (!SUPPORTED_MODIFIERS.has(code))
+			return { supported: false, reason: 'unsupported_modifier' };
+	}
+	return { supported: true };
+}
 
 /** Only checkmate-family win conditions are understood. */
 function checkWinConditions(gameRules: GameRules): SupportedResult {
@@ -139,12 +149,16 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
 
 /**
  * Game-level support that's independent of any single position's piece set: the variant's custom
- * piece movement (4D) the engine can't replay, and win conditions. Unlike {@link isPlaySupported}
- * these require no bounded board — the engine takes coordinates of any size itself.
+ * piece movement (4D) the engine can't replay, modifiers, and win conditions. Unlike
+ * {@link isPlaySupported} these require no bounded board — the engine takes coordinates of any
+ * size itself.
  */
 function checkGameRules(gamefile: GameFile): SupportedResult {
 	if (variantmodule.hasCustomMovement(gamefile.variant?.mod))
 		return { supported: false, reason: 'unsupported_variant' };
+
+	const modifiersResult = checkModifiers(gamefile.gameRules);
+	if (!modifiersResult.supported) return modifiersResult;
 
 	return checkWinConditions(gamefile.gameRules);
 }

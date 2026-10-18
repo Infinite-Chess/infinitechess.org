@@ -8,12 +8,12 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
+import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './analysisprotocol.js';
 import type {
 	EngineRefusal,
 	EngineSupportCode,
 } from '../../../../../shared/chess/engines/apeironcard.js';
-import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
-import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './analysisprotocol.js';
 
 import * as z from 'zod';
 
@@ -619,8 +619,8 @@ function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): v
 
 /**
  * Why the engine can't analyze `gamefile`'s viewed position, as far as the page can tell without
- * asking it (4D/5D variants, too many pieces, unsupported pieces/win conditions), or undefined.
- * The engine may still refuse the position itself ({@link refusals}).
+ * asking it (4D/5D variants, modifiers, too many pieces, unsupported pieces/win conditions), or
+ * undefined. The engine may still refuse the position itself ({@link refusals}).
  */
 function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
 	const result = apeironcard.isAnalysisSupported(gamefile);

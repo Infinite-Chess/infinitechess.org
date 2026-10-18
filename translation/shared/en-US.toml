@@ -171,6 +171,10 @@ too_many_royals_for_checkmate = "Too many royals for using checkmate."
 label = "Unsupported variant"
 message = "The engine doesn't support this variant."
 
+[position_errors.engine.unsupported_modifier]
+label = "Unsupported modifier"
+message = "The engine doesn't support this modifier."
+
 [position_errors.engine.unsupported_win_rule]
 label = "Unsupported win rule"
 message = "The engine doesn't support this win condition."
