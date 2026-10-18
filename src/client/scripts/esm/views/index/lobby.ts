@@ -36,7 +36,8 @@ import gamesound from '../../board/gamesound.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
 import socketintents from '../../socket/socketintents.js';
-import gamesetupmodal from './gamesetupmodal.js';
+import featuredgames from './featured/featuredgames.js';
+import gamesetupmodal from './gamesetup/gamesetupmodal.js';
 import seekpreviewcache from './seekpreviewcache.js';
 import variantpreviewtooltip from '../../board/variantselector/variantpreviewtooltip.js';
 
@@ -401,12 +402,13 @@ function renderSeekList(seeks: LobbySeek[], newSeekIds = new Set<number>()): voi
 }
 
 /**
- * Clears the seek display, tracked state, and viewer count, but preserves
- * the new-seek tracker so a reconnect doesn't replay arrival sounds.
+ * Clears the seek display, tracked state, viewer count, game count and featured games, but
+ * preserves the new-seek tracker so a reconnect doesn't replay arrival sounds.
  */
 function clearSeekList(): void {
 	onSeekListUpdate({ seekslist: [] }, true); // Don't clear seek tracker memory
 	element_lobbyViewerCount.textContent = 'ω';
+	featuredgames.clear();
 }
 
 /** Creates the keyed snabbdom div vnode for the current seek list. */
@@ -514,12 +516,16 @@ function spawnSeekPulse(row: HTMLElement, isOurs: boolean): void {
 		// A clipped row's pulse would float over the page outside the list, anchored to nothing visible.
 		if (!isRowFullyVisible(row)) return;
 		const overlay = document.createElement('div');
-		overlay.className = 'seek-pulse-overlay';
-		const box = document.createElement('div');
-		box.className = isOurs ? 'seek-pulse-box ours' : 'seek-pulse-box';
-		overlay.appendChild(box);
+		overlay.classList.add('seek-pulse-overlay');
+		overlay.classList.toggle('ours', isOurs);
+		for (const corner of ['top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+			const element = document.createElement('div');
+			element.classList.add('seek-pulse-corner', corner);
+			overlay.appendChild(element);
+		}
 		document.body.appendChild(overlay);
-		box.addEventListener('animationend', () => overlay.remove(), { once: true });
+		// The overlay and its corners all end together; the first end event removes them.
+		overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
 
 		/** Resizes the overlay onto the row's current rect. */
 		const updateBounds = (): void => {

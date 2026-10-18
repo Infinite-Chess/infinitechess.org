@@ -34,6 +34,7 @@ import onOfferDraw from './onOfferDraw.js';
 import gameManager from './gameManager.js';
 import gameSockets from './gameSockets.js';
 import gameUtility from './gameUtility.js';
+import featuredGames from '../featured/featuredGames.js';
 import gameLifecycle from './gameLifecycle.js';
 import liveGameValues from './liveGameValues.js';
 import gameStateBuilder from './gameStateBuilder.js';
@@ -120,6 +121,7 @@ function submitMove(
 		? applyServerValidatedMove(ws, servergame, messageContents, moveParsed, role)
 		: applyClientReportedMove(ws, servergame, messageContents, moveParsed, role);
 	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
+	servergame.match.timeLastMove = Date.now();
 
 	onOfferDraw.decline(servergame, role); // Auto-decline any open draw offer on move submissions
 
@@ -159,6 +161,7 @@ function broadcastMove(
 	if (!gameUtility.isEngineGame(servergame))
 		gameSockets.sendToColor(servergame.match, typeutil.invertPlayer(role), 'game', 'move', moveMessage); // prettier-ignore
 	gameSockets.broadcastToSpectators(servergame, 'move', moveMessage);
+	featuredGames.onMove(servergame, moveMessage);
 
 	// Free, finalize, and evict the game if it's concluded.
 	if (servergame.gameConclusion !== undefined) gameLifecycle.free(servergame);

@@ -104,7 +104,7 @@ function createRematchGame(oldGame: ServerGame): void {
 
 	try {
 		const newGameID = activeGames.issueUniqueId();
-		gameManager.createGame(newGameID, setup, swapped);
+		gameManager.createGame(newGameID, setup, swapped, oldGame);
 
 		// Alert all connected players of the new game (they auto navigate)
 		for (const { socket, role } of toNavigate)

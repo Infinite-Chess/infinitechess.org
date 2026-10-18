@@ -10,6 +10,7 @@
 
 import type { Line } from './highlightline.js';
 import type { Color } from '../../../../../../shared/types/color.js';
+import type { Renderable } from '../../../webgl/Renderable.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
@@ -24,6 +25,7 @@ import vectors, { Ray, Vec2 } from '../../../../../../shared/util/math/vectors.j
 import space from '../../../board/rendering/space.js';
 import mouse from '../../mouse.js';
 import meshes from '../../../board/rendering/meshes.js';
+import camera from '../../../board/rendering/camera.js';
 import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../../../board/rendering/boardpos.js';
@@ -37,39 +39,10 @@ import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
 import preferences from '../../../util/preferences.js';
 import texturecache from '../../../chess/rendering/texturecache.js';
-import { Renderable } from '../../../webgl/Renderable.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 
-// Variables -------------------------------------------------------------------
-
-/**
- * Width of all entity icons when zoomed out, in virtual pixels.
- * Includes mini images, square annotations, arrows, move hints,
- * snap point ghost images.
- */
-export const ENTITY_WIDTH_VPIXELS = 40;
-
-/** The color of the line that shows you what entity your mouse is snapped to. */
-const SNAP_LINE_COLOR = [0, 0, 1, 0.3] as const;
-
-/** Properties of the glow dot when rendering the snapped coord. */
-const GLOW_DOT = {
-	RADIUS_PIXELS: 8,
-	RESOLUTION: 16,
-};
-
-/**
- * The opacity of the ghost image that's rendered when hovering over
- * the highlight line of the selected piece's legal moves.
- */
-const GHOST_IMAGE_OPACITY = 1;
-
-/**
- * If more pieces than this are present in the game, snapping skips
- * checking if we should snap to a piece, as it's too slow.
- */
-const THRESHOLD_TO_SNAP_PIECES = 5_000;
+// Types -----------------------------------------------------------------------
 
 /** A point the pointer has snapped to, along with how to render it. */
 type Snap = {
@@ -106,11 +79,51 @@ type Intersection = {
 	line2: Line;
 };
 
+/** The entity (piece or square highlight) nearest the pointer. */
+type ClosestEntity = {
+	coords: Coords;
+	/** The euclidean distance in coordinates from the mouse to the entity. */
+	dist: number;
+	type: 'miniimage' | 'square';
+	/** The index of the entity within its home list. */
+	index: number;
+};
+
+// Constants -------------------------------------------------------------------
+
+/**
+ * Width of all entity icons when zoomed out, in virtual pixels.
+ * Includes mini images, square annotations, arrows, move hints,
+ * snap point ghost images.
+ */
+const ENTITY_WIDTH_VPIXELS = 40;
+
+/** The color of the line that shows you what entity your mouse is snapped to. */
+const SNAP_LINE_COLOR = [0, 0, 1, 0.3] as const;
+
+/** Properties of the glow dot when rendering the snapped coord. */
+const GLOW_DOT = {
+	RADIUS_PIXELS: 8,
+	RESOLUTION: 16,
+};
+
+/**
+ * The opacity of the ghost image that's rendered when hovering over
+ * the highlight line of the selected piece's legal moves.
+ */
+const GHOST_IMAGE_OPACITY = 1;
+
+/**
+ * If more pieces than this are present in the game, snapping skips
+ * checking if we should snap to a piece, as it's too slow.
+ */
+const THRESHOLD_TO_SNAP_PIECES = 5_000;
+
 // Entity Hovering -------------------------------------------------------------
 
 /** Returns the width of entity icons when zoomed out, in world-space units. */
-export function getEntityWidthWorld(): number {
-	return space.convertPixelsToWorldSpace_Virtual(ENTITY_WIDTH_VPIXELS);
+function getEntityWidthWorld(): number {
+	return space.convertPixelsToWorldSpace_Virtual(camera, ENTITY_WIDTH_VPIXELS);
 }
 
 /** Returns all entities (pieces and squares highlights) under the given world coordinates. */
@@ -120,15 +133,6 @@ function getAllEntitiesWorldHovers(world: DoubleCoords): Coords[] {
 	const highlightsHovered = drawsquares.getSquaresBelowWorld(allSquares, world, false).squares;
 	return [...imagesHovered, ...highlightsHovered];
 }
-
-type ClosestEntity = {
-	coords: Coords;
-	/** The euclidean distance in coordinates from the mouse to the entity. */
-	dist: number;
-	type: 'miniimage' | 'square';
-	/** The index of the entity within its home list. */
-	index: number;
-};
 
 /** Calculates the closest entity (piece/square) to the given world coords. */
 function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined {
@@ -170,7 +174,7 @@ function isSnappingEnabledThisFrame(): boolean {
 	return true;
 }
 
-/** Snap's the provided world coords to the nearest snappable coords. */
+/** Snaps the provided world coords to the nearest snappable coords. */
 function getWorldSnapCoords(world: DoubleCoords): Coords | undefined {
 	if (!isSnappingEnabledThisFrame()) return undefined;
 
@@ -189,7 +193,7 @@ function getSnapContext(world: DoubleCoords): SnapContext | undefined {
 	const allLines: Line[] = getAllLinesSegmented(annotations.getRays(), drawrays.getPresetRays());
 	if (allLines.length === 0) return undefined; // No lines to snap to
 
-	const pointerCoords = space.convertWorldSpaceToCoords(world);
+	const pointerCoords = space.convertWorldSpaceToCoords(boardpos, world);
 
 	/** The minimum distance from a snap point, in world space, for our mouse to snap to it. */
 	const snapDistWorld: BigDecimal = bd.fromNumber(getEntityWidthWorld() / 2);
@@ -316,8 +320,6 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	 * existing lines, calculating what we should snap to.
 	 */
 
-	// Allows snapping to all hippogonals, even the ones in 4D variants.
-	// const allPrimitiveSlidesInGame = boardsim.pieces.slides.filter((vector: Vec2) => math.GCD(vector[0], vector[1]) === 1); // Filters out colinears, and thus potential repeats.
 	// Minimal snapping vectors
 	// prettier-ignore
 	const searchVectors = gamefile.pieces.hippogonalsPresent ? [
@@ -362,18 +364,6 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 				return closestPieceSnap.snap;
 		}
 	}
-
-	// 3. Origin (Center of Play) ==============================
-
-	// DISABLED for now. I don't really like it
-	// const startingBox = gamefileutility.getStartingAreaBox(boardsim);
-	// const startingBoxBD = bounds.castBoundingBoxToBigDecimal(startingBox);
-	// const origin: BDCoords = bounds.calcCenterOfBoundingBox(startingBoxBD);
-	// const closestOriginSnap = findClosestEntityOfGroup([origin], closeLines, pointerCoords, searchVectors);
-	// if (closestOriginSnap !== undefined) {
-	// 	// Is the snap within snapping distance of the mouse?
-	// 	if (bd.compare(closestOriginSnap.dist, snapDistSquares) < 0) return closestOriginSnap.snap;
-	// }
 
 	// No snap found! ===========================================
 
@@ -472,7 +462,6 @@ function findClosestEntityOfGroup(
 					continue; // Chebyshev distance isn't even within the threshold, the euclidean distance won't be either.
 				const euclidDist = vectors.euclideanDistanceBD(intersection, mouseCoords);
 				// Is the intersection point closer to the mouse than the previous closest snap?
-				// const intersectionWorld = space.convertCoordToWorldSpace(intersection);
 				if (
 					closestEntitySnap === undefined ||
 					bd.compare(euclidDist, closestEntitySnap.dist) < 0
@@ -481,7 +470,7 @@ function findClosestEntityOfGroup(
 						coords: intersection,
 						color: highlightLine.line.color,
 						type: highlightLine.line.piece,
-						source: jsutil.deepCopyObject(entityCoords),
+						source: coordutil.copyBDCoords(entityCoords),
 					};
 					closestEntitySnap = { snap, dist: euclidDist };
 				}
@@ -565,8 +554,16 @@ function render(): void {
 		// Render a single line between the snap point and its source
 		if (snap.source !== undefined) {
 			const [r, g, b, a] = SNAP_LINE_COLOR;
-			const start = space.convertCoordToWorldSpace(snap.source);
-			const end = space.convertCoordToWorldSpace(snap.coords);
+			const start = space.convertCoordToWorldSpace(
+				snap.source,
+				boardpos.getBoardPos(),
+				boardpos.getBoardScale(),
+			);
+			const end = space.convertCoordToWorldSpace(
+				snap.coords,
+				boardpos.getBoardPos(),
+				boardpos.getBoardScale(),
+			);
 			// prettier-ignore
 			const data = [
 				//   Vertex              Color
@@ -578,7 +575,11 @@ function render(): void {
 
 		// Next we render either the glow dot or the mini image of the piece.
 
-		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(snap.coords);
+		const coordsWorld = space.convertCoordToWorldSpace_IgnoreSquareCenter(
+			snap.coords,
+			boardpos.getBoardPos(),
+			boardpos.getBoardScale(),
+		);
 
 		if (snap.type === undefined) {
 			// Render glow dot
@@ -586,7 +587,7 @@ function render(): void {
 			const colorTransparent = jsutil.deepCopyObject(color);
 			colorTransparent[3] = 0;
 
-			const radius = space.convertPixelsToWorldSpace_Virtual(GLOW_DOT.RADIUS_PIXELS);
+			const radius = space.convertPixelsToWorldSpace_Virtual(camera, GLOW_DOT.RADIUS_PIXELS);
 			// prettier-ignore
 			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
 			createRenderable(data, 2, 'TRIANGLE_FAN', 'color', true).render();
@@ -598,10 +599,11 @@ function render(): void {
 	}
 }
 
+/** Builds the translucent mini image of a piece, centered on the given world coords. */
 function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
 	const dataGhost: number[] = [];
 
-	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords(camera);
 
 	const entityWorldWidth = getEntityWidthWorld();
 	const halfWidth = entityWorldWidth / 2;
@@ -629,12 +631,15 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	ENTITY_WIDTH_VPIXELS,
+	// Entity Hovering
 	getEntityWidthWorld,
-
 	getClosestEntityToWorld,
-	getAnnoteSnapPoints,
-
+	// Snapping
 	getWorldSnapCoords,
 	transitionToHoveredIfClicked,
+	getAnnoteSnapPoints,
+	// Rendering
 	render,
 };

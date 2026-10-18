@@ -28,13 +28,13 @@ import { rawTypes as r, players as p } from '../../../../../shared/chess/util/ty
 
 import mouse from '../mouse.js';
 import pieces from '../rendering/pieces.js';
-import arrows from '../rendering/arrows/arrows.js';
 import camera from '../../board/rendering/camera.js';
 import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import premoves from './premoves.js';
 import keybinds from '../keybinds.js';
 import { Mouse } from '../input.js';
+import gamescene from '../rendering/gamescene.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import Transition from '../rendering/transitions/Transition.js';
 import gamesession from './gamesession.js';
@@ -46,7 +46,8 @@ import frametracker from '../../board/rendering/frametracker.js';
 import guipromotion from '../gui/guipromotion.js';
 import draganimation from '../rendering/dragging/draganimation.js';
 import { VIDEO_MODE } from '../config.js';
-import graphicalchanges from './graphicalchanges.js';
+import graphicalchanges from '../../board/rendering/graphicalchanges.js';
+import arrowinteraction from '../rendering/arrows/arrowinteraction.js';
 import { listener_canvas } from '../listeners.js';
 
 // Types -----------------------------------------------------------------------
@@ -249,7 +250,7 @@ function updateHoverSquareLegal(gamefile: GameFile): void {
 
 /** If a piece was clicked or dragged, this will attempt to select that piece. */
 function testIfPieceSelected(gamefile: GameFile, mesh: Mesh | undefined): void {
-	if (arrows.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
+	if (arrowinteraction.areHoveringAtleastOneArrow()) return; // Don't select a piece if we're hovering over an arrow
 
 	const mouseKeybind = keybinds.getPieceSelectionMouseButton();
 	if (mouseKeybind === undefined) return; // Nothing assigned to selecting pieces currently
@@ -321,7 +322,7 @@ function testIfPieceDropped(gamefile: GameFile, mesh: Mesh | undefined): void {
 /** If a piece is selected, and we clicked a legal square to move to, this will make the move. */
 function testIfPieceMoved(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (!pieceSelected) return;
-	if (arrows.areHoveringAtleastOneArrow()) return; // Don't move a piece if we're hovering over an arrow
+	if (arrowinteraction.areHoveringAtleastOneArrow()) return; // Don't move a piece if we're hovering over an arrow
 
 	const mouseKeybind = keybinds.getPieceSelectionMouseButton();
 	if (mouseKeybind === undefined) return; // Nothing assigned to moving pieces currently
@@ -562,7 +563,7 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	const animateMain = !wasBeingDragged;
-	graphicalchanges.animateMove(changes, true, animateMain, isPremove);
+	graphicalchanges.animateMove(gamescene.getGameContext(), changes, true, animateMain, isPremove);
 
 	if (!isPremove) GameBus.dispatch('user-move-played');
 

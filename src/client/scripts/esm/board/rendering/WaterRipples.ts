@@ -1,25 +1,35 @@
-// src/client/scripts/esm/game/rendering/WaterRipples.ts
+// src/client/scripts/esm/board/rendering/WaterRipples.ts
 
 /**
- * This scripts managers the animated water ripple effect for extremely large moves.
+ * This script manages the animated water ripple effect for extremely large moves.
+ * Each live board owns its own ripples, threaded through every function here.
  */
 
+import type LiveBoard from './LiveBoard.js';
+import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type { ProgramManager } from '../../webgl/ProgramManager.js';
 import type { PostProcessPass } from '../../webgl/postprocessing/PostProcessPass.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
+import vectors from '../../../../../shared/util/math/vectors.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
-import coordutil, { Coords } from '../../../../../shared/util/coordutil.js';
+import coordutil from '../../../../../shared/util/coordutil.js';
 
-import space from '../../board/rendering/space.js';
-import camera from '../../board/rendering/camera.js';
-import boardpos from '../../board/rendering/boardpos.js';
-import drawrays from './highlights/annotations/drawrays.js';
-import gameslot from '../chess/gameslot.js';
-import perspective from './perspective.js';
-import { GameBus } from '../../board/GameBus.js';
-import frametracker from '../../board/rendering/frametracker.js';
+import space from './space.js';
 import { RippleState, WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePass.js';
+
+// Types -----------------------------------------------------------------------
+
+/** One board's ripple effect: its post-processing pass and the droplets currently rippling. */
+export interface Ripples {
+	pass: WaterRipplePass;
+	droplets: RippleState[];
+	/**
+	 * ACTUAL ripple lifetime, dependent on screen ratio, as the more
+	 * wider the screen is taller, the longer drops take to travel across.
+	 */
+	lifetime: number;
+}
 
 // Constants -------------------------------------------------------------------
 
@@ -39,50 +49,44 @@ const RIPPLE_LIFETIME_BASE = 1.1;
 /** How much longer ripples last per screen ratio of width/height. */
 const RIPPLE_LIFETIME_MULTIPLIER = 0.5;
 
-// Variables -------------------------------------------------------------------
-
-let waterRipplePass: WaterRipplePass;
-
-const activeDroplets: RippleState[] = [];
-
-/**
- * ACTUAL ripple lifetime, dependent on screen ratio, as the more
- * wider the screen is taller, the longer drops take to travel across.
- */
-let rippleLifetime: number;
-
 // Functions -------------------------------------------------------------------
 
-function init(programManager: ProgramManager, width: number, height: number): void {
-	waterRipplePass = new WaterRipplePass(programManager, width, height);
-
-	updateRippleLifetime(width, height);
-
-	// The post processing effect relies on the dimensions of the canvas.
-	// Init listener for screen resize
-	GameBus.addEventListener('canvas-resize', (event) => {
-		const { width, height } = event.detail;
-		waterRipplePass.setResolution(width, height);
-		updateRippleLifetime(width, height);
-	});
+/** Creates a board's ripples, sized to its canvas. */
+function create(programManager: ProgramManager, width: number, height: number): Ripples {
+	return {
+		pass: new WaterRipplePass(programManager, width, height),
+		droplets: [],
+		lifetime: getLifetime(width, height),
+	};
 }
 
-function updateRippleLifetime(width: number, height: number): void {
-	rippleLifetime = RIPPLE_LIFETIME_BASE + RIPPLE_LIFETIME_MULTIPLIER * (width / height);
-	// console.log(`ripple lifetime adjusted to ${rippleLifetime.toFixed(2)}s`);
+/** Resizes the ripples to their board's new canvas dimensions. */
+function resize(ripples: Ripples, width: number, height: number): void {
+	ripples.pass.setResolution(width, height);
+	ripples.lifetime = getLifetime(width, height);
+}
+
+/** The lifetime of a ripple, in seconds, on a canvas of the given dimensions. */
+function getLifetime(width: number, height: number): number {
+	return RIPPLE_LIFETIME_BASE + RIPPLE_LIFETIME_MULTIPLIER * (width / height);
 }
 
 /**
  * Adds a ripple droplet at the given source coordinates.
  * Caps the ripple to be just off-screen if the source is significantly off-screen.
  */
-function addRipple(sourceCoords: Coords): void {
+function addRipple(board: LiveBoard, sourceCoords: Coords): void {
+	const { camera, boardpos } = board;
 	// Convert coords to world space
-	const sourceWorldSpace = space.convertCoordToWorldSpace(bdcoords.fromCoords(sourceCoords));
+	const sourceWorldSpace = space.convertCoordToWorldSpace(
+		bdcoords.fromCoords(sourceCoords),
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
 
 	const screenHeight = camera.getCanvas().height / window.devicePixelRatio;
 	const pixelPadding = RIPPLE_DIST_FROM_EDGE * screenHeight;
-	const rippleWorldFromEdge = space.convertPixelsToWorldSpace_Virtual(pixelPadding);
+	const rippleWorldFromEdge = space.convertPixelsToWorldSpace_Virtual(camera, pixelPadding);
 	// The screen rectangle in world space
 	const screenBox = camera.getScreenBoundingBox(false);
 	const paddedScreenBox = {
@@ -103,7 +107,7 @@ function addRipple(sourceCoords: Coords): void {
 			bdcoords.fromCoords(sourceCoords),
 			boardpos.getBoardPos(),
 		);
-		const closestVector = drawrays.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
+		const closestVector = vectors.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
 
 		if (closestVector[0] === 0n) {
 			rippleX = 0;
@@ -133,52 +137,60 @@ function addRipple(sourceCoords: Coords): void {
 	let u = (rippleX - screenBox.left) / screenWidthWorld;
 	let v = (rippleY - screenBox.bottom) / screenHeightWorld;
 
-	// If we're playing black, negate the UV coordinates
-	if (!gameslot.areViewingWhite()) {
+	// If we're viewing black's perspective, negate the UV coordinates
+	if (camera.getIsViewingBlackPerspective()) {
 		u = 1 - u;
 		v = 1 - v;
 	}
 
 	// Create a new droplet
-	activeDroplets.push({ center: [u, v], timeCreated: Date.now() + elapsedTimeOffset });
+	board.ripples.droplets.push({ center: [u, v], timeCreated: Date.now() + elapsedTimeOffset });
 }
 
-function update(): void {
+/** Removes every droplet, ending the board's ripples at once. */
+function clear(board: LiveBoard): void {
+	board.ripples.droplets.length = 0;
+}
+
+/**
+ * Drops expired droplets and feeds the rest to the pass.
+ * @param suppressed - Whether to hide every ripple this frame. Perspective mode does, as the
+ * effect is a pure 2D post-processing one, not an effect on the rendered board.
+ */
+function update(board: LiveBoard, suppressed: boolean): void {
+	const { droplets, lifetime, pass } = board.ripples;
 	const now = Date.now();
 
 	// Filter out old droplets
-	for (let i = activeDroplets.length - 1; i >= 0; i--) {
-		const droplet = activeDroplets[i]!;
-		if (now >= droplet.timeCreated + rippleLifetime * 1000) {
+	for (let i = droplets.length - 1; i >= 0; i--) {
+		const droplet = droplets[i]!;
+		if (now >= droplet.timeCreated + lifetime * 1000) {
 			// Convert seconds to milliseconds
-			activeDroplets.splice(i, 1);
-			// console.log("Removed ripple droplet.");
+			droplets.splice(i, 1);
 		}
 	}
 
-	// Don't render ripple effect in perspective mode, as it is a pure
-	// 2D post processing effect, not an effect on the rendered board.
-	const framesActiveDrops = perspective.getEnabled() ? [] : activeDroplets;
-
 	// FEED the active list to the pass
-	waterRipplePass.updateDroplets(framesActiveDrops);
+	pass.updateDroplets(suppressed ? [] : droplets);
 
 	// Only call for an animation frame if there are active droplets
-	if (activeDroplets.length > 0) frametracker.onVisualChange();
+	if (droplets.length > 0) board.frames.onVisualChange();
 }
 
 /**
  * Returns the WaterRipplePass instance this frame to be added to
  * the post-processing pipeline, if there are any visible drops.
  */
-function getPass(): PostProcessPass[] {
-	if (activeDroplets.length === 0) return [];
-	return [waterRipplePass];
+function getPass(board: LiveBoard): PostProcessPass[] {
+	if (board.ripples.droplets.length === 0) return [];
+	return [board.ripples.pass];
 }
 
 export default {
-	init,
+	create,
+	resize,
 	addRipple,
+	clear,
 	update,
 	getPass,
 };

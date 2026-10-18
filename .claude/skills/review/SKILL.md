@@ -45,7 +45,7 @@ Cross-check your file and line counts against `--stat` (or the PR's numbers).
 
 Then read **in full** — an earlier read this session doesn't count — every file the diff touches,
 **plus the neighbouring code it should have reused**, so you judge against reality rather than the
-diff's framing. Read `docs/systems/IMPORT_RULES.md`, and any system doc rule 26 routes the touched
+diff's framing. Read `docs/systems/IMPORT_RULES.md`, and any system doc rule 27 routes the touched
 area to.
 
 ## 3. Judge the approach
@@ -101,7 +101,7 @@ had to review, however large the diff.
 
 ## 5. Design decisions
 
-A finding that carries a design decision follows rules 5 and 6: read every touched and related file
+A finding that carries a design decision follows rules 6 and 7: read every touched and related file
 in full, come to your own recommendation, and present it to the user.
 
 The exception is when your reply ends the session, as in an `@claude` run: proceed with your own
@@ -110,8 +110,8 @@ recommendation instead.
 ## 6. Act and report
 
 **Working tree or commits.** Make every fix that carries no design decision without asking, per
-rule 6. Fixes land uncommitted in the working tree for the user to review; get the checks passing
-per rule 34. Report briefly what you changed: one line per fix, linked to its file and line, grouped
+rule 7. Fixes land uncommitted in the working tree for the user to review; get the checks passing
+per rule 35. Report briefly what you changed: one line per fix, linked to its file and line, grouped
 so it scans.
 
 **PR.** Change nothing in the code. Write the full review to a markdown file in the project root and

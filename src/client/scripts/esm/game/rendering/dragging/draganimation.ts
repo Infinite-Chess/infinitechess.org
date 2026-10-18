@@ -24,8 +24,9 @@ import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import keybinds from '../../keybinds.js';
 import selection from '../../chess/selection.js';
-import animation from '../animation.js';
+import animation from '../../../board/rendering/animation/animation.js';
 import { Mouse } from '../../input.js';
+import gamescene from '../gamescene.js';
 import droparrows from './droparrows.js';
 import primitives from '../../../board/rendering/primitives.js';
 import preferences from '../../../util/preferences.js';
@@ -143,12 +144,13 @@ function pickUpPiece(piece: Piece, resetParity: boolean): void {
 	startCoords = piece.coords;
 	pieceType = piece.type;
 	// If any one animation's end coords is currently being animated towards the coords of the picked up piece, clear the animation.
+	const board = gamescene.getGameContext();
 	if (
-		animation.animations.some((a) =>
+		board.animations.some((a) =>
 			coordutil.areCoordsEqual(piece.coords, a.path[a.path.length - 1]!),
 		)
 	)
-		animation.clearAnimations(true);
+		animation.clearAnimations(board, true);
 }
 
 /**
@@ -165,6 +167,8 @@ function updateDragLocation(): void {
 	if (squarePawnPromotingOn !== undefined) {
 		const worldCoords = space.convertCoordToWorldSpace(
 			bdcoords.fromCoords(squarePawnPromotingOn),
+			boardpos.getBoardPos(),
+			boardpos.getBoardScale(),
 		);
 		worldLocation = worldCoords;
 		hoveredCoords = squarePawnPromotingOn;
@@ -173,7 +177,7 @@ function updateDragLocation(): void {
 		// Normal drag location
 		worldLocation = mouse.getPointerWorld(pointerId!);
 		hoveredCoords = worldLocation
-			? space.convertWorldSpaceToCoords_Rounded(worldLocation)
+			? space.convertWorldSpaceToCoords_Rounded(boardpos, worldLocation)
 			: undefined;
 	}
 }
@@ -248,7 +252,7 @@ function renderTransparentSquare(): void {
 	if (!startCoords) return;
 
 	const color: Color = [0, 0, 0, 0];
-	const data = meshes.QuadWorld_Color(startCoords, color); // Hide orginal piece
+	const data = meshes.QuadWorld_Color(boardpos, startCoords, color); // Hide orginal piece
 	return createRenderable(data, 2, 'TRIANGLES', 'color', true).render([0, 0, FLAT_Z]);
 }
 
@@ -268,7 +272,7 @@ function renderPieceModel(): void {
 	const touchscreenUsed = listener_canvas.isPointerTouch(pointerId!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const rotation = camera.getIsViewingBlackPerspective() ? -1 : 1;
-	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords(camera);
 
 	// In perspective the piece is rendered above the surface of the board.
 	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : FLAT_Z;
@@ -280,8 +284,8 @@ function renderPieceModel(): void {
 		// Apply a minimum size only if we're not currently promoting a pawn (promote UI open) and not in perspective mode.
 		// The minimum world space the dragged piece should be rendered
 		const minSizeWorldSpace = touchscreenUsed
-			? space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.touch) // Mobile/touchscreen mode
-			: space.convertPixelsToWorldSpace_Virtual(dragMinSizeVirtualPixels.mouse); // 2D desktop mode
+			? space.convertPixelsToWorldSpace_Virtual(camera, dragMinSizeVirtualPixels.touch) // Mobile/touchscreen mode
+			: space.convertPixelsToWorldSpace_Virtual(camera, dragMinSizeVirtualPixels.mouse); // 2D desktop mode
 		size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
 	}
 
@@ -317,7 +321,7 @@ function renderPieceModel(): void {
 function renderOutline(): void {
 	const pointerIsTouch = listener_canvas.isPointerTouch(pointerId!);
 	// The coordinates of the edges of the square
-	const { left, right, bottom, top } = meshes.getCoordBoxWorld(hoveredCoords!);
+	const { left, right, bottom, top } = meshes.getCoordBoxWorld(boardpos, hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
 	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;
 	const color = preferences.getBoxOutlineColor();
@@ -327,7 +331,7 @@ function renderOutline(): void {
 	// 2. It is a touch screen, OR we are zoomed out enough.
 	if (
 		!coordutil.areCoordsEqual(hoveredCoords!, startCoords!) &&
-		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardgeometry.getTileWidthPixels()) < MIN_SIZE_TO_DRAW_OUTLINE)
+		(forceRankFileOutline || pointerIsTouch || bd.toNumber(boardgeometry.getTileWidthPixels(camera, boardpos.getBoardScale())) < MIN_SIZE_TO_DRAW_OUTLINE)
 	) {
 		// Outline the entire rank and file
 		const screenBox = camera.getRespectiveScreenBox();
@@ -343,7 +347,7 @@ function renderOutline(): void {
 		const offset = legalmovemodel.getOffset();
 		const offsetCoord = coordutil.subtractCoords(hoveredCoords!, offset);
 		const instanceData: number[] = [Number(offsetCoord[0]), Number(offsetCoord[1])];
-		const { position, scale } = meshes.getBoardRenderTransform(offset);
+		const { position, scale } = meshes.getBoardRenderTransform(boardpos, offset);
 		createRenderable_Instanced(vertexData, instanceData, 'TRIANGLES', 'colorInstanced', true)
 			.render(position, scale);
 	}

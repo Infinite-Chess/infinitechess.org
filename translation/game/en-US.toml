@@ -10,6 +10,8 @@ resign = "Resign"
 accept_draw = "Accept draw offer?"
 rematch = "Rematch"
 analysis = "Analysis"
+spectating = "Spectating"
+follow = "Follow the game"
 
 [disconnect] # Shown once the disconnected opponent can be claimed against
 claim_victory = "Claim victory"

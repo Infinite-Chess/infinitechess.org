@@ -226,8 +226,34 @@ function initGameFile(
 	additional: Additional = {},
 	validateMoves?: true,
 ): GameFile {
+	const gameRules = resolveGameRules(variant, additional);
+	const game = initGame(
+		timeControl,
+		dateTimestamp,
+		gameRules,
+		additional.gameConclusion,
+		additional.clockValues,
+	);
+	const boardsim = boardinit.init(gameRules, variant, {
+		variantOptions: additional.variantOptions,
+		editor: additional.editor,
+	});
+	const gamefile = loadGameWithBoard(game, boardsim, additional.moves, validateMoves);
+
+	// Must follow the moves being made, as the stamps are read off them.
+	clock.seedFromMoveStamps(gamefile, additional.clockValues?.clocks);
+
+	return gamefile;
+}
+
+/**
+ * The rules a game is played by: its explicit ones, else its variant's, with the Slide Limit
+ * modifier and an engine game's world border applied. Never mutates the caller's rules.
+ * @param variant - The variant with its module already resolved, or undefined for a custom position.
+ */
+function resolveGameRules(variant: LoadedVariant | undefined, additional: Additional): GameRules {
 	let gameRules: GameRules =
-		additional.variantOptions?.gameRules ?? variantrules.getGameRulesOfVariant(variant); // Already a fresh copy
+		additional.variantOptions?.gameRules ?? variantrules.getGameRulesOfVariant(variant);
 
 	// Slide Limit modifier override. Onto a shallow copy, so the caller's rules stay untouched —
 	// boardinit.init deep-copies from here, so the gamefile shares no nested objects with them either.
@@ -250,23 +276,7 @@ function initGameFile(
 		if (worldBorder !== undefined) gameRules = { ...gameRules, worldBorder };
 	}
 
-	const game = initGame(
-		timeControl,
-		dateTimestamp,
-		gameRules,
-		additional.gameConclusion,
-		additional.clockValues,
-	);
-	const boardsim = boardinit.init(gameRules, variant, {
-		variantOptions: additional.variantOptions,
-		editor: additional.editor,
-	});
-	const gamefile = loadGameWithBoard(game, boardsim, additional.moves, validateMoves);
-
-	// Must follow the moves being made, as the stamps are read off them.
-	clock.seedFromMoveStamps(gamefile, additional.clockValues?.clocks);
-
-	return gamefile;
+	return gameRules;
 }
 
 // Exports ---------------------------------------------------------------------
@@ -275,4 +285,5 @@ export default {
 	initGame,
 	loadGameWithBoard,
 	initGameFile,
+	resolveGameRules,
 };

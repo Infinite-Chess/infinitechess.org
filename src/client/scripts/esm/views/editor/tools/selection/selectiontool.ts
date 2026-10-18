@@ -19,14 +19,15 @@ import boardutil from '../../../../../../../shared/chess/logic/boardutil.js';
 import mouse from '../../../../game/mouse.js';
 import sfill from './sfill.js';
 import sdrag from './sdrag.js';
-import arrows from '../../../../game/rendering/arrows/arrows.js';
 import meshes from '../../../../board/rendering/meshes.js';
 import gameslot from '../../../../game/chess/gameslot.js';
+import boardpos from '../../../../board/rendering/boardpos.js';
 import { Mouse } from '../../../../game/input.js';
 import { GameBus } from '../../../../board/GameBus.js';
 import etoolmanager from '../etoolmanager.js';
 import stoolgraphics from './stoolgraphics.js';
 import stransformations from './stransformations.js';
+import arrowinteraction from '../../../../game/rendering/arrows/arrowinteraction.js';
 import guipositionheader from '../../gui/guipositionheader.js';
 import { listener_document, listener_canvas } from '../../../../game/listeners.js';
 
@@ -67,7 +68,11 @@ function update(): void {
 			sdrag.update(); // Update selection box drag handler
 		}
 		// Test if a new selection is beginning
-		if (mouse.isMouseDown(Mouse.LEFT) && !selecting && !arrows.areHoveringAtleastOneArrow()) {
+		if (
+			mouse.isMouseDown(Mouse.LEFT) &&
+			!selecting &&
+			!arrowinteraction.areHoveringAtleastOneArrow()
+		) {
 			// Start new selection
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
@@ -202,18 +207,7 @@ function convertIntBoxToWorldBox(intBox: BoundingBox): DoubleBoundingBox {
 	const roundedAwayBox: BoundingBoxBD =
 		meshes.expandTileBoundingBoxToEncompassWholeSquare(intBox);
 	// Convert it to a world-space box
-	return meshes.applyWorldTransformationsToBoundingBox(roundedAwayBox);
-}
-
-/**
- * Returns the corners of the current selection.
- * ONLY CALL if you know a selection exists!
- */
-function getSelectionCorners(): [Coords, Coords] {
-	if (!startPoint || !endPoint)
-		throw new Error("No current selection. Can't get selection corners.");
-
-	return [startPoint, endPoint];
+	return meshes.applyWorldTransformationsToBoundingBox(boardpos, roundedAwayBox);
 }
 
 /**
@@ -260,7 +254,6 @@ export default {
 	getSelectionIntBox,
 	getSelectionWorldBox,
 	convertIntBoxToWorldBox,
-	getSelectionCorners,
 	setSelection,
 	selectAll,
 };

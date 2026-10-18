@@ -465,7 +465,7 @@
 }
 
 /* ============================================================
-   Game actions — live (offer draw / resign) + draw-offer + post-game (rematch / analysis)
+   Game actions — live (offer draw / resign) + draw-offer + post-game (rematch / analysis) + spectating
    ============================================================ */
 
 .game-actions {
@@ -641,6 +641,55 @@
 				transparent
 			);
 	}
+}
+
+/* A spectator's label in place of the live actions, as tall as their buttons. */
+.actions-spectating {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 20px;
+	min-height: 40px;
+	padding-inline: 16px;
+	font-size: 14px;
+	color: var(--c-text-muted);
+}
+
+.spectating-label {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+}
+
+.spectating-eye {
+	width: 1.2em;
+	height: 1.2em;
+}
+
+/* The follow toggle: a viewfinder around a dot, the dot swapped for a slash while off.
+   As wide as its icon, so the row's padding reaches the icon's edge as it does the eye's. */
+#btn-follow {
+	width: auto;
+}
+
+.follow-icon {
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.follow-dot {
+	fill: currentColor;
+	stroke: none;
+}
+
+#btn-follow.enabled .follow-slash,
+#btn-follow:not(.enabled) .follow-dot {
+	display: none;
 }
 
 /* =================================
@@ -915,10 +964,9 @@
 		--strip-height: 35px;
 		--controls-height: 42px;
 		/* The rows the bars and actions take of their own, and what the strip's row measures —
-		   see the wide layout below. The actions count only while they show anything. */
+		   see the wide layout below. */
 		--bar-rows: 2;
 		--actions-rows: 1;
-		--has-actions: 0;
 		--strip-row: var(--strip-height);
 		position: relative; /* Anchors .secondary-panels just below the first screen. */
 		display: grid;
@@ -934,13 +982,10 @@
 			'moves moves'
 			'controls controls';
 	}
-	.game:has(.game-actions > :not(.hidden)) {
-		--has-actions: 1;
-	}
 
 	.game .canvas-container {
 		/* prettier-ignore */
-		height: max(0px, 100svh - var(--header-height) - var(--strip-row) - var(--controls-height) - (var(--bar-rows) * var(--bar-height) + var(--actions-rows) * var(--has-actions) * var(--actions-height)) * var(--ui-zoom));
+		height: max(0px, 100svh - var(--header-height) - var(--strip-row) - var(--controls-height) - (var(--bar-rows) * var(--bar-height) + var(--actions-rows) * var(--actions-height)) * var(--ui-zoom));
 	}
 
 	:where(.game) {
@@ -1069,13 +1114,13 @@
 		.actions-over {
 			border-top: none;
 		}
-		/* Its own row only while it has something to show (a spectator's, only once the game ends). */
-		.game-actions:not(:has(> :not(.hidden))) {
-			display: none;
-		}
 
-		/* Moves strip — the moves list reflows into one sideways-scrolling strip between the jump buttons. */
+		/* Moves strip — the moves list reflows into one sideways-scrolling strip between the jump buttons.
+		   Stacked above the board controls, or Android Chrome sends a swipe over it to a glowing toggle's
+		   filter layer, and it won't scroll. */
 		.moves {
+			position: relative;
+			z-index: 1;
 			flex-direction: row;
 			min-height: var(--strip-height);
 			font-size: calc(1em * var(--ui-zoom));
@@ -1241,14 +1286,12 @@
 				margin-left: calc(var(--bar-padding-inline) * var(--ui-zoom));
 			}
 
-			/* Game actions — kept even when empty, so the merged row's height never changes. */
-			.game-actions:not(:has(> :not(.hidden))) {
-				display: flex;
-			}
-			/* Room for an incoming draw offer, whenever there's an action to show at all. */
-			.game-actions:has(> :not(.hidden)) {
-				min-width: 290px;
+			/* Game actions — room for an incoming draw offer, except around the spectator's label. */
+			.game-actions {
 				border-inline-start: 1px solid var(--c-border-muted);
+			}
+			.game-actions:has(> :not(.hidden, .actions-spectating)) {
+				min-width: 290px;
 			}
 		}
 	}

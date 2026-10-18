@@ -2,9 +2,9 @@
 
 /**
  * A RenderContext bundles everything needed to draw a board onto ONE canvas: its WebGL
- * context, ProgramManager, camera, board position, piece textures, stencil masker, tile
- * renderer, and renderable factory. Two boards on screen at once (the interactive game and
- * a variant-preview tooltip) each own a separate instance, so neither disturbs the other.
+ * context, ProgramManager, camera, board position, piece textures, stencil masker, frame
+ * tracker, tile renderer, and renderable factory. Two boards on screen at once (the interactive
+ * game and a variant-preview tooltip) each own a separate instance, so neither disturbs the other.
  *
  * Shared render code takes a RenderContext and draws for whichever board it's told, rather
  * than reaching for process-wide singletons. The interactive game's view (camera/boardpos)
@@ -16,6 +16,7 @@ import type { Camera } from './camera.js';
 import type { BoardPos } from './boardpos.js';
 import type { BoardTiles } from './boardtiles.js';
 import type { MaskedDraw } from '../../webgl/maskeddraw.js';
+import type { FrameTracker } from './frametracker.js';
 import type { TextureCache } from '../../chess/rendering/texturecache.js';
 import type { ProgramManager } from '../../webgl/ProgramManager.js';
 import type { RenderableFactory } from '../../webgl/Renderable.js';
@@ -25,7 +26,7 @@ import { createBoardTiles } from './boardtiles.js';
 import { createRenderableFactory } from '../../webgl/Renderable.js';
 
 /** The parts a RenderContext is assembled from. */
-interface RenderContextParams {
+export interface RenderContextParams {
 	gl: WebGL2RenderingContext;
 	canvas: HTMLCanvasElement;
 	programManager: ProgramManager;
@@ -37,6 +38,8 @@ interface RenderContextParams {
 	textures: TextureCache;
 	/** The stencil masker for this context's gl. */
 	maskedDraw: MaskedDraw;
+	/** Tracks whether this context's board needs redrawing. Its camera and board position flag it too. */
+	frames: FrameTracker;
 }
 
 /** Everything needed to render one board onto one canvas. */
@@ -48,6 +51,7 @@ class RenderContext {
 	readonly boardpos: BoardPos;
 	readonly textures: TextureCache;
 	readonly maskedDraw: MaskedDraw;
+	readonly frames: FrameTracker;
 	/** Creates renderable models bound to this context. */
 	readonly renderable: RenderableFactory;
 	/** Renders the board tiles into this context. */
@@ -64,6 +68,7 @@ class RenderContext {
 		this.boardpos = params.boardpos;
 		this.textures = params.textures;
 		this.maskedDraw = params.maskedDraw;
+		this.frames = params.frames;
 		this.#clearColor = [0.5, 0.5, 0.5]; // Fallback sky color. Replaced by boardtiles.ts.
 		this.renderable = createRenderableFactory(this.gl, this.programManager, this.camera);
 		this.boardtiles = createBoardTiles(this);
@@ -81,12 +86,21 @@ class RenderContext {
 
 	/** Runs a render function with the depth function forced to ALWAYS, in this context. */
 	executeWithDepthFunc_ALWAYS(func: () => void): void {
-		webgl.executeWithDepthFunc_ALWAYS(func, this.gl);
+		webgl.executeWithDepthFunc_ALWAYS(this.gl, func);
 	}
 
 	/** Runs a render function with inverse blending enabled, in this context. */
 	executeWithInverseBlending(func: () => void): void {
-		webgl.executeWithInverseBlending(func, this.gl);
+		webgl.executeWithInverseBlending(this.gl, func);
+	}
+
+	/**
+	 * Discards this context: detaches its listeners and loses its WebGL context at once,
+	 * since browsers cap how many stay alive. Never draw with it afterward.
+	 */
+	dispose(): void {
+		this.boardtiles.dispose();
+		this.gl.getExtension('WEBGL_lose_context')?.loseContext();
 	}
 }
 

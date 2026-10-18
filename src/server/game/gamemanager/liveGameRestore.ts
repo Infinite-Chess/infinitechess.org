@@ -216,30 +216,25 @@ function reconstructPlayerIdentities(
 				row.user_id,
 			);
 
-			if (memberData) {
-				let roles = null;
-				try {
-					roles = memberData.roles ? JSON.parse(memberData.roles) : null;
-				} catch {
-					logEvents.addAndPrint(
-						`Failed to parse roles for user_id ${row.user_id} during game restoration.`,
-						'errLog',
-					);
-				}
-				identities[player] = {
-					signedIn: true,
-					user_id: row.user_id,
-					username: memberData.username,
-					roles,
-					browser_id: row.browser_id,
-				};
-			} else {
-				// User was deleted since the game started. Treat as guest.
-				identities[player] = {
-					signedIn: false,
-					browser_id: row.browser_id,
-				};
+			// Corrupt: members' games are concluded before they're deleted.
+			if (!memberData) throw new Error(`Member ${row.user_id} no longer exists.`);
+
+			let roles = null;
+			try {
+				roles = memberData.roles ? JSON.parse(memberData.roles) : null;
+			} catch {
+				logEvents.addAndPrint(
+					`Failed to parse roles for user_id ${row.user_id} during game restoration.`,
+					'errLog',
+				);
 			}
+			identities[player] = {
+				signedIn: true,
+				user_id: row.user_id,
+				username: memberData.username,
+				roles,
+				browser_id: row.browser_id,
+			};
 		} else {
 			// Guest player
 			identities[player] = {
@@ -320,6 +315,7 @@ function reconstructMatchInfo(
 		variant,
 		timeCreated: gameRow.time_created,
 		timeEnded: undefined, // Only ongoing games are restored — none have ended.
+		timeLastMove: Date.now(),
 		rated: Boolean(gameRow.rated),
 		private: Boolean(gameRow.private),
 		modifiers:

@@ -9,21 +9,19 @@
 
 import type { Mesh } from '../../board/rendering/piecemodels.js';
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
+import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { PresetAnnotes } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { GameConstructionOptions } from '../../../../../shared/chess/game/gameformulator.js';
-import type { GameFile, LoadedVariant } from '../../../../../shared/chess/logic/gamefile.js';
 
 import clock from '../../../../../shared/chess/logic/clock.js';
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
-import gamefile from '../../../../../shared/chess/logic/gamefile.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
-import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
-import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import gameformulator from '../../../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
-import arrows from '../rendering/arrows/arrows.js';
+import arrows from '../../board/rendering/arrows/arrows.js';
 import { gl } from '../../board/rendering/webgl.js';
 import camera from '../../board/rendering/camera.js';
 import guiclock from '../gui/guiclock.js';
@@ -32,6 +30,7 @@ import gamescene from '../rendering/gamescene.js';
 import miniimage from '../rendering/miniimage.js';
 import starfield from '../rendering/starfield.js';
 import gamesound from '../../board/gamesound.js';
+import animation from '../../board/rendering/animation/animation.js';
 import imagecache from '../../chess/rendering/imagecache.js';
 import gamesession from './gamesession.js';
 import piecemodels from '../../board/rendering/piecemodels.js';
@@ -41,6 +40,8 @@ import perspective from '../rendering/perspective.js';
 import guipromotion from '../gui/guipromotion.js';
 import movesequence from './movesequence.js';
 import texturecache from '../../chess/rendering/texturecache.js';
+import frametracker from '../../board/rendering/frametracker.js';
+import arrowinteraction from '../rendering/arrows/arrowinteraction.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
@@ -100,10 +101,6 @@ function getMesh(): Mesh | undefined {
 	return mesh;
 }
 
-function areInGame(): boolean {
-	return loadedGamefile !== undefined;
-}
-
 /** Whether a game is loaded and hasn't concluded (locally) yet. */
 function isGameLive(): boolean {
 	return loadedGamefile !== undefined && !gamefileutility.isGameOver(loadedGamefile);
@@ -154,39 +151,20 @@ async function loadLogical(loadOptions: LoadOptions): Promise<void> {
 	const game =
 		loadOptions.kind === 'prebuilt'
 			? loadOptions.gamefile
-			: await constructGamefile(loadOptions);
+			: await gameformulator.loadAndConstructGame(loadOptions);
 	loadedGamefile = game;
 
 	viewColor = loadOptions.viewWhitePerspective ? p.WHITE : p.BLACK;
 
-	const pieceCount = boardutil.getPieceCountOfGame(game.pieces);
-	// Disable miniimages if there's too many pieces
-	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT) miniimage.disable();
-	// Disable arrows if there's too many pieces or lines in the game
-	if (pieceCount > arrows.MAX_PIECES || game.pieces.lines.size > arrows.MAX_LINES)
-		arrows.forceModeOff();
-	else arrows.applyPreferredMode(); // A previous game may have forced them off, or lowered the mode
+	if (miniimagerenderer.isOverPieceCap(game)) miniimage.disable();
+	if (arrows.isGameTooLarge(game)) arrowinteraction.forceModeOff();
+	else arrowinteraction.applyPreferredMode(); // A previous game may have forced them off, or lowered the mode
 
 	// If custom preset rays are specified, initiate them in drawrays.ts
 	if (loadOptions.presetAnnotes?.squares)
 		drawsquares.setPresetOverrides(loadOptions.presetAnnotes.squares);
 	if (loadOptions.presetAnnotes?.rays)
 		drawrays.setPresetOverrides(loadOptions.presetAnnotes.rays);
-}
-
-/** Builds the gamefile the options describe, loading the variant module it reads from first. */
-async function constructGamefile(options: GameConstructionOptions): Promise<GameFile> {
-	let variant: LoadedVariant | undefined;
-	if (options.variant !== undefined) {
-		await variantcache.ensureVariantLoaded(options.variant.code);
-		variant = { ...options.variant, mod: variantcache.getModule(options.variant.code) };
-	}
-	return gamefile.initGameFile(
-		options.timeControl,
-		options.dateTimestamp,
-		variant,
-		options.additional,
-	);
 }
 
 /** Loads all of the graphical components of a game */
@@ -248,6 +226,7 @@ function unloadGame(): void {
 	clearTimeout(animateLastMoveTimeoutID);
 	animateLastMoveTimeoutID = undefined;
 
+	animation.clearAnimations(gamescene.getGameContext());
 	starfield.terminate();
 
 	GameBus.dispatch('game-unloaded');
@@ -273,6 +252,8 @@ function concludeGame(playSound = true): void {
 	guiclock.stopClocks(loadedGamefile);
 
 	GameBus.dispatch('game-concluded');
+	// Draws the conclusion's glyph. Load-bearing: a resignation, flag or disconnect has no move to trigger a redraw.
+	frametracker.onVisualChange();
 
 	if (playSound) gamesound.playNotify(true);
 }
@@ -280,7 +261,6 @@ function concludeGame(playSound = true): void {
 export default {
 	getGamefile,
 	getMesh,
-	areInGame,
 	isGameLive,
 	areViewingWhite,
 	flipView,

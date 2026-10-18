@@ -15,8 +15,8 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import space from '../../../board/rendering/space.js';
 import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
+import boardview from '../boardview.js';
 import perspective from '../perspective.js';
-import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import { Renderable } from '../../../webgl/Renderable.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
@@ -49,7 +49,7 @@ export interface Line {
 function getRenderRange(): BoundingBoxBD {
 	if (!perspective.getEnabled()) {
 		// 2D mode
-		return boardgeometry.gboundingBoxFloat();
+		return boardview.gboundingBoxFloat();
 	} else {
 		// Perspective mode
 
@@ -78,8 +78,16 @@ function genLinesModel(lines: Line[]): Renderable {
 }
 
 function getLineData(line: Line): number[] {
-	const startWorld = space.convertCoordToWorldSpace(line.start);
-	const endWorld = space.convertCoordToWorldSpace(line.end);
+	const startWorld = space.convertCoordToWorldSpace(
+		line.start,
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
+	const endWorld = space.convertCoordToWorldSpace(
+		line.end,
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
 	const [r, g, b, a] = line.color;
 	// prettier-ignore
 	return [

@@ -11,20 +11,15 @@
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { ServerGame } from './serverGameTypes.js';
 import type { MovePacket } from '../../../shared/chess/util/typeschemas.js';
-import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
-import type { AuthMemberInfo } from '../../types.js';
+import type { StaticGameSetup } from '../../../shared/chess/game/gameformulator.js';
 import type { ScriptTranslations } from '../../../shared/types/script-translations.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { StaticGameState, Participant } from '../../../shared/transport/domain.js';
 import type {
 	SourceVariantMetaData,
 	MetaData,
 	Rating,
 } from '../../../shared/chess/util/metadatautil.js';
-import type {
-	StaticGameSetup,
-	StaticGameState,
-	Participant,
-} from '../../../shared/transport/domain.js';
 import type {
 	ChatLogEntry,
 	GameConclusionMessage,
@@ -46,7 +41,6 @@ import engineregistry from '../../../shared/chess/util/engineregistry.js';
 import variantregistry from '../../../shared/chess/variants/variantregistry.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
-import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import urlUtils from '../../utility/urlUtils.js';
 import drawOffers from './drawOffers.js';
@@ -54,85 +48,45 @@ import gameUtility from './gameUtility.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import chatEntryMapper from './chatEntryMapper.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
-import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Ratings ---------------------------------------------------------------------
 
-/**
- * Returns the current elo of all signed-in players in the game,
- * read from the leaderboard of {@link leaderboardregistry.ratingSourceOf}.
- * @throws If a database error occurs (from {@link leaderboardsManager.getEloOfPlayer}).
- */
-function getRatingDataForGamePlayers(
-	players: PlayerGroup<{ identifier: AuthMemberInfo }>,
-	variant: SeekVariant,
-): PlayerGroup<Rating> {
-	const leaderboardId = leaderboardregistry.ratingSourceOf(variant);
-
-	const ratingData: PlayerGroup<Rating> = {};
-	for (const [color, { identifier }] of Object.entries(players)) {
-		if (!identifier.signedIn) continue; // Not a member, no rating to send
-		const user_id = identifier.user_id;
-		ratingData[Number(color) as Player] = leaderboardsManager.getEloOfPlayer(
-			user_id,
-			leaderboardId,
-		);
-	}
-
-	return ratingData;
-}
-
-/**
- * The per-player rating deltas for client display,
- * or undefined if the game isn't a finalized rated one.
- */
+/** The per-player rating deltas for client display, or undefined until a rated game is logged. */
 function getRatingChanges(servergame: ServerGame): PlayerGroup<number> | undefined {
-	if (!servergame.ratingResults) return undefined;
 	const ratingChanges: PlayerGroup<number> = {};
-	for (const [color, result] of Object.entries(servergame.ratingResults)) {
-		ratingChanges[Number(color) as Player] = result.change;
+	for (const [color, { change }] of Object.entries(servergame.ratings)) {
+		if (change !== undefined) ratingChanges[Number(color) as Player] = change;
 	}
-	return ratingChanges;
+	return Object.keys(ratingChanges).length > 0 ? ratingChanges : undefined;
 }
 
 // SSR Page State --------------------------------------------------------------
 
-/**
- * Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar and game info).
- * @throws If a database error occurs (from {@link getRatingDataForGamePlayers}).
- */
+/** Assembles the role-agnostic {@link StaticGameState} of a live game (the static side-bar and game info). */
 function buildStaticState(servergame: ServerGame): StaticGameState {
+	const state: StaticGameState = {
+		setup: buildStaticGameSetup(servergame),
+		rated: servergame.match.rated,
+		players: buildParticipants(servergame),
+	};
+	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
+	return state;
+}
+
+/** Each color's participant in a live game, with their rating embedded. */
+function buildParticipants(servergame: ServerGame): PlayerGroup<Participant> {
 	const match = servergame.match;
-
-	// Resolve each player's display rating: once a rated game is finalized the leaderboard
-	// is already post-calc, so use the retained at-game snapshot. In-progress (and casual)
-	// games read live — there the leaderboard rating equals the at-game rating.
-	const ratings: PlayerGroup<Rating> = {};
-	if (!servergame.ratingResults) {
-		Object.assign(ratings, getRatingDataForGamePlayers(match.playerData, match.variant));
-	} else {
-		for (const [color, result] of Object.entries(servergame.ratingResults)) {
-			ratings[Number(color) as Player] = result.ratingAtGame;
-		}
-	}
-
 	const players: PlayerGroup<Participant> = {};
 	for (const [p, data] of Object.entries(match.playerData)) {
 		const color = Number(p) as Player;
-		players[color] = memberInfoUtil.buildPublicIdentity(data.identifier, ratings[color]);
+		const rating = servergame.ratings[color]?.rating;
+		players[color] = memberInfoUtil.buildPublicIdentity(data.identifier, rating);
 	}
 	if (match.engineParticipant) {
 		const { color, engine, strengthLevel } = match.engineParticipant;
 		players[color] = { type: 'engine', engine, strengthLevel };
 	}
-
-	const state: StaticGameState = {
-		setup: buildStaticGameSetup(servergame),
-		rated: match.rated,
-		players,
-	};
-	if (servergame.gameConclusion !== undefined) state.gameConclusion = servergame.gameConclusion;
-	return state;
+	return players;
 }
 
 /**
@@ -393,6 +347,7 @@ export default {
 	getRatingChanges,
 	// SSR Page State
 	buildStaticState,
+	buildParticipants,
 	resolvePlayerNames,
 	// ICN Metadata
 	buildMetadata,

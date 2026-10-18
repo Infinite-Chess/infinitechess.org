@@ -8,6 +8,7 @@
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { ArrowPiece } from '../../../board/rendering/arrows/arrows.js';
 import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
@@ -17,12 +18,13 @@ import coordutil, { Coords } from '../../../../../../shared/util/coordutil.js';
 
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import selection from '../../chess/selection.js';
 import gamesession from '../../chess/gamesession.js';
 import preferences from '../../../util/preferences.js';
 import { GameBus } from '../../../board/GameBus.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
-import arrows, { ArrowPiece } from './arrows.js';
+import arrowinteraction from './arrowinteraction.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -67,7 +69,7 @@ GameBus.addEventListener('view-move', () => reset());
  * legal moves cached.
  */
 function update(): void {
-	const hoveredArrows = arrows.getHoveredArrows();
+	const hoveredArrows = arrowinteraction.getHoveredArrows();
 
 	// Iterate through all pieces in piecesHoveredOver, if they aren't being
 	// hovered over anymore, delete them. Stop rendering their legal moves.
@@ -149,7 +151,10 @@ function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
 function renderEachHoveredPieceLegalMoves(): void {
 	if (hoveredArrowsLegalMoves.length === 0) return; // No legal moves to render
 
-	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
+	const { position, scale } = meshes.getBoardRenderTransform(
+		boardpos,
+		legalmovemodel.getOffset(),
+	);
 
 	hoveredArrowsLegalMoves.forEach((hoveredArrow) => {
 		// Skip it if the piece being hovered over IS the piece selected! (Its legal moves are already being rendered)

@@ -1,13 +1,14 @@
-// src/client/scripts/esm/game/rendering/arrows/arrowshifts.ts
+// src/client/scripts/esm/board/rendering/arrows/arrowshifts.ts
 
 /**
- * This script manages mid-frame arrow modifications (arrow shifts).
+ * This script manages a board's mid-frame arrow modifications (arrow shifts).
  *
  * Other scripts call deleteArrow(), moveArrow(), animateArrow(), and addArrow()
  * between the arrows update() and render() calls. Those "shifts" are then
  * applied all at once by executeArrowShifts() before rendering.
  */
 
+import type LiveBoard from '../LiveBoard.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { Change } from '../../../../../../shared/chess/logic/boardchanges.js';
 import type { Vec2Key } from '../../../../../../shared/util/math/vectors.js';
@@ -25,15 +26,13 @@ import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../../../shared/chess/logic/boardchanges.js';
 import organizedpieces from '../../../../../../shared/chess/logic/organizedpieces.js';
 
-import mouse from '../../mouse.js';
 import arrows from './arrows.js';
-import gameslot from '../../chess/gameslot.js';
 import arrowscalculator from './arrowscalculator.js';
 
 // Types -----------------------------------------------------------------------
 
 /** An Arrow Shift/Modification. */
-type Shift =
+export type Shift =
 	| {
 			kind: 'delete';
 			start: Coords;
@@ -59,39 +58,26 @@ type Shift =
 
 const ONE = bd.fromBigInt(1n);
 
-// State -----------------------------------------------------------------------
-
-/**
- * A list of arrow modifications made by other
- * scripts after update() and before render().
- */
-let shifts: Shift[] = [];
-
 // Functions -------------------------------------------------------------------
-
-/** Clears the pending shifts list. Called from arrows.reset() at the start of each frame. */
-export function reset(): void {
-	shifts.length = 0;
-}
 
 /**
  * Piece deleted from start coords
  * => Arrow line recalculated
  */
-export function deleteArrow(start: Coords): void {
-	if (!arrows.areArrowsActiveThisFrame()) return;
-	overwriteArrows(start);
-	shifts.push({ kind: 'delete', start });
+function deleteArrow(board: LiveBoard, start: Coords): void {
+	if (!arrows.areArrowsActiveThisFrame(board)) return;
+	overwriteArrows(board, start);
+	board.arrows.shifts.push({ kind: 'delete', start });
 }
 
 /**
  * Piece deleted on start coords and added on end coords
  * => Arrow lines recalculated
  */
-export function moveArrow(start: Coords, end: Coords): void {
-	if (!arrows.areArrowsActiveThisFrame()) return;
-	overwriteArrows(start);
-	shifts.push({ kind: 'move', start, end });
+function moveArrow(board: LiveBoard, start: Coords, end: Coords): void {
+	if (!arrows.areArrowsActiveThisFrame(board)) return;
+	overwriteArrows(board, start);
+	board.arrows.shifts.push({ kind: 'move', start, end });
 }
 
 /**
@@ -104,26 +90,26 @@ export function moveArrow(start: Coords, end: Coords): void {
  * 				the piece is not guaranteed to be there. In Atomic Chess, the piece can
  * 				move, and then explode itself, leaving its destination square empty.
  */
-export function animateArrow(start: Coords, end: BDCoords, type: number): void {
-	if (!arrows.areArrowsActiveThisFrame()) return;
-	overwriteArrows(start);
-	shifts.push({ kind: 'animate', start, end, type });
+function animateArrow(board: LiveBoard, start: Coords, end: BDCoords, type: number): void {
+	if (!arrows.areArrowsActiveThisFrame(board)) return;
+	overwriteArrows(board, start);
+	board.arrows.shifts.push({ kind: 'animate', start, end, type });
 }
 
 /**
  * Piece added on end coords.
  * => Arrow lines recalculated
  */
-export function addArrow(type: number, end: Coords): void {
-	if (!arrows.areArrowsActiveThisFrame()) return;
-	shifts.push({ kind: 'add', type, end });
+function addArrow(board: LiveBoard, type: number, end: Coords): void {
+	if (!arrows.areArrowsActiveThisFrame(board)) return;
+	board.arrows.shifts.push({ kind: 'add', type, end });
 }
 
 /**
  * Erases existing arrow shifts that should be overwritten by the new arrow.
  * Should only be called when shifting a new arrow.
  */
-function overwriteArrows(start: Coords): void {
+function overwriteArrows(board: LiveBoard, start: Coords): void {
 	/**
 	 * For each previous shift, if either their start or end
 	 * is on this start (deletion coords), then delete it!
@@ -131,7 +117,7 @@ function overwriteArrows(start: Coords): void {
 	 * check to see if the start is the same as this end coords.
 	 * If so, replace that shift with a delete action, and retain the same order.
 	 */
-	shifts = shifts.filter((shift) => {
+	board.arrows.shifts = board.arrows.shifts.filter((shift) => {
 		// All shift kinds with a `start` property
 		if (shift.kind === 'delete' || shift.kind === 'move' || shift.kind === 'animate') {
 			if (coordutil.areCoordsEqual(shift.start, start)) return false; // Filter
@@ -144,20 +130,22 @@ function overwriteArrows(start: Coords): void {
 	});
 }
 
-/** Execute any pending arrow shift modifications. */
-export function executeArrowShifts(): void {
+/**
+ * Execute any pending arrow shift modifications.
+ * @param pointerWorlds - The world coordinates every existing pointer is over, for hovering.
+ */
+function executeArrowShifts(
+	board: LiveBoard,
+	gamefile: GameFile,
+	pointerWorlds: DoubleCoords[],
+): void {
+	const { shifts, slideArrows, animatedArrows, mode } = board.arrows;
 	if (shifts.length === 0) return;
 
-	const slideArrows = arrows.getSlideArrows();
-	const animatedArrows = arrows.getAnimatedArrows();
-	const mode = arrows.getMode();
-
-	const gamefile = gameslot.getGamefile()!;
 	const changes: Change[] = [];
 
-	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth();
-	const pointerWorlds = mouse.getAllPointerWorlds();
-	const slideExceptions = arrowscalculator.getSlideExceptions(mode);
+	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth(board);
+	const slideExceptions = arrowscalculator.getSlideExceptions(gamefile, mode);
 
 	shifts.forEach((shift) => {
 		if (shift.kind === 'delete') {
@@ -178,7 +166,7 @@ export function executeArrowShifts(): void {
 
 			// Only add the arrow if the piece is JUST off-screen.
 			// Add 1 square on each side of the screen box first.
-			const boundingBoxFloat = arrowscalculator.getBoundingBoxFloat()!;
+			const boundingBoxFloat = board.arrows.boundingBoxFloat!;
 			const expandedFloatingBox = {
 				left: bd.subtract(boundingBoxFloat.left, ONE),
 				right: bd.add(boundingBoxFloat.right, ONE),
@@ -216,7 +204,7 @@ export function executeArrowShifts(): void {
 					? thisPieceIntersections[0]!.coords
 					: thisPieceIntersections[1]!.coords;
 
-				const arrow: Arrow = arrowscalculator.processPiece(piece, direction, intersect, 0, worldHalfWidth, pointerWorlds); // prettier-ignore
+				const arrow: Arrow = arrowscalculator.processPiece(board, piece, direction, intersect, 0, worldHalfWidth, pointerWorlds); // prettier-ignore
 				animatedArrows.push(arrow);
 			}
 		}
@@ -245,11 +233,11 @@ export function executeArrowShifts(): void {
 	shifts.forEach((shift) => {
 		if (shift.kind === 'delete' || shift.kind === 'move' || shift.kind === 'animate') {
 			// Recalculate the lines through the start coordinate
-			recalculateLinesThroughCoords(slideArrows, gamefile, shift.start, worldHalfWidth, pointerWorlds, slideExceptions); // prettier-ignore
+			recalculateLinesThroughCoords(board, slideArrows, gamefile, shift.start, worldHalfWidth, pointerWorlds, slideExceptions); // prettier-ignore
 		}
 		if (shift.kind === 'add' || shift.kind === 'move') {
 			// Recalculate the lines through the end coordinate
-			recalculateLinesThroughCoords(slideArrows, gamefile, shift.end, worldHalfWidth, pointerWorlds, slideExceptions); // prettier-ignore
+			recalculateLinesThroughCoords(board, slideArrows, gamefile, shift.end, worldHalfWidth, pointerWorlds, slideExceptions); // prettier-ignore
 		}
 	});
 
@@ -262,6 +250,7 @@ export function executeArrowShifts(): void {
  * is on, adding them to this frame's list of arrows.
  */
 function recalculateLinesThroughCoords(
+	board: LiveBoard,
 	slideArrows: SlideArrows,
 	gamefile: GameFile,
 	coords: Coords,
@@ -285,7 +274,7 @@ function recalculateLinesThroughCoords(
 		const organizedLine = lines.get(lineKey);
 		if (organizedLine === undefined) continue; // No pieces on line, empty
 
-		const arrowsLineDraft = arrowscalculator.calcArrowsLineDraft(gamefile, step, slideKey, organizedLine); // prettier-ignore
+		const arrowsLineDraft = arrowscalculator.calcArrowsLineDraft(board, gamefile, step, slideKey, organizedLine); // prettier-ignore
 		if (arrowsLineDraft === undefined) continue; // Only intersects the corner of our screen, not visible.
 
 		// Remove Unnecessary arrows...
@@ -295,7 +284,7 @@ function recalculateLinesThroughCoords(
 				continue; // No more pieces on this line
 		}
 
-		const { line } = arrowscalculator.convertLineDraftToLine(arrowsLineDraft, step, slideKey, worldHalfWidth, pointerWorlds, false); // prettier-ignore
+		const { line } = arrowscalculator.convertLineDraftToLine(board, gamefile, arrowsLineDraft, step, slideKey, worldHalfWidth, pointerWorlds, false); // prettier-ignore
 		slideArrows[slideKey] = slideArrows[slideKey] ?? {}; // Make sure this exists first.
 		slideArrows[slideKey][lineKey] = line;
 	}
@@ -304,8 +293,6 @@ function recalculateLinesThroughCoords(
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// State management
-	reset,
 	// Queuing modifications
 	deleteArrow,
 	moveArrow,

@@ -1,39 +1,30 @@
-// src/client/scripts/esm/game/rendering/animation.ts
+// src/client/scripts/esm/board/rendering/animation/animation.ts
 
 /**
- * This script handles the animation of pieces.
- * It also plays the sounds.
+ * This script handles the animation of pieces, on whichever live board they move on.
+ * It also plays each move's landing effects, through moveeffects.
  */
 
-import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
-import type { Color } from '../../../../../shared/types/color.js';
-import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
+import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
+import type { Color } from '../../../../../../shared/types/color.js';
+import type LiveBoard from '../LiveBoard.js';
+import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import math from '../../../../../shared/util/math/math.js';
-import bdcoords from '../../../../../shared/util/bdcoords.js';
-import coordutil from '../../../../../shared/util/coordutil.js';
-import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
-import vectors, { Vec3 } from '../../../../../shared/util/math/vectors.js';
-import typeutil, { RawType, TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
+import math from '../../../../../../shared/util/math/math.js';
+import bdcoords from '../../../../../../shared/util/bdcoords.js';
+import coordutil from '../../../../../../shared/util/coordutil.js';
+import piecethemes from '../../../../../../shared/chess/util/piecethemes.js';
+import vectors, { Vec3 } from '../../../../../../shared/util/math/vectors.js';
+import typeutil, { RawType, TypeGroup } from '../../../../../../shared/chess/util/typeutil.js';
 
-import meshes from '../../board/rendering/meshes.js';
-import camera from '../../board/rendering/camera.js';
+import meshes from '../meshes.js';
 import splines from './splines.js';
-import boardpos from '../../board/rendering/boardpos.js';
-import movesound from '../movesound.js';
-import arrowshifts from './arrows/arrowshifts.js';
-import piecemodels from '../../board/rendering/piecemodels.js';
-import { GameBus } from '../../board/GameBus.js';
-import frametracker from '../../board/rendering/frametracker.js';
-import texturecache from '../../chess/rendering/texturecache.js';
-import WaterRipples from './WaterRipples.js';
-import instancedshapes from '../../board/rendering/instancedshapes.js';
-import {
-	createRenderable,
-	createRenderable_Instanced_GivenInfo,
-} from '../../board/rendering/renderable.js';
+import moveeffects from './moveeffects.js';
+import arrowshifts from '../arrows/arrowshifts.js';
+import piecemodels from '../piecemodels.js';
+import instancedshapes from '../instancedshapes.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -71,7 +62,7 @@ type SegmentInfo = {
 };
 
 /** Represents an animation of a piece. */
-interface Animation {
+export interface Animation {
 	/** The type of piece to animate. */
 	type: number;
 	/** The original integer coordinates of the piece's path. Minimum: 2 */
@@ -149,18 +140,8 @@ const MOVE_ANIMATION_DURATION = {
 
 // Variables -------------------------------------------------------------------
 
-/** The list of all current animations */
-const animations: Animation[] = [];
-
 /** If this is enabled, the spline of the animations will be rendered, and the animations' duration increased. */
 let DEBUG = false;
-
-// Events ----------------------------------------------------------------------
-
-GameBus.addEventListener('game-unloaded', () => {
-	// Clear all animations from the last game
-	clearAnimations();
-});
 
 // Adding / Clearing Animations ------------------------------------------------
 
@@ -175,6 +156,7 @@ GameBus.addEventListener('game-unloaded', () => {
  * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
  */
 function animatePiece(
+	board: LiveBoard,
 	type: number,
 	path: Coords[],
 	showKeyframes: Map<number, Piece[]>,
@@ -184,7 +166,7 @@ function animatePiece(
 	premove = false,
 ): void {
 	if (path.length < 2) throw new Error('Animation requires at least 2 waypoints');
-	if (resetAnimations) clearAnimations(true);
+	if (resetAnimations) clearAnimations(board, true);
 
 	// Generate smooth spline waypoints
 	const path_smooth = splines.generateSplinePath(path, SPLINES.RESOLUTION);
@@ -208,7 +190,8 @@ function animatePiece(
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
 	if (instant)
-		return movesound.playMove(
+		return moveeffects.playMove(
+			board,
 			totalDistance,
 			showKeyframes.size !== 0,
 			premove,
@@ -229,9 +212,9 @@ function animatePiece(
 		soundPlayed: false,
 	};
 
-	scheduleSoundPlayback(newAnimation);
-	scheduleAnimationRemoval(newAnimation);
-	animations.push(newAnimation);
+	scheduleSoundPlayback(board, newAnimation);
+	scheduleAnimationRemoval(board, newAnimation);
+	board.animations.push(newAnimation);
 }
 
 /**
@@ -241,13 +224,13 @@ function animatePiece(
  * (in that scenario we immediately play the sound),
  * or when the game is unloaded.
  */
-function clearAnimations(playSounds = false): void {
-	animations.forEach((animation) => {
+function clearAnimations(board: LiveBoard, playSounds = false): void {
+	board.animations.forEach((animation) => {
 		clearTimeout(animation.soundTimeoutId); // Don't play it twice..
 		clearTimeout(animation.scheduledRemovalId); // Don't remove it twice..
-		if (playSounds && !animation.soundPlayed) playAnimationSound(animation); // .. play it NOW.
+		if (playSounds && !animation.soundPlayed) playAnimationSound(board, animation); // .. play it NOW.
 	});
-	animations.length = 0; // Empties existing animations
+	board.animations.length = 0; // Empties existing animations
 }
 
 function toggleDebug(): void {
@@ -320,18 +303,18 @@ function calculateAnimationDuration(totalDistance: BigDecimal, waypointCount: nu
 }
 
 /** Schedules the playback of the sound of the animation. */
-function scheduleSoundPlayback(animation: Animation): void {
+function scheduleSoundPlayback(board: LiveBoard, animation: Animation): void {
 	const playbackTime = Math.max(0, animation.durationMillis + SOUND_OFFSET);
-	animation.soundTimeoutId = setTimeout(() => playAnimationSound(animation), playbackTime);
+	animation.soundTimeoutId = setTimeout(() => playAnimationSound(board, animation), playbackTime);
 }
 
 /** Schedules the removal of an animation after it's over. */
-function scheduleAnimationRemoval(animation: Animation): void {
+function scheduleAnimationRemoval(board: LiveBoard, animation: Animation): void {
 	animation.scheduledRemovalId = setTimeout(() => {
-		const index = animations.indexOf(animation);
+		const index = board.animations.indexOf(animation);
 		if (index === -1) return; // Already removed
-		animations.splice(index, 1);
-		frametracker.onVisualChange();
+		board.animations.splice(index, 1);
+		board.frames.onVisualChange();
 	}, animation.durationMillis);
 }
 
@@ -340,8 +323,9 @@ function scheduleAnimationRemoval(animation: Animation): void {
  * @param animation - The animation to play the sound for.
  * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
-function playAnimationSound(animation: Animation): void {
-	movesound.playMove(
+function playAnimationSound(board: LiveBoard, animation: Animation): void {
+	moveeffects.playMove(
+		board,
 		animation.totalDistance,
 		animation.showKeyframes.size !== 0,
 		animation.premove,
@@ -353,32 +337,31 @@ function playAnimationSound(animation: Animation): void {
 // Updating --------------------------------------------------------------------
 
 /** Flags the frame to be rendered if there are any animations, and adds an arrow indicator animation for each */
-function update(): void {
-	WaterRipples.update();
+function update(board: LiveBoard): void {
+	if (board.animations.length === 0) return;
 
-	if (animations.length === 0) return;
-
-	frametracker.onVisualChange();
-	animations.forEach((animation) => shiftArrowIndicatorOfAnimatedPiece(animation)); // Animate the arrow indicator
+	board.frames.onVisualChange();
+	board.animations.forEach((animation) => shiftArrowIndicatorOfAnimatedPiece(board, animation)); // Animate the arrow indicator
 }
 
 /** Animates the arrow indicator */
-function shiftArrowIndicatorOfAnimatedPiece(animation: Animation): void {
+function shiftArrowIndicatorOfAnimatedPiece(board: LiveBoard, animation: Animation): void {
 	const segmentInfo = getCurrentSegment(animation);
 	// Delete the arrows of the hidden pieces
 	forEachActiveKeyframe(animation.hideKeyframes, segmentInfo.segmentNum, (coords) =>
-		coords.forEach((c) => arrowshifts.deleteArrow(c)),
+		coords.forEach((c) => arrowshifts.deleteArrow(board, c)),
 	);
 	const animationCurrentCoords = getCurrentAnimationPosition(animation.segments, segmentInfo);
 	// Add the arrow of the animated piece (also removes the arrow it off its destination square)
 	arrowshifts.animateArrow(
+		board,
 		animation.path[animation.path.length - 1]!,
 		animationCurrentCoords,
 		animation.type,
 	);
 	// Add the arrows of the captured pieces only after we've shifted the piece that captured it
 	forEachActiveKeyframe(animation.showKeyframes, segmentInfo.segmentNum, (pieces) =>
-		pieces.forEach((p) => arrowshifts.addArrow(p.type, p.coords)),
+		pieces.forEach((p) => arrowshifts.addArrow(board, p.type, p.coords)),
 	);
 }
 
@@ -388,30 +371,34 @@ function shiftArrowIndicatorOfAnimatedPiece(animation: Animation): void {
  * [ZOOMED IN] Renders the transparent squares that block out the default rendering of the pieces while the animation is visible.
  * This works because they are higher in the depth buffer than the pieces.
  */
-function renderTransparentSquares(): void {
-	if (!animations.length) return;
+function renderTransparentSquares(board: LiveBoard): void {
+	if (!board.animations.length) return;
 
 	const color: Color = [0, 0, 0, 0];
 	// Calls map() on each animation, and then flats() the results into a single array.
-	const data = animations.flatMap((animation) => {
+	const data = board.animations.flatMap((animation) => {
 		const hidesData: number[] = [];
 		const segmentNum = getCurrentSegment(animation).segmentNum;
 		forEachActiveKeyframe(animation.hideKeyframes, segmentNum, (v) => {
-			v.forEach((coord) => hidesData.push(...meshes.QuadWorld_Color(coord, color)));
+			v.forEach((coord) =>
+				hidesData.push(...meshes.QuadWorld_Color(board.boardpos, coord, color)),
+			);
 		});
 		return hidesData;
 	});
 
-	createRenderable(data, 2, 'TRIANGLES', 'color', true).render([0, 0, TRANSPARENT_SQUARE_Z]);
+	board.renderable
+		.createRenderable(data, 2, 'TRIANGLES', 'color', true)
+		.render([0, 0, TRANSPARENT_SQUARE_Z]);
 }
 
 /** [ZOOMED IN] Renders the animations of the pieces. */
-function renderAnimations(): void {
-	if (animations.length === 0) return;
+function renderAnimations(board: LiveBoard): void {
+	if (board.animations.length === 0) return;
 
 	if (DEBUG)
-		animations.forEach((animation) =>
-			splines.renderSplineDebug(animation.path_smooth, SPLINES.WIDTH, SPLINES.COLOR),
+		board.animations.forEach((animation) =>
+			splines.renderSplineDebug(board, animation.path_smooth, SPLINES.WIDTH, SPLINES.COLOR),
 		);
 
 	/**
@@ -421,10 +408,10 @@ function renderAnimations(): void {
 	 * for each type of piece included in the animations.
 	 */
 
-	const boardPos = boardpos.getBoardPos();
+	const boardPos = board.boardpos.getBoardPos();
 
 	/** Whether the textures should be inverted or not, based on whether we're viewing black's perspective. */
-	const inverted = camera.getIsViewingBlackPerspective();
+	const inverted = board.camera.getIsViewingBlackPerspective();
 
 	const vertexData = instancedshapes.getDataTexture(inverted);
 
@@ -434,7 +421,7 @@ function renderAnimations(): void {
 	const capturedPiecesInstanceData: TypeGroup<number[]> = {};
 	const movingPiecesInstanceData: TypeGroup<number[]> = {};
 
-	animations.forEach((animation) => {
+	board.animations.forEach((animation) => {
 		const segmentInfo = getCurrentSegment(animation);
 		const currentPos = getCurrentAnimationPosition(animation.segments, segmentInfo);
 
@@ -466,22 +453,24 @@ function renderAnimations(): void {
 
 	// Render all
 
-	const boardScale = boardpos.getBoardScaleAsNumber();
+	const boardScale = board.boardpos.getBoardScaleAsNumber();
 	const scale: Vec3 = [boardScale, boardScale, 1];
 
 	/** Renders an entire group of pieces, organized by type. */
 	function renderTypeGroup(instanceData: TypeGroup<number[]>): void {
 		for (const [typeStr, instance_data] of Object.entries(instanceData)) {
 			const type = Number(typeStr);
-			const texture = texturecache.getTexture(type);
-			createRenderable_Instanced_GivenInfo(
-				vertexData,
-				instance_data,
-				piecemodels.ATTRIBUTE_INFO,
-				'TRIANGLES',
-				'textureInstanced',
-				[{ texture, uniformName: 'u_sampler' }],
-			).render(undefined, scale);
+			const texture = board.textures.getTexture(type);
+			board.renderable
+				.createRenderable_Instanced_GivenInfo(
+					vertexData,
+					instance_data,
+					piecemodels.ATTRIBUTE_INFO,
+					'TRIANGLES',
+					'textureInstanced',
+					[{ texture, uniformName: 'u_sampler' }],
+				)
+				.render(undefined, scale);
 		}
 	}
 
@@ -624,7 +613,6 @@ function forEachActiveKeyframe<T>(
 }
 
 export default {
-	animations,
 	animatePiece,
 	clearAnimations,
 	toggleDebug,

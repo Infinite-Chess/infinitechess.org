@@ -19,7 +19,7 @@ export class EventBus<T extends Record<string, any>> {
 		this.target.addEventListener(type, listener as any, options);
 	}
 
-	/** Unsubscribes a listener previously passed to {@link EventBus.addEventListener}. */
+	/** Unsubscribes a listener previously passed to {@link EventBus#addEventListener}. */
 	removeEventListener<K extends keyof T & string>(
 		type: K,
 		listener: (event: CustomEvent<T[K]>) => void,

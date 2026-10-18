@@ -9,6 +9,7 @@
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
+import type { Camera } from './camera.js';
 import type { BoardPos } from './boardpos.js';
 import type {
 	BoundingBox,
@@ -23,8 +24,6 @@ import bdcoords from '../../../../../shared/util/bdcoords.js';
 import { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import coordutil, { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
-import camera from './camera.js';
-import boardpos from './boardpos.js';
 import primitives from './primitives.js';
 import boardgeometry from './boardgeometry.js';
 
@@ -50,9 +49,9 @@ function getCoordBoxModel(coords: DoubleCoords): DoubleBoundingBox {
 /**
  * [World Space] Returns a bounding box of a square.
  */
-function getCoordBoxWorld(coords: Coords): DoubleBoundingBox {
-	const boardPos = boardpos.getBoardPos();
-	const boardScale = boardpos.getBoardScaleAsNumber();
+function getCoordBoxWorld(bpos: BoardPos, coords: Coords): DoubleBoundingBox {
+	const boardPos = bpos.getBoardPos();
+	const boardScale = bpos.getBoardScaleAsNumber();
 
 	const squareCenterScaled = boardgeometry.getSquareCenterAsNumber() * boardScale;
 
@@ -110,8 +109,8 @@ function expandTileBoundingBoxToEncompassWholeSquareBD(boundingBox: BoundingBoxB
  * Since its floating, we don't bother to subtract squareCenter.
  */
 function applyWorldTransformationsToBoundingBox(
+	bpos: BoardPos,
 	boundingBox: BoundingBoxBD,
-	bpos: BoardPos = boardpos,
 ): DoubleBoundingBox {
 	const boardPos = bpos.getBoardPos();
 	const boardScale = bpos.getBoardScaleAsNumber();
@@ -137,17 +136,22 @@ function QuadModel_Color(coords: DoubleCoords, color: Color): number[] {
 /**
  * [World Space] Generates the vertex data of a square highlight, given the coords and color.
  */
-function QuadWorld_Color(coords: Coords, color: Color): number[] {
-	const { left, bottom, right, top } = getCoordBoxWorld(coords);
+function QuadWorld_Color(bpos: BoardPos, coords: Coords, color: Color): number[] {
+	const { left, bottom, right, top } = getCoordBoxWorld(bpos, coords);
 	return primitives.Quad_Color(left, bottom, right, top, color);
 }
 
 /**
  * [World Space] Generates the vertex data of a colored texture.
  */
-function QuadWorld_ColorTexture(coords: Coords, color: Color): number[] {
-	const { texleft, texbottom, texright, textop } = getPieceTexCoords();
-	const { left, right, bottom, top } = getCoordBoxWorld(coords);
+function QuadWorld_ColorTexture(
+	cam: Camera,
+	bpos: BoardPos,
+	coords: Coords,
+	color: Color,
+): number[] {
+	const { texleft, texbottom, texright, textop } = getPieceTexCoords(cam);
+	const { left, right, bottom, top } = getCoordBoxWorld(bpos, coords);
 	const [r, g, b, a] = color;
 
 	// prettier-ignore
@@ -158,13 +162,13 @@ function QuadWorld_ColorTexture(coords: Coords, color: Color): number[] {
  * Returns the texture coordinates for a full-texture piece quad (UV range 0–1),
  * flipped when viewing from black's perspective.
  */
-function getPieceTexCoords(): {
+function getPieceTexCoords(cam: Camera): {
 	texleft: number;
 	texbottom: number;
 	texright: number;
 	textop: number;
 } {
-	const isBlack = camera.getIsViewingBlackPerspective();
+	const isBlack = cam.getIsViewingBlackPerspective();
 	return {
 		texleft: isBlack ? 1 : 0,
 		texbottom: isBlack ? 1 : 0,
@@ -176,9 +180,12 @@ function getPieceTexCoords(): {
 /**
  * [World Space, LINE_LOOP] Generates the vertex data of a rectangle outline.
  */
-function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
+function RectWorld(bpos: BoardPos, boundingBox: BoundingBox, color: Color): number[] {
 	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
-	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
+	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(
+		bpos,
+		boundingBoxBD,
+	);
 	return primitives.Rect(left, bottom, right, top, color);
 }
 
@@ -216,9 +223,9 @@ function RectWorld(boundingBox: BoundingBox, color: Color): number[] {
 
 /** Returns the position and uniform scale needed to render a board-space model. */
 function getBoardRenderTransform(
+	bpos: BoardPos,
 	offset: Coords,
 	z: number = 0,
-	bpos: BoardPos = boardpos,
 ): { position: Vec3; scale: Vec3 } {
 	const boardPos = bpos.getBoardPos();
 	const position = getModelPosition(boardPos, offset, z);

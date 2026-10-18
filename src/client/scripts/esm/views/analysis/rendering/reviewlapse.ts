@@ -12,9 +12,10 @@ import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
+import gamescene from '../../../game/rendering/gamescene.js';
 import gamereview from '../gamereview.js';
 import drawarrows from '../../../game/rendering/highlights/annotations/drawarrows.js';
-import boardglyphs from '../../../game/rendering/glyphs/boardglyphs.js';
+import boardglyphs from '../../../board/rendering/glyphs/boardglyphs.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
@@ -36,7 +37,7 @@ function render(): void {
 	if (!review || !gamereview.isLapseKey(review.classification)) return;
 
 	if (review.bestMove !== undefined) renderBestMoveArrow(review.bestMove);
-	boardglyphs.render(review.classification, [node.move.endCoords]);
+	boardglyphs.render(gamescene.getGameContext(), review.classification, [node.move.endCoords]);
 }
 
 /** Renders the arrow of the move that should have been played, given as a move token. */

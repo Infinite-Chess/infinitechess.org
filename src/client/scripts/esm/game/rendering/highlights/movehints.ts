@@ -5,7 +5,7 @@
  * and our own piece is selected:
  *
  * [Zoomed out] Green entity squares at each individual legal move location.
- * [Zoomed in]  Arrow indicators (via arrows.ts) for off-screen individual legal moves.
+ * [Zoomed in]  Arrow indicators (via arrowinteraction.ts) for off-screen individual legal moves.
  */
 
 import type { Color } from '../../../../../../shared/types/color.js';
@@ -20,12 +20,13 @@ import gamefileutility from '../../../../../../shared/chess/logic/gamefileutilit
 import snapping from './snapping.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import gameslot from '../../chess/gameslot.js';
+import gamescene from '../gamescene.js';
 import selection from '../../chess/selection.js';
 import gamesession from '../../chess/gamesession.js';
 import drawsquares from './annotations/drawsquares.js';
 import preferences from '../../../util/preferences.js';
 import { GameBus } from '../../../board/GameBus.js';
-import squarerendering from './squarerendering.js';
+import squarerendering from '../../../board/rendering/squarerendering.js';
 
 // Variables -------------------------------------------------------------------
 
@@ -101,14 +102,17 @@ function render(): void {
 		isPremove: false,
 	});
 	const u_size = snapping.getEntityWidthWorld();
-	squarerendering.genModel(individualMoves, color).render(undefined, undefined, { u_size });
+	const ctx = gamescene.getGameContext();
+	squarerendering.genModel(ctx, individualMoves, color).render(undefined, undefined, { u_size });
 
 	// Render hovered move hints at higher opacity
 	const allHovered = drawsquares.getAllSquaresHovered(individualMoves);
 	if (allHovered.length > 0) {
 		const hoverColor: Color = [...color];
-		hoverColor[3] = drawsquares.HOVER_OPACITY;
-		squarerendering.genModel(allHovered, hoverColor).render(undefined, undefined, { u_size });
+		hoverColor[3] = squarerendering.HOVER_OPACITY;
+		squarerendering
+			.genModel(ctx, allHovered, hoverColor)
+			.render(undefined, undefined, { u_size });
 	}
 }
 

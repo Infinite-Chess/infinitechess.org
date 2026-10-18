@@ -107,7 +107,7 @@ function update(arrows: Arrow[]): void {
 				}
 			} else {
 				// No snap
-				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+				drag_start = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 			}
 		}
 	} else {
@@ -156,7 +156,7 @@ function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arro
 		}
 	} else {
 		// No snap
-		drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+		drag_end = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 	}
 
 	// Skip if end equals start (no arrow drawn)
@@ -237,7 +237,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	const entityWidthWorld: number = snapping.getEntityWidthWorld();
 	// How many squares wide highlights are at this zoom distance.
 	const entityWidthSquares: BigDecimal = boardpos.areZoomedOut()
-		? space.convertWorldSpaceToGrid(entityWidthWorld)
+		? space.convertWorldSpaceToGrid(boardpos, entityWidthWorld)
 		: ONE;
 
 	// The size of entities at this zoom level.
@@ -254,8 +254,16 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	if (bd.compare(totalLengthSquares, arrowBaseOffsetSquares) <= 0) return [];
 
 	// Calculate the base and tip world space coordinates
-	let startWorld = space.convertCoordToWorldSpace(bdcoords.fromCoords(arrow.start));
-	let endWorld = space.convertCoordToWorldSpace(bdcoords.fromCoords(arrow.end));
+	let startWorld = space.convertCoordToWorldSpace(
+		bdcoords.fromCoords(arrow.start),
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
+	let endWorld = space.convertCoordToWorldSpace(
+		bdcoords.fromCoords(arrow.end),
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
 	// Apply the base offset to the start world coordinates
 	// so the arrow base doesn't start exactly at the center of the square.
 	startWorld[0] += arrow.xRatio * arrowBaseOffsetWorld;
@@ -297,7 +305,11 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	// startWorld: Make sure it doesn't come before the first intersection.
 	// If it does, set it to the first intersection.
 	// To do this, we're going to have to compare dot products.
-	const firstIntersectionWorld = space.convertCoordToWorldSpace(intersections[0]!.coords!);
+	const firstIntersectionWorld = space.convertCoordToWorldSpace(
+		intersections[0]!.coords!,
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
 	const startToFirstIntersection: DoubleCoords = coordutil.subtractDoubleCoords(
 		firstIntersectionWorld,
 		startWorld,
@@ -308,7 +320,11 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 
 	// endWorld: Make sure it doesn't go past the last intersection.
 	// If it does, set it to the last intersection.
-	const lastIntersectionWorld = space.convertCoordToWorldSpace(intersections[1]!.coords!);
+	const lastIntersectionWorld = space.convertCoordToWorldSpace(
+		intersections[1]!.coords!,
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
 	const endToLastIntersection: DoubleCoords = coordutil.subtractDoubleCoords(
 		lastIntersectionWorld,
 		endWorld,

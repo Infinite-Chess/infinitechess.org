@@ -39,7 +39,7 @@ const MINUTE_MS = 60000;
 /**
  * The timestamps of each client's recent requests, keyed by `"IP|User-Agent"`.
  * A list's length is how many requests that client has made within the past
- * {@link MINUTE_MS}. Swept by an interval below.
+ * {@link MINUTE_MS}. Swept by {@link purgeExpiredClients}.
  */
 const rateLimitHash: Record<string, number[]> = {};
 
@@ -52,6 +52,14 @@ const recentRequests: number[] = [];
 
 /** Whether we think we're currently experiencing a DDOS. If true, 429 errors never render html, returning a plain json/string instead. */
 let underAttackMode = false;
+
+// Scheduling ------------------------------------------------------------------
+
+/** Starts the per-client purge and the attack-mode watchdog on their timers. */
+function start(): void {
+	setInterval(() => purgeExpiredClients(), RATE_UPDATE_INTERVAL_MS);
+	setInterval(() => checkForAttack(), ATTACK_WINDOW_MS);
+}
 
 // Recording -------------------------------------------------------------------
 
@@ -101,8 +109,8 @@ function getRetryAfterSeconds(timestamps: number[]): number {
 	return Math.max(1, Math.ceil(retryAfterMillis / 1000));
 }
 
-/** Periodically clears {@link rateLimitHash} of clients whose every timestamp is older than {@link MINUTE_MS}. */
-setInterval(() => {
+/** Clears {@link rateLimitHash} of clients whose every timestamp is older than {@link MINUTE_MS}. */
+function purgeExpiredClients(): void {
 	const currentTimeMillis = Date.now();
 
 	for (const [key, timestamps] of Object.entries(rateLimitHash)) {
@@ -137,7 +145,7 @@ setInterval(() => {
 		timestamps.splice(0, indexToSplitAt);
 		if (timestamps.length === 0) delete rateLimitHash[key];
 	}
-}, RATE_UPDATE_INTERVAL_MS);
+}
 
 // Attack-mode watchdog --------------------------------------------------------
 
@@ -147,14 +155,14 @@ function isUnderAttack(): boolean {
 }
 
 /**
- * Periodically strips {@link recentRequests} of timestamps longer than
+ * Strips {@link recentRequests} of timestamps longer than
  * {@link ATTACK_WINDOW_MS} ago. Uses binary search to quickly find the splice
  * point, so we don't potentially have to check hundreds of timestamps.
  *
  * This also toggles {@link underAttackMode} if it thinks we have had SO many recent
  * connections that it must be a DDOS attack.
  */
-setInterval(() => {
+function checkForAttack(): void {
 	// Delete recent requests longer than the attack window ago
 	const windowStart = Date.now() - ATTACK_WINDOW_MS;
 	const indexToSplitAt = jsutil.findIndexOfPointInOrganizedArray(recentRequests, windowStart);
@@ -170,13 +178,15 @@ setInterval(() => {
 		underAttackMode = false;
 		logAttackEnd();
 	}
-}, ATTACK_WINDOW_MS);
+}
 
+/** Logs that a probable DDOS attack has begun. */
 function logAttackBegin(): void {
 	const logText = `Probable DDOS attack happening now. Initial recent request count: ${recentRequests.length}`;
 	logEvents.addAndPrint(logText, 'hackLog');
 }
 
+/** Logs that the DDOS attack has ended. */
 function logAttackEnd(): void {
 	const logText = `DDOS attack has ended.`;
 	logEvents.addAndPrint(logText, 'hackLog');
@@ -185,6 +195,8 @@ function logAttackEnd(): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Scheduling
+	start,
 	// Recording
 	recordRecent,
 	// Metering

@@ -73,11 +73,15 @@ const GitHubContributorSchema = z.array(
   }
   ```
  */
-let contributors: Contributor[] = loadContributorsSnapshot();
-
-setInterval(() => refresh(), INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
+let contributors: Contributor[] = [];
 
 // Functions -------------------------------------------------------------------
+
+/** Loads the snapshot, then refreshes the list from GitHub on a timer. */
+function start(): void {
+	contributors = loadContributorsSnapshot();
+	setInterval(() => refresh(), INTERVAL_TO_REFRESH_CONTRIBUTORS_MS);
+}
 
 /**
  * Reads the contributor snapshot off disk, so the site has a list before the first refresh.
@@ -200,4 +204,4 @@ function get(): Contributor[] {
 
 // Exports ---------------------------------------------------------------------
 
-export default { refresh, get };
+export default { start, refresh, get };

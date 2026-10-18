@@ -25,12 +25,8 @@ import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/
 
 // Types -----------------------------------------------------------------------
 
-/**
- * Per-player rating outcome of a finalized rated game: the rating going in (at-game) + the delta.
- * Server-internal — the at-game rating feeds the SSR side bar; only the delta is sent to clients
- * (the base rating is always SSR'd, never needed on the wire).
- */
-export type PlayerRatingResult = { ratingAtGame: Rating; change: number };
+/** A member's rating going into a game, and its change once the game is logged, if rated. */
+export type MemberRating = { rating: Rating; change?: number };
 
 /** Contains information about this player's disconnection and their opponent's claim window. */
 export type PlayerDisconnect = {
@@ -96,6 +92,11 @@ export interface MatchInfo {
 	timeCreated: number;
 	/** The time this game ended, the game conclusion was set and the clocks were stopped serverside. */
 	timeEnded?: number;
+	/**
+	 * The time the latest move was accepted, or the match was created if none has been.
+	 * Ephemeral — never persisted: a restored game restarts it at its restore time.
+	 */
+	timeLastMove: number;
 	/** Whether the match is rated. A rated game is always server validated. */
 	rated: boolean;
 	/** Whether the match is private (created from "Challenge a friend" flow). */
@@ -162,11 +163,11 @@ export type ServerGame = Game & {
 	/** Sockets spectating this game (non-participants). */
 	spectators: Set<CustomWebSocket>;
 	/**
-	 * Per-player rating results (at-game rating + delta), retained once a rated game finalizes so
-	 * late resyncers get the deltas AND the finalized side bar displays the at-game rating (the
-	 * leaderboard is already post-calc by then).
+	 * Each member's rating, read once when the game is built, and never persisted. Display-only:
+	 * an elo changes only when its owner's own game is logged, and nobody is in two live games,
+	 * but the logger still reads its own, since rating math needs the deviation too.
 	 */
-	ratingResults?: PlayerGroup<PlayerRatingResult>;
+	ratings: PlayerGroup<MemberRating>;
 	/** Preset square and ray overrides. Custom games only — a preset's come off its variant module. */
 	presetAnnotes?: PresetAnnotes;
 } & ValidationDependant;

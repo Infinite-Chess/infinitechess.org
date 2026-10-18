@@ -3,13 +3,11 @@
 /**
  * This is a client-side script that executes global and local moves,
  * making both the logical, and graphical changes.
- *
- * We also have the animate move method here.
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
-import type { Edit, MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
+import type { MoveFull, MoveTagged } from '../../../../../shared/chess/logic/movepiece.js';
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 import movepiece from '../../../../../shared/chess/logic/movepiece.js';
@@ -18,15 +16,14 @@ import wincondition from '../../../../../shared/chess/logic/wincondition.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 
 import gameslot from './gameslot.js';
-import { Mesh } from '../../board/rendering/piecemodels.js';
 import premoves from './premoves.js';
 import gamescene from '../rendering/gamescene.js';
-import animation from '../rendering/animation.js';
-import piecemodels from '../../board/rendering/piecemodels.js';
+import animation from '../../board/rendering/animation/animation.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';
 import frametracker from '../../board/rendering/frametracker.js';
-import graphicalchanges from './graphicalchanges.js';
+import graphicalchanges from '../../board/rendering/graphicalchanges.js';
+import piecemodels, { Mesh } from '../../board/rendering/piecemodels.js';
 
 // Global Moving ---------------------------------------------------------------
 
@@ -39,9 +36,7 @@ function commitMove(
 	moveTagged: MoveTagged,
 	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
-	const move = movepiece.generateMove(gamefile, moveTagged);
-
-	movepiece.makeMove(gamefile, move); // Logical changes
+	const move = movepiece.generateAndMakeMove(gamefile, moveTagged);
 
 	// Must run before announceMove(): a checkmate conclusion flags the move as mate, and the
 	// move list renders each ply's notation (# vs +) once, from the flags it sees then.
@@ -79,7 +74,8 @@ function makeMove(
 ): MoveFull {
 	const move = commitMove(gamefile, moveTagged, conclusion);
 	announceMove(gamefile);
-	if (mesh) runMeshChanges(gamefile, mesh, move, true);
+	if (mesh)
+		graphicalchanges.runMeshChanges(gamescene.getGameContext(), gamefile, mesh, move, true);
 	GameBus.dispatch('view-move'); // Committing a move at the front also advances the viewed position.
 	GameBus.dispatch('view-front'); // ...to the new front, so the moves panel follows it.
 	return move;
@@ -119,36 +115,18 @@ function makeMoveAndAnimate(
 	conclusion: 'detect' | GameConclusion | undefined,
 ): MoveFull {
 	const move = makeMove(gamefile, mesh, moveTagged, conclusion);
-	if (mesh) graphicalchanges.animateMove(move.changes, true);
+	if (mesh) graphicalchanges.animateMove(gamescene.getGameContext(), move.changes, true);
 	return move;
-}
-
-/**
- * Wrapper for performing the graphical mesh changes of an edit.
- *
- * If the newlyRegenerated flag is present, indicating the organized pieces were regenerated,
- * than we instead need to regenerate all piece models.
- * Otherwise, we run graphical changes as normal.
- *
- * We have to regenerate ALL types here, not just the ones whos type ranges
- * were affected, because other pieces may still need graphical changes
- * from the move's changes! For example, pawn deleted that promoted.
- */
-function runMeshChanges(boardsim: GameFile, mesh: Mesh, edit: Edit, forward: boolean): void {
-	if (boardsim.pieces.newlyRegenerated)
-		piecemodels.regenAll(gamescene.getGameContext(), boardsim, mesh);
-	else boardchanges.runChanges(mesh, edit.changes, graphicalchanges.meshChanges, forward); // Graphical changes
-	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 }
 
 /** Makes a global backward move in the game. */
 function rewindMove(gamefile: GameFile, mesh: Mesh | undefined): void {
 	// Terminate all current animations to avoid a crash when undoing moves
-	animation.clearAnimations();
+	animation.clearAnimations(gamescene.getGameContext());
 	// movepiece.rewindMove() deletes the move, so we need to keep a reference here.
 	const lastMove = moveutil.getLastMove(gamefile.moves)!;
 	movepiece.rewindMove(gamefile); // Logical changes
-	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, graphicalchanges.meshChanges, false); // Graphical changes
+	if (mesh) boardchanges.runChanges(mesh, lastMove.changes, graphicalchanges.CHANGE_FUNCS, false); // Graphical changes
 	frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	gamefile.gameConclusion = undefined; // Un-conclude the game if it was concluded
 	GameBus.dispatch('moves-changed'); // Backward chokepoint for the committed move list (mirrors makeMove).
@@ -177,7 +155,7 @@ function viewMove(
 	movepiece.applyMove(gamefile, move, forward, updateTurn); // Apply the logical changes.
 
 	if (mesh) {
-		boardchanges.runChanges(mesh, move.changes, graphicalchanges.meshChanges, forward); // Apply the graphical changes.
+		boardchanges.runChanges(mesh, move.changes, graphicalchanges.CHANGE_FUNCS, forward); // Apply the graphical changes.
 		frametracker.onVisualChange(); // Flag the next frame to be rendered, since we ran some graphical changes.
 	}
 }
@@ -205,8 +183,9 @@ function viewIndex(
 		// Dispatch ONCE for the whole navigation, not per-ply. Listeners only care about the final resting position.
 		GameBus.dispatch('view-move');
 		// Only clear any previous animations if we viewed a different index.
-		animation.clearAnimations();
-		if (animateFinal && mesh) graphicalchanges.animateMove(lastMove.changes, forward);
+		const board = gamescene.getGameContext();
+		animation.clearAnimations(board);
+		if (animateFinal && mesh) graphicalchanges.animateMove(board, lastMove.changes, forward);
 	}
 }
 
@@ -245,17 +224,18 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	GameBus.dispatch('view-move');
-	graphicalchanges.animateMove(move.changes, forward); // Animate
+	graphicalchanges.animateMove(gamescene.getGameContext(), move.changes, forward); // Animate
 }
 
-// --------------------------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
+	// Global Moving
 	makeMove,
 	makeMoveKeepingView,
 	makeMoveAndAnimate,
-	runMeshChanges,
 	rewindMove,
+	// Local Moving
 	viewIndex,
 	viewStart,
 	viewFront,

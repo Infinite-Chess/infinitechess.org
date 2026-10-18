@@ -9,12 +9,13 @@ import type { Condition } from '../../../../../../shared/chess/util/winconutil.j
 
 import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
+import gamescene from '../../../game/rendering/gamescene.js';
 import gamereview from '../gamereview.js';
 import reviewlapse from './reviewlapse.js';
 import { GameBus } from '../../../board/GameBus.js';
 import enginearrows from './enginearrows.js';
 import frametracker from '../../../board/rendering/frametracker.js';
-import conclusionglyphs from '../../../game/rendering/glyphs/conclusionglyphs.js';
+import conclusionglyphs from '../../../board/rendering/glyphs/conclusionglyphs.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -53,5 +54,5 @@ function renderConclusion(): void {
 	if (!conclusion) return;
 	if (HISTORY_CONDITIONS.includes(conclusion.condition) && node !== movetree.getLoadedGameEnd())
 		return;
-	conclusionglyphs.render(gamefile, conclusion);
+	conclusionglyphs.render(gamescene.getGameContext(), gamefile, conclusion);
 }

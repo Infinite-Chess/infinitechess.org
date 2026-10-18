@@ -1,24 +1,24 @@
-// src/client/scripts/esm/views/index/gamesetupmodal.ts
+// src/client/scripts/esm/views/index/gamesetup/gamesetupmodal.ts
 
 /**
  * This script manages the game setup invite/seek creation modal.
  */
 
-import type { GameMode } from '../../../../../shared/transport/domain.js';
-import type { ModalMode } from '../../handoffs/gamesetuphandoff.js';
-import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
+import type { GameMode } from '../../../../../../shared/transport/domain.js';
+import type { ModalMode } from '../../../handoffs/gamesetuphandoff.js';
+import type { TimeControl } from '../../../../../../shared/chess/util/clockutil.js';
 import type { GameOptions } from './gameoptionsstore.js';
 
-import { players } from '../../../../../shared/chess/util/typeutil.js';
-import leaderboardregistry from '../../../../../shared/chess/variants/leaderboardregistry.js';
+import { players } from '../../../../../../shared/chess/util/typeutil.js';
+import leaderboardregistry from '../../../../../../shared/chess/variants/leaderboardregistry.js';
 
-import lobby from './lobby.js';
+import lobby from '../lobby.js';
 import timecontrols from './timecontrols.js';
-import validatorama from '../../util/validatorama.js';
-import variantselector from '../../board/variantselector/variantselector.js';
-import modifierselector from '../../board/variantselector/modifierselector.js';
+import validatorama from '../../../util/validatorama.js';
+import variantselector from '../../../board/variantselector/variantselector.js';
+import modifierselector from '../../../board/variantselector/modifierselector.js';
 import gameoptionsstore from './gameoptionsstore.js';
-import gamesetuphandoff from '../../handoffs/gamesetuphandoff.js';
+import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
 
 // Types -----------------------------------------------------------------------
 

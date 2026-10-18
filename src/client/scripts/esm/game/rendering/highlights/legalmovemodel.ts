@@ -33,11 +33,10 @@ import space from '../../../board/rendering/space.js';
 import meshes from '../../../board/rendering/meshes.js';
 import gameslot from '../../chess/gameslot.js';
 import boardpos from '../../../board/rendering/boardpos.js';
-import primitives from '../../../board/rendering/primitives.js';
+import boardview from '../boardview.js';
 import preferences from '../../../util/preferences.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import perspective from '../perspective.js';
-import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { AttributeInfoInstanced, RenderableInstanced } from '../../../webgl/Renderable.js';
@@ -186,7 +185,7 @@ function isViewRangeContainedInRenderRange(): boolean {
 	// The bounding box of what the camera currently sees on-screen.
 	const boundingBoxOfView: BoundingBoxBD = perspective.getEnabled()
 		? getBoundingBoxOfPerspectiveView()
-		: boardgeometry.gboundingBoxFloat();
+		: boardview.gboundingBoxFloat();
 
 	// In 2D mode, we also care about whether the
 	// camera box is significantly smaller than our render range.
@@ -232,7 +231,7 @@ function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	// New improved method of calculating render bounding box
 
-	const boundingBoxOfView = boardgeometry.gboundingBox(false);
+	const boundingBoxOfView = boardview.gboundingBox(false);
 	const width: number = Number(boundingBoxOfView.right - boundingBoxOfView.left) + 1; // Need to +1 since the board bounding box just includes the integer squares, not floating point edges.
 	const height: number = Number(boundingBoxOfView.top - boundingBoxOfView.bottom) + 1;
 
@@ -732,18 +731,7 @@ function renderOutlineOfRenderBox(): void {
 	// const color: Color = [1,0,1, 1]; // Magenta
 	// const color: Color = [0.65, 0.15, 0, 1]; // Maroon (matches light brown wood theme)
 	const color: Color = [1, 1, 1, 1]; // White
-	const data = meshes.RectWorld(boundingBoxOfRenderRange!, color);
-
-	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
-}
-
-/**
- * [DEBUG] Renders an outline of the provided floating point bounding box.
- */
-function renderOutlineofFloatingBox(box: BoundingBoxBD): void {
-	const color: Color = [0.65, 0.15, 0, 1];
-	const { left, right, bottom, top } = meshes.applyWorldTransformationsToBoundingBox(box);
-	const data = primitives.Rect(left, bottom, right, top, color);
+	const data = meshes.RectWorld(boardpos, boundingBoxOfRenderRange!, color);
 
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();
 }
@@ -761,5 +749,4 @@ export default {
 	genModelForRays,
 	// Rendering
 	renderOutlineOfRenderBox,
-	renderOutlineofFloatingBox,
 };

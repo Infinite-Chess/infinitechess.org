@@ -271,6 +271,60 @@ function getPerpendicularLine(lineCoeffs: LineCoefficients, point: BDCoords): Li
 	return [A2, B2, C2];
 }
 
+/**
+ * Finds the orthogonal or diagonal vector (or hippogonal, if searched)
+ * whose angle most closely matches the angle of the given targetVector.
+ */
+function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: boolean): Vec2 {
+	// Since the targetVector can be arbitrarily large, we need to normalize it
+	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
+	const normalizedVector = normalizeVectorBD(targetVector);
+
+	// Now we can use small numbers
+	const targetAngle = Math.atan2(normalizedVector[1], normalizedVector[0]); // Y value first
+
+	// prettier-ignore
+	const searchVectors: Vec2[] = searchHippogonals ? [
+		...VECTORS_ORTHOGONAL,
+		...VECTORS_DIAGONAL,
+		...VECTORS_HIPPOGONAL
+	] : [
+		...VECTORS_ORTHOGONAL,
+		...VECTORS_DIAGONAL
+	];
+	// Add the negation of all vectors
+	for (let i = searchVectors.length - 1; i >= 0; i--) {
+		searchVectors.push(negateVector(searchVectors[i]!));
+	}
+
+	let minAbsoluteAngleDifference = Infinity;
+	// Initialize with the first vector
+	let closestVector: Vec2 = searchVectors[0]!;
+
+	for (const predefinedVector of searchVectors) {
+		const predifinedVectorDouble: DoubleCoords = convertVectorToDoubles(predefinedVector);
+		const angle = Math.atan2(predifinedVectorDouble[1], predifinedVectorDouble[0]);
+		// Calculate the difference in angles
+		let angleDifferenceRad = targetAngle - angle;
+
+		// Normalize angleDifferenceRad to the shortest signed angle in the range [-PI, PI].
+		// This ensures that angles like -179 deg and 179 deg are considered close (2 deg diff), not far (358 deg diff).
+		// Example: diff = 350 deg (almost 2PI). Normalized: -10 deg.
+		//          diff = -350 deg. Normalized: 10 deg.
+		angleDifferenceRad =
+			angleDifferenceRad - 2 * Math.PI * Math.round(angleDifferenceRad / (2 * Math.PI));
+
+		const currentAbsoluteAngleDifference = Math.abs(angleDifferenceRad);
+
+		if (currentAbsoluteAngleDifference < minAbsoluteAngleDifference) {
+			minAbsoluteAngleDifference = currentAbsoluteAngleDifference;
+			closestVector = predefinedVector;
+		}
+	}
+
+	return closestVector;
+}
+
 /** Converts an angle in degrees to radians. */
 function degreesToRadians(angleDegrees: number): number {
 	return angleDegrees * (Math.PI / 180);
@@ -296,15 +350,9 @@ function euclideanDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): n
 }
 
 /**
- * Returns the manhatten distance between 2 points.
- * This is the sum of the distances between the points' x distance and y distance.
+ * Returns the manhattan distance between 2 points: the sum of their x and y distances.
  * This is often the distance of roads, because you can't move diagonally.
  */
-function manhattanDistance(point1: Coords, point2: Coords): bigint {
-	return bimath.abs(point2[0] - point1[0]) + bimath.abs(point2[1] - point1[1]);
-}
-
-/** {@link manhattanDistance} but for javascript double coordinates. */
 function manhattanDistanceDoubles(point1: DoubleCoords, point2: DoubleCoords): number {
 	return Math.abs(point2[0] - point1[0]) + Math.abs(point2[1] - point1[1]);
 }
@@ -364,12 +412,12 @@ export default {
 	normalizeVectorBD,
 	getPerpendicularVector,
 	getPerpendicularLine,
+	findClosestPredefinedVector,
 	degreesToRadians,
 	// Distance Calculation
 	euclideanDistance,
 	euclideanDistanceBD,
 	euclideanDistanceDoubles,
-	manhattanDistance,
 	manhattanDistanceDoubles,
 	chebyshevDistance,
 	chebyshevDistanceBD,

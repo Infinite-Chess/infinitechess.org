@@ -11,10 +11,9 @@
  *    joined another game), so it drops out of memory.
  */
 
-import type { RatingData } from '../../utility/ratingCalculation.js';
+import type { Player } from '../../../shared/chess/util/typeutil.js';
+import type { ServerGame } from './serverGameTypes.js';
 import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
-import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
-import type { PlayerRatingResult, ServerGame } from './serverGameTypes.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
@@ -33,10 +32,10 @@ import ratingAbuse from '../ratingabuse/ratingAbuse.js';
 import activeGames from './activeGames.js';
 import inGameStatus from '../seeksmanager/inGameStatus.js';
 import gamesManager from '../../database/gamesManager.js';
+import featuredGames from '../featured/featuredGames.js';
 import activePlayers from './activePlayers.js';
 import liveGameValues from './liveGameValues.js';
 import gameStateBuilder from './gameStateBuilder.js';
-import ratingCalculation from '../../utility/ratingCalculation.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
 
 // Constants -------------------------------------------------------------------
@@ -75,6 +74,7 @@ function conclude(servergame: ServerGame, conclusion: GameConclusion): void {
 	const spectatorMessage = gameStateBuilder.buildConclusionMessage(servergame);
 	gameSockets.sendToColor(servergame.match, opponentColor, 'game', 'gameconclusion', opponentMessage); // prettier-ignore
 	gameSockets.broadcastToSpectators(servergame, 'gameconclusion', spectatorMessage);
+	featuredGames.onConclusion(servergame);
 
 	free(servergame);
 }
@@ -187,9 +187,11 @@ function logConcludedGame(servergame: ServerGame): void {
 		const ratingdata = gameLogger.log(servergame); // Also drops its live-game row.
 
 		if (ratingdata !== undefined) {
-			// Retain the rating results on the game so a client that resyncs after this (but
-			// before the game is memory-evicted) still gets the deltas via its `gamestate`.
-			servergame.ratingResults = buildRatingResults(ratingdata);
+			// Retain the deltas on the game so a client that resyncs after this (but
+			// before the game is memory-evicted) still gets them via its `gamestate`.
+			for (const [color, { elo_change_from_game }] of Object.entries(ratingdata)) {
+				servergame.ratings[Number(color) as Player]!.change = elo_change_from_game!;
+			}
 			// Broadcast the deltas to everyone currently connected.
 			const ratingChanges = gameStateBuilder.getRatingChanges(servergame)!;
 			gameSockets.broadcastToEveryone(servergame, 'gameratingchange', ratingChanges);
@@ -201,22 +203,6 @@ function logConcludedGame(servergame: ServerGame): void {
 				socketSend.send(ws, 'general', 'toast-error', ws.t.responses.game.logging_failed);
 		}
 	}
-}
-
-/** Bundles each player's rating outcome (at-game rating + delta) from the rated game's results. */
-function buildRatingResults(ratingdata: RatingData): PlayerGroup<PlayerRatingResult> {
-	const ratingResults: PlayerGroup<PlayerRatingResult> = {};
-	for (const [playerStr, playerRating] of Object.entries(ratingdata)) {
-		ratingResults[Number(playerStr) as Player] = {
-			ratingAtGame: ratingCalculation.toRating(
-				playerRating.elo_at_game,
-				playerRating.rating_deviation_at_game,
-			),
-			change: playerRating.elo_change_from_game!,
-		};
-	}
-
-	return ratingResults;
 }
 
 // 3. Finalizing ---------------------------------------------------------------

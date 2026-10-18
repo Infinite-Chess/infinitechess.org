@@ -109,6 +109,12 @@
 				</div>
 			</section>
 		</div>{# .lobby-home #}
+
+		{# -- Games in play: their count, and featured cards by featuredgames.ts. #}
+		<section class="featured-games">
+			<h2 id="featured-game-count">{{ ts.featured.active_games_other | replace("{n}", "ω") }}</h2>
+			<div id="featured-cards" class="featured-cards"></div>
+		</section>
 	</div>{# .main-inner #}
 </main>
 
@@ -166,7 +172,7 @@
 							<button class="preset-btn" data-minutes="2" data-increment="2">2+2</button>
 							<button class="preset-btn" data-minutes="3" data-increment="2">3+2</button>
 							<button class="preset-btn" data-minutes="5" data-increment="2">5+2</button>
-							<button class="preset-btn active" data-minutes="8" data-increment="3">8+3</button>
+							<button class="preset-btn" data-minutes="8" data-increment="3">8+3</button>
 							<button class="preset-btn" data-minutes="10" data-increment="4">10+4</button>
 							<button class="preset-btn" data-minutes="15" data-increment="5">15+5</button>
 							<button class="preset-btn" data-minutes="20" data-increment="6">20+6</button>

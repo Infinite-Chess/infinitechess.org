@@ -19,16 +19,18 @@ import movepiece from '../../../../../shared/chess/logic/movepiece.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
 
-import arrows from '../../game/rendering/arrows/arrows.js';
+import arrows from '../../board/rendering/arrows/arrows.js';
 import gameslot from '../../game/chess/gameslot.js';
 import miniimage from '../../game/rendering/miniimage.js';
 import selection from '../../game/chess/selection.js';
+import gamescene from '../../game/rendering/gamescene.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import { GameBus } from '../../board/GameBus.js';
 import boardeditor from './boardeditor.js';
-import movesequence from '../../game/chess/movesequence.js';
 import guinavigation from './gui/guinavigation.js';
+import graphicalchanges from '../../board/rendering/graphicalchanges.js';
+import arrowinteraction from '../../game/rendering/arrows/arrowinteraction.js';
 import miniimagerenderer from '../../board/rendering/miniimagerenderer.js';
 
 // Types -----------------------------------------------------------------------
@@ -78,12 +80,6 @@ function init(pawnDoublePush: boolean | undefined, castling: boolean | undefined
 	guinavigation.update_EditButtons();
 }
 
-/** Resets the edit history state when the board editor is closed. */
-function reset(): void {
-	edits = undefined;
-	indexOfThisEdit = undefined;
-}
-
 // Running Edits ---------------------------------------------------------------
 
 /** Runs both logical and graphical changes. */
@@ -97,13 +93,13 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
 
 	// Run graphical changes
-	movesequence.runMeshChanges(gamefile, mesh, edit, forward);
+	graphicalchanges.runMeshChanges(gamescene.getGameContext(), gamefile, mesh, edit, forward);
 
 	// If the piece count is now high enough, disable icons and arrows.
 	const pieceCount = boardutil.getPieceCountOfGame(gamefile.pieces);
 	if (pieceCount > miniimagerenderer.MAX_PIECE_COUNT || pieceCount > arrows.MAX_PIECES) {
 		miniimage.disable();
-		arrows.forceModeOff();
+		arrowinteraction.forceModeOff();
 	}
 
 	// Prune the oldest edits in the history if we exceed the cap, to help prevent memory crashes.
@@ -236,7 +232,6 @@ function queueSpecialRights(gamefile: GameFile, edit: Edit, coords: Coords, add:
 export default {
 	// Initialization
 	init,
-	reset,
 	// Running Edits
 	runEdit,
 	addEditToHistory,

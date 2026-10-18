@@ -1,7 +1,7 @@
 // src/client/scripts/esm/game/rendering/gamescene.ts
 
 /**
- * The interactive game's scene: it builds the render context every other draw call needs
+ * The interactive game's scene: it builds the live board every other draw call needs
  * (shaders, post-processing pipeline, effect zones), then draws the whole board with it in
  * the correct order.
  *
@@ -19,12 +19,15 @@ import bimath from '../../../../../shared/util/math/bimath.js';
 import pieces from './pieces.js';
 import border from '../../board/rendering/border.js';
 import camera from '../../board/rendering/camera.js';
+import { gl } from '../../board/rendering/webgl.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from './highlights/snapping.js';
 import selection from '../chess/selection.js';
-import animation from './animation.js';
+import animation from '../../board/rendering/animation/animation.js';
 import starfield from './starfield.js';
+import LiveBoard from '../../board/rendering/LiveBoard.js';
+import boardview from './boardview.js';
 import highlights from './highlights/highlights.js';
 import dragarrows from './dragging/dragarrows.js';
 import maskeddraw from '../../webgl/maskeddraw.js';
@@ -35,27 +38,23 @@ import piecemodels from '../../board/rendering/piecemodels.js';
 import { GameBus } from '../../board/GameBus.js';
 import coordinates from './coordinates.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import WaterRipples from './WaterRipples.js';
-import boardgeometry from '../../board/rendering/boardgeometry.js';
-import RenderContext from '../../board/rendering/RenderContext.js';
+import WaterRipples from '../../board/rendering/WaterRipples.js';
+import frametracker from '../../board/rendering/frametracker.js';
 import draganimation from './dragging/draganimation.js';
-import webgl, { gl } from '../../board/rendering/webgl.js';
 import promotionlines from '../../board/rendering/promotionlines.js';
-import arrowsgraphics from './arrows/arrowsgraphics.js';
+import arrowsgraphics from '../../board/rendering/arrows/arrowsgraphics.js';
+import arrowinteraction from './arrows/arrowinteraction.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from './effectzone/EffectZoneManager.js';
 import selectedpiecehighlightline from './highlights/selectedpiecehighlightline.js';
-import { PostProcessingPipeline } from '../../webgl/postprocessing/PostProcessingPipeline.js';
 import Renderable, { createRenderable } from '../../board/rendering/renderable.js';
 
 // State -----------------------------------------------------------------------
 
 /** Manager of our Shaders */
 let programManager: ProgramManager;
-/** The interactive game's render context (gl, camera, boardpos, textures, tile renderer...). */
-let gameContext: RenderContext;
-/** Manager of Post Processing Effects */
-let pipeline: PostProcessingPipeline;
+/** The interactive game's live board (gl, camera, boardpos, textures, animations, arrows...). */
+let gameContext: LiveBoard;
 /** Manager of Effect Zones */
 let effectZoneManager: EffectZoneManager | undefined;
 
@@ -67,11 +66,11 @@ let effectZoneManager: EffectZoneManager | undefined;
 
 // Setup -----------------------------------------------------------------------
 
-/** Builds the game's render context and every manager drawing through it. */
+/** Builds the game's live board and every manager drawing through it. */
 function init(canvas: HTMLCanvasElement): void {
 	programManager = new ProgramManager(gl);
 	const gameMasker = maskeddraw.init(gl, programManager);
-	gameContext = new RenderContext({
+	gameContext = new LiveBoard({
 		gl,
 		canvas,
 		programManager,
@@ -79,24 +78,23 @@ function init(canvas: HTMLCanvasElement): void {
 		boardpos,
 		textures: texturecache,
 		maskedDraw: gameMasker,
+		frames: frametracker,
+		sound: true,
 	});
 	Renderable.init(gameContext.renderable); // Point the free create-functions at this context's factory
 	gameContext.boardtiles.init();
 
-	pipeline = new PostProcessingPipeline(gl, programManager);
 	effectZoneManager = new EffectZoneManager(gl, programManager);
 	// colorFlowRenderer = new ColorFlowRenderer(gl);
-	WaterRipples.init(programManager, gl.canvas.width, gl.canvas.height);
 
-	// Update the pipeline on canvas resize
 	GameBus.addEventListener('canvas-resize', (event) => {
 		const { width, height } = event.detail;
-		pipeline.resize(width, height);
+		gameContext.resize(width, height);
 	});
 }
 
-/** Returns the interactive game's render context. Must be called after {@link init}. */
-function getGameContext(): RenderContext {
+/** Returns the interactive game's live board. Must be called after {@link init}. */
+function getGameContext(): LiveBoard {
 	return gameContext;
 }
 
@@ -109,7 +107,7 @@ function updateEffectZone(): void {
 
 /** Returns the absolute value of the furthest tile from the origin on our screen. */
 function getFurthestTileVisible(): bigint {
-	const tileBox = boardgeometry.gboundingBox(false);
+	const tileBox = boardview.gboundingBox(false);
 	let furthest: bigint = 0n;
 	furthest = bimath.max(furthest, bimath.abs(tileBox.left));
 	furthest = bimath.max(furthest, bimath.abs(tileBox.right));
@@ -125,10 +123,11 @@ function render(): void {
 	// First gather all post processing effects this frame
 	const passes: PostProcessPass[] = [];
 	// Append water ripples of really far moves!
-	passes.push(...WaterRipples.getPass());
+	passes.push(...WaterRipples.getPass(gameContext));
 	// Add the current effect zone passes
 	passes.push(...effectZoneManager!.getActivePostProcessPasses());
 	// Set them in the pipeline
+	const pipeline = gameContext.pipeline;
 	pipeline.setPasses(passes);
 
 	// Only use the pipeline if there are any current effects,
@@ -180,13 +179,13 @@ function renderScene(): void {
 	renderOutlineofScreenBox();
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
-	webgl.executeWithDepthFunc_ALWAYS(() => {
+	gameContext.executeWithDepthFunc_ALWAYS(() => {
 		coordinates.render();
 		selectedpiecehighlightline.render();
 		highlights.render(gamefile);
 		GameBus.dispatch('render-below-pieces');
 		snapping.render(); // Renders ghost image or glow dot over snapped point on highlight lines.
-		animation.renderTransparentSquares(); // Required to hide the piece currently being animated
+		animation.renderTransparentSquares(gameContext); // Required to hide the piece currently being animated
 		draganimation.renderTransparentSquare(); // Required to hide the piece currently being animated
 	});
 
@@ -195,12 +194,12 @@ function renderScene(): void {
 	pieces.renderPiecesInGame(gameContext, mesh);
 
 	// Using depth function "ALWAYS" means we don't have to render with a tiny z offset
-	webgl.executeWithDepthFunc_ALWAYS(() => {
-		animation.renderAnimations();
+	gameContext.executeWithDepthFunc_ALWAYS(() => {
+		animation.renderAnimations(gameContext);
 		selection.renderGhostPiece(); // If not after pieces.renderPiecesInGame(), wont render on top of existing pieces
 		draganimation.renderPiece();
 		dragarrows.render();
-		arrowsgraphics.render();
+		arrowsgraphics.render(gameContext, arrowinteraction.getHintArrows());
 		GameBus.dispatch('render-above-pieces');
 		annotations.render_abovePieces();
 		perspective.renderCrosshair();

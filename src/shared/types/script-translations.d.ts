@@ -157,6 +157,10 @@ export interface ScriptTranslations {
 			cancel_seek: string;
 			accept_seek: string;
 		};
+		featured: {
+			active_games_one: string;
+			active_games_other: string;
+		};
 	};
 	register: {
 		verification_failed: string;

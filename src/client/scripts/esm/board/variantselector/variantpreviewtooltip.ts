@@ -22,6 +22,7 @@ import {
 import svgcache from '../../chess/rendering/svgcache.js';
 import previewboards from '../previewboards.js';
 import previewrenderer from '../rendering/previewrenderer.js';
+import standaloneboard from '../rendering/standaloneboard.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -168,7 +169,7 @@ async function showForBoard(
 ): Promise<void> {
 	const rules = await buildRules(boardsim, variantCode, modifiers);
 	const ctx = await (previewCtx ??= previewrenderer.createContext(element_canvas));
-	await previewrenderer.load(ctx, boardsim);
+	await standaloneboard.load(ctx, boardsim);
 
 	if (token !== showToken || !anchor.isConnected) return; // They have since left hover, hovered over another tooltip anchor, or the anchor has been removed from the DOM mid-load.
 

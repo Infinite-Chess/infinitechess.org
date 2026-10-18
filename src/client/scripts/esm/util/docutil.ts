@@ -99,6 +99,23 @@ function isTouchSupported(): boolean {
 }
 
 /**
+ * Calls back whenever the pixel density alone changes, e.g. the window moving to a retina
+ * monitor — which resizes no element, so a ResizeObserver never sees it.
+ * @param signal - Stops the watching once aborted.
+ */
+function onPixelDensityChange(callback: () => void, signal?: AbortSignal): void {
+	const query = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+	query.addEventListener(
+		'change',
+		() => {
+			callback();
+			onPixelDensityChange(callback, signal); // The query names one exact density, so watch the new one.
+		},
+		{ once: true, signal },
+	);
+}
+
+/**
  * Gets the last segment of the current URL without query parameters.
  * "/member/jacob?lng=en-US" ==> "jacob"
  */
@@ -205,6 +222,7 @@ export default {
 	isTypingInTextField,
 	isMouseSupported,
 	isTouchSupported,
+	onPixelDensityChange,
 	getLastSegmentOfURL,
 	getQueryParam,
 	getPathnameFromHref,

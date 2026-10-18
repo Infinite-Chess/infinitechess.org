@@ -1,13 +1,13 @@
-// src/client/scripts/esm/views/index/timecontrols.ts
+// src/client/scripts/esm/views/index/gamesetup/timecontrols.ts
 
 /**
  * Manages the time control section of the game setup modal:
  * the timed/untimed toggle, base+increment sliders, and preset buttons.
  */
 
-import type { TimeControl } from '../../../../../shared/chess/util/clockutil.js';
+import type { TimeControl } from '../../../../../../shared/chess/util/clockutil.js';
 
-import clockutil from '../../../../../shared/chess/util/clockutil.js';
+import clockutil from '../../../../../../shared/chess/util/clockutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ let config: TimeControlsConfig;
 
 // Initialization --------------------------------------------------------------
 
-/** Wires both time sliders and the preset buttons, then syncs the section to the active markup. */
+/** Wires both time sliders and the preset buttons, then sets the section to the default time control. */
 function init(hostConfig: TimeControlsConfig): void {
 	config = hostConfig;
 
@@ -58,8 +58,10 @@ function init(hostConfig: TimeControlsConfig): void {
 			config.onCommit();
 		});
 	});
-	const activePreset = document.querySelector<HTMLElement>('.preset-btn.active');
-	if (activePreset) applyPreset(activePreset);
+	const { minutes, increment } = clockutil.getMinutesAndIncrementFromClock(
+		clockutil.DEFAULT_TIME_CONTROL,
+	)!;
+	setMinutesAndIncrement(minutes, increment);
 	onTimeToggle();
 }
 

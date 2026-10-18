@@ -1,34 +1,29 @@
-// src/client/scripts/esm/game/rendering/arrows/arrowsgraphics.ts
+// src/client/scripts/esm/board/rendering/arrows/arrowsgraphics.ts
 
 /**
- * This script renders all arrow indicators on the screen edges,
+ * This script renders all of a board's arrow indicators on the screen edges,
  * including piece indicators (pointing to off-screen pieces)
  * and hint arrows (pointing to off-screen legal move squares).
  */
 
+import type LiveBoard from '../LiveBoard.js';
 import type { Color } from '../../../../../../shared/types/color.js';
-import type { Arrow, ArrowsLine } from './arrows.js';
 import type { AttributeInfoInstanced } from '../../../webgl/Renderable.js';
+import type { Arrow, ArrowsLine, HintArrow } from './arrows.js';
 
 import vectors from '../../../../../../shared/util/math/vectors.js';
 
-import arrows from './arrows.js';
-import meshes from '../../../board/rendering/meshes.js';
-import primitives from '../../../board/rendering/primitives.js';
+import meshes from '../meshes.js';
+import primitives from '../primitives.js';
 import preferences from '../../../util/preferences.js';
-import drawsquares from '../highlights/annotations/drawsquares.js';
-import texturecache from '../../../chess/rendering/texturecache.js';
-import instancedshapes from '../../../board/rendering/instancedshapes.js';
+import instancedshapes from '../instancedshapes.js';
+import squarerendering from '../squarerendering.js';
 import arrowscalculator from './arrowscalculator.js';
-import {
-	createRenderable_Instanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
 
 /** The size of arrow triangles as a fraction of the arrow indicator half-width. */
-export const ARROW_SIZE_RATIO = 0.3;
+const TRIANGLE_SIZE_RATIO = 0.3;
 
 /** Attribute layout for the instanced piece-image renderable. */
 const ATTRIB_INFO_PICTURES: AttributeInfoInstanced = {
@@ -54,12 +49,13 @@ const ATTRIB_INFO_ARROWS: AttributeInfoInstanced = {
 
 // Functions -------------------------------------------------------------------
 
-/** Renders all the arrow indicators for this frame. */
-export function render(): void {
-	const slideArrows = arrows.getSlideArrows();
-	const animatedArrows = arrows.getAnimatedArrows();
-	const hintArrows = arrows.getHintArrows();
-	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth();
+/**
+ * Renders all the arrow indicators for this frame.
+ * @param hintArrows - Arrows to the off-screen legal moves of a selected piece in check, if any.
+ */
+function render(board: LiveBoard, hintArrows: HintArrow[]): void {
+	const { slideArrows, animatedArrows } = board.arrows;
+	const worldHalfWidth = arrowscalculator.getArrowIndicatorHalfWidth(board);
 	if (
 		Object.keys(slideArrows).length === 0 &&
 		animatedArrows.length === 0 &&
@@ -73,7 +69,7 @@ export function render(): void {
 	const bottom = -worldHalfWidth;
 	const top = worldHalfWidth;
 	// Texture data of the single quad instance
-	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords();
+	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords(board.camera);
 
 	// Initialize the data arrays...
 
@@ -109,26 +105,30 @@ export function render(): void {
 
 		// Green squares at screen edge for each hint arrow
 		const hintSquaresInstanceData: number[] = hintArrows.flatMap((ha) => ha.worldLocation);
-		createRenderable_Instanced(
-			instancedshapes.getDataLegalMoveSquare(hintColor),
-			hintSquaresInstanceData,
-			'TRIANGLES',
-			'highlights',
-			true,
-		).render(undefined, undefined, { u_size: size });
+		board.renderable
+			.createRenderable_Instanced(
+				instancedshapes.getDataLegalMoveSquare(hintColor),
+				hintSquaresInstanceData,
+				'TRIANGLES',
+				'highlights',
+				true,
+			)
+			.render(undefined, undefined, { u_size: size });
 
 		// Re-render hovered hint squares at increased opacity on top
 		const hoveredHintSquaresInstanceData: number[] = hintArrows.filter((ha) => ha.hovered).flatMap((ha) => ha.worldLocation); // prettier-ignore
 		if (hoveredHintSquaresInstanceData.length > 0) {
 			const hoveredHintColor: Color = [...hintColor];
-			hoveredHintColor[3] = drawsquares.HOVER_OPACITY;
-			createRenderable_Instanced(
-				instancedshapes.getDataLegalMoveSquare(hoveredHintColor),
-				hoveredHintSquaresInstanceData,
-				'TRIANGLES',
-				'highlights',
-				true,
-			).render(undefined, undefined, { u_size: size });
+			hoveredHintColor[3] = squarerendering.HOVER_OPACITY;
+			board.renderable
+				.createRenderable_Instanced(
+					instancedshapes.getDataLegalMoveSquare(hoveredHintColor),
+					hoveredHintSquaresInstanceData,
+					'TRIANGLES',
+					'highlights',
+					true,
+				)
+				.render(undefined, undefined, { u_size: size });
 		}
 
 		// Append hint direction triangles into the shared arrow triangle array
@@ -142,25 +142,29 @@ export function render(): void {
 
 	// Render piece images for regular (piece) arrow indicators, one draw call per type.
 	for (const [type, instanceData] of instanceDataByType) {
-		createRenderable_Instanced_GivenInfo(
-			vertexData_Pictures,
-			instanceData,
-			ATTRIB_INFO_PICTURES,
-			'TRIANGLES',
-			'arrowImages',
-			[{ texture: texturecache.getTexture(type), uniformName: 'u_sampler' }],
-		).render();
+		board.renderable
+			.createRenderable_Instanced_GivenInfo(
+				vertexData_Pictures,
+				instanceData,
+				ATTRIB_INFO_PICTURES,
+				'TRIANGLES',
+				'arrowImages',
+				[{ texture: board.textures.getTexture(type), uniformName: 'u_sampler' }],
+			)
+			.render();
 	}
 
 	// Render all arrow direction triangles (regular piece arrows + hint arrows) together
 	if (instanceData_Arrows.length > 0) {
-		createRenderable_Instanced_GivenInfo(
-			vertexData_Arrows,
-			instanceData_Arrows,
-			ATTRIB_INFO_ARROWS,
-			'TRIANGLES',
-			'arrows',
-		).render();
+		board.renderable
+			.createRenderable_Instanced_GivenInfo(
+				vertexData_Arrows,
+				instanceData_Arrows,
+				ATTRIB_INFO_ARROWS,
+				'TRIANGLES',
+				'arrows',
+			)
+			.render();
 	}
 }
 
@@ -213,7 +217,7 @@ function concatData(
  * @param halfWorldWidth - Half of the width of the arrow indicators for the current frame (dependant on scale).
  */
 function getVertexDataOfArrow(halfWorldWidth: number): number[] {
-	const size = halfWorldWidth * ARROW_SIZE_RATIO;
+	const size = halfWorldWidth * TRIANGLE_SIZE_RATIO;
 	// prettier-ignore
 	return [
 		halfWorldWidth,       -size,
@@ -225,6 +229,8 @@ function getVertexDataOfArrow(halfWorldWidth: number): number[] {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Frame lifecycle
+	// Constants
+	TRIANGLE_SIZE_RATIO,
+	// Functions
 	render,
 };

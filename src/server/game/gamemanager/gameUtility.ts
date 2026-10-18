@@ -3,18 +3,18 @@
 /**
  * Builds a single server-side game, and answers simple questions about one.
  *
- * A dependency-free leaf: everything here reads or constructs a {@link ServerGame} and
+ * A leaf among its sibling modules: everything here reads or constructs a {@link ServerGame} and
  * nothing more. Sending lives in `gameSockets.ts`, outward projections in
  * `gameStateBuilder.ts`, and the life cycle in `gameManager.ts` / `gameLifecycle.ts`.
  */
 
-import type { GameRules } from '../../../shared/chess/util/gamerules.js';
 import type { MoveRecord } from '../../../shared/chess/logic/movepiece.js';
 import type { VariantCode } from '../../../shared/chess/util/variantcodes.js';
 import type { SeekVariant } from '../../../shared/chess/util/variantselection.js';
 import type { ClockValues } from '../../../shared/chess/util/clockutil.js';
 import type { PresetAnnotes } from '../../../shared/chess/logic/icn/icnconverter.js';
 import type { AuthMemberInfo } from '../../types.js';
+import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 import type {
@@ -22,6 +22,7 @@ import type {
 	GameConstruction,
 	GameSetup,
 	MatchInfo,
+	MemberRating,
 	ServerGame,
 } from './serverGameTypes.js';
 
@@ -33,14 +34,14 @@ import moveutil from '../../../shared/chess/logic/moveutil.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
-import variantrules from '../../../shared/chess/logic/variantrules.js';
-import apeironborder from '../../../shared/chess/logic/apeironborder.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import { players as p } from '../../../shared/chess/util/typeutil.js';
 import servervalidation from '../../../shared/chess/variants/servervalidation.js';
+import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import logEvents from '../../utility/logEvents.js';
+import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Construction ----------------------------------------------------------------
 
@@ -70,7 +71,6 @@ function resolveGameConstruction(
 	engineGame: boolean,
 ): GameConstruction {
 	let loaded: LoadedVariant | undefined;
-	let gameRules: GameRules;
 	let variantOptions: VariantOptions | undefined;
 	let presetAnnotes: PresetAnnotes | undefined;
 
@@ -80,11 +80,6 @@ function resolveGameConstruction(
 			mod: variantcache.getModule(variant.code),
 			dateTimestamp,
 		};
-		gameRules = variantrules.getGameRulesOfVariant(loaded); // Already a fresh copy
-		// The board an engine game is played on.
-		if (engineGame && gameRules.worldBorder === undefined) {
-			gameRules.worldBorder = apeironborder.forVariant(loaded);
-		}
 	} else {
 		// The ICN is the source of truth for the position, the gamerules, and which variant
 		// revision it's a position of. Parsing can't fail here — a position only becomes a
@@ -97,22 +92,21 @@ function resolveGameConstruction(
 			...resolved.variant,
 			mod: variantcache.getModule(resolved.variant.code), // Every module is preloaded at startup
 		};
-		gameRules = variantOptions.gameRules;
 	}
 
-	const construction: GameConstruction = {
+	const gameRules = gamefile.resolveGameRules(loaded, {
+		variantOptions,
+		slideLimit: slideLimit !== undefined ? BigInt(slideLimit) : undefined,
+		engineGame,
+	});
+
+	return {
 		variant: loaded,
 		gameRules,
 		variantOptions,
 		presetAnnotes,
 		validateMoves: servervalidation.isGameValidated(variant, loaded),
 	};
-
-	// Slide Limit modifier override. Must precede boardinit.init(),
-	// which reads gameRules.slideLimit to narrow the sliding movesets.
-	if (slideLimit !== undefined) construction.gameRules.slideLimit = BigInt(slideLimit);
-
-	return construction;
 }
 
 /**
@@ -133,12 +127,14 @@ function initMatch(
 		};
 	}
 
+	const now = Date.now();
 	return {
 		id,
 		variant: setup.variant,
 		playerData,
 		engineParticipant: setup.engineParticipant,
-		timeCreated: Date.now(),
+		timeCreated: now,
+		timeLastMove: now,
 		rated: setup.rated,
 		private: setup.private,
 		modifiers: setup.modifiers,
@@ -161,25 +157,44 @@ function initServerGame(
 	moves: MoveRecord[] = [],
 ): ServerGame {
 	const { variant, gameRules, variantOptions, presetAnnotes, validateMoves } = construction;
+	const common = {
+		match,
+		presetAnnotes,
+		spectators: new Set<CustomWebSocket>(),
+		ratings: readRatings(match),
+	};
 	if (validateMoves) {
 		const boardsim = boardinit.init(gameRules, variant, { variantOptions });
 		// The same load the client runs, so both ends settle on identical
 		// win conditions and starting check state. Spread last, so the servergame's
 		// rules are the board's own copy — never a second one.
 		const loaded = gamefile.loadGameWithBoard(game, boardsim, moves);
-		return { ...loaded, match, presetAnnotes, spectators: new Set(), validateMoves: true };
+		return { ...loaded, ...common, validateMoves: true };
 	} else {
 		return {
 			...game,
+			...common,
 			gameRules,
-			match,
-			presetAnnotes,
 			whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
 			moves,
-			spectators: new Set(),
 			validateMoves: false,
 		};
 	}
+}
+
+/**
+ * Reads each member's current rating from the leaderboard of {@link leaderboardregistry.ratingSourceOf}.
+ * @throws If a database error occurs.
+ */
+function readRatings(match: MatchInfo): PlayerGroup<MemberRating> {
+	const leaderboardId = leaderboardregistry.ratingSourceOf(match.variant);
+	const ratings: PlayerGroup<MemberRating> = {};
+	for (const [color, { identifier }] of Object.entries(match.playerData)) {
+		if (!identifier.signedIn) continue; // Guests have no rating
+		const rating = leaderboardsManager.getEloOfPlayer(identifier.user_id, leaderboardId);
+		ratings[Number(color) as Player] = { rating };
+	}
+	return ratings;
 }
 
 /**

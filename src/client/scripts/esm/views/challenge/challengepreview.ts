@@ -10,9 +10,11 @@ import type { BoardPreview } from '../../../../../shared/chess/logic/boardprevie
 import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
+import docutil from '../../util/docutil.js';
 import previewboards from '../../board/previewboards.js';
 import { SettingsBus } from '../../util/SettingsBus.js';
 import previewrenderer from '../../board/rendering/previewrenderer.js';
+import standaloneboard from '../../board/rendering/standaloneboard.js';
 
 // Elements --------------------------------------------------------------------
 
@@ -31,7 +33,7 @@ void init();
 async function init(): Promise<void> {
 	const boardsim = await buildBoard(window.challengePageData.variant);
 	const ctx = await previewrenderer.createContext(element_preview);
-	await previewrenderer.load(ctx, boardsim);
+	await standaloneboard.load(ctx, boardsim);
 
 	const draw = (): void => {
 		previewrenderer.render(ctx, boardsim);
@@ -40,6 +42,7 @@ async function init(): Promise<void> {
 
 	// ResizeObserver also delivers the initial size, triggering the first draw.
 	new ResizeObserver(draw).observe(element_preview);
+	docutil.onPixelDensityChange(draw); // Resizes no element, so the observer never sees it.
 
 	// The tiles regenerate their textures on a theme change, but only a render loop would
 	// pick that up — this board has none, so it redraws itself once the new ones land.

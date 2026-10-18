@@ -1,29 +1,33 @@
-// src/client/scripts/esm/game/chess/graphicalchanges.ts
+// src/client/scripts/esm/board/rendering/graphicalchanges.ts
 
 /**
  * This script contains the functions that know what mesh changes to make,
  * and what animations to make, according to each action of a move's actions list.
  */
 
-import type { Mesh } from '../../board/rendering/piecemodels.js';
+import type { Mesh } from './piecemodels.js';
+import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
+import type LiveBoard from './LiveBoard.js';
 import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
+import type RenderContext from './RenderContext.js';
+import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type {
 	ChangeApplication,
 	Change,
 	genericChangeFunc,
 } from '../../../../../shared/chess/logic/boardchanges.js';
 
-import animation from '../rendering/animation.js';
-import piecemodels from '../../board/rendering/piecemodels.js';
+import boardchanges from '../../../../../shared/chess/logic/boardchanges.js';
+
+import animation from './animation/animation.js';
+import piecemodels from './piecemodels.js';
 import preferences from '../../util/preferences.js';
 
-// Mesh Changes ----------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
-/**
- * An object mapping move changes to a function that performs the graphical mesh change for that action.
- */
-const meshChanges: ChangeApplication<genericChangeFunc<Mesh>> = {
+/** Maps each move change to the function that performs its mesh changes. */
+const CHANGE_FUNCS: ChangeApplication<genericChangeFunc<Mesh>> = {
 	forward: {
 		add: addMeshPiece,
 		delete: deleteMeshPiece,
@@ -38,14 +42,38 @@ const meshChanges: ChangeApplication<genericChangeFunc<Mesh>> = {
 	},
 };
 
+// Executing changes of a Move -------------------------------------------------
+
+/**
+ * Applies an edit's changes to a board's mesh, then flags the board for a redraw.
+ * Regenerates every piece type's model instead when the edit regenerated the organized pieces,
+ * as other pieces may still need the edit's changes (e.g. the pawn deleted by a promotion).
+ */
+function runMeshChanges(
+	ctx: RenderContext,
+	boardsim: BoardPreview,
+	mesh: Mesh,
+	edit: Edit,
+	forward: boolean,
+): void {
+	if (boardsim.pieces.newlyRegenerated) piecemodels.regenAll(ctx, boardsim, mesh);
+	else boardchanges.runChanges(mesh, edit.changes, CHANGE_FUNCS, forward);
+	ctx.frames.onVisualChange();
+}
+
+// Standard Change Functions ---------------------------------------------------
+
+/** Writes a piece into the mesh at its coords. */
 function addMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.overwritebufferdata(mesh, change.piece);
 }
 
+/** Erases a piece from the mesh. */
 function deleteMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.deletebufferdata(mesh, change.piece);
 }
 
+/** Rewrites a moved piece into the mesh at its destination. */
 function moveMeshPiece(mesh: Mesh, change: Change): void {
 	if (change.action !== 'move')
 		throw Error(`moveMeshPiece called with non-move action: ${change.action}`);
@@ -56,6 +84,7 @@ function moveMeshPiece(mesh: Mesh, change: Change): void {
 	});
 }
 
+/** Rewrites a moved piece into the mesh back at its origin, undoing {@link moveMeshPiece}. */
 function returnMeshPiece(mesh: Mesh, change: Change): void {
 	piecemodels.overwritebufferdata(mesh, change.piece);
 }
@@ -63,7 +92,7 @@ function returnMeshPiece(mesh: Mesh, change: Change): void {
 // Animate ---------------------------------------------------------------------
 
 /**
- * Animates a given set of changes to the board.
+ * Animates a given set of changes on a board.
  * We don't use boardchanges because a custom compositor is needed.
  * @param moveChanges - the changes to animate
  * @param forward - whether this is a forward or back animation
@@ -72,6 +101,7 @@ function returnMeshPiece(mesh: Mesh, change: Change): void {
  * @param force_instant - Whether to FORCE instant animation, EVEN secondary pieces won't be animated. Enable when you are playing a premove in the game.
  */
 function animateMove(
+	board: LiveBoard,
 	moveChanges: Change[],
 	forward = true,
 	animateMain = true,
@@ -145,6 +175,7 @@ function animateMove(
 			pushToArrayMap(newHideFrames, last, waypoints[last]);
 
 			animation.animatePiece(
+				board,
 				change.piece.type,
 				waypoints,
 				showKeyframes,
@@ -161,9 +192,13 @@ function animateMove(
 	}
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
-	// Mesh Changes
-	meshChanges,
+	// Constants
+	CHANGE_FUNCS,
+	// Executing changes of a Move
+	runMeshChanges,
 	// Animate
 	animateMove,
 };

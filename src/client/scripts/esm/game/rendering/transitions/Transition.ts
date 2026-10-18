@@ -27,13 +27,15 @@ import coordutil, {
 
 import space from '../../../board/rendering/space.js';
 import meshes from '../../../board/rendering/meshes.js';
+import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
+import snapping from '../highlights/snapping.js';
+import boardview from '../boardview.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../../board/GameBus.js';
 import preferences from '../../../util/preferences.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import area, { Area } from '../../../board/rendering/area.js';
-import { ENTITY_WIDTH_VPIXELS } from '../highlights/snapping.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -251,7 +253,11 @@ function startZoomTransition(
 		);
 	} else {
 		// Is a zoom-in
-		originWorldSpace = space.convertCoordToWorldSpace(destinationCoords);
+		originWorldSpace = space.convertCoordToWorldSpace(
+			destinationCoords,
+			boardpos.getBoardPos(),
+			boardpos.getBoardScale(),
+		);
 		destinationWorldSpace = [0, 0];
 	}
 	differenceWorldSpace = coordutil.subtractDoubleCoords(destinationWorldSpace, originWorldSpace);
@@ -407,7 +413,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 	const startCoords = boardpos.getBoardPos();
 	const endCoords = thisArea.coords;
 
-	const currentBoardBoundingBox = boardgeometry.gboundingBoxFloat(); // Tile/board space, NOT world-space
+	const currentBoardBoundingBox = boardview.gboundingBoxFloat(); // Tile/board space, NOT world-space
 
 	// Will a teleport to this area be a zoom out or in?
 	const isAZoomOut = bd.compare(thisArea.scale, boardpos.getBoardScale()) < 0;
@@ -418,7 +424,11 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 		// If our current screen isn't within the final area, create new area to teleport to first
 		if (!bounds.boxContainsSquareBD(thisAreaBox, startCoords)) {
 			bounds.expandBDBoxToContainSquare(thisAreaBox, startCoords); // Unpadded
-			firstArea = area.calculateFromUnpaddedBox(thisAreaBox, ENTITY_WIDTH_VPIXELS);
+			firstArea = area.calculateFromUnpaddedBox(
+				camera,
+				thisAreaBox,
+				snapping.ENTITY_WIDTH_VPIXELS,
+			);
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!bounds.boxContainsBoxBD(thisAreaBox, currentBoardBoundingBox)) {
@@ -429,7 +439,7 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
 		// zoom-in. If the end area isn't visible on screen now, create new area to teleport to first
 		if (!bounds.boxContainsSquareBD(currentBoardBoundingBox, endCoords)) {
 			bounds.expandBDBoxToContainSquare(currentBoardBoundingBox, endCoords); // Unpadded
-			firstArea = area.calculateFromUnpaddedBox(currentBoardBoundingBox, ENTITY_WIDTH_VPIXELS); // prettier-ignore
+			firstArea = area.calculateFromUnpaddedBox(camera, currentBoardBoundingBox, snapping.ENTITY_WIDTH_VPIXELS); // prettier-ignore
 		}
 		// Version that fits the entire screen on the zoom out
 		// if (!bounds.boxContainsBoxBD(currentBoardBoundingBox, thisAreaBox)) {
@@ -456,7 +466,11 @@ function initTransitionFromArea(thisArea: Area, ignoreHistory: boolean): void {
  */
 function zoomToCoordsBox(box: BoundingBox): void {
 	const boxFloating = meshes.expandTileBoundingBoxToEncompassWholeSquare(box);
-	const thisArea = area.calculateFromUnpaddedBox(boxFloating, ENTITY_WIDTH_VPIXELS);
+	const thisArea = area.calculateFromUnpaddedBox(
+		camera,
+		boxFloating,
+		snapping.ENTITY_WIDTH_VPIXELS,
+	);
 	initTransitionFromArea(thisArea, false);
 }
 
@@ -465,7 +479,11 @@ function zoomToCoordsBox(box: BoundingBox): void {
  * Will not incur an intermediate transition if all coords are not on screen originally.
  */
 function singleZoomToCoordsList(coordsList: Coords[]): void {
-	const transitionArea: Area = area.calculateFromCoordsList(coordsList, ENTITY_WIDTH_VPIXELS);
+	const transitionArea: Area = area.calculateFromCoordsList(
+		camera,
+		coordsList,
+		snapping.ENTITY_WIDTH_VPIXELS,
+	);
 	zoomTransitionToArea(transitionArea);
 }
 
@@ -482,7 +500,11 @@ function singleZoomToBDCoords(coords: BDCoords): void {
 	};
 	const boxFloating: BoundingBoxBD =
 		meshes.expandTileBoundingBoxToEncompassWholeSquareBD(snapBoundingBox);
-	const transitionArea: Area = area.calculateFromUnpaddedBox(boxFloating, ENTITY_WIDTH_VPIXELS);
+	const transitionArea: Area = area.calculateFromUnpaddedBox(
+		camera,
+		boxFloating,
+		snapping.ENTITY_WIDTH_VPIXELS,
+	);
 	zoomTransitionToArea(transitionArea);
 }
 
@@ -505,6 +527,15 @@ function pushToTelHistory(trans: Transition): void {
 	if (teleportHistory.length > HISTORY_CAP) teleportHistory.shift(); // Trim excess
 }
 
+/** Records the current view in the history, so the next undo returns to it. */
+function recordView(): void {
+	pushToTelHistory({
+		isZoom: true,
+		destinationCoords: boardpos.getBoardPos(),
+		destinationScale: boardpos.getBoardScale(),
+	});
+}
+
 /** Undos the last transition by transitioning to that transition's  */
 function undoTransition(): void {
 	const previousTrans = teleportHistory.pop();
@@ -516,6 +547,7 @@ function undoTransition(): void {
 			coords: previousTrans.destinationCoords,
 			scale: previousTrans.destinationScale,
 			boundingBox: boardgeometry.getBoundingBoxOfBoard(
+				camera,
 				previousTrans.destinationCoords,
 				previousTrans.destinationScale,
 			),
@@ -754,15 +786,15 @@ function terminate(): void {
 export default {
 	// Initiating Transitions
 	areTransitioning,
-	startZoomTransition,
 	startPanTransition,
 	zoomToCoordsBox,
 	singleZoomToCoordsList,
 	singleZoomToBDCoords,
+	initTransitionFromArea,
+	recordView,
 	undoTransition,
 	// Updating
 	update,
 	// Utility
-	eraseTelHist,
 	terminate,
 };

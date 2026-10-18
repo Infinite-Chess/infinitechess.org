@@ -12,15 +12,19 @@ import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
+import boardutil from '../../../../../../shared/chess/logic/boardutil.js';
 import legalmoves from '../../../../../../shared/chess/logic/legalmoves.js';
 
 import space from '../../../board/rendering/space.js';
-import arrows from '../arrows/arrows.js';
+import arrows from '../../../board/rendering/arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import selection from '../../chess/selection.js';
-import arrowshifts from '../arrows/arrowshifts.js';
+import gamescene from '../gamescene.js';
+import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import draganimation from './draganimation.js';
+import arrowinteraction from '../arrows/arrowinteraction.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -34,6 +38,7 @@ const LEGAL_CAPTURE_PULSATE = {
 
 // State -----------------------------------------------------------------------
 
+/** The piece that letting go of the dragged piece this frame would capture, if any. */
 let capturedPieceThisFrame: Piece | undefined;
 /** Timestamp when the current drag started, used to anchor the pulsation phase to 0. */
 let dragStartTime: number | undefined;
@@ -58,12 +63,11 @@ function updateCapturedPiece(): void {
 
 	// Test if the mouse is hovering over any arrow
 
-	let hoveredArrows = arrows.getHoveredArrows();
+	let hoveredArrows = arrowinteraction.getHoveredArrows();
 
-	// Filter out the selected piece, and floating point arrows (animated ones)
+	// Filter out the selected piece
 
 	hoveredArrows = hoveredArrows.filter((arrow) => {
-		if (arrow.piece.floating) return false; // Filter animated arrows
 		const integerCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
 		return !coordutil.areCoordsEqual(integerCoords, selectedPiece.coords);
 	});
@@ -84,8 +88,6 @@ function updateCapturedPiece(): void {
 
 	const legalCapturePiece = legalCaptureHoveredArrows[0]!.piece;
 
-	// console.log(JSON.stringify(legalCaptureHoveredArrows));
-
 	capturedPieceThisFrame = {
 		type: legalCapturePiece.type,
 		coords: bdcoords.coordsToBigInt(legalCapturePiece.coords),
@@ -93,6 +95,7 @@ function updateCapturedPiece(): void {
 	};
 }
 
+/** The coords of the piece letting go now would capture, if any. */
 function getCaptureCoords(): Coords | undefined {
 	return capturedPieceThisFrame?.coords;
 }
@@ -106,6 +109,7 @@ function shiftArrows(): void {
 	if (!draganimation.areDraggingPiece()) return;
 
 	const selectedPiece = selection.getPieceSelected()!;
+	const board = gamescene.getGameContext();
 
 	// Modify the arrow indicators to reflect the potentialcapture
 
@@ -115,19 +119,21 @@ function shiftArrows(): void {
 		// Reflect the dragged piece's new location in draganimation.ts
 		const worldCoords = space.convertCoordToWorldSpace(
 			bdcoords.fromCoords(capturedPieceThisFrame.coords),
+			boardpos.getBoardPos(),
+			boardpos.getBoardScale(),
 		);
 		draganimation.setDragLocationAndHoverSquare(worldCoords, capturedPieceThisFrame.coords);
 		// Delete the captured piece arrow
-		arrowshifts.deleteArrow(capturedPieceThisFrame.coords);
+		arrowshifts.deleteArrow(board, capturedPieceThisFrame.coords);
 		// Place the selected piece's arrow location on it
 		newLocationOfSelectedPiece = capturedPieceThisFrame.coords;
 	}
 
 	// Shift the arrow of the selected piece
 	if (newLocationOfSelectedPiece)
-		arrowshifts.moveArrow(selectedPiece.coords, newLocationOfSelectedPiece);
+		arrowshifts.moveArrow(board, selectedPiece.coords, newLocationOfSelectedPiece);
 	// Or just delete if there's no new integer destination
-	else arrowshifts.deleteArrow(selectedPiece.coords);
+	else arrowshifts.deleteArrow(board, selectedPiece.coords);
 }
 
 /**
@@ -151,16 +157,11 @@ function updateLegalCaptureArrows(): void {
 		((1 - LEGAL_CAPTURE_PULSATE.MIN_OPACITY) * (Math.cos(phase) + 1)) / 2;
 
 	let hasCapturable = false;
-	for (const arrow of arrows.getAllArrows()) {
-		if (arrow.piece.floating) continue;
+	for (const arrow of arrows.getAllArrows(gamescene.getGameContext())) {
+		// Shifts can show a piece the board doesn't hold there: the dragged piece's own arrow moved
+		// onto a pending capture, a piece mid-capture shown in place, or one animating in flight.
 		const intCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
-		if (coordutil.areCoordsEqual(intCoords, selectedPiece.coords)) continue;
-		// When a capture is pending, the arrows at the capture destination have been replaced
-		// by the dragged piece's own arrows — skip them so they don't pulsate.
-		if (
-			capturedPieceThisFrame !== undefined &&
-			coordutil.areCoordsEqual(intCoords, capturedPieceThisFrame.coords)
-		)
+		if (boardutil.getPieceFromCoords(gamefile.pieces, intCoords)?.type !== arrow.piece.type)
 			continue;
 		if (
 			legalmoves.checkIfMoveLegal(
@@ -179,10 +180,13 @@ function updateLegalCaptureArrows(): void {
 	if (hasCapturable) frametracker.onVisualChange();
 }
 
+/** Clears the pending capture and the pulsation's start, once a drag ends. */
 function onDragTermination(): void {
 	capturedPieceThisFrame = undefined;
 	dragStartTime = undefined;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	updateCapturedPiece,

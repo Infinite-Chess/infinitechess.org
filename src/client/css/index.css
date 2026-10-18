@@ -2,6 +2,13 @@
 
 /* The home page, containing the lobby and spectating sections. */
 
+:root {
+	/* The home page's accent: calls to action, and what's new or live. */
+	--accent-orange: rgb(255 88 0);
+	/* Green marking what's yours: your seek. */
+	--ours-color: rgb(0 180 15);
+}
+
 /* ============================================================
    Page layout
    ============================================================ */
@@ -17,8 +24,7 @@ main {
 .main-inner {
 	max-width: 1200px;
 	margin: 20px auto;
-	flex-direction: column;
-	gap: 32px;
+	container-type: inline-size;
 }
 
 /* ============================================================
@@ -142,7 +148,7 @@ main {
 }
 
 .new-prompt-btn.primary {
-	background: rgb(255 88 0 / 70%);
+	background: color-mix(in srgb, var(--accent-orange) 70%, transparent);
 	border-color: transparent;
 }
 
@@ -247,16 +253,34 @@ html[data-home-prompt='dismissed'] .new-prompt {
    Lobby
    ============================================================ */
 
-.lobby h2 {
+.lobby h2,
+.featured-games h2 {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 0.667em;
 	padding: 0.693em 1.067em;
-	font-size: 15px;
-	color: var(--c-text-muted);
+	font-size: 16px;
+	font-weight: normal;
+	color: var(--c-text);
 	letter-spacing: 0.07em;
 	text-align: center;
+	white-space: nowrap; /* The featured header's lines shrink instead */
+}
+
+/* A line either side, fading out away from the text. */
+.featured-games h2::before,
+.featured-games h2::after {
+	/* Its full length, shrinking only when the header is too narrow to fit it. */
+	--line-length: 8em;
+	content: '';
+	flex: 0 1 var(--line-length);
+	height: 1.5px;
+	background: linear-gradient(to right, var(--c-text-muted), transparent);
+}
+
+.featured-games h2::before {
+	transform: scaleX(-1);
 }
 
 .lobby-viewers {
@@ -375,11 +399,11 @@ svg.bg-omega {
 
 .seek-row:hover:not([aria-disabled='true']) {
 	color: var(--c-text-strong);
-	background: rgb(255 88 0 / 40%);
+	background: color-mix(in srgb, var(--accent-orange) 40%, transparent);
 }
 
 .seek-row.ours {
-	background: rgba(0, 180, 15, 0.37);
+	background: color-mix(in srgb, var(--ours-color) 37%, transparent);
 	color: var(--c-text-strong);
 }
 
@@ -440,32 +464,57 @@ svg.bg-omega {
    Seek pulse animation
    ============================================================ */
 
+/*
+ * A ring growing 14px past each edge of the row as it fades. Only transform and opacity keep
+ * animating while the main thread is busy, so the ring is four overlapping row-sized corners,
+ * each moved out diagonally; the fade is on the overlay, so their overlaps don't darken.
+ */
 .seek-pulse-overlay {
+	--pulse-color: var(--accent-orange);
 	position: fixed;
 	pointer-events: none;
 	z-index: 1;
+	opacity: 0.9;
+	animation: seek-pulse-fade 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.seek-pulse-box {
+.seek-pulse-overlay.ours {
+	--pulse-color: var(--ours-color);
+}
+
+.seek-pulse-corner {
 	position: absolute;
 	inset: 0;
-	border: 4px solid rgb(255 88 0 / 90%);
-	box-sizing: border-box;
-	animation: seek-pulse 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	border: 0 solid var(--pulse-color);
+	animation: seek-pulse-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.seek-pulse-box.ours {
-	border-color: rgb(0 180 15 / 90%);
+.seek-pulse-corner.top-left {
+	--pulse-end: translate(-14px, -14px);
+	border-width: 4px 0 0 4px;
+}
+.seek-pulse-corner.top-right {
+	--pulse-end: translate(14px, -14px);
+	border-width: 4px 4px 0 0;
+}
+.seek-pulse-corner.bottom-left {
+	--pulse-end: translate(-14px, 14px);
+	border-width: 0 0 4px 4px;
+}
+.seek-pulse-corner.bottom-right {
+	--pulse-end: translate(14px, 14px);
+	border-width: 0 4px 4px 0;
 }
 
-@keyframes seek-pulse {
-	0% {
-		inset: 0;
-		opacity: 1;
-	}
-	100% {
-		inset: -14px;
+@keyframes seek-pulse-fade {
+	to {
 		opacity: 0;
+	}
+}
+
+@keyframes seek-pulse-grow {
+	to {
+		transform: var(--pulse-end);
 	}
 }
 
@@ -756,6 +805,88 @@ svg.bg-omega {
 }
 
 /* ============================================================
+   Featured games
+   ============================================================ */
+
+.featured-games {
+	margin-top: 1em;
+}
+
+/* Rows of three, two or one boards by screen width, left-aligned; a short row keeps full-row sizes.
+   The gap is a share of the row's width, so it shrinks with the boards. */
+.featured-cards {
+	--featured-columns: 2;
+	--featured-gap: 2cqi;
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--featured-gap);
+	position: relative;
+}
+
+/* One game: its board between its players' bars, sitting straight on the page, linking to the game. */
+.featured-card {
+	display: flex;
+	flex-direction: column;
+	/* Whole pixels: a fractional width stretches the board's pixel buffer onto it, blurring it. */
+	/* prettier-ignore */
+	width: round(down, calc((100% - (var(--featured-columns) - 1) * var(--featured-gap)) / var(--featured-columns)), 1px);
+	color: inherit;
+	text-decoration: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* Held back: still sized as in the row, which its board frames to, but out of it and unseen. */
+.featured-card.pending {
+	position: absolute;
+	visibility: hidden;
+}
+
+.featured-board {
+	width: 100%;
+	aspect-ratio: 1;
+	border-radius: 4px;
+}
+
+[data-theme='light'] .featured-board {
+	box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.featured-bar {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5em;
+	padding: 3px 2px;
+}
+
+/* A long name truncates rather than overflowing the bar. */
+.featured-bar .username-embed,
+.featured-bar .username {
+	min-width: 0;
+}
+
+.featured-bar .username {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.featured-clock {
+	font-variant-numeric: tabular-nums;
+	color: var(--c-text-strong);
+}
+
+/* An untimed game's infinity icon has no text baseline to share, so it centers in the bar. */
+svg.featured-clock {
+	align-self: center;
+}
+
+/* The clock of the player on the move. */
+.featured-clock.tempo {
+	color: var(--accent-orange);
+}
+
+/* ============================================================
    Responsive
    ============================================================ */
 
@@ -781,6 +912,10 @@ svg.bg-omega {
 	.lobby {
 		flex: 2;
 	}
+
+	.featured-cards {
+		--featured-columns: 3;
+	}
 }
 
 /* Narrow screens: the lobby buttons stack, and the page drops its side padding. */
@@ -792,6 +927,9 @@ svg.bg-omega {
 	}
 	.lobby-btn {
 		min-height: 54px;
+	}
+	.featured-cards {
+		--featured-columns: 1;
 	}
 	main {
 		padding-left: 0;

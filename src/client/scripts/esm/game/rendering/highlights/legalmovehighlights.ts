@@ -16,6 +16,7 @@ import coordutil from '../../../../../../shared/util/coordutil.js';
 
 import camera from '../../../board/rendering/camera.js';
 import meshes from '../../../board/rendering/meshes.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import selection from '../../chess/selection.js';
 import preferences from '../../../util/preferences.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
@@ -160,7 +161,10 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 function renderSelectedPieceLegalMoves(): void {
 	if (!pieceSelected) return; // No model to render
 
-	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
+	const { position, scale } = meshes.getBoardRenderTransform(
+		boardpos,
+		legalmovemodel.getOffset(),
+	);
 
 	// Render each of the models using instanced rendering.
 	model_SelectedPiece!.render(position, scale);

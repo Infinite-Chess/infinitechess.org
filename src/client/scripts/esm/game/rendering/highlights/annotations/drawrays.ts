@@ -112,7 +112,7 @@ function update(rays: Ray[]): void {
 				}
 			} else {
 				// No snap
-				drag_start = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+				drag_start = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 			}
 			// console.log("Ray drag start:", drag_start);
 		}
@@ -126,7 +126,7 @@ function update(rays: Ray[]): void {
 		if (respectiveListener.isPointerHeld(pointerId!)) {
 			// Pointer is still holding
 			if (!pointerWorld) return; // Maybe we're looking into sky?
-			const pointerCoords = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+			const pointerCoords = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
 			// This prevents the start coord from being highlighted too opaque.
 			if (!coordutil.areCoordsEqual(pointerCoords, drag_start!)) {
@@ -209,18 +209,18 @@ function getLines(rays: Ray[], color: Color): Line[] {
 function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	if (!pointerWorld) return { added: false }; // Probably stopped drawing while looking into sky?
 
-	const drag_end = space.convertWorldSpaceToCoords_Rounded(pointerWorld);
+	const drag_end = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 
 	// Skip if end equals start (no ray drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
 	// const vector_unnormalized = coordutil.subtractCoords(drag_end, drag_start!);
-	const mouseTileCoords = space.convertWorldSpaceToCoords(pointerWorld);
+	const mouseTileCoords = space.convertWorldSpaceToCoords(boardpos, pointerWorld);
 	const vector_unnormalized = coordutil.subtractBDCoords(
 		mouseTileCoords,
 		bdcoords.fromCoords(drag_start!),
 	);
-	const vector = findClosestPredefinedVector(
+	const vector = vectors.findClosestPredefinedVector(
 		vector_unnormalized,
 		gameslot.getGamefile()!.pieces.hippogonalsPresent,
 	);
@@ -277,61 +277,6 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	rays.push(ray);
 	// console.log("Added ray:", ray);
 	return { added: true, deletedRays };
-}
-
-/**
- * Finds the VECTOR whose angle most closely matches the angle of the given targetVector.
- * This helps us snap the ray's direction to a slide direction in the game.
- */
-function findClosestPredefinedVector(targetVector: BDCoords, searchHippogonals: boolean): Coords {
-	// Since the targetVector can be arbitrarily large, we need to normalize it
-	// NEAR the range 0-1 (don't matter if it's not exact) so that we can use javascript numbers.
-	const normalizedVector = vectors.normalizeVectorBD(targetVector);
-
-	// Now we can use small numbers
-	const targetAngle = Math.atan2(normalizedVector[1], normalizedVector[0]); // Y value first
-
-	// prettier-ignore
-	const searchVectors: Coords[] = searchHippogonals ? [
-		...vectors.VECTORS_ORTHOGONAL,
-		...vectors.VECTORS_DIAGONAL,
-		...vectors.VECTORS_HIPPOGONAL
-	] : [
-		...vectors.VECTORS_ORTHOGONAL,
-		...vectors.VECTORS_DIAGONAL
-	];
-	// Add the negation of all vectors
-	for (let i = searchVectors.length - 1; i >= 0; i--) {
-		searchVectors.push(vectors.negateVector(searchVectors[i]!));
-	}
-
-	let minAbsoluteAngleDifference = Infinity;
-	// Initialize with the first vector
-	let closestVector: Coords = searchVectors[0]!;
-
-	for (const predefinedVector of searchVectors) {
-		const predifinedVectorDouble: DoubleCoords =
-			vectors.convertVectorToDoubles(predefinedVector);
-		const angle = Math.atan2(predifinedVectorDouble[1], predifinedVectorDouble[0]);
-		// Calculate the difference in angles
-		let angleDifferenceRad = targetAngle - angle;
-
-		// Normalize angleDifferenceRad to the shortest signed angle in the range [-PI, PI].
-		// This ensures that angles like -179 deg and 179 deg are considered close (2 deg diff), not far (358 deg diff).
-		// Example: diff = 350 deg (almost 2PI). Normalized: -10 deg.
-		//          diff = -350 deg. Normalized: 10 deg.
-		angleDifferenceRad =
-			angleDifferenceRad - 2 * Math.PI * Math.round(angleDifferenceRad / (2 * Math.PI));
-
-		const currentAbsoluteAngleDifference = Math.abs(angleDifferenceRad);
-
-		if (currentAbsoluteAngleDifference < minAbsoluteAngleDifference) {
-			minAbsoluteAngleDifference = currentAbsoluteAngleDifference;
-			closestVector = predefinedVector;
-		}
-	}
-
-	return closestVector;
 }
 
 /**
@@ -466,7 +411,10 @@ function genAndRenderRays(rays: Ray[], color: Color): void {
 		highlightline.genLinesModel(lines).render();
 	} else {
 		// Zoomed in, render rays as infinite legal move highlights
-		const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
+		const { position, scale } = meshes.getBoardRenderTransform(
+			boardpos,
+			legalmovemodel.getOffset(),
+		);
 
 		legalmovemodel.genModelForRays(rays, color).render(position, scale);
 	}
@@ -482,7 +430,6 @@ export default {
 	getPointerId,
 	stopDrawing,
 	getLines,
-	findClosestPredefinedVector,
 	collapseRays,
 	dispatchRayCountEvent,
 	setPresetOverrides,

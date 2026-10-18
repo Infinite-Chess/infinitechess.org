@@ -12,12 +12,11 @@
  */
 
 import type { Camera } from './camera.js';
+import type { BoardPos } from './boardpos.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
-import camera from './camera.js';
-import boardpos from './boardpos.js';
 import boardgeometry from './boardgeometry.js';
 
 // Constants -------------------------------------------------------------------
@@ -30,9 +29,9 @@ const HALF: BigDecimal = bd.fromNumber(0.5);
  * Since the camera is fixed in place, with the board moving and scaling below it,
  * this depends on your position and scale.
  */
-function convertWorldSpaceToCoords(worldCoords: DoubleCoords): BDCoords {
-	const boardPos: BDCoords = boardpos.getBoardPos();
-	const boardScale: BigDecimal = boardpos.getBoardScale();
+function convertWorldSpaceToCoords(bpos: BoardPos, worldCoords: DoubleCoords): BDCoords {
+	const boardPos: BDCoords = bpos.getBoardPos();
+	const boardScale: BigDecimal = bpos.getBoardScale();
 	return [
 		convertWorldSpaceToCoords_Axis(worldCoords[0], boardScale, boardPos[0]),
 		convertWorldSpaceToCoords_Axis(worldCoords[1], boardScale, boardPos[1]),
@@ -50,8 +49,8 @@ function convertWorldSpaceToCoords_Axis(
 }
 
 /** Returns the integer square coordinate that includes the floating point square coords inside its area. */
-function convertWorldSpaceToCoords_Rounded(worldCoords: DoubleCoords): Coords {
-	const coordsBD: BDCoords = convertWorldSpaceToCoords(worldCoords);
+function convertWorldSpaceToCoords_Rounded(bpos: BoardPos, worldCoords: DoubleCoords): Coords {
+	const coordsBD: BDCoords = convertWorldSpaceToCoords(bpos, worldCoords);
 	return roundCoords(coordsBD);
 }
 
@@ -74,8 +73,8 @@ function roundCoords(coords: BDCoords): Coords {
  */
 function convertCoordToWorldSpace(
 	coords: BDCoords,
-	position: BDCoords = boardpos.getBoardPos(),
-	scale: BigDecimal = boardpos.getBoardScale(),
+	position: BDCoords,
+	scale: BigDecimal,
 ): DoubleCoords {
 	const squareCenter = boardgeometry.getSquareCenter();
 
@@ -94,8 +93,8 @@ function convertCoordToWorldSpace(
 
 function convertCoordToWorldSpace_IgnoreSquareCenter(
 	coords: BDCoords,
-	position = boardpos.getBoardPos(),
-	scale = boardpos.getBoardScale(),
+	position: BDCoords,
+	scale: BigDecimal,
 ): DoubleCoords {
 	function getAxis(coord: BigDecimal, position: BigDecimal): number {
 		const diff = bd.subtract(coord, position);
@@ -108,25 +107,16 @@ function convertCoordToWorldSpace_IgnoreSquareCenter(
 
 // Pixel Conversions -----------------------------------------------------------
 
-/**
- * Converts a measurement of virtual screen pixels to world space units. Dependant on the current screen height.
- * @param cam - The camera to measure against. Defaults to the game camera.
- */
-function convertPixelsToWorldSpace_Virtual(value: number, cam: Camera = camera): number {
+/** Converts a measurement of virtual screen pixels to world space units. Dependant on the current screen height. */
+function convertPixelsToWorldSpace_Virtual(cam: Camera, value: number): number {
 	const screenHeight = cam.getScreenHeightWorld(false);
 	return (value / cam.getCanvasHeightVirtualPixels()) * screenHeight;
 }
 
-/** Converts a measurement of world space units to virtual screen pixels. Dependant on the current screen height. */
-function convertWorldSpaceToPixels_Virtual(value: number): number {
-	const screenHeight = camera.getScreenHeightWorld(false);
-	return (value / screenHeight) * camera.getCanvasHeightVirtualPixels();
-}
-
 /** Tells you how many square units span the grid value you pass in. */
-function convertWorldSpaceToGrid(value: number): BigDecimal {
+function convertWorldSpaceToGrid(bpos: BoardPos, value: number): BigDecimal {
 	const valueBD = bd.fromNumber(value);
-	const scale = boardpos.getBoardScale();
+	const scale = bpos.getBoardScale();
 	// value / scale
 	return bd.divideFloating(valueBD, scale);
 }
@@ -142,6 +132,5 @@ export default {
 	convertCoordToWorldSpace,
 	convertCoordToWorldSpace_IgnoreSquareCenter,
 	convertPixelsToWorldSpace_Virtual,
-	convertWorldSpaceToPixels_Virtual,
 	convertWorldSpaceToGrid,
 };

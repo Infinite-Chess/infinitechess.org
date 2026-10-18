@@ -12,7 +12,7 @@
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
-import type { HoveredArrow } from '../arrows/arrows.js';
+import type { HoveredArrow } from '../../../board/rendering/arrows/arrows.js';
 import type { Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { Coords, BDCoords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
 
@@ -27,21 +27,24 @@ import space from '../../../board/rendering/space.js';
 import mouse from '../../mouse.js';
 import camera from '../../../board/rendering/camera.js';
 import meshes from '../../../board/rendering/meshes.js';
-import arrows from '../arrows/arrows.js';
+import arrows from '../../../board/rendering/arrows/arrows.js';
 import gameslot from '../../chess/gameslot.js';
 import keybinds from '../../keybinds.js';
+import boardpos from '../../../board/rendering/boardpos.js';
 import deltatime from '../../../board/deltatime.js';
 import selection from '../../chess/selection.js';
 import { Mouse } from '../../input.js';
+import gamescene from '../gamescene.js';
 import maskeddraw from '../../../webgl/maskeddraw.js';
 import primitives from '../../../board/rendering/primitives.js';
 import droparrows from './droparrows.js';
-import arrowshifts from '../arrows/arrowshifts.js';
+import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import draganimation from './draganimation.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
-import arrowscalculator from '../arrows/arrowscalculator.js';
-import { ARROW_SIZE_RATIO } from '../arrows/arrowsgraphics.js';
+import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
+import arrowscalculator from '../../../board/rendering/arrows/arrowscalculator.js';
+import arrowinteraction from '../arrows/arrowinteraction.js';
 import { createRenderable } from '../../../board/rendering/renderable.js';
 
 // Types -----------------------------------------------------------------------
@@ -111,11 +114,11 @@ let slideZonePhase: number = 0;
 /**
  * Main per-frame update.
  *
- * CALL AFTER droparrows.shiftArrows() and BEFORE arrows.executeArrowShifts().
+ * CALL AFTER droparrows.shiftArrows() and BEFORE arrowinteraction.executeArrowShifts().
  */
 function update(): void {
 	if (!gameslot.getGamefile()) return;
-	if (!arrows.areArrowsActiveThisFrame()) return;
+	if (!arrows.areArrowsActiveThisFrame(gamescene.getGameContext())) return;
 
 	if (isDragActive) {
 		updateActiveDrag();
@@ -152,7 +155,6 @@ function updateActiveDrag(): void {
 		// Mouse moved back within threshold — deactivate the drag.
 		draganimation.setForceRankFileOutline(false);
 		isDragActive = false;
-		// console.log('Set isDragActive = false');
 		selection.unselectPiece(); // Fires 'piece-unselected' → draganimation.cancelDragging()
 		return;
 	}
@@ -169,7 +171,6 @@ function updateCandidate(): void {
 	if (!respectiveListener.isPointerHeld(candidate!.pointerId)) {
 		// Pointer released without crossing threshold — clear candidate, allow normal arrow click.
 		candidate = undefined;
-		// console.log('Set candidate = undefined');
 		return;
 	}
 
@@ -184,14 +185,12 @@ function updateCandidate(): void {
 	if (!piece) {
 		// Piece disappeared (shouldn't happen during candidate phase, but guard it).
 		candidate = undefined;
-		// console.log('Set candidate = undefined');
 		return;
 	}
 
 	selection.selectPiece(gamefile, gameslot.getMesh(), piece, true);
 	mouse.cancelMouseClick(Mouse.LEFT); // Prevent the eventual release from being treated as a click/teleport.
 	isDragActive = true;
-	// console.log('Set isDragActive = true');
 	draganimation.setForceRankFileOutline(true);
 	frametracker.onVisualChange();
 }
@@ -200,7 +199,7 @@ function updateCandidate(): void {
 function detectCandidateArrow(): void {
 	if (!mouse.isMouseDown(Mouse.LEFT)) return;
 
-	const hoveredArrowsList = arrows.getHoveredArrows();
+	const hoveredArrowsList = arrowinteraction.getHoveredArrows();
 	if (hoveredArrowsList.length === 0) return;
 
 	// Claim the mouse down for any arrow hover to prevent board drag.
@@ -227,7 +226,6 @@ function detectCandidateArrow(): void {
 			direction: hoveredArrow.direction,
 			pointerId,
 		};
-		// console.log('Set candidate');
 
 		candidateAnimStartTime = performance.now();
 		break;
@@ -242,7 +240,7 @@ function detectCandidateArrow(): void {
  */
 function findCandidateHoveredArrow(): HoveredArrow | undefined {
 	if (!candidate) return undefined;
-	return arrows.getHoveredArrows().find((h) => {
+	return arrowinteraction.getHoveredArrows().find((h) => {
 		if (h.piece.floating) return false;
 		const hCoords = bdcoords.coordsToBigInt(h.piece.coords);
 		return (
@@ -258,7 +256,10 @@ function findCandidateHoveredArrow(): HoveredArrow | undefined {
  */
 function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	// Slide zone depth in world space units
-	const slideZoneDepth = 2.0 * arrowscalculator.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
+	const slideZoneDepth =
+		2.0 *
+		arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext()) *
+		SLIDE_ZONE_WIDTH;
 	// Always use the 2D screen box for slide zone boundaries, even in perspective mode.
 	const screenBox = camera.getScreenBoundingBox(false);
 	const dir = candidate!.direction;
@@ -283,7 +284,7 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 	// captured piece's location — don't overwrite it with an animateArrow shift.
 	if (droparrows.getCaptureCoords() !== undefined) return;
 
-	const mouseBDCoords: BDCoords = space.convertWorldSpaceToCoords(mouseWorld);
+	const mouseBDCoords: BDCoords = space.convertWorldSpaceToCoords(boardpos, mouseWorld);
 	const pieceBDCoords: BDCoords = bdcoords.fromCoords(candidate!.pieceCoords);
 	const arrowDir = candidate!.direction;
 	const perpDir = vectors.getPerpendicularVector(arrowDir);
@@ -300,14 +301,23 @@ function updateSlideZoneDrag(mouseWorld: DoubleCoords): void {
 	);
 	if (!intersectionBD) return; // Lines are parallel (shouldn't happen with perpendicular lines).
 
-	const intersectionWorld: DoubleCoords = space.convertCoordToWorldSpace(intersectionBD);
+	const intersectionWorld: DoubleCoords = space.convertCoordToWorldSpace(
+		intersectionBD,
+		boardpos.getBoardPos(),
+		boardpos.getBoardScale(),
+	);
 	const hoveredCoords: Coords = space.roundCoords(intersectionBD);
 
 	draganimation.setDragLocationAndHoverSquare(intersectionWorld, hoveredCoords);
 
 	// Queue arrow shifts — animateArrow handles deletion of the original arrow and places
 	// animated arrows (for each applicable slide direction) at the intersection.
-	arrowshifts.animateArrow(candidate!.pieceCoords, intersectionBD, candidate!.pieceType);
+	arrowshifts.animateArrow(
+		gamescene.getGameContext(),
+		candidate!.pieceCoords,
+		intersectionBD,
+		candidate!.pieceType,
+	);
 }
 
 /** Mouse is outside the slide zone — piece follows mouse normally, original arrow removed. */
@@ -316,14 +326,13 @@ function updateOnScreenDrag(): void {
 	// droparrows has already queued a moveArrow shift — don't overwrite it with a deleteArrow.
 	if (droparrows.getCaptureCoords() !== undefined) return;
 	// Delete the original arrow. Normal drag rendering takes over.
-	arrowshifts.deleteArrow(candidate!.pieceCoords);
+	arrowshifts.deleteArrow(gamescene.getGameContext(), candidate!.pieceCoords);
 }
 
 // Cleanup ---------------------------------------------------------------------
 
 /** Resets all drag arrow state. Called when the drag naturally completes or is force-cleared. */
 function reset(): void {
-	// console.error('Resetting state');
 	candidate = undefined;
 	isDragActive = false;
 	currentlyInSlideZone = false;
@@ -335,7 +344,7 @@ function reset(): void {
 
 /** Renders all dragarrows visuals: the slide zone gradient and the slide move highlights. */
 function render(): void {
-	if (!arrows.areArrowsActiveThisFrame()) return;
+	if (!arrows.areArrowsActiveThisFrame(gamescene.getGameContext())) return;
 	renderCandidateArrows();
 	renderSlideZone();
 	renderSlideMoveHighlights();
@@ -351,8 +360,8 @@ function renderCandidateArrows(): void {
 	const worldLocation = findCandidateHoveredArrow()?.worldLocation;
 	if (!worldLocation) return;
 
-	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth();
-	const size = halfWidth * ARROW_SIZE_RATIO;
+	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext());
+	const size = halfWidth * arrowsgraphics.TRIANGLE_SIZE_RATIO;
 
 	// Determine the perpendicular axis from the indicator's screen position by measuring
 	// the raw world-space distance to each edge pair. The indicator sits on whichever edge is closer.
@@ -412,7 +421,10 @@ function renderSlideZone(): void {
 
 	const screenBox = camera.getScreenBoundingBox(false);
 	// Slide zone depth in world space units
-	const depth = 2.0 * arrowscalculator.getArrowIndicatorHalfWidth() * SLIDE_ZONE_WIDTH;
+	const depth =
+		2.0 *
+		arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext()) *
+		SLIDE_ZONE_WIDTH;
 	const dir = candidate.direction;
 
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.
@@ -506,7 +518,10 @@ function renderSlideMoveHighlights(): void {
 
 	// Render white box outlines for all reachable squares using the shared transform
 	const model = legalmovemodel.generateModelForSlideHighlightOutlines(hoveredCoords, moves);
-	const { position, scale } = meshes.getBoardRenderTransform(legalmovemodel.getOffset());
+	const { position, scale } = meshes.getBoardRenderTransform(
+		boardpos,
+		legalmovemodel.getOffset(),
+	);
 	model.render(position, scale);
 }
 

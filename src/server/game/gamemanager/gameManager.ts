@@ -34,6 +34,7 @@ import inGameStatus from '../seeksmanager/inGameStatus.js';
 import activePlayers from './activePlayers.js';
 import gameLifecycle from './gameLifecycle.js';
 import deadGameState from './deadGameState.js';
+import featuredGames from '../featured/featuredGames.js';
 import liveGameValues from './liveGameValues.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import lobbySubscribers from '../seeksmanager/lobbySubscribers.js';
@@ -63,8 +64,14 @@ export interface ResolvedGameState {
  * @param gameID - The id the game is created under, from {@link activeGames.issueUniqueId}.
  * @param setup - The variant, time control, and rated flag of the game to start.
  * @param assignments - The color each player has, and their socket if connected.
+ * @param rematchOf - The concluded game this one is a rematch of, if it is.
  */
-function createGame(gameID: number, setup: GameSetup, assignments: PlayerAssignments): void {
+function createGame(
+	gameID: number,
+	setup: GameSetup,
+	assignments: PlayerAssignments,
+	rematchOf?: ServerGame,
+): void {
 	// Joining a new game counts as leaving any concluded game still lingering for a rematch.
 	for (const { identifier } of Object.values(assignments)) forceLeaveLingeringGame(identifier);
 
@@ -116,6 +123,8 @@ function createGame(gameID: number, setup: GameSetup, assignments: PlayerAssignm
 
 	// Last: a socket removed from the lobby would no longer receive the pushes above.
 	leaveLobby(assignments);
+
+	featuredGames.onGameCreated(servergame, rematchOf);
 
 	if (activeGames.PRINT_GAMES) {
 		console.log('Starting new game:');
@@ -381,6 +390,7 @@ function freezeEngineClock(servergame: ServerGame): void {
 	clearTimeout(servergame.match.autoTimeLossTimeoutID);
 	liveGameValues.onEngineClockChanged(servergame);
 	gameSockets.broadcastEngineClock(servergame);
+	featuredGames.onClock(servergame);
 }
 
 /** Restarts the engine's frozen clock: a client has attached to think for it. */
@@ -404,6 +414,7 @@ function resumeEngineClock(servergame: ServerGame): void {
 	armAutoTimeLoss(servergame);
 	liveGameValues.onEngineClockChanged(servergame);
 	gameSockets.broadcastEngineClock(servergame);
+	featuredGames.onClock(servergame);
 }
 
 // SSR Page State --------------------------------------------------------------

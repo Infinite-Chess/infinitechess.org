@@ -26,6 +26,7 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 import jsutil from '../../../../../shared/util/jsutil.js';
 
 import mat4 from '../../webgl/gl-matrix.js';
+import docutil from '../../util/docutil.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../GameBus.js';
 import frametracker from './frametracker.js';
@@ -381,21 +382,8 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		SettingsBus.addEventListener('fov-change', () => onFOVChange());
 		// The canvas, not the window: page layout can resize it without the window changing.
 		new ResizeObserver(() => syncCanvasDimensions()).observe(canvas);
-		watchPixelDensity();
+		docutil.onPixelDensityChange(() => syncCanvasDimensions());
 		shake.wireGlobalListeners();
-	}
-
-	/** Resyncs the canvas when the pixel density alone changes, e.g. moving to a retina monitor. */
-	function watchPixelDensity(): void {
-		const query = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-		query.addEventListener(
-			'change',
-			() => {
-				syncCanvasDimensions();
-				watchPixelDensity(); // The query names one exact density, so watch the new one.
-			},
-			{ once: true },
-		);
 	}
 
 	/** Syncs the canvas dimensions, then builds the projection and view matrices. */

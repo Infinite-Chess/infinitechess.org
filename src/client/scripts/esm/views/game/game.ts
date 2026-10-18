@@ -8,14 +8,16 @@ import moveutil from '../../../../../shared/chess/logic/moveutil.js';
 
 import gameloop from '../../game/gameloop.js';
 import gameslot from '../../game/chess/gameslot.js';
+import gamescene from '../../game/rendering/gamescene.js';
 import onlinegame from './onlinegame.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from '../../game/chess/gamesession.js';
 import deadgameloader from './deadgameloader.js';
-import conclusionglyphs from '../../game/rendering/glyphs/conclusionglyphs.js';
+import conclusionglyphs from '../../board/rendering/glyphs/conclusionglyphs.js';
 
 import './gui/guichat.js';
 import './onlinegamerouter.js';
+import './spectatorframing.js';
 import './gui/guichatreport.js';
 import './gui/guigameactions.js';
 import '../../game/gui/guigamemeta.js';
@@ -43,7 +45,7 @@ function start(): void {
 	GameBus.addEventListener('render-above-pieces', () => {
 		const gamefile = gameslot.getGamefile()!;
 		if (gamefile.gameConclusion && moveutil.areWeViewingLatestMove(gamefile))
-			conclusionglyphs.render(gamefile, gamefile.gameConclusion);
+			conclusionglyphs.render(gamescene.getGameContext(), gamefile, gamefile.gameConclusion);
 	});
 
 	if (window.gamePageData.isLive) {
