@@ -63,6 +63,14 @@ async function readFromClipboard(): Promise<string | undefined> {
 }
 
 /**
+ * Whether a copy or cut belongs to the user's text (a field being typed in, or a selection),
+ * rather than to the page.
+ */
+function isCopyingText(): boolean {
+	return isTypingInTextField() || !!window.getSelection()?.toString();
+}
+
+/**
  * Whether the user is typing in a text field (text input, textarea, or contenteditable),
  * meaning keyboard and clipboard events belong to it rather than to the page.
  */
@@ -219,6 +227,7 @@ export default {
 	DEV_BUILD,
 	copyToClipboard,
 	readFromClipboard,
+	isCopyingText,
 	isTypingInTextField,
 	isMouseSupported,
 	isTouchSupported,

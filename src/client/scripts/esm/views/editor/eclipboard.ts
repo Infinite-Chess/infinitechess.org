@@ -7,6 +7,7 @@
  * selection tool transformations or the game notation actions.
  */
 
+import docutil from '../../util/docutil.js';
 import gameslot from '../../game/chess/gameslot.js';
 import eactions from './actions/eactions.js';
 import gamesession from '../../game/chess/gamesession.js';
@@ -27,8 +28,7 @@ function addEventListeners(): void {
 
 /** Custom Board Editor handler for the Copy event. */
 function onCopy(): void {
-	if (document.activeElement instanceof HTMLInputElement) return; // Don't copy if the user is typing in an input field
-	if (window.getSelection()?.toString()) return; // Don't copy if the user has text selected in the UI
+	if (docutil.isCopyingText()) return;
 
 	if (etoolmanager.getTool() !== 'selection-tool') {
 		eactions.copy(); // Copy the full position as game notation
@@ -42,8 +42,7 @@ function onCopy(): void {
 
 /** Board Editor handler for the Cut event. */
 function onCut(): void {
-	if (document.activeElement instanceof HTMLInputElement) return; // Don't cut if the user is typing in an input field
-	if (window.getSelection()?.toString()) return; // Don't cut if the user has text selected in the UI
+	if (docutil.isCopyingText()) return;
 
 	if (etoolmanager.getTool() !== 'selection-tool' || !selectiontool.isExistingSelection()) return;
 
@@ -57,7 +56,7 @@ function onCut(): void {
 
 /** Custom Board Editor handler for the Paste event. */
 function onPaste(): void {
-	if (document.activeElement instanceof HTMLInputElement) return; // Don't paste if the user is typing in an input field
+	if (docutil.isTypingInTextField()) return; // The paste belongs to the field
 	if (gamesession.isLoading()) return gamesession.showPleaseWait();
 
 	if (etoolmanager.getTool() !== 'selection-tool') {

@@ -3,7 +3,7 @@
 /**
  * The analysis page's "More actions" menu — flip board, open the position in the editor,
  * the "Continue from here" choices that hand the position off to the lobby, and Export ICN
- * (copies the current game's ICN to the clipboard).
+ * (copies the current game's ICN to the clipboard, also bound to the page's copy shortcut).
  */
 
 import type { ModalMode } from '../../../handoffs/gamesetuphandoff.js';
@@ -91,6 +91,7 @@ function init(): void {
 		closeActionsMenu();
 		void exportIcnToClipboard();
 	});
+	document.addEventListener('copy', onCopy);
 }
 
 /**
@@ -140,6 +141,12 @@ async function openCurrentPositionInEditor(): Promise<void> {
 
 	await editorhandoff.save({ variantOptions: position.variantOptions });
 	window.location.assign('/editor');
+}
+
+/** Copying anywhere on the page exports the game's ICN, as the Export ICN button does. */
+function onCopy(): void {
+	if (docutil.isCopyingText()) return;
+	void exportIcnToClipboard();
 }
 
 /** Copies the whole game's ICN to the clipboard. */
