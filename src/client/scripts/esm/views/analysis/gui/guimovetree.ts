@@ -215,7 +215,7 @@ function buildMainline(from: AnalysisMoveNode): VNode[] {
 		rowChildren = null;
 	};
 
-	let node = getMainlineChild(from);
+	let node = movetree.getMainLineChild(from);
 	// Whether the left move just placed has variations rendered beneath it — its reply
 	// must then start a fresh row so the variations stay ordered below their branch move.
 	let leftHadVariations = false;
@@ -249,7 +249,7 @@ function buildMainline(from: AnalysisMoveNode): VNode[] {
 		}
 		leftHadVariations = isLeft && variations.length > 0;
 		last = node;
-		node = getMainlineChild(node);
+		node = movetree.getMainLineChild(node);
 	}
 	flushRow();
 
@@ -291,7 +291,7 @@ function buildVariationLine(head: AnalysisMoveNode, depth: number): VNode[] {
 		// Alternatives to THIS move (its variation siblings). The head's are its fork-siblings,
 		// already rendered by the enclosing group, so they're skipped here.
 		const siblingAlts = node === head ? [] : getVariationChildren(node.parent!);
-		const next = getMainlineChild(node);
+		const next = movetree.getMainLineChild(node);
 		// When this move's continuation was forced into a variation it has no mainline child;
 		// its own variation children then branch from it with no row of their own above.
 		const forcedContinuation = next ? [] : getVariationChildren(node);
@@ -322,16 +322,10 @@ function buildVariationSegment(depth: number, isContinuation: boolean, line: VNo
 	]);
 }
 
-/** The node's mainline continuation, or undefined when its first child is forced into a variation. */
-function getMainlineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined {
-	const child = node.children[0];
-	return child?.forceVariation ? undefined : child;
-}
-
 /** The node's variation children — every alternative to its mainline continuation. */
 function getVariationChildren(node: AnalysisMoveNode): AnalysisMoveNode[] {
-	const first = node.children[0];
-	return first?.forceVariation ? node.children : node.children.slice(1);
+	const mainLineChild = movetree.getMainLineChild(node);
+	return node.children.filter((child) => child !== mainLineChild);
 }
 
 // Game review repaints --------------------------------------------------------
@@ -388,7 +382,7 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 				syncAnalysisTreeAfterAction(node);
 			}),
 		);
-	if (parent && parent.children[0] === node && !node.forceVariation)
+	if (parent && movetree.getMainLineChild(parent) === node)
 		menu.append(
 			createContextAction('Force variation', () => {
 				movetree.forceVariation(node);

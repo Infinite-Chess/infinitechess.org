@@ -377,21 +377,9 @@ function buildReverseChunks(totalPositions: number, threads: number): ReviewWork
 
 // Mainline capture ------------------------------------------------------------
 
-/** The node's mainline continuation, or undefined when its first child is forced into a variation. */
-function getMainlineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined {
-	const child = node.children[0];
-	return child?.forceVariation ? undefined : child;
-}
-
-/** Walks the move tree's mainline from the root. */
+/** The move tree's mainline nodes, without the root. */
 function captureMainline(): AnalysisMoveNode[] {
-	const nodes: AnalysisMoveNode[] = [];
-	let node = movetree.getRoot() ? getMainlineChild(movetree.getRoot()!) : undefined;
-	while (node) {
-		nodes.push(node);
-		node = getMainlineChild(node);
-	}
-	return nodes;
+	return movetree.getMainLine().slice(1);
 }
 
 // Lifecycle -------------------------------------------------------------------

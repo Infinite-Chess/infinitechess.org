@@ -107,6 +107,11 @@ function getActiveLine(): AnalysisMoveNode[] {
 	return activeLine;
 }
 
+/** The mainline, root-first, or empty until built. */
+function getMainLine(): AnalysisMoveNode[] {
+	return root ? getLineForNode(root) : [];
+}
+
 /** The node of the position being viewed. */
 function getCurrentNode(gamefile: GameFile): AnalysisMoveNode | undefined {
 	return activeLine[gamefile.state.local.moveIndex + 1];
@@ -134,10 +139,16 @@ function getCommonAncestorPly(a: AnalysisMoveNode, b: AnalysisMoveNode): number 
 function isMainLine(node: AnalysisMoveNode): boolean {
 	let current: AnalysisMoveNode | undefined = node;
 	while (current?.parent) {
-		if (current.forceVariation || current.parent.children[0] !== current) return false;
+		if (getMainLineChild(current.parent) !== current) return false;
 		current = current.parent;
 	}
 	return true;
+}
+
+/** The node's mainline continuation, or undefined when its first child is forced into a variation. */
+function getMainLineChild(node: AnalysisMoveNode): AnalysisMoveNode | undefined {
+	const child = node.children[0];
+	return child?.forceVariation ? undefined : child;
 }
 
 /** Whether `line` is the loaded game exactly, with no move added or removed. */
@@ -192,7 +203,7 @@ function syncAfterMovesChanged(gamefile: GameFile): void {
 		// dead-ending at the move just played. Returns early on purpose: the global conclusion
 		// describes the played move's position, not this front's, so we adopt the front's instead.
 		if (rejoinedExistingBranch) {
-			activeLine = extendWithMainline(activeLine);
+			activeLine = extendWithMainLine(activeLine);
 			gamefile.moves = getMovesFromLine(activeLine);
 			gamefile.gameConclusion = getActiveLineConclusion();
 			return;
@@ -222,7 +233,7 @@ function storeActiveLineConclusion(conclusion: GameConclusion | undefined): void
 
 /** The full active line for `node`: its path from root, extended forward along the mainline. */
 function getLineForNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
-	return extendWithMainline(getLineToNode(node));
+	return extendWithMainLine(getLineToNode(node));
 }
 
 /** `node`'s path from the root, root-first. */
@@ -238,12 +249,12 @@ function getLineToNode(node: AnalysisMoveNode): AnalysisMoveNode[] {
 }
 
 /** Appends the mainline continuation past `line`'s end, until a forced variation or leaf. */
-function extendWithMainline(line: AnalysisMoveNode[]): AnalysisMoveNode[] {
+function extendWithMainLine(line: AnalysisMoveNode[]): AnalysisMoveNode[] {
 	const extended = [...line];
-	let current = extended[extended.length - 1];
-	while (current?.children[0] && !current.children[0].forceVariation) {
-		current = current.children[0];
-		extended.push(current);
+	let next = getMainLineChild(extended[extended.length - 1]!);
+	while (next) {
+		extended.push(next);
+		next = getMainLineChild(next);
 	}
 	return extended;
 }
@@ -344,10 +355,12 @@ export default {
 	getRoot,
 	getLoadedGameEnd,
 	getActiveLine,
+	getMainLine,
 	getCurrentNode,
 	isInSubtree,
 	getCommonAncestorPly,
 	isMainLine,
+	getMainLineChild,
 	isLoadedGame,
 	// Active line
 	beginBranchFromViewedPosition,

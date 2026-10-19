@@ -169,7 +169,7 @@ function closeReview(): void {
  * reload is destructive to added lines, so confirm first.
  */
 function onGameReviewClicked(): void {
-	if (movetree.isLoadedGame(movetree.getLineForNode(movetree.getRoot()!))) {
+	if (movetree.isLoadedGame(movetree.getMainLine())) {
 		// Main line preserved, no need to confirm: start review.
 		openReview();
 	} else {
