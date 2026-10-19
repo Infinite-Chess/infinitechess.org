@@ -11,16 +11,69 @@
 - **Removing a page** — delete its `.njk`, its CSS, and its entry point together; remove the route from `root.ts`.
 - **Adding a new page** — add a route to `root.ts`, create a `.njk` template and a CSS file in `src/client/css/`, add an esbuild entry point.
 
-- Redesign other pages as you go. SSR all profile data (username, rating, join date, etc.). SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction. SSR for news post "NEW" badges.
-
-- Add the **Terms of Service** page — English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
-	- Add a `last_emailed_tos_version` INTEGER column to the `members` table (default 0) to track which ToS-update broadcast each member has been emailed — for when the ToS-update email broadcaster is built.
-
-- Add the **Privacy Policy** page — English only, same approach as ToS.
-
 - Delete all old ejs documents, stylesheets, and scripts related to the old pages.
 
 - Should we have some special 429 "Too Many Requests" page or handling? Does sending the html for that page each rate limit effectively defeat the purpose? We're still sending just as much data each request??
+
+### Profile
+- SSR all profile data (username, rating, join date, etc.).
+- User info: Patron badge, username, member since, online/last online status. World ranking.
+- Spectate (if in live game).
+- Manage account: Change username, password, cancel patron plan, delete account.
+
+### Leaderboard
+- SSR initial batch of leaderboard rows; Snabbdom for the "Show More" interaction.
+
+### News
+- SSR for news post "NEW" badges.
+
+### Board Editor
+- Share games via url. Next to the link to copy notation. Maximum piece count / icn length prevents dirty images.
+- Create an invite from the position. Maximum piece count / icn length prevents dirty images. Same model popup as creating an invite from the lobby.
+- Move to Analysis Board
+- Wire the variant selector's pencil (edit) button, already rendered but inert, to open the selected variant in the editor.
+
+### Tutorial
+- Interactive tutorial teaching users the basic controls, features, and rules, of Infinite Chess.
+
+### Checkmate Practice
+- Along the top is a bar displaying your percentage completion of all checkmates, with badges displayed at the percentages you will earn them. If the user is not logged in, display a clear warning that users cannot earn badges without an account.
+- Large banners for each checkmate to play, similar to that of Lichess's learn page. Each banner is colored, with clear boundaries, and like the existing checkmate practice on the main branch, contains svgs of the pieces showing you the checkmate pattern you need to solve. Unsolved checkmates are blue. Solved are green, with a checkmark badge. Checkmates are categorized and clearly separated by difficulty.
+
+### Donate
+- Lichess inspired. Donating any amount gives you a cool badge next to your username.
+- One-time and Monthly donation options.
+- TODO: Study laws and regulations surrounding payment processing and accepting users credit cards and other private information.
+- TODO: Answer whether regulations are stricter if a patron plan also gives you a cool skin in the future infinite-multiplayer game. It wouldn't provide players an advantage. One could argue the skin is just a cosmetic reward similar to that of the badge?
+- When monthly dontations stop, badge is removed.
+- Maybe a lifetime donation amount where the badge is permanent?
+- Lichess offers golden wings after 5 years of active patron status. And instantly after a lifetime donation, unlocking all colors.
+- Do not handle raw credit card numbers, that's a huge liability. Instead, accept the 3% & ~$0.50 processing fee of payment processors such as Stripe, PayPal, etc.
+
+### About Infinite Chess
+- Brief story about the game's inception, why it is interesting, and how users can learn more. Basically the stuff on the existing home page on the main branch, but more professional.
+- Reconsider linking it from below the home page's splash text.
+
+### Terms of Service
+- What it and the Privacy Policy must cover is sketched in [terms.md](terms.md).
+- English only, rendered from a Markdown file, with an optional notice that the English version is authoritative.
+- Add a `last_emailed_tos_version` INTEGER column to the `members` table (default 0) to track which ToS-update broadcast each member has been emailed — for when the ToS-update email broadcaster is built.
+
+### Privacy Policy
+- English only, same approach as ToS.
+
+### Credits
+- State the project is open source, conveniently link to the github.
+- Thank all github contributors. List all contributors on the github, similarly to the existing home page on the main branch.
+- Give appropriate credit for other aspects of the website and game - variants, textures, sounds, music, external code, language translations, etc. Similar to the existing credits page on the main branch.
+
+---
+
+## Components
+
+- **Settings:** Add a way to change keybinds.
+
+- **Game options modal (FUTURE):** A way to add special rule modifications to the selected variant: Fog of War, Duck Chess, Antichess, Atomic, KoTH, Chess 960, Obstocean (infinite obstacles), Drawback Chess, Progressive Chess. None are mutually-exclusive, add as many as desired. Adding a modification shows that respective symbol in the Variant column of the seek.
 
 ---
 
@@ -30,11 +83,7 @@
 
 - Analyze the remaining keys in the old monolith English TOML determine whether the stragglers should be deleted or migrated into new components. Delete all old monolith TOMLs.
 
-- Delete everything related to old translations system - translationLoader (rename componentTranslationloader), generate-translation-types (remove that from `generate:types` script, too). Also delete `src/types/translations.ts`. Also remove `../types/**/*` from the `includes` properties of the server and client tsconfigs. Remove unused global declares from `src/client/types/global.d.ts`.
-
-- Drop `i18next` package entirely.
-
-- Restructure TOML translation files from one-file-per-page to one-file-per-feature-component (header nav, game UI, settings, leaderboard, profile, etc.). Do not migrate all existing keys, create new ones as we go, in the appropriate component. 
+- Delete everything left of the old translations system: generate-translation-types (remove that from the `generate:types` script, too), and `src/types/translations.ts`. Also remove `../types/**/*` from the `include` property of `src/shared/tsconfig.json`. Remove unused global declares from `src/client/types/globals.d.ts`.
 
 - **Once all pages are redesigned and real page usage is known: audit `shared/` for per-feature splitting to reduce bandwidth.** The `translation/shared/` component is injected into `window.t` on *every* page sitewide (via `layout.njk`), so every string it holds ships on every page load whether or not that page uses it. The current convention is "anything used (or likely to be used post-redesign) on more than one page goes in `shared`," which is simple but means genuinely cross-page-but-not-universal string groups (e.g. account-field validation, used only on register/awaiting/resetpassword) ride along on the homepage, game, leaderboard, etc. that never reference them. When page usage is finalized, audit `shared`'s contents and split out string groups consumed only by a *handful* of related pages into their own per-feature components (like `header`/`footer` already are), injected only where needed — leaving `shared` for what is *truly* universal (e.g. likely variant codes, sitewide error fallbacks, socket messages, etc.). This trades a little extra per-page injection wiring for a leaner baseline payload on every page. It's a deliberate convention change, not a one-off: do it across the board or not at all, since a single exception just makes the rule inconsistent.
 
@@ -57,8 +106,6 @@
 ---
 
 ## Late-Stage Polish
-
-- Ensure you can't exceed db positions quota.
 
 - Delete any unused theme-specific css variables in global.css
 

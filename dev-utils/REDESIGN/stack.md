@@ -34,7 +34,7 @@ Self-hosted on a Mac, no VPS. SSD storage. Cloudflare in front. Low traffic — 
 
 - **Font stack:** `"Noto Sans", Verdana, sans-serif` (Lichess font). Self-host Noto Sans (not loaded from Google Fonts CDN, but via `@font-face`) to avoid the extra DNS/connection overhead and the 1-day CSS cache expiry that Google Fonts carries. Font files are served with `Cache-Control: max-age=31536000` alongside other static assets. To update a font, change the `@font-face` src URL and bump `?v=N` on any direct template references.
 
-- **Header layout without JS measurement.** The header renders its correct auth state (logged-in vs. logged-out) entirely server-side. CSS container queries or a CSS-only overflow fallback handle layout at different widths. Language-width variation is the remaining open challenge.
+- **Header layout without JS measurement.** The header renders its correct auth state (logged-in vs. logged-out) entirely server-side. CSS container queries or a CSS-only overflow fallback handle layout at different widths.
 
 ### Auth & Session
 
