@@ -211,11 +211,11 @@ const MAX_POSITIONS_PER_CHUNK = 5;
 /** Chunk size floor, keeping each warmup amortized. The trailing chunk may still be shorter. */
 const MIN_POSITIONS_PER_CHUNK = 2;
 
-/** Nodes a whole review shares out across its positions, taking about 30s on 4 workers. */
-const REVIEW_TOTAL_NODES = 20_000_000;
+/** Nodes a whole review shares out across its positions, taking about 36s on a 12-thread desktop. */
+const REVIEW_TOTAL_NODES = 15_000_000;
 /** Node budget range per position: games past 100 plies get the floor, under 50 plies the ceiling. */
-const MIN_POSITION_NODES = 200_000;
-const MAX_POSITION_NODES = 400_000;
+const MIN_POSITION_NODES = 150_000;
+const MAX_POSITION_NODES = 300_000;
 /** Transposition-table size handed to each review worker. */
 const REVIEW_HASH_MB = 16;
 /**
