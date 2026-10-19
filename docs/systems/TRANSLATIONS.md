@@ -214,9 +214,8 @@ starting inventory, not a guarantee. It can't see:
 
 ## Target end state (post-refactor)
 
-What remains of the legacy system exists only for the dormant EJS-era pages. The redesign roadmap
-([todo.md § Translation System Refactor](/dev-utils/REDESIGN/todo.md)) removes it once they're
-migrated. Expect then:
+What remains of the legacy system exists only for the dormant EJS-era pages, and is removed once
+they're migrated. Expect then:
 
 - **Legacy type generator removed.** `scripts/generate-translation-types.ts` is deleted and dropped
   from the `generate:types` npm script. Only `generate-component-translation-types.ts` remains.
@@ -235,10 +234,24 @@ migrated. Expect then:
 - **[NAVIGATING.md](/docs/NAVIGATING.md) updated.** Its `src/client/views/` row still describes the
   legacy flow (EJS pages, the monolith `translation/en-US.toml`, and manual version bumps +
   `changes.json` entries). Rewrite it for the new system.
+- **Once all pages are redesigned and real page usage is known: audit `shared/` for per-feature
+  splitting to reduce bandwidth.** The `translation/shared/` component is injected into `window.t`
+  on _every_ page sitewide (via `layout.njk`), so every string it holds ships on every page load
+  whether or not that page uses it. The current convention is "anything used (or likely to be used
+  post-redesign) on more than one page goes in `shared`," which is simple but means genuinely
+  cross-page-but-not-universal string groups (e.g. account-field validation, used only on
+  register/awaiting/resetpassword) ride along on the homepage, game, leaderboard, etc. that never
+  reference them. When page usage is finalized, audit `shared`'s contents and split out string
+  groups consumed only by a _handful_ of related pages into their own per-feature components (like
+  `header`/`footer` already are), injected only where needed — leaving `shared` for what is _truly_
+  universal (e.g. likely variant codes, sitewide error fallbacks, socket messages, etc.). This
+  trades a little extra per-page injection wiring for a leaner baseline payload on every page. It's
+  a deliberate convention change, not a one-off: do it across the board or not at all, since a
+  single exception just makes the rule inconsistent.
 
-When working on this refactor, the migration approach in todo.md is: localize each new page by
-creating its component TOML, deleting the migrated keys from the old monolith, and only deleting the
-legacy infrastructure once nothing references it.
+When working on this refactor, the migration approach is: localize each new page by creating its
+component TOML, deleting the migrated keys from the old monolith, and only deleting the legacy
+infrastructure once nothing references it.
 
 ## Out of scope for this system
 
