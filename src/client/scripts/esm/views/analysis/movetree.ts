@@ -140,6 +140,11 @@ function isMainLine(node: AnalysisMoveNode): boolean {
 	return true;
 }
 
+/** Whether `line` is the loaded game exactly, with no move added or removed. */
+function isLoadedGame(line: AnalysisMoveNode[]): boolean {
+	return line[line.length - 1] === loadedGameEnd;
+}
+
 // Active line -----------------------------------------------------------------
 
 /**
@@ -343,6 +348,7 @@ export default {
 	isInSubtree,
 	getCommonAncestorPly,
 	isMainLine,
+	isLoadedGame,
 	// Active line
 	beginBranchFromViewedPosition,
 	syncAfterMovesChanged,

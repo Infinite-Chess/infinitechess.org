@@ -15,6 +15,7 @@ import metadatautil from '../../../../../../shared/chess/util/metadatautil.js';
 import view from './guianalysisview.js';
 import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil.js';
+import movetree from '../movetree.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
@@ -151,13 +152,16 @@ async function exportIcnToClipboard(): Promise<void> {
 }
 
 /**
- * Serializes the active line's every move, regardless of the viewed ply,
- * to compact ICN with the loaded game's record metadata.
+ * Serializes the active line's every move, regardless of the viewed ply, to compact ICN.
+ * Only the loaded game itself carries its record metadata and time control — an edited
+ * line was never played, so either would misattribute it.
  */
 function getGameICN(gamefile: GameFile): string {
 	const presetOverrides = annotations.getPresetOverrides();
 	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
-	longformIn.metadata = { ...longformIn.metadata, ...analysisloader.getRecordMetadata() };
+	if (movetree.isLoadedGame(movetree.getActiveLine()))
+		longformIn.metadata = { ...longformIn.metadata, ...analysisloader.getRecordMetadata() };
+	else delete longformIn.metadata.TimeControl;
 	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 

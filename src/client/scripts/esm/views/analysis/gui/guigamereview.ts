@@ -15,7 +15,6 @@
  */
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
-import type { MoveFull } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { LapseKey, MoveReview, ReviewOutcome } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
@@ -77,9 +76,6 @@ const CURRENT_POSITION_COLOR = '#d85000';
 /** The stat value cells per player, rebuilt when the stats columns are created. */
 const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {};
 
-/** The loaded game's mainline, snapshotted at load (bar-delimited move tokens) for edit detection. */
-let pristineMainline = '';
-
 // --- Eval graph ---
 
 /** The graph position under the cursor, and the cursor's x for placing the tooltip. */
@@ -117,24 +113,19 @@ function init(): void {
 
 	element_GameReviewBtn.addEventListener('click', onGameReviewClicked);
 	GameBus.addEventListener('game-unloaded', closeReview);
-	GameBus.addEventListener('game-loaded', snapshotPristineMainline);
-	// Deliberately later than the snapshot: the moves list is already interactive during the
-	// graphical load, and a review started then silently loses its lapse variations (see
-	// guimovetree.addVariation), so the button mustn't be offered until the load is over.
+	// Not 'game-loaded': the moves list is already interactive during the graphical load, and a
+	// review started then silently loses its lapse variations (see guimovetree.addVariation), so
+	// the button mustn't be offered until the load is over. Runs after guimoveslist's own listener,
+	// registered on import, has built the move tree this reads.
 	GameBus.addEventListener('graphical-loaded', revealButtonIfReviewable);
-}
-
-/** Records the game's mainline as loaded, for later edit detection. */
-function snapshotPristineMainline(): void {
-	pristineMainline = mainlineTokens(gameslot.getGamefile()!.moves);
 }
 
 /** Shows the Game Review button if the loaded game can be reviewed, else hides it. */
 function revealButtonIfReviewable(): void {
-	// An empty pristine mainline means the game arrived with no moves — a preset variant or an
-	// editor position on the bare /analysis page. Moves played by hand onto one aren't a game
-	// to review, so the button stays hidden until an ICN with moves is pasted.
-	const reviewable = pristineMainline !== '' && gamereview.canStart();
+	// A loaded game ending at the root arrived with no moves — a preset variant or an editor
+	// position on the bare /analysis page. Moves played by hand onto one aren't a game to
+	// review, so the button stays hidden until an ICN with moves is pasted.
+	const reviewable = movetree.getLoadedGameEnd() !== movetree.getRoot() && gamereview.canStart();
 	element_GameReviewBtn.classList.toggle('hidden', !reviewable);
 }
 
@@ -167,22 +158,9 @@ function closeReview(): void {
 	// Hidden here as well as on load: a load is async, and until the next one lands the button
 	// would otherwise still offer a review of the game that just went away.
 	element_GameReviewBtn.classList.add('hidden');
-	pristineMainline = '';
 	// Blanked, not reset to the fallback — the next game's participants aren't known yet.
 	setPlayerName(p.WHITE, '');
 	setPlayerName(p.BLACK, '');
-}
-
-/** Serializes a move list to bar-joined tokens, for cheap comparison. */
-function mainlineTokens(moves: MoveFull[]): string {
-	return icnmoves.getShortFormMovesFromMoves(moves, { compact: true, spaces: false, comments: false, abbrev: false, move_numbers: false }); // prettier-ignore
-}
-
-/** Returns the current mainline as bar-joined move tokens, for cheap comparison. */
-function currentMainline(): string {
-	const root = movetree.getRoot();
-	if (!root) return '';
-	return mainlineTokens(movetree.getMovesFromLine(movetree.getLineForNode(root)));
 }
 
 /**
@@ -191,7 +169,7 @@ function currentMainline(): string {
  * reload is destructive to added lines, so confirm first.
  */
 function onGameReviewClicked(): void {
-	if (currentMainline() === pristineMainline) {
+	if (movetree.isLoadedGame(movetree.getLineForNode(movetree.getRoot()!))) {
 		// Main line preserved, no need to confirm: start review.
 		openReview();
 	} else {
