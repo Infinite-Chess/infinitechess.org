@@ -406,10 +406,13 @@ function CreateInputListener(
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 
-		// This makes it so the coordinate input fields are unfocused when clicking the canvas.
-		const prev = document.activeElement;
-		if (element instanceof HTMLElement && prev !== element && prev instanceof HTMLElement)
-			prev.blur();
+		// Clicking the canvas unfocuses fields and clears the text selection, as clicking off
+		// natively would, had the canvas not prevented the default.
+		if (element instanceof HTMLElement) {
+			const prev = document.activeElement;
+			if (prev !== element && prev instanceof HTMLElement) prev.blur();
+			window.getSelection()?.removeAllRanges();
+		}
 
 		// Generate a unique logical ID for the action.
 		const logicalId = getLogicalPointerId(e, targetButton);
