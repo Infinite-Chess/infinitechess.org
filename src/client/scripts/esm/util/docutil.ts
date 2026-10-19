@@ -3,8 +3,10 @@
 /**
  * This script contains utility methods for the document/window objects, or the page.
  *
- * ZERO dependancies.
+ * ZERO dependencies.
  */
+
+// Constants -------------------------------------------------------------------
 
 /** SVG default namespace */
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -14,6 +16,11 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * features. Read once at load — the hostname cannot change without a navigation.
  */
 const DEV_BUILD: boolean = isLocalEnvironment();
+
+/** The `<input>` types that take typed text. */
+const TEXT_INPUT_TYPES = new Set(['text', 'password', 'search', 'email', 'url', 'tel', 'number']);
+
+// Environment -----------------------------------------------------------------
 
 /**
  * Determines if the current page is running on a local environment (localhost or local IP).
@@ -33,6 +40,8 @@ function isLocalEnvironment(): boolean {
 			parseInt(hostname.split('.')[1]!, 10) <= 31) // Private IPv4 address space
 	);
 }
+
+// Clipboard -------------------------------------------------------------------
 
 /**
  * Copies the provided text to the operating system's clipboard.
@@ -70,6 +79,8 @@ function isCopyingText(): boolean {
 	return isTypingInTextField() || !!window.getSelection()?.toString();
 }
 
+// Focus -----------------------------------------------------------------------
+
 /**
  * Whether the user is typing in a text field (text input, textarea, or contenteditable),
  * meaning keyboard and clipboard events belong to it rather than to the page.
@@ -77,33 +88,20 @@ function isCopyingText(): boolean {
 function isTypingInTextField(): boolean {
 	const active = document.activeElement;
 	return (
-		// A focused checkbox isn't typing — bare keys (Space, arrows…) should still control the board.
-		(active instanceof HTMLInputElement && active.type !== 'checkbox') ||
+		(active instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(active.type)) ||
 		active instanceof HTMLTextAreaElement ||
 		(active instanceof HTMLElement && active.isContentEditable)
 	);
 }
 
-/**
- * Returns true if the current device has a mouse pointer.
- */
+// Device ----------------------------------------------------------------------
+
+/** Returns true if the current device has a mouse pointer. */
 function isMouseSupported(): boolean {
 	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
 	// See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
 	// USING "any-pointer" CAUSES false positives on mobile devices!
 	return window.matchMedia('(pointer: fine)').matches;
-}
-
-/**
- * Returns true if the current device supports touch events.
- */
-function isTouchSupported(): boolean {
-	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
-	return (
-		'ontouchstart' in window ||
-		navigator.maxTouchPoints > 0 ||
-		window.matchMedia('(pointer: coarse)').matches
-	);
 }
 
 /**
@@ -123,6 +121,8 @@ function onPixelDensityChange(callback: () => void, signal?: AbortSignal): void 
 	);
 }
 
+// URLs ------------------------------------------------------------------------
+
 /**
  * Gets the last segment of the current URL without query parameters.
  * "/member/jacob?lng=en-US" ==> "jacob"
@@ -135,17 +135,6 @@ function getLastSegmentOfURL(): string {
 }
 
 /**
- * Extracts the pathname from a given href.
- * (e.g. "https://www.infinitechess.org/news?lng=en-US" ==> "/news")
- * @param href - The href to extract the pathname from. Can be a relative or absolute URL.
- * @returns The pathname of the href (e.g., '/news').
- */
-function getPathnameFromHref(href: string): string {
-	const url = new URL(href, window.location.origin);
-	return url.pathname;
-}
-
-/**
  * Reads a query‐param from the current URL.
  * @param name - The name of the parameter to read.
  * @returns The parameter's value, or null if not present.
@@ -154,6 +143,8 @@ function getQueryParam(name: string): string | null {
 	const urlParams = new URLSearchParams(window.location.search);
 	return urlParams.get(name);
 }
+
+// Cookies ---------------------------------------------------------------------
 
 /**
  * Searches the document for the specified cookie, and returns it if found.
@@ -195,6 +186,8 @@ function deleteCookie(cookieName: string): void {
 	document.cookie = cookieName + '=; Max-Age=-99999999;';
 }
 
+// DOM -------------------------------------------------------------------------
+
 /**
  * Finds the index of an element within its parent.
  * @param element - The element to find the index of.
@@ -222,22 +215,29 @@ function createSvgElementFromString(svgText: string): SVGElement {
 	return svg;
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
+	// Constants
 	SVG_NS,
 	DEV_BUILD,
+	// Clipboard
 	copyToClipboard,
 	readFromClipboard,
 	isCopyingText,
+	// Focus
 	isTypingInTextField,
+	// Device
 	isMouseSupported,
-	isTouchSupported,
 	onPixelDensityChange,
+	// URLs
 	getLastSegmentOfURL,
 	getQueryParam,
-	getPathnameFromHref,
+	// Cookies
 	getCookieValue,
 	updateCookie,
 	deleteCookie,
+	// DOM
 	getElementIndexWithinItsParent,
 	createSvgElementFromString,
 };
