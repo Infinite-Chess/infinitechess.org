@@ -563,8 +563,9 @@ function renderMovesSlice(
 		moveSpan.className = 'line-move';
 		moveSpan.textContent = line.moves[i]!;
 		moveSpan.title = `${line.moves[i]!} — play the line up to this move`;
-		// Use 'pointerdown', as with 'click' the line changing mid-click cancels the click.
-		moveSpan.addEventListener('pointerdown', () => playLine(line.moves, i));
+		// Not 'click', which the line re-rendering mid-press cancels, nor 'pointerdown', which a
+		// touch that starts a scroll fires. A scroll cancels 'pointerup'.
+		moveSpan.addEventListener('pointerup', () => playLine(line.moves, i));
 		container.append(moveSpan);
 	}
 	if (showRightPager) {
