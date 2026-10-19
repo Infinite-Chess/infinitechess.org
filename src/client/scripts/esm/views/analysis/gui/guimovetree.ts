@@ -136,7 +136,10 @@ function scrollToCurrentNode(): void {
 			guimoveslist.scrollMovesTableToStart();
 		return;
 	}
-	guimoveslist.centerPly(current);
+	// The result banner shows the loaded game's ending, not that of whichever line is viewed.
+	const isFinalMove =
+		movetree.getCurrentNode(gameslot.getGamefile()!) === movetree.getLoadedGameEnd();
+	guimoveslist.scrollToPly(current, isFinalMove, 'nearest');
 }
 
 /**

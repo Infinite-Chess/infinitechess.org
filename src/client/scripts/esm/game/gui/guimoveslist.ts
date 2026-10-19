@@ -434,12 +434,17 @@ function scrollToCurrentPly(): void {
 		return;
 	}
 
-	// On the final move with the result banner shown, scroll all the way to the end so the
-	// banner (which sits just after it) stays visible; otherwise center the ply.
-	const onFinalMove = moveIndex === gamefile.moves.length - 1;
-	const bannerVisible = !element_GameResult.classList.contains('hidden');
-	if (onFinalMove && bannerVisible) scrollMovesTableToEnd();
-	else centerPly(current);
+	scrollToPly(current, moveIndex === gamefile.moves.length - 1, 'center');
+}
+
+/**
+ * Scrolls the table to follow `ply`: centered, or by the least needed to show it whole. On the
+ * game's final move with the result banner shown, scrolls to the end so the banner stays visible.
+ */
+function scrollToPly(ply: HTMLElement, isFinalMove: boolean, align: 'center' | 'nearest'): void {
+	if (isFinalMove && !element_GameResult.classList.contains('hidden')) scrollMovesTableToEnd();
+	else if (align === 'center') centerPly(ply);
+	else revealPly(ply);
 }
 
 /** Scrolls the table so the given ply is centered along whichever axes the table scrolls. */
@@ -448,6 +453,14 @@ function centerPly(ply: HTMLElement): void {
 	const plyRect = ply.getBoundingClientRect();
 	element_MovesTable.scrollTop += plyRect.top - containerRect.top - (element_MovesTable.clientHeight - plyRect.height) / 2; // prettier-ignore
 	element_MovesTable.scrollLeft += plyRect.left - containerRect.left - (element_MovesTable.clientWidth - plyRect.width) / 2; // prettier-ignore
+}
+
+/** Scrolls the table vertically by the least needed to show the whole ply, if it isn't already. */
+function revealPly(ply: HTMLElement): void {
+	const containerRect = element_MovesTable.getBoundingClientRect();
+	const plyRect = ply.getBoundingClientRect();
+	if (plyRect.top < containerRect.top) element_MovesTable.scrollTop += plyRect.top - containerRect.top; // prettier-ignore
+	else if (plyRect.bottom > containerRect.bottom) element_MovesTable.scrollTop += plyRect.bottom - containerRect.bottom; // prettier-ignore
 }
 
 /** Scrolls the table as far toward its end as possible (used when the result banner appears). */
@@ -486,7 +499,7 @@ export default {
 	element_GameResult,
 	update,
 	getPlyDisplay,
-	centerPly,
+	scrollToPly,
 	scrollMovesTableToStart,
 	zoomToPlyDestination,
 };
