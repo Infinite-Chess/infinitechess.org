@@ -16,7 +16,8 @@ client pages may ship which code. Enforced by [import-rules.ts](/scripts/modules
   _within_ each root, and which client pages may ship which shared rungs.
 - Placement philosophy differs by root, because bundle weight differs:
     - **Client ships one bundle per page** — a directory decides which pages download it, so a
-      file's home is its **widest consumer**, not its subject matter.
+      file's home is its **widest consumer**, not its subject matter. Except a self-contained,
+      reusable widget: it lives in `components/` however few use it.
     - **Server ships unbundled; shared has no entry points** — placement costs no bytes, so
       **subject** wins: every rung names a kind of thing. A file does NOT slide down a rung just
       because its lowest consumer allows it. A file that fits no rung's subject is carrying two

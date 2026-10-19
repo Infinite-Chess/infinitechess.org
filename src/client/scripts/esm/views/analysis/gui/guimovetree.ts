@@ -3,8 +3,8 @@
 /**
  * Analysis-page extension of the moves panel: renders the move TREE (mainline plus
  * nested variations) into the shared `.moves-table`, with click-to-navigate, a
- * current-node highlight, and a right-click context menu for promoting / demoting /
- * deleting branches. Registers itself with `guimoveslist` on import, which then
+ * current-node highlight, and a right-click (or long-press) context menu for promoting /
+ * demoting / deleting branches. Registers itself with `guimoveslist` on import, which then
  * delegates all rendering here in place of its flat move list. Imported only by the
  * analysis page, so no move-tree code reaches the game page.
  */
@@ -31,6 +31,7 @@ import svgcache from '../../../chess/rendering/svgcache.js';
 import gamescene from '../../../game/rendering/gamescene.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
+import longpress from '../../../components/longpress.js';
 import gamereview from '../gamereview.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
@@ -70,12 +71,16 @@ element_tree.addEventListener('click', (e) =>
 		navigateToNode(node);
 	}),
 );
-element_tree.addEventListener('contextmenu', (e) =>
+element_tree.addEventListener('contextmenu', openPlyContextMenu);
+longpress.make(element_tree, (e) => openPlyContextMenu(e));
+
+/** Opens the context menu for the ply a right-click or long press landed on. */
+function openPlyContextMenu(e: MouseEvent): void {
 	withPlyNode(e, (node, ply) => {
 		ply.blur(); // Drop the focus right-click gave it, else Escape later draws a focus-visible ring.
 		openAnalysisContextMenu(e, node);
-	}),
-);
+	});
+}
 
 /** Resolves the ply (and its node) an event landed on, running `fn` when one is found. */
 function withPlyNode(e: Event, fn: (node: AnalysisMoveNode, ply: HTMLElement) => void): void {
