@@ -94,15 +94,14 @@ function init(): void {
 	document.addEventListener('copy', onCopy);
 }
 
-/**
- * Serializes the active line's every move, regardless of the viewed ply,
- * to compact ICN with the loaded game's record metadata.
- */
-function getGameICN(gamefile: GameFile): string {
-	const presetOverrides = annotations.getPresetOverrides();
-	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
-	longformIn.metadata = { ...longformIn.metadata, ...analysisloader.getRecordMetadata() };
-	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
+/** Hands the current position off to the board editor and navigates there. */
+async function openCurrentPositionInEditor(): Promise<void> {
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
+	const position = exportCurrentPosition();
+	if (!position) return;
+
+	await editorhandoff.save({ variantOptions: position.variantOptions });
+	window.location.assign('/editor');
 }
 
 /** Exports the current position as ICN plus the variant options needed to reload it, or undefined if nothing's loaded. */
@@ -133,16 +132,6 @@ function exportCurrentPosition(): { icn: string; variantOptions: VariantOptions 
 	return { icn, variantOptions };
 }
 
-/** Hands the current position off to the board editor and navigates there. */
-async function openCurrentPositionInEditor(): Promise<void> {
-	if (gamesession.isLoading()) return gamesession.showPleaseWait();
-	const position = exportCurrentPosition();
-	if (!position) return;
-
-	await editorhandoff.save({ variantOptions: position.variantOptions });
-	window.location.assign('/editor');
-}
-
 /** Copying anywhere on the page exports the game's ICN, as the Export ICN button does. */
 function onCopy(): void {
 	if (docutil.isCopyingText()) return;
@@ -159,6 +148,17 @@ async function exportIcnToClipboard(): Promise<void> {
 	} else {
 		toast.show('Clipboard permission denied. This might be your browser.', { error: true });
 	}
+}
+
+/**
+ * Serializes the active line's every move, regardless of the viewed ply,
+ * to compact ICN with the loaded game's record metadata.
+ */
+function getGameICN(gamefile: GameFile): string {
+	const presetOverrides = annotations.getPresetOverrides();
+	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
+	longformIn.metadata = { ...longformIn.metadata, ...analysisloader.getRecordMetadata() };
+	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
 
 /** Opens the "Continue from here" sub-menu, provided the position can be exported. */
