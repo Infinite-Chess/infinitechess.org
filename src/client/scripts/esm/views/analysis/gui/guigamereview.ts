@@ -441,7 +441,6 @@ function drawGraph(): void {
 	if (width <= 0 || height <= 0) return;
 	canvas.width = width * dpr;
 	canvas.height = height * dpr;
-	canvas.style.height = `${height}px`;
 	const ctx = canvas.getContext('2d')!;
 	ctx.scale(dpr, dpr);
 

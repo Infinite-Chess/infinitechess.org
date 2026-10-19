@@ -1,12 +1,15 @@
 /* src/client/css/game.css */
 
-/* The game page (/game/:id).
+/* The game page (/game/:id), whose `.board-page` rules the analysis page builds on too.
    Desktop: a fixed-width side bar beside a board canvas filling the rest below the site header.
    Stacked (phones, narrow windows): the side bar's contents stack around the canvas instead. */
 
 .board-page {
+	--sidebar-width: 380px;
+	/* Between the side bar's cards, and around them. */
+	--sidebar-gap: 15px;
 	display: flex;
-	/* One-liner for wapping the side bar to the right edge. */
+	/* One-liner for wrapping the side bar to the right edge. */
 	flex-direction: row-reverse;
 	height: calc(100dvh - var(--header-height));
 }
@@ -26,9 +29,6 @@
    ============================ */
 
 .sidebar {
-	--sidebar-width: 380px;
-	/* Between the side bar's cards, and around them. */
-	--sidebar-gap: 15px;
 	flex: 0 0 var(--sidebar-width);
 	display: flex;
 	flex-direction: column;
@@ -924,13 +924,15 @@
    screen less the fixed-height rows; the disconnect notices aren't counted, so they
    push the rows below down instead of resizing the board mid-move. :where() keeps
    specificity level with the rules above, so their state classes still win.
-   874px = 2.3 × --sidebar-width; 56px = --header-height.
+   874px = 2.3 × --sidebar-width; 56px = --header-height; 745px, where two side bars'
+   content fit side by side (2 × (--sidebar-width − 2 × --sidebar-gap) + 3 × --sidebar-gap),
+   splits each page's content below the first screen into two columns.
    ============================================================ */
 
 @media (height >= 420px) and ((width < 874px) or (height >= calc(56px + 1.67 * (100vw - 380px)))) {
 	/* The page's own background, so it runs unbroken under everything the page scrolls. Keeps
 	   the page color beneath, which mobile browsers tint their system bars from. */
-	body:has(> .game) {
+	body:has(> .board-page) {
 		background:
 			linear-gradient(var(--c-checkerboard-dim), var(--c-checkerboard-dim)),
 			var(--checkerboard);
@@ -938,8 +940,8 @@
 	}
 
 	/* The board edge's shade falls along its top and bottom instead. */
-	.game .canvas-container::before,
-	.game .canvas-container::after {
+	.board-page .canvas-container::before,
+	.board-page .canvas-container::after {
 		content: '';
 		position: absolute;
 		inset: 100% 0 auto;
@@ -947,30 +949,43 @@
 		height: 20px;
 		box-shadow: 0 0 8px var(--c-shadow-edge);
 	}
-	.game .canvas-container::before {
+	.board-page .canvas-container::before {
 		inset: auto 0 100%;
 	}
 
 	/* Too small a board to aim by coordinates. */
-	.game .coords {
+	.board-page .coords {
 		display: none;
 	}
 
-	.game {
-		/* The first screen's fixed rows. The bars and actions are zoomed by --ui-zoom. */
+	.board-page {
+		/* The fixed rows both pages share, and the rows the bars take of their own. The bars are
+		   zoomed by --ui-zoom. Each page sums its other fixed rows into --page-rows. */
 		--ui-zoom: 0.92;
 		--bar-height: 40px;
-		--actions-height: 41px;
-		--strip-height: 35px;
 		--controls-height: 42px;
-		/* The rows the bars and actions take of their own, and what the strip's row measures —
-		   see the wide layout below. */
 		--bar-rows: 2;
-		--actions-rows: 1;
-		--strip-row: var(--strip-height);
-		position: relative; /* Anchors .secondary-panels just below the first screen. */
 		display: grid;
 		height: auto;
+	}
+
+	.board-page .canvas-container {
+		/* prettier-ignore */
+		height: max(0px, 100svh - var(--header-height) - var(--controls-height) - var(--bar-rows) * var(--bar-height) * var(--ui-zoom) - var(--page-rows));
+	}
+
+	.game {
+		/* The game's own fixed rows. The actions are zoomed by --ui-zoom too. */
+		--actions-height: 41px;
+		--strip-height: 35px;
+		/* The rows the actions take of their own, and what the strip's row measures — see the
+		   wide layout below. */
+		--actions-rows: 1;
+		--strip-row: var(--strip-height);
+		--page-rows: calc(
+			var(--strip-row) + var(--actions-rows) * var(--actions-height) * var(--ui-zoom)
+		);
+		position: relative; /* Anchors .secondary-panels just below the first screen. */
 		grid-template-columns: minmax(0, 1fr) auto;
 		grid-template-areas:
 			'opp opp'
@@ -983,12 +998,7 @@
 			'controls controls';
 	}
 
-	.game .canvas-container {
-		/* prettier-ignore */
-		height: max(0px, 100svh - var(--header-height) - var(--strip-row) - var(--controls-height) - (var(--bar-rows) * var(--bar-height) + var(--actions-rows) * var(--actions-height)) * var(--ui-zoom));
-	}
-
-	:where(.game) {
+	:where(.board-page) {
 		/* Layout — the side bar unwraps, and each piece takes its grid area. */
 		.sidebar,
 		.play-group,
@@ -1006,34 +1016,15 @@
 		#material-bottom {
 			grid-area: me;
 		}
-		.self-disconnect-status {
-			grid-area: self-disconnect;
-		}
-		.disconnect-status {
-			grid-area: disconnect;
-		}
-		.game-actions {
-			grid-area: actions;
-		}
-		.moves {
-			grid-area: moves;
-		}
 		.board-controls {
 			grid-area: controls;
+			height: var(--controls-height);
 		}
 
-		/* Zoom — a touch smaller than desktop, to suit a phone. Zoom does it in one go, except
-		   for the material and the moves strip, whose ply centering mixes on-screen rects with
-		   scroll offsets: those multiply their own sizes by --ui-zoom. */
-		.player-bar,
-		.self-disconnect-status,
-		.disconnect-status,
-		.game-actions {
-			zoom: var(--ui-zoom);
-		}
-
-		/* Player bars — each also anchors its material: by its clock, or by the bar itself when untimed. */
+		/* Player bars — a touch smaller than desktop, to suit a phone. Each also anchors its
+		   material: by its clock, or by the bar itself when untimed. */
 		.player-bar {
+			zoom: var(--ui-zoom);
 			height: var(--bar-height);
 			background: var(--c-surface);
 		}
@@ -1095,6 +1086,29 @@
 		&:has(#player-bar-top.tempo) #material-top > *,
 		&:has(#player-bar-bottom.tempo) #material-bottom > * {
 			color: var(--c-text);
+		}
+	}
+
+	:where(.game) {
+		.self-disconnect-status {
+			grid-area: self-disconnect;
+		}
+		.disconnect-status {
+			grid-area: disconnect;
+		}
+		.game-actions {
+			grid-area: actions;
+		}
+		.moves {
+			grid-area: moves;
+		}
+
+		/* Zoom — like the bars, except for the moves strip, whose ply centering mixes on-screen
+		   rects with scroll offsets: it multiplies its own sizes by --ui-zoom. */
+		.self-disconnect-status,
+		.disconnect-status,
+		.game-actions {
+			zoom: var(--ui-zoom);
 		}
 
 		/* Disconnect notices — opaque over the checkerboard; the self notice's pulse mixes in the
@@ -1201,11 +1215,6 @@
 		}
 		.game-result .result-text {
 			font-size: 0.9em;
-		}
-
-		/* Board controls */
-		.board-controls {
-			height: var(--controls-height);
 		}
 
 		/* Scroll anchoring — never anchors, so a notice appearing while scrolled pushes these down

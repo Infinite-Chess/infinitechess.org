@@ -1,7 +1,7 @@
 /* src/client/css/analysis.css */
 
-/* The analysis page (/analysis/:id?): layered on top of game.css — same sidebar +
-   board layout. Extras: the variant setup panel (shared widget, see
+/* The analysis page (/analysis/:id?): layered on top of game.css — same side bar and
+   stacked layouts. Extras: the variant setup panel (shared widget, see
    variantselector.css), the local-engine evaluation panel, the move tree,
    the actions menu, the eval gauge beside the board, and the Game Review
    overlays (per-player stats, move classifications, progress bar, eval graph). */
@@ -527,7 +527,7 @@
    ============================ */
 
 .analysis .moves-nav {
-	position: relative;
+	anchor-name: --moves-nav;
 	background: var(--c-surface-inset);
 	border: none;
 }
@@ -566,7 +566,18 @@
 	text-align: left;
 }
 
-/* Actions dropdown — icon rows, anchored above the actions toggle in the nav bar. */
+/* Actions dropdown — icon rows above the nav bar, or below it when the screen has no room
+   above. Fixed, so that room is measured against the screen. */
+.analysis-menu {
+	position: fixed;
+	position-anchor: --moves-nav;
+	right: anchor(right);
+	bottom: anchor(top);
+	margin: var(--header-height) 2px 5px 0;
+	position-try-fallbacks: flip-block;
+	z-index: 1;
+}
+
 .analysis-menu button {
 	display: flex;
 	width: 100%;
@@ -614,12 +625,18 @@
 
 .review-graph {
 	position: relative;
-	min-height: 150px;
+	flex: none;
+	height: 150px;
 	background: var(--c-surface-inset);
 }
 
+/* Fills the graph, which the canvas code measures to size its backing store. */
 .review-graph canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
 	color: var(--c-text-strong); /* Read by the canvas code for the eval line. */
+	-webkit-tap-highlight-color: transparent;
 }
 
 .review-phase-markers {
@@ -716,4 +733,116 @@
 /* Flipped board: white on top */
 .eval-gauge.flipped {
 	transform: rotate(180deg);
+}
+
+/* ============================================================
+   Stacked layout — game.css's breakpoint, building on its .board-page rules. Every
+   control takes its own row beneath the board; the gauge is dropped, as the eval
+   number says the same. The first screen ends at the engine header.
+   ============================================================ */
+
+@media (height >= 420px) and ((width < 874px) or (height >= calc(56px + 1.67 * (100vw - 380px)))) {
+	.analysis {
+		/* The nav keeps its desktop height: a 25px icon padded 3px either side. */
+		--nav-height: 31px;
+		--engine-height: 47px;
+		--page-rows: calc(var(--nav-height) + var(--engine-height));
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			'opp'
+			'canvas'
+			'me'
+			'controls'
+			'moves'
+			'review'
+			'graph'
+			'stats'
+			'info';
+	}
+	/* The bare page has no players, so no bars for them or their material. */
+	.analysis:has(#player-bar-top.hidden) {
+		--bar-rows: 0;
+		.material {
+			display: none;
+		}
+	}
+
+	/* 8 rows of moves, each 26px. As specific as the desktop flex sizing it overrides,
+	   which would collapse it. */
+	.analysis .moves-table {
+		flex: none;
+		height: 208px;
+		background: var(--c-surface);
+	}
+
+	:where(.analysis) {
+		/* The moves' column: the nav, engine panel, tree and review progress. */
+		.moves {
+			grid-area: moves;
+		}
+		.moves-nav {
+			order: -1;
+		}
+		.engine-panel {
+			background: var(--c-surface);
+		}
+		/* Less the depth bar above it. */
+		.engine-header {
+			height: calc(var(--engine-height) - 3px);
+		}
+		.review-progress {
+			background: var(--c-surface);
+		}
+		.eval-gauge {
+			display: none;
+		}
+
+		/* The review and game info — one centered column a side bar's content wide, the game
+		   info or variant setup always last. */
+		#btn-game-review,
+		.review-graph,
+		.review-stats.panel,
+		.game-meta,
+		.variant-setup {
+			justify-self: center;
+			width: min(
+				100% - 2 * var(--sidebar-gap),
+				var(--sidebar-width) - 2 * var(--sidebar-gap)
+			);
+			margin-top: var(--sidebar-gap);
+		}
+		#btn-game-review {
+			grid-area: review;
+		}
+		.review-graph {
+			grid-area: graph;
+		}
+		.review-stats.panel {
+			grid-area: stats;
+		}
+		.game-meta,
+		.variant-setup {
+			grid-area: info;
+			margin-bottom: var(--sidebar-gap);
+		}
+	}
+
+	/* Two columns once two side bars' content fit (745px, see game.css's stacked header): the
+	   moves' column beside the review and game info. Spanning their rows, the moves never
+	   stretch a panel's row; the last row takes any slack. */
+	@media (width >= 745px) {
+		.analysis {
+			grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
+			grid-template-rows: repeat(7, auto) 1fr;
+			grid-template-areas:
+				'opp opp'
+				'canvas canvas'
+				'me me'
+				'controls controls'
+				'moves review'
+				'moves graph'
+				'moves stats'
+				'moves info';
+		}
+	}
 }
