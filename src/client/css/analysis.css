@@ -846,3 +846,11 @@
 		}
 	}
 }
+
+/* Phones: the Game Review button shrunk to 90%, at the auth card's threshold (global.css). */
+@media (width <= 390px) {
+	#btn-game-review {
+		padding: 12.6px;
+		font-size: 14.4px;
+	}
+}
