@@ -350,10 +350,11 @@ function getPositionNodes(): number {
 // Chunking --------------------------------------------------------------------
 
 /**
- * Fishnet-style chunks: positions run from the game end toward the start. Each chunk
+ * Fishnet-style chunks: within each, positions run from later to earlier. Each chunk
  * begins by searching its immediate child without reporting it, then keeps that warm
  * TT while evaluating its real positions. Chunks shrink when the review is too short
  * to fill every thread, so idle workers take positions instead of one worker taking all.
+ * The chunks queue from the game's start, so its opening is reviewed first.
  */
 function buildReverseChunks(totalPositions: number, threads: number): ReviewWorkItem[][] {
 	const chunkSize = math.clamp(
@@ -366,13 +367,16 @@ function buildReverseChunks(totalPositions: number, threads: number): ReviewWork
 	for (let i = 0; i < reversed.length; i += chunkSize)
 		groups.push(reversed.slice(i, i + chunkSize));
 
-	return groups.map((group, index) => {
-		const warmupIndex = index === 0 ? group[0]! : groups[index - 1]!.at(-1)!;
-		return [
-			{ index: warmupIndex, warmup: true, newChunk: true },
-			...group.map((positionIndex) => ({ index: positionIndex })),
-		];
-	});
+	// The reverse changes no result, as each chunk starts from a cleared engine.
+	return groups
+		.map((group, index): ReviewWorkItem[] => {
+			const warmupIndex = index === 0 ? group[0]! : groups[index - 1]!.at(-1)!;
+			return [
+				{ index: warmupIndex, warmup: true, newChunk: true },
+				...group.map((positionIndex) => ({ index: positionIndex })),
+			];
+		})
+		.reverse();
 }
 
 // Mainline capture ------------------------------------------------------------
