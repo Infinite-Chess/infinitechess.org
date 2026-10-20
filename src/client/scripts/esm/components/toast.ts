@@ -49,6 +49,9 @@ let pauseStart: number | undefined;
 
 /** Shows a toast with the given text, replacing any toast already shown. */
 function show(text: string, options: ToastOptions = {}): void {
+	// Load-bearing: a translation the page doesn't ship arrives undefined despite its type.
+	if (typeof text !== 'string') return console.error(`Toast text is not a string: ${text}`);
+
 	const { error = false, durationMultiplier = 1 } = options;
 	const duration = (DURATION_BASE + text.length * DURATION_PER_CHAR) * durationMultiplier;
 
