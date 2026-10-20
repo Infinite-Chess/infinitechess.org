@@ -170,15 +170,15 @@ const THRESHOLDS: { max: number; key: ClassificationKey }[] = [
 	{ max: 1, key: 'blunder' },
 ];
 
-/** Display metadata per classification. Colors live in CSS. */
-const CLASSIFICATION_DISPLAY: Record<ClassificationKey, { label: string; symbol: string }> = {
-	best: { label: 'Best', symbol: '★' },
-	excellent: { label: 'Excellent', symbol: '!' },
-	good: { label: 'Good', symbol: '' },
-	inaccuracy: { label: 'Inaccuracy', symbol: '?!' },
-	mistake: { label: 'Mistake', symbol: '?' },
-	blunder: { label: 'Blunder', symbol: '??' },
-	forced: { label: 'Forced', symbol: '⇒' },
+/** Glyph per classification. Colors live in CSS. */
+const CLASSIFICATION_SYMBOLS: Record<ClassificationKey, string> = {
+	best: '★',
+	excellent: '!',
+	good: '',
+	inaccuracy: '?!',
+	mistake: '?',
+	blunder: '??',
+	forced: '⇒',
 };
 
 /** The classifications counted as "lapses" — the mistakes a review calls out. */
@@ -1068,7 +1068,7 @@ function onFinished(listener: ReviewListeners['finished']): void {
 
 export default {
 	// Constants
-	CLASSIFICATION_DISPLAY,
+	CLASSIFICATION_SYMBOLS,
 	isLapseKey,
 	// Lifecycle
 	canStart,

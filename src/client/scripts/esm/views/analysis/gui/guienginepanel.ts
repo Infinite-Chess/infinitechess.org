@@ -12,6 +12,7 @@ import type { AnalysisMoveNode } from '../movetree.js';
 import type { CevalLine, CevalStatus, CevalUpdate } from '../ceval.js';
 
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
+import interpolate from '../../../../../../shared/util/interpolate.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
@@ -117,7 +118,7 @@ function setEngineEnabled(value: boolean): void {
 	// showing it eagerly on enable would flash an uninitialized (0%, all-white) bar for a frame.
 	if (!value) {
 		setGaugeVisible(false);
-		clearPanelReadout('Local evaluation off');
+		clearPanelReadout(t.analysis.engine.readout.off);
 	}
 }
 
@@ -144,7 +145,7 @@ function initSettingsUI(): void {
 	// Hash: index slider over its option array (Memory doubles each step).
 	element_Hash.max = String(ceval.HASH_OPTIONS.length - 1);
 	element_Hash.value = String(Math.max(0, ceval.HASH_OPTIONS.indexOf(settings.hashMb)));
-	element_HashValue.textContent = `${settings.hashMb} MB`;
+	element_HashValue.textContent = formatMegabytes(settings.hashMb);
 
 	// Depth: direct value, step 1.
 	element_Depth.min = String(ceval.MIN_DEPTH);
@@ -162,8 +163,7 @@ function applyThreadsCap(): void {
 		element_Threads.value = '1';
 		element_Threads.disabled = true;
 		element_ThreadsValue.textContent = '1';
-		element_Threads.title =
-			'Multithreading unavailable (needs a cross-origin-isolated browser and a threaded engine build).';
+		element_Threads.title = t.analysis.engine.threads_unavailable;
 	} else {
 		element_Threads.disabled = false;
 		element_Threads.title = '';
@@ -203,7 +203,7 @@ function initListeners(): void {
 	bindSettingSlider(
 		element_Hash,
 		element_HashValue,
-		(v) => `${ceval.HASH_OPTIONS[v]!} MB`,
+		(v) => formatMegabytes(ceval.HASH_OPTIONS[v]!),
 		(v) => ceval.updateSettings({ hashMb: ceval.HASH_OPTIONS[v]! }),
 	);
 
@@ -227,6 +227,11 @@ function bindSettingSlider(
 ): void {
 	input.addEventListener('input', () => (label.textContent = format(Number(input.value))));
 	input.addEventListener('change', () => commit(Number(input.value)));
+}
+
+/** Formats a memory size for the Memory slider's label. */
+function formatMegabytes(megabytes: number): string {
+	return interpolate.interpolate(t.analysis.engine.units.megabytes, { n: megabytes });
 }
 
 /** Polls this panel's keyboard shortcuts. Called once per frame by the page loop. */
@@ -267,22 +272,22 @@ function onEngineStatus(status: CevalStatus): void {
 	const changed = status.kind !== lastStatusKind;
 	lastStatusKind = status.kind;
 	if (status.kind === 'loading') {
-		element_Stats.textContent = 'Loading engine…';
+		element_Stats.textContent = t.analysis.engine.readout.loading;
 		updateProgress(ceval.getLatestUpdate());
 	} else if (status.kind === 'failed') {
 		element_Toggle.checked = false;
 		setGaugeVisible(false);
-		element_Stats.textContent = 'Engine failed to load';
+		element_Stats.textContent = t.analysis.engine.readout.failed;
 		updateProgress(undefined);
 		// A deploy can change the content-hashed engine files mid-page.
-		if (changed) toast.show('The engine failed to load. Try refreshing.', { error: true });
+		if (changed) toast.show(t.gamegui.engine.load_failed, { error: true });
 	} else if (status.kind === 'blocked') {
 		setGaugeVisible(false);
 		clearPanelReadout(t.shared.position_errors.engine[status.reason].label);
 	} else if (status.kind === 'crashed') {
-		clearPanelReadout('Analysis crashed', { gauge: 0 });
+		clearPanelReadout(t.analysis.engine.readout.crashed, { gauge: 0 });
 		if (!crashToastShown) {
-			toast.show('The engine crashed analyzing this position. Please report this bug!', { error: true }); // prettier-ignore
+			toast.show(t.analysis.engine.crash_report, { error: true });
 			crashToastShown = true;
 		}
 	}
@@ -294,7 +299,7 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (!update) {
 		// Position changed; awaiting the first info of the new search.
-		clearPanelReadout('Starting analysis', { evalText: '…' });
+		clearPanelReadout(t.analysis.engine.readout.starting, { evalText: '…' });
 		return;
 	}
 
@@ -305,7 +310,10 @@ function onEngineUpdate(update: CevalUpdate | undefined): void {
 
 	if (update.terminal) {
 		setGaugeVisible(true);
-		clearPanelReadout('Game Over', { gauge: terminalGaugeChances(update), progress: update });
+		clearPanelReadout(t.analysis.engine.readout.game_over, {
+			gauge: terminalGaugeChances(update),
+			progress: update,
+		});
 		return;
 	}
 
@@ -334,15 +342,20 @@ function formatStats(update: CevalUpdate, targetDepthOverride?: number): string 
 	// Guard against a stale target briefly lagging the reached depth (e.g. right after
 	// "go deeper") — never show something like "15/13".
 	const target = targetDepthOverride ?? update.targetDepth;
-	const depth = `Depth ${update.depth}/${Math.max(target, update.depth)}`;
+	const depth = { depth: update.depth, target: Math.max(target, update.depth) };
+	const engineT = t.analysis.engine;
 	// Only show speed while actually searching (like lichess): once finished nps is 0.
 	const searching = !update.done && !update.terminal;
-	if (!searching || update.nps <= 0) return depth;
-	const nps =
+	if (!searching || update.nps <= 0) return interpolate.interpolate(engineT.readout.depth, depth);
+	const speed =
 		update.nps >= 1_000_000
-			? `${(update.nps / 1_000_000).toFixed(1)} Mn/s`
-			: `${Math.round(update.nps / 1000)} kn/s`;
-	return `${depth} · ${nps}`;
+			? interpolate.interpolate(engineT.units.mega_nodes, {
+					n: (update.nps / 1_000_000).toFixed(1),
+				})
+			: interpolate.interpolate(engineT.units.kilo_nodes, {
+					n: Math.round(update.nps / 1000),
+				});
+	return interpolate.interpolate(engineT.readout.depth_speed, { ...depth, speed });
 }
 
 /**
@@ -555,21 +568,23 @@ function renderMovesSlice(
 ): void {
 	container.replaceChildren();
 	if (showLeftPager) {
-		container.append(createLinePagerButton('Show earlier moves in this line', onGoBack));
+		container.append(createLinePagerButton(t.analysis.engine.lines.earlier, onGoBack));
 	}
 	for (let k = 0; k < count; k++) {
 		const i = start + k;
 		const moveSpan = document.createElement('span');
 		moveSpan.className = 'line-move';
 		moveSpan.textContent = line.moves[i]!;
-		moveSpan.title = `${line.moves[i]!} — play the line up to this move`;
+		moveSpan.title = interpolate.interpolate(t.analysis.engine.lines.play, {
+			move: line.moves[i]!,
+		});
 		// Not 'click', which the line re-rendering mid-press cancels, nor 'pointerdown', which a
 		// touch that starts a scroll fires. A scroll cancels 'pointerup'.
 		moveSpan.addEventListener('pointerup', () => playLine(line.moves, i));
 		container.append(moveSpan);
 	}
 	if (showRightPager) {
-		container.append(createLinePagerButton('Show more moves in this line', onGoForward));
+		container.append(createLinePagerButton(t.analysis.engine.lines.later, onGoForward));
 	}
 }
 

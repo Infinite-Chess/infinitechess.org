@@ -11,6 +11,73 @@
  * src/client/types/globals.d.ts; the server through `req.t` / `ws.t`.
  */
 export interface ScriptTranslations {
+	analysis: {
+		engine: {
+			crash_report: string;
+			threads_unavailable: string;
+			readout: {
+				off: string;
+				loading: string;
+				failed: string;
+				starting: string;
+				game_over: string;
+				crashed: string;
+				depth: string;
+				depth_speed: string;
+			};
+			units: {
+				megabytes: string;
+				mega_nodes: string;
+				kilo_nodes: string;
+			};
+			lines: {
+				play: string;
+				earlier: string;
+				later: string;
+			};
+		};
+		clipboard: {
+			copied: string;
+			denied: string;
+		};
+		move_tree: {
+			ply: string;
+			ply_best: string;
+			eval: string;
+			menu: {
+				promote: string;
+				make_main: string;
+				force_variation: string;
+				delete: string;
+			};
+		};
+		review: {
+			confirm_discard: string;
+			progress: string;
+			failed: string;
+			classifications: {
+				best: string;
+				excellent: string;
+				good: string;
+				inaccuracy: string;
+				mistake: string;
+				blunder: string;
+				forced: string;
+			};
+			phases: {
+				opening: string;
+				middlegame: string;
+				endgame: string;
+			};
+			graph: {
+				start: string;
+				unevaluated: string;
+				refused: string;
+				advantage: string;
+				advantage_classified: string;
+			};
+		};
+	};
 	awaiting: {
 		account_activated: string;
 	};

@@ -1,0 +1,108 @@
+# Translation component: analysis board page (/analysis/:id?).
+# Source template: src/server/views/analysis.njk
+
+title = "Analysis Board" # The browser tab title
+
+[engine] # The local engine panel's icon button tooltips
+toggle = "Toggle local evaluation (l)" # l is its keyboard shortcut
+go_deeper = "Search to depth 64"
+settings = "Engine settings"
+
+[engine.settings_drawer] # Slider labels
+multipv = "Multiple lines" # How many of the engine's best lines are shown
+threads = "Threads"
+hash = "Memory"
+depth = "Depth"
+
+[actions] # The "More actions" menu beside the move navigation buttons
+menu = "More actions"
+flip = "Flip board"
+editor = "Board editor"
+export_icn = "Export ICN"
+continue = "Continue from here" # Opens a menu to play on from the viewed position
+
+[review]
+start = "Game Review"
+
+[review.stats] # Per-player stats, each in a narrow column: keep within 22 characters.
+accuracy = "Accuracy"
+inaccuracy = "Inaccuracies"
+mistake = "Mistakes"
+blunder = "Blunders"
+acpl = "Avg. cp loss" # Average centipawn loss
+
+[review.next] # Tooltips of the counts above, which cycle through that player's moves of the kind
+inaccuracy = "Go to next inaccuracy"
+mistake = "Go to next mistake"
+blunder = "Go to next blunder"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Strings shipped to the browser. JS reads these from `t.analysis.*`.
+# ──────────────────────────────────────────────────────────────────────────────
+
+[script.engine]
+crash_report = "The engine crashed analyzing this position. Please report this bug!"
+threads_unavailable = "Multithreading unavailable (needs a cross-origin-isolated browser and a threaded engine build)."
+
+# The engine panel's status readout. It's one truncated line, so keep each within ~20 characters,
+# like the labels in shared's [position_errors.engine].
+[script.engine.readout]
+off = "Local evaluation off"
+loading = "Loading engine…"
+failed = "Engine failed to load"
+starting = "Starting analysis"
+game_over = "Game Over"
+crashed = "Analysis crashed"
+depth = "Depth {depth}/{target}"
+depth_speed = "Depth {depth}/{target} · {speed}" # {speed} comes from [script.engine.units] below
+
+[script.engine.units]
+megabytes = "{n} MB"
+mega_nodes = "{n} Mn/s" # Million positions searched per second
+kilo_nodes = "{n} kn/s" # Thousand positions searched per second
+
+[script.engine.lines] # The engine's best lines, whose moves can be clicked
+play = "{move} — play the line up to this move"
+earlier = "Show earlier moves in this line"
+later = "Show more moves in this line"
+
+[script.clipboard]
+copied = "Copied ICN to your clipboard!"
+denied = "Clipboard permission denied. This might be your browser."
+
+[script.move_tree] # Move list tooltips. {classification} comes from [script.review.classifications].
+ply = "{move} · {classification}" # A reviewed move
+ply_best = "{move} · {classification} — best was {best}" # A reviewed move the engine would've bettered
+eval = "Evaluation at depth {depth}" # A move's inline eval label
+
+[script.move_tree.menu] # A move's right-click menu
+promote = "Promote variation"
+make_main = "Make main line"
+force_variation = "Force variation"
+delete = "Delete from here"
+
+[script.review]
+confirm_discard = "Starting a Game Review will discard the lines you've added and review the game as it was played. Continue?"
+progress = "Evaluating position {n} of {total}"
+failed = "Game review failed. Please try again."
+
+[script.review.classifications] # How good each move was
+best = "Best"
+excellent = "Excellent"
+good = "Good"
+inaccuracy = "Inaccuracy"
+mistake = "Mistake"
+blunder = "Blunder"
+forced = "Forced" # The only legal move
+
+[script.review.phases] # Vertical labels on the short eval graph: keep within ~20 characters.
+opening = "Opening"
+middlegame = "Middlegame"
+endgame = "Endgame"
+
+[script.review.graph] # The eval graph's hover tooltip
+start = "Starting position"
+unevaluated = "Not evaluated"
+refused = "{reason} — not evaluated" # {reason} is a label from shared's [position_errors.engine]
+advantage = "Advantage: {eval}"
+advantage_classified = "Advantage: {eval} · {classification}"

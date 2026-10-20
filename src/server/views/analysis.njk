@@ -1,6 +1,8 @@
 {% extends "layout.njk" %}
 
-{% set pageName = "Analysis Board" %}
+{% set t = templateT('analysis') %}
+{% set ts = scriptT('analysis') %}
+{% set pageName = t.title %}
 
 {% block style %}
 <link rel="stylesheet" href="{{ manifest['css/game.css'] }}" />
@@ -11,50 +13,50 @@
 {% block head %}
 {# SSR→client channel: the game to auto-load, the side to view it from, and the engine's assets. #}
 <script>window.analysisPageData = {{ analysisPageData | json | safe }};</script>
-{# Ship the gamegui [script] strings to the browser, preserving window.t from layout.njk. #}
-<script>window.t = Object.assign(window.t || {}, { gamegui: {{ scriptT('gamegui') | json | safe }} });</script>
+{# Ship the analysis and gamegui [script] strings to the browser, preserving window.t from layout.njk. #}
+<script>window.t = Object.assign(window.t || {}, { analysis: {{ scriptT('analysis') | json | safe }}, gamegui: {{ scriptT('gamegui') | json | safe }} });</script>
 {% endblock %}
 
 {% block body %}
 {% include "components/header/header.njk" %}
 {% from "components/gamegui.njk" import boardControls, gameMeta, playerBar, material, movesNav, movesTable, boardCanvas %}
 {% from "components/variantselector.njk" import variantSelector %}
-{% set tsIndex = scriptT('index') %}
+
+{# Borrowed strings: the board pages' shared UI, the lobby's buttons, and the shared codes-and-labels. #}
 {% set tGamegui = templateT('gamegui') %}
 {% set tsGamegui = scriptT('gamegui') %}
-
-{# Shared codes-and-labels translations (variants, groups, modifiers, selector labels) #}
+{% set tsIndex = scriptT('index') %}
 {% set s = scriptT('shared') %}
 
 {# Per-player review stats. Hidden until a Game Review is opened, when guigamereview.ts
    reveals it. On /analysis/:id it lives inside the meta panel, which donates its
    .meta-player rows as the column headers; the bare /analysis page has no meta panel, so
    it stands alone and SSRs its own headers instead (`standalone`). #}
-{% macro reviewStats(standalone) %}
+{% macro reviewStats(standalone, t, s) %}
 {% set reviewStatRows = [
-	{ key: 'inaccuracy', label: 'Inaccuracies', lapse: true },
-	{ key: 'mistake', label: 'Mistakes', lapse: true },
-	{ key: 'blunder', label: 'Blunders', lapse: true },
-	{ key: 'acpl', label: 'Avg. cp loss', lapse: false }
+	{ key: 'inaccuracy', lapse: true },
+	{ key: 'mistake', lapse: true },
+	{ key: 'blunder', lapse: true },
+	{ key: 'acpl', lapse: false }
 ] %}
 <div class="review-stats hidden{{ ' panel' if standalone }}" id="review-stats">
 	{% for color in [p.WHITE, p.BLACK] %}
 	<div class="review-stats-col" data-player="{{ color }}">
 		{% if standalone %}
 		<div class="meta-player">
-			<span class="side-dot{{ ' black' if color == p.BLACK }}" title="{{ 'White' if color == p.WHITE else 'Black' }}"></span>
+			<span class="side-dot{{ ' black' if color == p.BLACK }}" title="{{ s.sides.white if color == p.WHITE else s.sides.black }}"></span>
 			{# Named by guigamereview.ts at review time, off the pasted ICN's metadata. #}
 			<span class="review-player-name"></span>
 		</div>
 		{% endif %}
 		<div class="review-accuracy">
 			<span class="review-accuracy-value">&mdash;</span>
-			<span class="review-stat-label">Accuracy</span>
+			<span class="review-stat-label">{{ t.review.stats.accuracy }}</span>
 		</div>
 		{% for row in reviewStatRows %}
-		<div class="review-stat-row{{ ' review-stat-action unselectable' if row.lapse }}"{% if row.lapse %} tabindex="0" role="button" title="Go to next {{ row.label | lower }}" data-classification="{{ row.key }}"{% endif %}>
+		<div class="review-stat-row{{ ' review-stat-action unselectable' if row.lapse }}"{% if row.lapse %} tabindex="0" role="button" title="{{ t.review.next[row.key] }}" data-classification="{{ row.key }}"{% endif %}>
 			<span class="review-stat-value {{ row.key }}">0</span>
-			<span class="review-stat-label">{{ row.label }}</span>
+			<span class="review-stat-label">{{ t.review.stats[row.key] }}</span>
 		</div>
 		{% endfor %}
 	</div>
@@ -70,13 +72,13 @@
 		{{ boardControls(tGamegui, tsGamegui) }}
 
 		{% if meta %}
-		{% call gameMeta(meta, tGamegui, s) %}{{ reviewStats(false) }}{% endcall %}
+		{% call gameMeta(meta, tGamegui, s) %}{{ reviewStats(false, t, s) }}{% endcall %}
 		{% else %}
 		{# Variant + modifiers picker #}
 		<div class="variant-setup panel">
 			{{ variantSelector(variantGroups, s) }}
 		</div>
-		{{ reviewStats(true) }}
+		{{ reviewStats(true, t, s) }}
 		{% endif %}
 
 		{# Material bars + match panel #}
@@ -95,20 +97,20 @@
 						</div>
 						<div class="engine-header">
 							<div class="engine-header-main">
-								<label class="switch engine-switch tooltip-d" data-tooltip="Toggle local evaluation (l)">
+								<label class="switch engine-switch tooltip-d" data-tooltip="{{ t.engine.toggle }}">
 									<input type="checkbox" id="engine-toggle"/>
 									<span></span>
 								</label>
 								<span class="engine-eval" id="engine-eval">-</span>
 								<div class="engine-title">
 									<span class="engine-name" id="engine-name">{{ engineNameVersioned }}</span>
-									<span class="engine-stats" id="engine-stats">Local evaluation off</span>
+									<span class="engine-stats" id="engine-stats">{{ ts.engine.readout.off }}</span>
 								</div>
-								<button class="btn-bare icon-btn tooltip-d hidden" id="btn-go-deeper" data-tooltip="Search to depth 64">
+								<button class="btn-bare icon-btn tooltip-d hidden" id="btn-go-deeper" data-tooltip="{{ t.engine.go_deeper }}">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 								</button>
 							</div>
-							<button class="btn-bare icon-btn tooltip-dl" id="btn-engine-settings" data-tooltip="Engine settings">
+							<button class="btn-bare icon-btn tooltip-dl" id="btn-engine-settings" data-tooltip="{{ t.engine.settings }}">
 								<svg class="gear"><use href="#svg-gear"/></svg>
 							</button>
 						</div>
@@ -116,22 +118,22 @@
 							{# All sliders. multipv/threads/depth are direct-value; hash is an index
 							   slider (JS maps the index to the real MB value). #}
 							<div class="setting-row">
-								<label for="setting-multipv">Multiple lines</label>
+								<label for="setting-multipv">{{ t.engine.settings_drawer.multipv }}</label>
 								<input type="range" class="slider" id="setting-multipv" min="1" max="5" step="1"/>
 								<span class="setting-value" id="setting-multipv-value">1</span>
 							</div>
 							<div class="setting-row">
-								<label for="setting-threads">Threads</label>
+								<label for="setting-threads">{{ t.engine.settings_drawer.threads }}</label>
 								<input type="range" class="slider" id="setting-threads" min="1" step="1"/>
 								<span class="setting-value" id="setting-threads-value">1</span>
 							</div>
 							<div class="setting-row">
-								<label for="setting-hash">Memory</label>
+								<label for="setting-hash">{{ t.engine.settings_drawer.hash }}</label>
 								<input type="range" class="slider" id="setting-hash" min="0" step="1"/>
-								<span class="setting-value" id="setting-hash-value">16 MB</span>
+								<span class="setting-value" id="setting-hash-value">{{ ts.engine.units.megabytes | replace('{n}', 16) }}</span>
 							</div>
 							<div class="setting-row">
-								<label for="setting-depth">Depth</label>
+								<label for="setting-depth">{{ t.engine.settings_drawer.depth }}</label>
 								<input type="range" class="slider" id="setting-depth" min="1" max="64" step="1"/>
 								<span class="setting-value" id="setting-depth-value">13</span>
 							</div>
@@ -140,26 +142,26 @@
 					</div>
 					{{ movesTable() }}
 					{% call movesNav(tGamegui) %}
-						<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="More actions" aria-expanded="false">
+						<button class="btn-bare move-btn analysis-actions-toggle" id="btn-analysis-actions" title="{{ t.actions.menu }}" aria-expanded="false">
 							<svg class="move-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="7" x2="19" y2="7"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="5" y1="17" x2="19" y2="17"/></svg>
 						</button>
 						{# More actions menu #}
 						<div class="popup-menu analysis-menu hidden" id="analysis-actions-menu">
 							<button type="button" id="btn-flip">
 								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 7 3 3 7"/><line x1="7" y1="3" x2="7" y2="15"/><polyline points="17 16 17 21 21 17"/><line x1="17" y1="21" x2="17" y2="9"/></svg>
-								<span>Flip board</span>
+								<span>{{ t.actions.flip }}</span>
 							</button>
 							<button type="button" id="btn-edit-current">
 								<svg><use href="#svg-pencil"/></svg>
-								<span>Board editor</span>
+								<span>{{ t.actions.editor }}</span>
 							</button>
 							<button type="button" id="btn-export-icn">
 								<svg><use href="#svg-clipboard"/></svg>
-								<span>Export ICN</span>
+								<span>{{ t.actions.export_icn }}</span>
 							</button>
 							<button type="button" id="btn-continue-from-here">
 								<svg><use href="#svg-pawn"/></svg>
-								<span>Continue from here</span>
+								<span>{{ t.actions.continue }}</span>
 							</button>
 						</div>
 						{# Continue-from-here choice menu #}
@@ -196,7 +198,7 @@
 			{# Game Review start button. Hidden on first paint — only the client can tell whether
 			a game is reviewable, and revealing it up front would flicker it away again on the
 			ones that aren't. guigamereview.ts decides on every load. #}
-			<button class="btn-primary hidden" id="btn-game-review">Game Review</button>
+			<button class="btn-primary hidden" id="btn-game-review">{{ t.review.start }}</button>
 
 			{# Game Review graph #}
 			<div class="review-graph panel hidden" id="review-graph">

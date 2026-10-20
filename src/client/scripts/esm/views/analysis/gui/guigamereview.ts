@@ -15,10 +15,12 @@
  */
 
 import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { AnalysisMoveNode } from '../movetree.js';
 import type { LapseKey, MoveReview, ReviewOutcome } from '../gamereview.js';
 
 import math from '../../../../../../shared/util/math/math.js';
 import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
+import interpolate from '../../../../../../shared/util/interpolate.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
 import toast from '../../../components/toast.js';
@@ -174,8 +176,7 @@ function onGameReviewClicked(): void {
 		openReview();
 	} else {
 		// Main line diverged: confirm destructive reload.
-		const proceed = confirm("Starting a Game Review will discard the lines you've added and review the game as it was played. Continue?"); // prettier-ignore
-		if (!proceed) return;
+		if (!confirm(t.analysis.review.confirm_discard)) return;
 		// Hidden immediately: the reload only marks the session as loading after an await, so
 		// until then the button would still be clickable and could start a second concurrent load.
 		element_GameReviewBtn.classList.add('hidden');
@@ -215,7 +216,10 @@ function updateProgress(): void {
 	// Starting counts as the first step, so the bar never looks frozen before the first result.
 	const pct = ((evaluated + 1) / (total + 1)) * 100;
 	element_ProgressFill.style.width = `${pct}%`;
-	element_ProgressText.textContent = `Evaluating position ${Math.min(evaluated + 1, total)} of ${total}`;
+	element_ProgressText.textContent = interpolate.interpolate(t.analysis.review.progress, {
+		n: Math.min(evaluated + 1, total),
+		total,
+	});
 }
 
 /** Swaps the progress bar for the eval graph on success, or tears the review UI down on failure. */
@@ -230,8 +234,8 @@ function onReviewFinished(outcome: ReviewOutcome): void {
 	// start over — gamereview has already returned itself to 'idle' for exactly that.
 	hideReviewUI();
 	revealButtonIfReviewable();
-	if (outcome === 'failed') toast.show('Game review failed. Please try again.', { error: true });
-	else toast.show('The engine failed to load.', { error: true });
+	if (outcome === 'failed') toast.show(t.analysis.review.failed, { error: true });
+	else toast.show(t.gamegui.engine.load_failed, { error: true });
 }
 
 // Stats columns ---------------------------------------------------------------
@@ -570,9 +574,10 @@ function updateCurrentPhaseMarker(selected: number): void {
 function renderPhaseMarkers(total: number): void {
 	if (element_PhaseMarkers.childElementCount > 0) return;
 	const { middle, end } = gamereview.getDivision();
-	const lines: { index: number; label: string }[] = [{ index: 0, label: 'Opening' }];
-	if (middle !== undefined) lines.push({ index: middle, label: 'Middlegame' });
-	if (end !== undefined) lines.push({ index: end, label: 'Endgame' });
+	const phasesT = t.analysis.review.phases;
+	const lines: { index: number; label: string }[] = [{ index: 0, label: phasesT.opening }];
+	if (middle !== undefined) lines.push({ index: middle, label: phasesT.middlegame });
+	if (end !== undefined) lines.push({ index: end, label: phasesT.endgame });
 
 	for (const line of lines) {
 		const marker = document.createElement('div');
@@ -651,19 +656,10 @@ function renderGraphTooltip(): void {
 				comments: false,
 				abbrev: true,
 			})
-		: 'Starting position';
+		: t.analysis.review.graph.start;
 	element_GraphTooltipMove.textContent = `${prefix}${move}`;
 
-	if (cp === undefined) {
-		const refusal = gamereview.getRefusalAt(index);
-		element_GraphTooltipEval.textContent = refusal === undefined ? 'Not evaluated' : `${t.shared.position_errors.engine[refusal].label} — not evaluated`; // prettier-ignore
-	} else {
-		const review = node ? gamereview.getReviewForNode(node.id) : undefined;
-		const classification = review
-			? ` · ${gamereview.CLASSIFICATION_DISPLAY[review.classification].label}`
-			: '';
-		element_GraphTooltipEval.textContent = `Advantage: ${moveevals.format({ cp })}${classification}`;
-	}
+	element_GraphTooltipEval.textContent = formatGraphTooltipEval(index, node, cp);
 	element_GraphTooltip.classList.remove('hidden');
 
 	const rect = element_Graph.getBoundingClientRect();
@@ -681,6 +677,29 @@ function renderGraphTooltip(): void {
 		pointY < graphHeight / 2
 			? `${Math.max(TOOLTIP_TOP_MARGIN, graphHeight - tooltipHeight - TOOLTIP_BOTTOM_MARGIN)}px` // Point is up top — tooltip goes near the bottom.
 			: `${TOOLTIP_TOP_MARGIN}px`; // Point is down low — tooltip goes near the top.
+}
+
+/** The tooltip's eval text: the advantage and move classification, or why it went unevaluated. */
+function formatGraphTooltipEval(
+	index: number,
+	node: AnalysisMoveNode | undefined,
+	cp: number | undefined,
+): string {
+	const graphT = t.analysis.review.graph;
+	if (cp === undefined) {
+		const refusal = gamereview.getRefusalAt(index);
+		if (refusal === undefined) return graphT.unevaluated;
+		const reason = t.shared.position_errors.engine[refusal].label;
+		return interpolate.interpolate(graphT.refused, { reason });
+	}
+	const advantage = moveevals.format({ cp });
+	const review = node ? gamereview.getReviewForNode(node.id) : undefined;
+	if (!review) return interpolate.interpolate(graphT.advantage, { eval: advantage });
+	const classification = t.analysis.review.classifications[review.classification];
+	return interpolate.interpolate(graphT.advantage_classified, {
+		eval: advantage,
+		classification,
+	});
 }
 
 // Exports ---------------------------------------------------------------------

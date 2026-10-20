@@ -145,9 +145,9 @@ async function exportIcnToClipboard(): Promise<void> {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return;
 	if (await docutil.copyToClipboard(getGameICN(gamefile))) {
-		toast.show('Copied ICN to your clipboard!');
+		toast.show(t.analysis.clipboard.copied);
 	} else {
-		toast.show('Clipboard permission denied. This might be your browser.', { error: true });
+		toast.show(t.analysis.clipboard.denied, { error: true });
 	}
 }
 

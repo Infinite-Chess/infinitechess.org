@@ -20,6 +20,7 @@ import { attributesModule, classModule, h, init } from 'snabbdom';
 import moveutil from '../../../../../../shared/chess/logic/moveutil.js';
 import icnmoves from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import movepiece from '../../../../../../shared/chess/logic/movepiece.js';
+import interpolate from '../../../../../../shared/util/interpolate.js';
 import wincondition from '../../../../../../shared/chess/logic/wincondition.js';
 import movevalidation from '../../../../../../shared/chess/logic/movevalidation.js';
 
@@ -145,9 +146,9 @@ function scrollToCurrentNode(): void {
 /**
  * Builds a tree `.ply` vnode for `node`, keyed by its node id so promote/demote/delete reorder
  * the existing button instead of rebuilding it. Everything the game review adds — the color
- * class, the lapse glyph, the tooltip suffix, the inline eval label — is plain vnode data, so
- * snabbdom diffs it in and out as the review lands. The silhouette (cloned from cache) is the
- * one exception, added once in the `insert` hook and never on reuse.
+ * class, the lapse glyph, the tooltip's classification, the inline eval label — is plain vnode
+ * data, so snabbdom diffs it in and out as the review lands. The silhouette (cloned from cache)
+ * is the one exception, added once in the `insert` hook and never on reuse.
  */
 function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: boolean): VNode {
 	idToNode.set(node.id, node);
@@ -157,18 +158,26 @@ function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: b
 	if (showIndex) children.push(h('span.move-index', formatMoveIndex(node.ply)));
 	children.push(h('span.move-coord', coord));
 
+	const treeT = t.analysis.move_tree;
 	let tooltip = title;
 	const classes: Record<string, boolean> = {};
 	const review = gamereview.getReviewForNode(node.id);
 	if (review) {
-		const display = gamereview.CLASSIFICATION_DISPLAY[review.classification];
-		tooltip += ` · ${display.label}`;
-		if (!review.isBestMove && review.bestMove) tooltip += ` — best was ${review.bestMove}`;
+		const vars = {
+			move: title,
+			classification: t.analysis.review.classifications[review.classification],
+		};
+		tooltip =
+			!review.isBestMove && review.bestMove
+				? interpolate.interpolate(treeT.ply_best, { ...vars, best: review.bestMove })
+				: interpolate.interpolate(treeT.ply, vars);
 		// Only lapses are marked visually — coloring the good tiers too would tint most
 		// of the list, and every classification is named in the tooltip regardless.
 		if (gamereview.isLapseKey(review.classification)) {
 			classes[`review-${review.classification}`] = true;
-			children.push(h('span.review-glyph', display.symbol));
+			children.push(
+				h('span.review-glyph', gamereview.CLASSIFICATION_SYMBOLS[review.classification]),
+			);
 		}
 	}
 
@@ -179,7 +188,11 @@ function buildPlyVNode(node: AnalysisMoveNode, showIndex: boolean, isMainline: b
 		children.push(
 			h(
 				'span.review-eval',
-				{ attrs: { title: `Evaluation at depth ${evalLabel.depth}` } },
+				{
+					attrs: {
+						title: interpolate.interpolate(treeT.eval, { depth: evalLabel.depth }),
+					},
+				},
 				moveevals.format(evalLabel).replace('-', '−'), // Like lichess, only the move list uses a true minus.
 			),
 		);
@@ -378,27 +391,29 @@ function openAnalysisContextMenu(e: MouseEvent, node: AnalysisMoveNode): void {
 	const isMainline = movetree.isMainLine(node);
 	if (parent && parent.children[0] !== node)
 		menu.append(
-			createContextAction('Promote variation', () => {
+			createContextAction(t.analysis.move_tree.menu.promote, () => {
 				movetree.promoteAtFork(node);
 				syncAnalysisTreeAfterAction(node);
 			}),
 		);
 	if (!isMainline)
 		menu.append(
-			createContextAction('Make main line', () => {
+			createContextAction(t.analysis.move_tree.menu.make_main, () => {
 				movetree.makeMainLine(node);
 				syncAnalysisTreeAfterAction(node);
 			}),
 		);
 	if (parent && movetree.getMainLineChild(parent) === node)
 		menu.append(
-			createContextAction('Force variation', () => {
+			createContextAction(t.analysis.move_tree.menu.force_variation, () => {
 				movetree.forceVariation(node);
 				syncAnalysisTreeAfterAction(node);
 			}),
 		);
 	if (parent)
-		menu.append(createContextAction('Delete from here', () => deleteAnalysisNode(node)));
+		menu.append(
+			createContextAction(t.analysis.move_tree.menu.delete, () => deleteAnalysisNode(node)),
+		);
 
 	document.body.append(menu);
 	contextMenu = menu;
