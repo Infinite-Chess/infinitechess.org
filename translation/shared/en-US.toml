@@ -29,7 +29,7 @@ cookies_required = "Your browser does not support cookies. Unable to connect to 
 guest_indicator = "(Guest)"
 you_indicator = "(You)"
 deleted_indicator = "(Deleted User)" # A player whose account was since deleted
-engine_level = "{name} (Level {level})" # An engine below its max strength. {name} comes from [engines].
+engine_level = "{name} (Level {level})" # An engine below its max strength. {name} is the engine's name.
 
 # Labels for the variant selector widget (game-options modal + analysis board setup).
 [variant_selector]
@@ -128,10 +128,6 @@ blue = "Blue"
 yellow = "Yellow"
 green = "Green"
 neutral = "Neutral"
-
-[engines] # Engine display names
-apeiron = "Apeiron" # A proper noun
-engineCheckmatePractice = "Practice Bot"
 
 [seek] # Descriptions of a seek's properties, shown on the lobby row and the challenge card.
 owner_side_white = "Invite owner chooses to be white"

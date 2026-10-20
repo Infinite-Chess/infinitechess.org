@@ -329,10 +329,6 @@ export interface ScriptTranslations {
 			green: string;
 			neutral: string;
 		};
-		engines: {
-			apeiron: string;
-			engineCheckmatePractice: string;
-		};
 		seek: {
 			owner_side_white: string;
 			owner_side_black: string;

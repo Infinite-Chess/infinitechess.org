@@ -14,8 +14,8 @@ interface Engine {
 	 * May vary from engine to engine because of different engine speeds and requirements.
 	 */
 	defaultTimeLimitPerMoveMillis: number;
-	/** The English name, for ICN metadata and {@link getVersionedName}. */
-	englishName: string;
+	/** The engine's name. A proper name, so never translated. */
+	name: string;
 	/** The maximum strength level supported by this engine. */
 	maxStrengthLevel: number;
 	/** Whether the worker loads separately served wasm glue at runtime. */
@@ -78,14 +78,14 @@ export type EngineAndConfig =
 const REGISTRY = {
 	engineCheckmatePractice: {
 		defaultTimeLimitPerMoveMillis: 500,
-		englishName: 'Practice Bot',
+		name: 'Practice Bot',
 		maxStrengthLevel: 1,
 		hasGlue: false,
 		needsMoveHistory: false,
 	},
 	apeiron: {
 		defaultTimeLimitPerMoveMillis: 4000,
-		englishName: 'Apeiron',
+		name: 'Apeiron',
 		maxStrengthLevel: 8,
 		hasGlue: true,
 		needsMoveHistory: true,
@@ -99,7 +99,7 @@ const REGISTRY = {
  * Notation never translates; `playername.ts` derives the display name.
  */
 function getEnglishName(engineName: ValidEngine, strengthLevel: number): string {
-	const name = REGISTRY[engineName].englishName;
+	const name = REGISTRY[engineName].name;
 	return isMaxStrength(engineName, strengthLevel) ? name : `${name} (Level ${strengthLevel})`;
 }
 
@@ -114,7 +114,7 @@ function isMaxStrength(engineName: ValidEngine, strengthLevel: number): boolean 
  * (e.g. an engine-release fetch failed at build time).
  */
 function getVersionedName(engineName: ValidEngine, version: string): string {
-	const name = REGISTRY[engineName].englishName;
+	const name = REGISTRY[engineName].name;
 	return version ? `${name} ${formatVersionMajorMinor(version)}` : name;
 }
 

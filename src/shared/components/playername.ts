@@ -31,7 +31,7 @@ function resolve(
 			return userStatus.deleted_indicator;
 		case 'engine': {
 			const { engine, strengthLevel } = participant;
-			const name = sharedT.engines[engine];
+			const name = engineregistry.REGISTRY[engine].name;
 			if (engineregistry.isMaxStrength(engine, strengthLevel)) return name;
 			return interpolate.interpolate(userStatus.engine_level, { name, level: strengthLevel });
 		}
