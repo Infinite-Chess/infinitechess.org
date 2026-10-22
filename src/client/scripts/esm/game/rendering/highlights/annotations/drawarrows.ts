@@ -101,9 +101,9 @@ function update(arrows: Arrow[]): void {
 		// Currently drawing an arrow
 
 		// Test if pointer released (finalize arrow)
-		if (respectiveListener.pointerExists(pointerId!))
+		if (respectiveListener.isPointerHeld(pointerId!))
 			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
-		if (!respectiveListener.isPointerHeld(pointerId!)) {
+		else {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
 			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
 			// else we drew a square highlight instead of an arrow

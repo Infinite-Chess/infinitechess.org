@@ -51,11 +51,10 @@ function update(): void {
 		// Determine if the selection has been dropped
 
 		const respectiveListener = mouse.getRelevantListener();
-		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!))
+		// Update its last known position while held, else execute the fill
+		if (respectiveListener.isPointerHeld(pointerId!))
 			lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
-		// Test if pointer released (execute selection translation)
-		if (!respectiveListener.isPointerHeld(pointerId!)) executeFill();
+		else executeFill();
 	} else {
 		// Determine if the fill handle needs to be grabbed,
 		// or if the canvas cursor style should change.

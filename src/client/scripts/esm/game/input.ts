@@ -14,25 +14,7 @@ import type { DoubleCoords } from '../../../../shared/util/coordutil.js';
 import docutil from '../util/docutil.js';
 import { GameBus } from '../board/GameBus.js';
 
-/**
- * A list of all keyboard shortcuts that don't have a built in event in javascript.
- * This includes: Undo, Redo, Select All
- * This does NOT include: Copy, Cut, Paste (these have built in events).
- */
-const manual_shortcuts: string[] = ['KeyZ', 'KeyY', 'KeyA'];
-
-const Mouse = {
-	LEFT: 0,
-	MIDDLE: 1,
-	RIGHT: 2,
-} as const;
-
-// Maps buttons to string names
-const MouseNames = {
-	[Mouse.LEFT]: 'Left',
-	[Mouse.MIDDLE]: 'Middle',
-	[Mouse.RIGHT]: 'Right',
-} as const;
+// Types -----------------------------------------------------------------------
 
 export type MouseButton = (typeof Mouse)[keyof typeof Mouse];
 
@@ -84,9 +66,9 @@ export interface InputListener {
 	 */
 	setTreatLeftasRight(value: boolean): void;
 	/** Returns the position of the given LOGICAL pointer id, if it still exists. */
-	getPointerPos(pointerId?: string): DoubleCoords | undefined;
+	getPointerPos(pointerId: string): DoubleCoords | undefined;
 	/** Returns the position of the given PHYSICAL pointer id, if it still exists. */
-	getPhysicalPointerPos(pointerId?: string): DoubleCoords | undefined;
+	getPhysicalPointerPos(pointerId: string): DoubleCoords | undefined;
 	/** Returns the PHYSICAL pointer id this pointer is attached to. */
 	getPhysicalPointerIdOfPointer(pointerId: string): string | undefined;
 	/**
@@ -105,13 +87,8 @@ export interface InputListener {
 	getAllTouchPointers(): string[];
 	/** Returns the ids of all existing PHYSICAL pointers. */
 	getAllPhysicalPointers(): string[];
-	/**
-	 * Whether the given LOGICAL pointer is currently being held down.
-	 * Which also happens to be true if the pointer still EXISTS.
-	 */
+	/** Whether the given LOGICAL pointer is held down (still exists). */
 	isPointerHeld(pointerId: string): boolean;
-	/** Whether the given LOGICAL pointer still exists (held down). */
-	pointerExists(pointerId: string): boolean;
 	/** Returns a list of all LOGICAL pointers that were pressed down this frame for the given button action. */
 	getPointersDown(button: MouseButton): string[];
 	/** Returns a list of all touch LOGICAL pointers that were pressed down this frame, regardless of what button action they were for. */
@@ -136,36 +113,11 @@ export interface InputListener {
 	isKeyHeld(keyCode: string): boolean;
 	/** Removes the key-down event for the given key code so that other scripts don't also use it. */
 	claimKey(keyCode: string): void;
-	/** Call when done with the input listener. This closes all its event listeners. */
-	removeEventListeners(): void;
 	/** The element this input listener is attached to. */
 	element: HTMLElement | typeof document;
 }
 
 type PointerHistory = { pos: DoubleCoords; time: number }[];
-
-/** Options for simulated clicks */
-const CLICK_THRESHOLDS = {
-	MOUSE: {
-		/** The maximum distance the mouse can move before a click is not registered. */
-		MOVE_VPIXELS: 6, // Default: 8
-		/** The maximum time the mouse can be held down before a click is not registered. */
-		TIME_MS: 400, // Default: 400
-		/** The maximum time between first click down and second click up to register a double click drag. */
-		DOUBLE_CLICK_TIME_MS: 450, // Default: 500
-	},
-	TOUCH: {
-		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
-		MOVE_VPIXELS: 17, // Default: 20
-		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MS}, but for fingers (more strict, they must lift quicker) */
-		TIME_MS: 120,
-		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MS}, but for fingers (more strict, they must lift quicker) */
-		DOUBLE_CLICK_TIME_MS: 250, // Default: 220
-	},
-} as const;
-
-/** The window of milliseconds to store mouse position history for velocity calculations. */
-const MOUSE_POS_HISTORY_WINDOW_MS = 80;
 
 /**
  * Physical Pointers are assigned one trackable POSITION.
@@ -253,6 +205,53 @@ interface ClickInfo {
 	doubleClickDrag: boolean;
 }
 
+// Constants -------------------------------------------------------------------
+
+const Mouse = {
+	LEFT: 0,
+	MIDDLE: 1,
+	RIGHT: 2,
+} as const;
+
+/** Each mouse button's name, for its logical pointer id. */
+const MOUSE_NAMES = {
+	[Mouse.LEFT]: 'Left',
+	[Mouse.MIDDLE]: 'Middle',
+	[Mouse.RIGHT]: 'Right',
+} as const;
+
+/**
+ * A list of all keyboard shortcuts that don't have a built in event in javascript.
+ * This includes: Undo, Redo, Select All
+ * This does NOT include: Copy, Cut, Paste (these have built in events).
+ */
+const MANUAL_SHORTCUTS: string[] = ['KeyZ', 'KeyY', 'KeyA'];
+
+/** Options for simulated clicks */
+const CLICK_THRESHOLDS = {
+	MOUSE: {
+		/** The maximum distance the mouse can move before a click is not registered. */
+		MOVE_VPIXELS: 6,
+		/** The maximum time the mouse can be held down before a click is not registered. */
+		TIME_MS: 400,
+		/** The maximum time between first click down and second click up to register a double click drag. */
+		DOUBLE_CLICK_TIME_MS: 450,
+	},
+	TOUCH: {
+		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
+		MOVE_VPIXELS: 17,
+		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MS}, but for fingers (more strict, they must lift quicker) */
+		TIME_MS: 120,
+		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MS}, but for fingers (more strict, they must lift quicker) */
+		DOUBLE_CLICK_TIME_MS: 250,
+	},
+} as const;
+
+/** The window of milliseconds to store mouse position history for velocity calculations. */
+const MOUSE_POS_HISTORY_WINDOW_MS = 80;
+
+// Input Listener --------------------------------------------------------------
+
 /**
  * Creates an input listener that listens to mouse and keyboard events on the given element.
  *
@@ -284,7 +283,6 @@ function CreateInputListener(
 	 */
 	let treatLeftAsRight = false;
 
-	// console.log("Mouse supported: ", docutil.isMouseSupported());
 	// Immediately add the mouse pointer if the doc supports it
 	if (docutil.isMouseSupported()) {
 		physicalPointers['mouse'] = {
@@ -330,21 +328,13 @@ function CreateInputListener(
 		},
 	};
 
-	const eventHandlers: Record<string, { target: EventTarget; handler: EventListener }> = {};
-
-	// Helper Functions ------------------------------------------------------------
-
-	function addListener(target: EventTarget, eventType: string, handler: EventListener): void {
-		target.addEventListener(eventType, handler);
-		eventHandlers[eventType] = { target, handler };
-	}
+	// --- Helper Functions ---
 
 	/** Reset the input events for the next frame. Fire 'reset-listener-events' at the very end of EVERY frame. */
 	GameBus.addEventListener('reset-listener-events', () => {
-		// console.log("Resetting events");
 		// We can continuously hold a key without triggering more events, so held keys should still count as an input that frame.
 		atleastOneInputThisFrame = keyHelds.length > 0;
-		// console.log("Atleast one input this frame: ", atleastOneInputThisFrame);
+		const now = Date.now();
 		// For each mouse button, reset its state
 		for (const button of Object.values(clickInfo)) {
 			button.isDown = false;
@@ -352,16 +342,12 @@ function CreateInputListener(
 			button.doubleClickDrag = false;
 			// Trim their timeDownMillisHistory of old mouse downs
 			button.timeDownMillisHistory = button.timeDownMillisHistory.filter(
-				(time) => time > Date.now() - 3000,
+				(time) => time > now - 3000,
 			);
 		}
 		// For each pointer, reset its state
-		const now = Date.now();
 		for (const pointer of Object.values(physicalPointers)) {
 			pointer.delta = [0, 0];
-			pointer.positionHistory = pointer.positionHistory.filter(
-				(entry) => entry.time > Date.now() - MOUSE_POS_HISTORY_WINDOW_MS,
-			);
 			recalcPointerVel(pointer, now);
 		}
 
@@ -399,10 +385,10 @@ function CreateInputListener(
 		} else pointer.velocity = [0, 0];
 	}
 
-	// Simulated Click Events (either mouse or finger) ------------------------------------------------------------
+	// --- Simulated Click Events (either mouse or finger) ---
 
+	/** Records a press of the button, detecting double click drags. */
 	function updateClickInfoDown(targetButton: MouseButton, e: MouseEvent | Touch): void {
-		// console.log("Mouse down: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 
@@ -448,9 +434,7 @@ function CreateInputListener(
 			if (isWithinClickTolerance(targetButtonInfo, relativeMousePos, e)) {
 				// Only register the double click drag if the mouse hasn't moved too far from its last click down.
 				targetButtonInfo.doubleClickDrag = true;
-				// console.log("Mouse double click dragged: ", MouseNames[targetButton]);
 			}
-			// else console.log("Mouse double click MOVED TOO FAR: ", MouseNames[targetButton]);
 		} // ----------------
 
 		// Now we can update the last click down after checking for its distance to the last one.
@@ -458,8 +442,8 @@ function CreateInputListener(
 		targetButtonInfo.deltaSinceDown = [0, 0]; // Reset the delta since down
 	}
 
+	/** Records a release of the button, detecting simulated clicks. */
 	function updateClickInfoUp(targetButton: MouseButton, e: MouseEvent | Touch): void {
-		// console.log("Mouse up: ", MouseNames[targetButton]);
 		const targetButtonInfo = clickInfo[targetButton];
 		if (targetButtonInfo === undefined) return; // Invalid button (some mice have extra buttons)
 		const logicalId = getLogicalPointerId(e, targetButton);
@@ -487,7 +471,6 @@ function CreateInputListener(
 		if (timePassed < TIME_MS) {
 			if (isWithinClickTolerance(targetButtonInfo, relativeMousePos, e)) {
 				targetButtonInfo.clicked = true;
-				// console.log("Mouse clicked: ", MouseNames[targetButton]);
 			}
 		} // --------------
 	}
@@ -514,9 +497,9 @@ function CreateInputListener(
 	}
 
 	if (mouse) {
-		// Mouse Events ----------------------------------------------------------------
+		// --- Mouse Events ---
 
-		addListener(element, 'mousedown', ((e: MouseEvent): void => {
+		element.addEventListener('mousedown', ((e: MouseEvent): void => {
 			if (element instanceof HTMLElement) {
 				if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 				// Prevents dragging the board also selecting/highlighting text in Coordinates container
@@ -536,7 +519,7 @@ function CreateInputListener(
 		}) as EventListener);
 
 		// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
-		addListener(document, 'mouseup', ((e: MouseEvent): void => {
+		document.addEventListener('mouseup', ((e: MouseEvent): void => {
 			atleastOneInputThisFrame = true;
 			const eventButton = e.button as MouseButton;
 			// If alt is held, right click instead
@@ -548,7 +531,7 @@ function CreateInputListener(
 		}) as EventListener);
 
 		// Mouse position tracking
-		addListener(element, 'mousemove', ((e: MouseEvent): void => {
+		element.addEventListener('mousemove', ((e: MouseEvent): void => {
 			// The document hears moves over the whole page, so only drags count as input there.
 			if (
 				element instanceof HTMLElement ||
@@ -558,7 +541,6 @@ function CreateInputListener(
 			const physicalPointer = physicalPointers['mouse'];
 			if (!physicalPointer) return; // Sometimes the 'mousemove' event is fired from touch events, even though the mouse pointer does not exist.
 			physicalPointer.position = getRelativeMousePosition([e.clientX, e.clientY], element);
-			// console.log(`Updated pointer ${targetPointer.id} position:`, targetPointer.position);
 			// Update delta (Note: e.movementX/Y are relative to the document, it should be fine)
 			// Add to the current delta, in case this event is triggered multiple times in a frame.
 			physicalPointer.delta[0] += e.movementX;
@@ -567,23 +549,21 @@ function CreateInputListener(
 			// Update the delta (deltaSinceDown) for simulated mouse clicks
 			updateDeltaSinceDownForPointer(physicalPointer.id, physicalPointer.delta);
 
-			// console.log("Mouse delta: ", targetPointer.delta);
 			// Update velocity
 			const now = Date.now();
 			physicalPointer.positionHistory.push({ pos: [...physicalPointer.position], time: now }); // Deep copy the mouse position to avoid modifying the original
 			recalcPointerVel(physicalPointer, now);
-			// console.log("Mouse relative position: ", targetPointer.position);
 		}) as EventListener);
 
 		// Counts as input so the frame after leaving isn't left showing a stale hover.
 		if (element instanceof HTMLElement) {
-			addListener(element, 'mouseleave', (): void => {
+			element.addEventListener('mouseleave', (): void => {
 				atleastOneInputThisFrame = true;
 			});
 		}
 
 		// Scroll wheel tracking
-		addListener(element, 'wheel', ((e: WheelEvent): void => {
+		element.addEventListener('wheel', ((e: WheelEvent): void => {
 			if (element instanceof HTMLElement) {
 				if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 				// The board zooms itself, so a scrollable page mustn't scroll too.
@@ -595,16 +575,15 @@ function CreateInputListener(
 		}) as EventListener);
 
 		// Prevent the context menu on right click
-		addListener(element, 'contextmenu', ((e: MouseEvent): void => {
+		element.addEventListener('contextmenu', ((e: MouseEvent): void => {
 			if (element instanceof Document || e.target !== element) return; // Allow context menu outside the element, or inside as long as the target isn't the element.
 			atleastOneInputThisFrame = true;
-			// console.log("Context menu");
 			e.preventDefault();
 		}) as EventListener);
 
-		// Finger Events ---------------------------------------------------------------
+		// --- Finger Events ---
 
-		addListener(element, 'touchstart', ((e: TouchEvent): void => {
+		element.addEventListener('touchstart', ((e: TouchEvent): void => {
 			if (e.target !== element) return; // Ignore events triggered on CHILDREN of the element.
 			atleastOneInputThisFrame = true;
 
@@ -630,7 +609,6 @@ function CreateInputListener(
 					positionHistory: [{ pos: [...position], time: Date.now() }],
 					velocity: [0, 0],
 				};
-				// console.log("Touch start: ", touch.identifier);
 
 				// Treat fingers as the left mouse button by default
 				const button = treatLeftAsRight ? Mouse.RIGHT : Mouse.LEFT;
@@ -638,7 +616,7 @@ function CreateInputListener(
 			}
 		}) as EventListener);
 
-		addListener(element, 'touchmove', ((e: TouchEvent): void => {
+		element.addEventListener('touchmove', ((e: TouchEvent): void => {
 			for (let i = 0; i < e.changedTouches.length; i++) {
 				const touch: Touch = e.changedTouches[i]!;
 				const touchId = getPhysicalPointerId(touch);
@@ -666,19 +644,17 @@ function CreateInputListener(
 					time: now,
 				}); // Deep copy the touch position to avoid modifying the original
 				recalcPointerVel(physicalPointer, now);
-				// console.log("Touch position: ", targetPointer.position);
 			}
 		}) as EventListener);
 
 		// This listeners are placed on the document so we don't miss touchend events if the user lifts their finger off the element.
-		addListener(document, 'touchend', touchEndCallback as EventListener);
-		addListener(document, 'touchcancel', touchEndCallback as EventListener);
+		document.addEventListener('touchend', touchEndCallback as EventListener);
+		document.addEventListener('touchcancel', touchEndCallback as EventListener);
 
 		function touchEndCallback(e: TouchEvent): void {
 			atleastOneInputThisFrame = true;
 			for (let i = 0; i < e.changedTouches.length; i++) {
 				const touch: Touch = e.changedTouches[i]!;
-				// console.log("Touch end/cancel: ", touch.identifier);
 				const physicalId = getPhysicalPointerId(touch);
 				// Destroy both pointers since it's a touch
 				delete logicalPointers[physicalId];
@@ -691,10 +667,10 @@ function CreateInputListener(
 		}
 	}
 
-	// Keyboard Events -------------------------------------------------------------
+	// --- Keyboard Events ---
 
 	if (keyboard) {
-		addListener(element, 'keydown', ((e: KeyboardEvent): void => {
+		element.addEventListener('keydown', ((e: KeyboardEvent): void => {
 			if (docutil.isTypingInTextField()) return; // The keystroke belongs to the text field
 
 			// Suppress the browser's default action for any bare key (no Ctrl/Meta/Alt), so keys
@@ -703,7 +679,6 @@ function CreateInputListener(
 			if (!(e.ctrlKey || e.metaKey || e.altKey) && !/^F\d{1,2}$/.test(e.code))
 				e.preventDefault();
 
-			// console.log("Key down: ", e.code);
 			atleastOneInputThisFrame = true;
 			if (!keyDowns.some((keyInfo) => keyInfo.keyCode === e.code)) {
 				keyDowns.push({
@@ -727,12 +702,10 @@ function CreateInputListener(
 			// Prevent default behavior for shortcuts without a built in event.
 			// This still allows copy & paste events to bubble through to our listeners,
 			// but for example it prevents Ctrl+A from selecting all text on the page.
-			if (manual_shortcuts.includes(e.code) && (e.ctrlKey || e.metaKey)) e.preventDefault();
+			if (MANUAL_SHORTCUTS.includes(e.code) && (e.ctrlKey || e.metaKey)) e.preventDefault();
 		}) as EventListener);
 
-		// This listener is placed on the document so we don't miss mouseup events if the user lifts their mouse off the element.
-		addListener(element, 'keyup', ((e: KeyboardEvent): void => {
-			// console.log("Key up: ", e.code);
+		element.addEventListener('keyup', ((e: KeyboardEvent): void => {
 			atleastOneInputThisFrame = true;
 			const downIndex = keyDowns.findIndex((keyInfo) => keyInfo.keyCode === e.code);
 			if (downIndex !== -1) keyDowns.splice(downIndex, 1);
@@ -750,28 +723,24 @@ function CreateInputListener(
 		});
 	}
 
-	// Return the InputListener object ---------------------------------------------
+	// --- The InputListener ---
 
 	return {
 		element,
 		atleastOneInput: (): boolean => atleastOneInputThisFrame,
 		isMouseDown: (button: MouseButton): boolean => clickInfo[button].isDown,
 		claimMouseDown: (button: MouseButton): void => {
-			// console.error("Claiming mouse down: ", MouseNames[button]);
 			clickInfo[button].isDown = false;
 			// Also remove the pointer from the list of pointers down this frame.
 			const logicalId = clickInfo[button].pointer?.logicalId;
 			if (logicalId === undefined) return; // Never pressed yet, so nothing is down to claim.
 			const index = pointersDown.indexOf(logicalId);
-			// console.error("Claiming pointer down1: ", logicalId);
 			if (index !== -1) pointersDown.splice(index, 1);
 		},
 		claimPointerDown: (pointerId: string): void => {
-			// console.error("Claiming pointer down: ", pointerId);
 			const index = pointersDown.indexOf(pointerId);
 			if (index === -1)
 				throw Error("Can't claim pointer down. Already claimed, or is not down.");
-			// console.error("Claiming pointer down2: ", pointerId);
 			pointersDown.splice(index, 1);
 			// Also claim the mouse down if this pointer is the most recent pointer that performed that action.
 			Object.values(clickInfo).forEach((buttonInfo) => {
@@ -779,12 +748,11 @@ function CreateInputListener(
 			});
 		},
 		claimMouseClick: (button: MouseButton): void => {
-			// console.error("Claiming mouse click: ", MouseNames[button]);
 			clickInfo[button].clicked = false;
-			// console.error("Claiming mouse click: ", MouseNames[button]);
 		},
-		cancelMouseClick: (button: MouseButton): number =>
-			(clickInfo[button].timeDownMillisHistory.length = 0),
+		cancelMouseClick: (button: MouseButton): void => {
+			clickInfo[button].timeDownMillisHistory.length = 0;
+		},
 		isMouseHeld: (button: MouseButton): boolean => clickInfo[button].isHeld,
 		isMouseTouch: (button: MouseButton): boolean => clickInfo[button].isTouch,
 		isPointerTouch: (pointerId: string): boolean =>
@@ -812,7 +780,9 @@ function CreateInputListener(
 		isMouseClicked: (button: MouseButton): boolean => clickInfo[button].clicked,
 		isMouseDoubleClickDragged: (button: MouseButton): boolean =>
 			clickInfo[button].doubleClickDrag,
-		setTreatLeftasRight: (value: boolean): boolean => (treatLeftAsRight = value),
+		setTreatLeftasRight: (value: boolean): void => {
+			treatLeftAsRight = value;
+		},
 		getPointerPos: (pointerId: string): DoubleCoords | undefined =>
 			logicalPointers[pointerId]?.physical.position,
 		getPhysicalPointerPos: (pointerId: string): DoubleCoords | undefined =>
@@ -833,7 +803,6 @@ function CreateInputListener(
 				.map((p) => p.id), // Filter out the non-touch ones, and map to ids
 		getAllPhysicalPointers: (): string[] => Object.keys(physicalPointers),
 		isPointerHeld: (pointerId: string): boolean => logicalPointers[pointerId] !== undefined,
-		pointerExists: (pointerId: string): boolean => logicalPointers[pointerId] !== undefined,
 		getPointersDown: (button: MouseButton): string[] =>
 			pointersDown.filter((id) => logicalPointers[id]!.button === button), // Filter out the ones not for the button action
 		getTouchPointersDown: (): string[] =>
@@ -865,15 +834,10 @@ function CreateInputListener(
 			const index = keyDowns.findIndex((k) => k.keyCode === keyCode);
 			if (index !== -1) keyDowns.splice(index, 1);
 		},
-		removeEventListeners: (): void => {
-			Object.keys(eventHandlers).forEach((eventType) => {
-				const { target, handler } = eventHandlers[eventType]!;
-				target.removeEventListener(eventType, handler);
-			});
-			console.log('Closed event listeners of Input Listener');
-		},
 	};
 }
+
+// Helpers ---------------------------------------------------------------------
 
 /** Generates the unique PHYSICAL pointer id for the mouse or touch event. */
 function getPhysicalPointerId(e: MouseEvent | Touch): string {
@@ -884,7 +848,7 @@ function getPhysicalPointerId(e: MouseEvent | Touch): string {
 /** Generates the unique pointer id for the mouse or touch event and button action. */
 function getLogicalPointerId(e: MouseEvent | Touch, button: MouseButton): string {
 	const mouseEvent = e instanceof MouseEvent; // CAN'T USE instanceof Touch because it's not defined in Safari!
-	return mouseEvent ? `mouse_${MouseNames[button]}` : e.identifier.toString();
+	return mouseEvent ? `mouse_${MOUSE_NAMES[button]}` : e.identifier.toString();
 }
 
 /**

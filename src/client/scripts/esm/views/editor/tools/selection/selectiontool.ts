@@ -82,11 +82,10 @@ function update(): void {
 	} else {
 		// Selection in progress
 		const respectiveListener = mouse.getRelevantListener();
-		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!))
+		// Update its last known position while held, else finalize the new selection
+		if (respectiveListener.isPointerHeld(pointerId!))
 			lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
-		// Test if pointer released (finalize new selection)
-		if (!respectiveListener.isPointerHeld(pointerId!)) endSelection();
+		else endSelection();
 	}
 }
 

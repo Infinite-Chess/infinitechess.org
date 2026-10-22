@@ -107,10 +107,8 @@ function update(rays: Ray[]): void {
 
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
-		if (respectiveListener.pointerExists(pointerId!))
-			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		if (respectiveListener.isPointerHeld(pointerId!)) {
-			// Pointer is still holding
+			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 			if (!pointerWorld) return; // Maybe we're looking into sky?
 			const pointerCoords = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
