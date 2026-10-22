@@ -170,11 +170,10 @@ async function loadGraphical(): Promise<void> {
 	await imagecache.initImagesForGame(loadedGamefile!);
 	texturecache.initTexturesForGame(gl, loadedGamefile!);
 
-	// MUST BE AFTER imagecache.initImagesForGame(), as we need SVGs fetched before then.
 	const uniquePlayers = gamerules.getUniquePlayersInTurnOrder(
 		loadedGamefile!.gameRules.turnOrder,
 	);
-	guipromotion.initUI(loadedGamefile!.gameRules.promotion?.pieces, uniquePlayers);
+	await guipromotion.initUI(loadedGamefile!.gameRules.promotion?.pieces, uniquePlayers);
 
 	// Rewind one move so that we can, after a short delay, animate the most recently played move.
 	if (!moveutil.areWeViewingLatestMove(loadedGamefile!))
