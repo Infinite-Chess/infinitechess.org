@@ -9,7 +9,10 @@ import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
-import type { AttributeInfoInstanced, RenderableInstanced } from '../../webgl/Renderable.js';
+import type {
+	AttributeInfoInstanced,
+	PersistentRenderableInstanced,
+} from '../../webgl/Renderable.js';
 
 import vectors from '../../../../../shared/util/math/vectors.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -37,7 +40,7 @@ interface MeshData {
 	/** Infinite precision BIGINT instance data for performing arithmetic. */
 	instanceData: InstanceData;
 	/** Buffer model for rendering. (This automatically stores the instanceData32 array going into the gpu) */
-	model: RenderableInstanced;
+	model: PersistentRenderableInstanced;
 }
 
 /** An object that contains the buffer models to render the pieces in a game. */
@@ -101,6 +104,7 @@ function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undef
 
 	// For each piece type in the game, generate its mesh
 	for (const type of boardsim.existingTypes) {
+		mesh.types[type]?.model.dispose();
 		if (typeutil.getRawType(type) === r.VOID)
 			mesh.types[type] = genVoidModel(ctx, boardsim, mesh, type); // Custom mesh generation logic for voids
 		else mesh.types[type] = genTypeModel(ctx, boardsim, mesh, type); // Normal generation logic for all pieces with a texture
@@ -130,7 +134,7 @@ function genTypeModel(
 	const texture = ctx.textures.getTexture(type);
 	return {
 		instanceData,
-		model: ctx.renderable.createRenderable_Instanced_GivenInfo(
+		model: ctx.renderable.createPersistentRenderable_Instanced_GivenInfo(
 			vertexData,
 			castInstanceDataToFloat32(instanceData),
 			ATTRIBUTE_INFO,
@@ -159,7 +163,7 @@ function genVoidModel(
 
 	return {
 		instanceData,
-		model: ctx.renderable.createRenderable_Instanced(
+		model: ctx.renderable.createPersistentRenderable_Instanced(
 			vertexData,
 			castInstanceDataToFloat32(instanceData),
 			'TRIANGLES',

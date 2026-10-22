@@ -1,22 +1,14 @@
 // src/client/scripts/esm/webgl/Renderable.ts
 
 /**
- * This script contains all the functions used to generate renderable buffer models of the
- * game objects that the shader programs can use. It receives the object's vertex data to do so,
- * the desired shader to use, the textures along with their uniform names, and the attribute
- * information, if applicable, such as how many components of the vertex data
- * are dedicated to position, color, texture coordinates, etc.
- *
- * It is also capable of instanced rendering.
- *
- * {@link createRenderableFactory} builds a set of create-functions bound to one WebGL
- * context + ProgramManager + view source. Each caller owns its factory, so its models
- * render into its own context.
+ * Builds renderable models from vertex data, a shader, textures and attribute layouts, plain or
+ * instanced, through {@link createRenderableFactory}: one set of create-functions per WebGL context.
+ * Plain models render the frame they're built from the context's shared buffers; persistent
+ * models own their buffers across frames until disposed.
  */
 
 import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 import type { TypedArray } from './BufferUtil.js';
-
 import type { ShaderProgram } from './ShaderProgram.js';
 import type { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 
@@ -37,10 +29,10 @@ interface ViewSource {
 }
 
 /**
- * Any kind of array that may be passed to the constructors
+ * Any kind of array that may be passed to the create-functions
  * to be used as vertex or instance data for a buffer model.
  *
- * Each of these are subsequently converted into aFloat32Array,
+ * Number arrays are converted into a Float32Array,
  * which have a max safe integer of 16,777,215 (16 million),
  * and a max value of 3.4e38. so beware of precision loss!
  *
@@ -97,8 +89,8 @@ export interface TextureInfo {
  */
 type UpdateBufferIndicesFunc = (changedIndicesStart: number, changedIndicesCount: number) => void;
 
-/** Contains the properties that both the {@link Renderable} and {@link RenderableInstanced} types share. */
-interface BaseRenderable {
+/** A renderable model, to render the frame it's built. */
+export interface Renderable {
 	/**
 	 * **Renders** the buffer model! Translates and scales according to the provided arguments.
 	 * Applies any custom uniform values before rendering.
@@ -109,17 +101,19 @@ interface BaseRenderable {
 	render: (position?: Vec3, scale?: Vec3, uniforms?: Record<string, UniformValue>) => void;
 }
 
-/** A renderable model. */
-export interface Renderable extends BaseRenderable {
+/** A renderable model kept across frames, owning its GPU buffer. */
+export interface PersistentRenderable extends Renderable {
 	/** A reference to the vertex data, stored in a Float32Array, that went into this model's buffer.
 	 * If this is modified, we can use updateBufferIndices() to pass those changes
 	 * on to the gpu, without having to create a new buffer model! */
 	data: TypedArray;
 	updateBufferIndices: UpdateBufferIndicesFunc;
+	/** Frees the model's GPU buffer and VAO. Never render it afterward. */
+	dispose: () => void;
 }
 
-/** A renderable model that uses instanced rendering! */
-export interface RenderableInstanced extends BaseRenderable {
+/** A {@link PersistentRenderable} that uses instanced rendering. */
+export interface PersistentRenderableInstanced extends Renderable {
 	/** A reference to the vertex data of a SINGLE INSTANCE, stored in a Float32Array, that went into this model's buffer.
 	 * If this is modified, we can use updateBufferIndices() to pass those changes
 	 * on to the gpu, without having to create a new buffer model! */
@@ -130,6 +124,8 @@ export interface RenderableInstanced extends BaseRenderable {
 	instanceData: TypedArray;
 	updateBufferIndices_VertexBuffer: UpdateBufferIndicesFunc;
 	updateBufferIndices_InstanceBuffer: UpdateBufferIndicesFunc;
+	/** Frees the model's GPU buffers and VAO. Never render it afterward. */
+	dispose: () => void;
 }
 
 /** A set of create-functions bound to one WebGL context, as returned by {@link createRenderableFactory}. */
@@ -138,6 +134,8 @@ export interface RenderableFactory {
 	 * The universal function for creating a renderable model,
 	 * given the vertex data, attribute information,
 	 * primitive rendering mode, and texture.
+	 * @param numPositionComponents - The number of position components for a single vertex: x,y,z
+	 * @param texture - If applicable, a texture to be bound when rendering (vertex data should contain texcoord attributes).
 	 */
 	createRenderable(
 		data: InputArray,
@@ -150,6 +148,9 @@ export interface RenderableFactory {
 	/**
 	 * The universal function for creating a renderable model THAT USES INSTANCED RENDERING,
 	 * given the vertex data and instance data, both attribute informations, primitive rendering mode, and texture!
+	 * @param vertexData - The vertex data of a single instance of the mesh.
+	 * @param usingColor - Whether the vertex data of a single instance contains color attributes, NOT the instance-specific data.
+	 * @param texture - If applicable, a texture to be bound when rendering (vertex data should contain texcoord attributes).
 	 */
 	createRenderable_Instanced(
 		vertexData: InputArray,
@@ -158,27 +159,64 @@ export interface RenderableFactory {
 		shader: keyof ProgramMap,
 		usingColor: boolean,
 		texture?: WebGLTexture,
-	): RenderableInstanced;
+	): Renderable;
 	/** Creates a renderable model, given the AttributeInfo object. */
-	createRenderable_GivenInfo<K extends keyof ProgramMap>(
+	createRenderable_GivenInfo(
 		data: InputArray,
 		attribInfo: AttributeInfo,
 		mode: PrimitiveType,
-		shader: K,
+		shader: keyof ProgramMap,
 		textures?: TextureInfo[],
 	): Renderable;
 	/**
 	 * Creates a renderable model that uses instanced rendering,
 	 * given the AttributeInfo objects of both the vertex data and instance data arrays.
 	 */
-	createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
+	createRenderable_Instanced_GivenInfo(
 		vertexData: InputArray,
 		instanceData: InputArray,
 		attribInfoInstanced: AttributeInfoInstanced,
 		mode: PrimitiveType,
-		shader: K,
+		shader: keyof ProgramMap,
 		textures?: TextureInfo[],
-	): RenderableInstanced;
+	): Renderable;
+	/** {@link createRenderable}, as a model kept across frames. */
+	createPersistentRenderable(
+		...args: Parameters<RenderableFactory['createRenderable']>
+	): PersistentRenderable;
+	/** {@link createRenderable_Instanced}, as a model kept across frames. */
+	createPersistentRenderable_Instanced(
+		...args: Parameters<RenderableFactory['createRenderable_Instanced']>
+	): PersistentRenderableInstanced;
+	/** {@link createRenderable_Instanced_GivenInfo}, as a model kept across frames. */
+	createPersistentRenderable_Instanced_GivenInfo(
+		...args: Parameters<RenderableFactory['createRenderable_Instanced_GivenInfo']>
+	): PersistentRenderableInstanced;
+}
+
+/** One buffer's data and how its attributes are laid out. */
+interface BufferLayout {
+	attribInfo: AttributeInfo;
+	/** Whether its attributes advance once per instance, instead of once per vertex. */
+	instanced: boolean;
+}
+
+/** A model's data, ready to upload: each buffer's contents and layout, and how to draw it. */
+interface Geometry<A extends TypedArray[] = TypedArray[]> {
+	shader: keyof ProgramMap;
+	textures: TextureInfo[];
+	/** The contents of each buffer, matching {@link layouts}. */
+	arrays: A;
+	layouts: BufferLayout[];
+	/** Issues the draw call, once the model's VAO is bound. */
+	draw: () => void;
+}
+
+/** A VAO and its buffers, reused by every plain renderable of one shader and layout. */
+interface StreamSlot {
+	shaderProgram: ShaderProgram<string, string>;
+	vao: WebGLVertexArrayObject;
+	buffers: WebGLBuffer[];
 }
 
 // Context-bound factory -------------------------------------------------------
@@ -195,253 +233,236 @@ function createRenderableFactory(
 	/** Scratch matrix reused by every draw call. */
 	const transformMatrix: Mat4 = mat4.create();
 
+	/** Plain renderables' reused VAOs and buffers, keyed by shader and layout. */
+	const streamSlots = new Map<string, StreamSlot>();
+
+	// --- Plain models ---
+
 	function createRenderable(
-		/** The array of vertex data of the mesh to be rendered. */
 		data: InputArray,
-		/** The number of position components for a single vertex: x,y,z */
 		numPositionComponents: 2 | 3,
-		/** What drawing primitive to use. */
 		mode: PrimitiveType,
 		shader: keyof ProgramMap,
-		/** Whether the vertex data contains color attributes. */
 		usingColor: boolean,
-		/** If applicable, a texture to be bound when rendering (vertex data should contain texcoord attributes). */
 		texture?: WebGLTexture,
 	): Renderable {
-		const usingTexture = texture !== undefined;
-		const attribInfo = getAttribInfo(numPositionComponents, usingColor, usingTexture);
-		const textureInfo: TextureInfo[] = [];
-		if (texture) textureInfo.push({ texture, uniformName: 'u_sampler' }); // Most models with a single texture use the 'u_sampler' uniform
-		return createRenderable_GivenInfo(data, attribInfo, mode, shader, textureInfo);
+		const attribInfo = getAttribInfo(numPositionComponents, usingColor, texture !== undefined);
+		return createRenderable_GivenInfo(data, attribInfo, mode, shader, getTextureInfo(texture));
 	}
 
 	function createRenderable_Instanced(
-		/** The array of vertex data of a single instance of the mesh. */
 		vertexData: InputArray,
-		/** The instance-specific vertex data of the mesh. */
 		instanceData: InputArray,
-		/** What drawing primitive to use. */
 		mode: PrimitiveType,
 		shader: keyof ProgramMap,
-		/** Whether the vertex data of a single instance contains color attributes, NOT THE INSTANCE-SPECIFIC DATA. */
 		usingColor: boolean,
-		/** If applicable, a texture to be bound when rendering (instance data should contain texcoord attributes). */
 		texture?: WebGLTexture,
-	): RenderableInstanced {
-		const usingTexture = texture !== undefined;
-		const attribInfoInstanced = getAttribInfo_Instanced(usingColor, usingTexture);
-		const textureInfo: TextureInfo[] = [];
-		if (texture) textureInfo.push({ texture, uniformName: 'u_sampler' }); // Most models with a single texture use the 'u_sampler' uniform
-		return createRenderable_Instanced_GivenInfo(
-			vertexData,
-			instanceData,
-			attribInfoInstanced,
-			mode,
-			shader,
-			textureInfo,
-		);
+	): Renderable {
+		const attribInfoInstanced = getAttribInfo_Instanced(usingColor, texture !== undefined);
+		return createRenderable_Instanced_GivenInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, getTextureInfo(texture)); // prettier-ignore
 	}
 
-	function createRenderable_GivenInfo<K extends keyof ProgramMap>(
+	function createRenderable_GivenInfo(
 		data: InputArray,
 		attribInfo: AttributeInfo,
 		mode: PrimitiveType,
-		shader: K,
+		shader: keyof ProgramMap,
 		textures: TextureInfo[] = [],
 	): Renderable {
-		const stride = getStrideFromAttributeInfo(attribInfo);
-		if (data.length % stride !== 0)
-			throw new Error('Data length is not divisible by stride when creating a buffer model. Check to make sure the specified attribInfo is correct.'); // prettier-ignore
-
-		data = ensureTypedArray(data); // Ensure the data is a Float32Array
-		const BYTES_PER_ELEMENT = data.BYTES_PER_ELEMENT;
-
-		const vertexCount = data.length / stride;
-
-		const buffer = BufferUtil.createFromData(gl, data);
-
-		const shaderProgram = programManager.get(shader);
-
-		// Generate the VAO that stores the attribute configuration.
-
-		const vao = gl.createVertexArray();
-		if (!vao) throw new Error('Could not create Vertex Array Object');
-
-		gl.bindVertexArray(vao);
-		configureAttributes(shaderProgram, buffer, attribInfo, stride, BYTES_PER_ELEMENT, false);
-		gl.bindVertexArray(null); // Unbind VAO. The configuration is now saved inside the 'vao' object.
-		gl.bindBuffer(gl.ARRAY_BUFFER, null); // Unbind the buffer next (configureAttributes() binds it)
-
-		return {
-			data,
-			updateBufferIndices: (changedIndicesStart: number, changedIndicesCount: number): void =>
-				BufferUtil.updateIndices(gl, buffer, data, changedIndicesStart, changedIndicesCount), // prettier-ignore
-			render: (
-				position: Vec3 = [0, 0, 0],
-				scale: Vec3 = [1, 1, 1],
-				uniforms: Record<string, UniformValue> = {},
-			): void =>
-				prepareAndExecuteRender(
-					shaderProgram,
-					vao,
-					position,
-					scale,
-					uniforms,
-					textures,
-					() => gl.drawArrays(gl[mode], 0, vertexCount),
-				),
-		};
+		return createStreamed(prepareGeometry(data, attribInfo, mode, shader, textures));
 	}
 
-	function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
+	function createRenderable_Instanced_GivenInfo(
 		vertexData: InputArray,
 		instanceData: InputArray,
 		attribInfoInstanced: AttributeInfoInstanced,
 		mode: PrimitiveType,
-		shader: K,
+		shader: keyof ProgramMap,
 		textures: TextureInfo[] = [],
-	): RenderableInstanced {
-		const vertexDataStride = getStrideFromAttributeInfo(
-			attribInfoInstanced.vertexDataAttribInfo,
-		);
-		const instanceDataStride = getStrideFromAttributeInfo(
-			attribInfoInstanced.instanceDataAttribInfo,
-		);
-		if (vertexData.length % vertexDataStride !== 0)
-			throw new Error('Vertex data length is not divisible by stride when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.'); // prettier-ignore
-		if (instanceData.length % instanceDataStride !== 0)
-			throw new Error(`Instance data length (${instanceData.length}) is not divisible by stride (${instanceDataStride}) when creating an instanced buffer model. Check to make sure the specified attribInfo is correct.`); // prettier-ignore
+	): Renderable {
+		return createStreamed(prepareGeometry_Instanced(vertexData, instanceData, attribInfoInstanced, mode, shader, textures)); // prettier-ignore
+	}
 
-		vertexData = ensureTypedArray(vertexData);
-		instanceData = ensureTypedArray(instanceData);
-		const BYTES_PER_ELEMENT_VData = vertexData.BYTES_PER_ELEMENT;
-		const BYTES_PER_ELEMENT_IData = instanceData.BYTES_PER_ELEMENT;
-
-		const vertexCount = vertexData.length / vertexDataStride; // The vertex count of our vertex data of one single instance
-		const instanceCount = instanceData.length / instanceDataStride;
-
-		const vertexBuffer = BufferUtil.createFromData(gl, vertexData);
-		const instanceBuffer = BufferUtil.createFromData(gl, instanceData);
-
-		const shaderProgram = programManager.get(shader);
-
-		// Generate the VAO that stores the attribute configuration.
-
-		const vao = gl.createVertexArray();
-		if (!vao) throw new Error('Could not create Vertex Array Object');
-
-		gl.bindVertexArray(vao);
-		configureAttributes(
-			shaderProgram,
-			vertexBuffer,
-			attribInfoInstanced.vertexDataAttribInfo,
-			vertexDataStride,
-			BYTES_PER_ELEMENT_VData,
-			false,
-		);
-		configureAttributes(
-			shaderProgram,
-			instanceBuffer,
-			attribInfoInstanced.instanceDataAttribInfo,
-			instanceDataStride,
-			BYTES_PER_ELEMENT_IData,
-			true,
-		);
-		gl.bindVertexArray(null); // Unbind VAO. The configuration is now saved inside the 'vao' object.
-		gl.bindBuffer(gl.ARRAY_BUFFER, null); // Unbind the buffer next (configureAttributes() binds it)
-
+	/** A model of the geometry that uploads into its shader and layout's shared buffers each render. */
+	function createStreamed(geometry: Geometry): Renderable {
 		return {
-			vertexData,
-			instanceData,
-			updateBufferIndices_VertexBuffer: (
-				changedIndicesStart: number,
-				changedIndicesCount: number,
-			): void =>
-				BufferUtil.updateIndices(gl, vertexBuffer, vertexData, changedIndicesStart, changedIndicesCount), // prettier-ignore
-			updateBufferIndices_InstanceBuffer: (
-				changedIndicesStart: number,
-				changedIndicesCount: number,
-			): void =>
-				BufferUtil.updateIndices(gl, instanceBuffer, instanceData, changedIndicesStart, changedIndicesCount), // prettier-ignore
-			render: (
-				position: Vec3 = [0, 0, 0],
-				scale: Vec3 = [1, 1, 1],
-				uniforms: Record<string, UniformValue> = {},
-			): void =>
-				prepareAndExecuteRender(
-					shaderProgram,
-					vao,
-					position,
-					scale,
-					uniforms,
-					textures,
-					() => gl.drawArraysInstanced(gl[mode], 0, vertexCount, instanceCount),
-				),
+			render: (position, scale, uniforms): void => {
+				const slot = getStreamSlot(geometry.shader, geometry.layouts);
+				geometry.arrays.forEach((array, i) =>
+					BufferUtil.refill(gl, slot.buffers[i]!, array),
+				);
+				prepareAndExecuteRender(slot.shaderProgram, slot.vao, geometry, position, scale, uniforms); // prettier-ignore
+			},
 		};
 	}
 
-	/**
-	 * Renders a model, preparing the GPU state beforehand and cleaning up afterwards.
-	 * @param shaderProgram - The shader program to render with.
-	 * @param vao - The Vertex Array Object that stores the attribute configuration.
-	 * @param position - The positional translation of the object: `[x,y,z]`
-	 * @param scale - The scale transformation of the object: `[x,y,z]`
-	 * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are transformmatrix, and all texture samplers.
-	 * @param textures - The textures to bind.
-	 * @param drawCallback - A function that executes the actual draw call, e.g. drawArrays() or drawArraysInstanced().
-	 */
-	function prepareAndExecuteRender<A extends string, U extends string>(
-		shaderProgram: ShaderProgram<A, U>,
-		vao: WebGLVertexArrayObject,
-		position: Vec3,
-		scale: Vec3,
-		uniforms: Record<string, UniformValue>,
+	/** Returns the reused VAO and buffers for the shader and layouts, creating them on first use. */
+	function getStreamSlot(shader: keyof ProgramMap, layouts: BufferLayout[]): StreamSlot {
+		const key = shader + layouts.map((l) => (l.instanced ? 'i' : 'v') + l.attribInfo.map((a) => a.name + a.numComponents).join()).join('|'); // prettier-ignore
+		let slot = streamSlots.get(key);
+		if (slot === undefined) {
+			const shaderProgram = programManager.get(shader);
+			const buffers = layouts.map(() => gl.createBuffer());
+			slot = { shaderProgram, vao: createVAO(shaderProgram, buffers, layouts), buffers };
+			streamSlots.set(key, slot);
+		}
+		return slot;
+	}
+
+	// --- Persistent models ---
+
+	function createPersistentRenderable(
+		data: InputArray,
+		numPositionComponents: 2 | 3,
+		mode: PrimitiveType,
+		shader: keyof ProgramMap,
+		usingColor: boolean,
+		texture?: WebGLTexture,
+	): PersistentRenderable {
+		const attribInfo = getAttribInfo(numPositionComponents, usingColor, texture !== undefined);
+		const geometry = prepareGeometry(data, attribInfo, mode, shader, getTextureInfo(texture));
+		const [typedData] = geometry.arrays;
+		const { buffers, render, dispose } = createOwned(geometry);
+		return {
+			data: typedData,
+			updateBufferIndices: (changedIndicesStart: number, changedIndicesCount: number): void =>
+				BufferUtil.updateIndices(gl, buffers[0]!, typedData, changedIndicesStart, changedIndicesCount), // prettier-ignore
+			render,
+			dispose,
+		};
+	}
+
+	function createPersistentRenderable_Instanced(
+		vertexData: InputArray,
+		instanceData: InputArray,
+		mode: PrimitiveType,
+		shader: keyof ProgramMap,
+		usingColor: boolean,
+		texture?: WebGLTexture,
+	): PersistentRenderableInstanced {
+		const attribInfoInstanced = getAttribInfo_Instanced(usingColor, texture !== undefined);
+		return createPersistentRenderable_Instanced_GivenInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, getTextureInfo(texture)); // prettier-ignore
+	}
+
+	function createPersistentRenderable_Instanced_GivenInfo(
+		vertexData: InputArray,
+		instanceData: InputArray,
+		attribInfoInstanced: AttributeInfoInstanced,
+		mode: PrimitiveType,
+		shader: keyof ProgramMap,
+		textures: TextureInfo[] = [],
+	): PersistentRenderableInstanced {
+		const geometry = prepareGeometry_Instanced(vertexData, instanceData, attribInfoInstanced, mode, shader, textures); // prettier-ignore
+		const [typedVertexData, typedInstanceData] = geometry.arrays;
+		const { buffers, render, dispose } = createOwned(geometry);
+		return {
+			vertexData: typedVertexData,
+			instanceData: typedInstanceData,
+			updateBufferIndices_VertexBuffer: (changedIndicesStart: number, changedIndicesCount: number): void =>
+				BufferUtil.updateIndices(gl, buffers[0]!, typedVertexData, changedIndicesStart, changedIndicesCount), // prettier-ignore
+			updateBufferIndices_InstanceBuffer: (changedIndicesStart: number, changedIndicesCount: number): void =>
+				BufferUtil.updateIndices(gl, buffers[1]!, typedInstanceData, changedIndicesStart, changedIndicesCount), // prettier-ignore
+			render,
+			dispose,
+		};
+	}
+
+	/** Uploads a geometry into buffers and a VAO of its own, which it renders from until disposed. */
+	function createOwned(
+		geometry: Geometry,
+	): Renderable & { buffers: WebGLBuffer[]; dispose: () => void } {
+		const shaderProgram = programManager.get(geometry.shader);
+		const buffers = geometry.arrays.map((array) => BufferUtil.createFromData(gl, array));
+		const vao = createVAO(shaderProgram, buffers, geometry.layouts);
+		return {
+			buffers,
+			render: (position, scale, uniforms): void =>
+				prepareAndExecuteRender(shaderProgram, vao, geometry, position, scale, uniforms),
+			dispose: (): void => {
+				buffers.forEach((buffer) => gl.deleteBuffer(buffer));
+				gl.deleteVertexArray(vao);
+			},
+		};
+	}
+
+	// --- Shared ---
+
+	/** Prepares a model's data for upload, checking it against its layout. */
+	function prepareGeometry(
+		data: InputArray,
+		attribInfo: AttributeInfo,
+		mode: PrimitiveType,
+		shader: keyof ProgramMap,
 		textures: TextureInfo[],
-		drawCallback: () => void,
-	): void {
-		// Switch to the program
-		shaderProgram.use();
-		// Bind the VAO. ONE call to restore all attribute configuration.
+	): Geometry<[TypedArray]> {
+		const typedData = toTypedArray(data, attribInfo);
+		const vertexCount = typedData.length / getStrideFromAttributeInfo(attribInfo);
+		return {
+			shader,
+			textures,
+			arrays: [typedData],
+			layouts: [{ attribInfo, instanced: false }],
+			draw: (): void => gl.drawArrays(gl[mode], 0, vertexCount),
+		};
+	}
+
+	/** Prepares an instanced model's data for upload, checking both arrays against their layouts. */
+	function prepareGeometry_Instanced(
+		vertexData: InputArray,
+		instanceData: InputArray,
+		{ vertexDataAttribInfo, instanceDataAttribInfo }: AttributeInfoInstanced,
+		mode: PrimitiveType,
+		shader: keyof ProgramMap,
+		textures: TextureInfo[],
+	): Geometry<[TypedArray, TypedArray]> {
+		const typedVertexData = toTypedArray(vertexData, vertexDataAttribInfo);
+		const typedInstanceData = toTypedArray(instanceData, instanceDataAttribInfo);
+		const vertexCount =
+			typedVertexData.length / getStrideFromAttributeInfo(vertexDataAttribInfo); // Of one single instance
+		const instanceCount = typedInstanceData.length / getStrideFromAttributeInfo(instanceDataAttribInfo); // prettier-ignore
+		return {
+			shader,
+			textures,
+			arrays: [typedVertexData, typedInstanceData],
+			layouts: [
+				{ attribInfo: vertexDataAttribInfo, instanced: false },
+				{ attribInfo: instanceDataAttribInfo, instanced: true },
+			],
+			draw: (): void => gl.drawArraysInstanced(gl[mode], 0, vertexCount, instanceCount),
+		};
+	}
+
+	/** Creates a VAO recording how the shader reads each buffer, per its layout. */
+	function createVAO<A extends string, U extends string>(
+		shaderProgram: ShaderProgram<A, U>,
+		buffers: WebGLBuffer[],
+		layouts: BufferLayout[],
+	): WebGLVertexArrayObject {
+		const vao = gl.createVertexArray();
 		gl.bindVertexArray(vao);
-		// Prepare the uniforms.
-		setUniforms(shaderProgram, position, scale, uniforms, textures);
-
-		// Call the draw function!
-		drawCallback();
-
-		// Unbind the VAO.
-		gl.bindVertexArray(null);
-		// Unbind textures from all units that were used.
-		// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
-		// We can't put it at the end of setUniforms()
-		textures.forEach((_texInfo, i) => {
-			gl.activeTexture(gl.TEXTURE0 + i);
-			gl.bindTexture(gl.TEXTURE_2D, null);
-		});
+		layouts.forEach((layout, i) => configureAttributes(shaderProgram, buffers[i]!, layout));
+		gl.bindVertexArray(null); // The configuration is now saved inside the 'vao' object.
+		gl.bindBuffer(gl.ARRAY_BUFFER, null); // configureAttributes() binds it
+		return vao;
 	}
 
 	/**
 	 * Configures the attributes for a shader program.
 	 * Tells the gpu how it will extract the data from the vertex data buffer.
 	 * BINDS THE BUFFER FOR YOU.
-	 * @param shaderProgram - The currently bound shader program, and the one we'll be rendering with.
+	 * @param shaderProgram - The shader program we'll be rendering with.
 	 * @param buffer - The buffer that we have passed the vertex data into.
-	 * @param attribInfo - The AttributeInfo object, storing what attributes are in a single stride of the vertex data, and how many components they use.
-	 * @param stride - The vertex data's stride per vertex.
-	 * @param BYTES_PER_ELEMENT - How many bytes each element in the vertex data array take up (usually Float32Array.BYTES_PER_ELEMENT).
-	 * @param instanced - Whether the provided attributes to enable are instance-specific attributes (only updated once per instance instead of once per vertex)
+	 * @param layout - What attributes are in a single stride of the buffer, and whether they're per instance.
 	 */
 	function configureAttributes<A extends string, U extends string>(
 		shaderProgram: ShaderProgram<A, U>,
 		buffer: WebGLBuffer,
-		attribInfo: AttributeInfo,
-		stride: number,
-		BYTES_PER_ELEMENT: number,
-		instanced: boolean,
+		{ attribInfo, instanced }: BufferLayout,
 	): void {
 		gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-		const stride_bytes = stride * BYTES_PER_ELEMENT; // # bytes in each vertex/line.
+		const BYTES_PER_ELEMENT = Float32Array.BYTES_PER_ELEMENT; // Every attribute is read as gl.FLOAT
+		const stride_bytes = getStrideFromAttributeInfo(attribInfo) * BYTES_PER_ELEMENT; // # bytes in each vertex/line.
 		const vertexAttribDivisor = instanced ? 1 : 0; // 0 = attribs updated once per vertex   1 = updated once per instance
 		let currentOffsetBytes = 0; // how many bytes inside the buffer to start from.
 
@@ -465,6 +486,44 @@ function createRenderableFactory(
 			// Adjust our offset for the next attribute
 			currentOffsetBytes += attrib.numComponents * BYTES_PER_ELEMENT;
 		}
+	}
+
+	/**
+	 * Renders a model, preparing the GPU state beforehand and cleaning up afterwards.
+	 * @param shaderProgram - The shader program to render with.
+	 * @param vao - The Vertex Array Object that stores the attribute configuration.
+	 * @param geometry - The model's textures and draw call.
+	 * @param position - The positional translation of the object: `[x,y,z]`
+	 * @param scale - The scale transformation of the object: `[x,y,z]`
+	 * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are transformmatrix, and all texture samplers.
+	 */
+	function prepareAndExecuteRender<A extends string, U extends string>(
+		shaderProgram: ShaderProgram<A, U>,
+		vao: WebGLVertexArrayObject,
+		{ textures, draw }: Geometry,
+		position: Vec3 = [0, 0, 0],
+		scale: Vec3 = [1, 1, 1],
+		uniforms: Record<string, UniformValue> = {},
+	): void {
+		// Switch to the program
+		shaderProgram.use();
+		// Bind the VAO. ONE call to restore all attribute configuration.
+		gl.bindVertexArray(vao);
+		// Prepare the uniforms.
+		setUniforms(shaderProgram, position, scale, uniforms, textures);
+
+		// Call the draw function!
+		draw();
+
+		// Unbind the VAO.
+		gl.bindVertexArray(null);
+		// Unbind textures from all units that were used.
+		// HAS TO BE AFTER THE DRAW CALL, or the render won't work.
+		// We can't put it at the end of setUniforms()
+		textures.forEach((_texInfo, i) => {
+			gl.activeTexture(gl.TEXTURE0 + i);
+			gl.bindTexture(gl.TEXTURE_2D, null);
+		});
 	}
 
 	/**
@@ -519,31 +578,35 @@ function createRenderableFactory(
 				continue;
 			}
 
-			// Infer the correct uniform function from the value's type and structure
-			if (Array.isArray(value)) {
-				// Value is an array, treat it as a vector (e.g., vec2, vec3, vec4)
-				switch (value.length) {
-					case 2:
-						gl.uniform2fv(uLoc, value);
-						break;
-					case 3:
-						gl.uniform3fv(uLoc, value);
-						break;
-					case 4:
-						gl.uniform4fv(uLoc, value);
-						break;
-					default:
-						console.warn(`Unsupported array length for uniform "${name}". Expected 2, 3, or 4.`); // prettier-ignore
-				}
-			} else if (typeof value === 'number') {
-				// Value is a number, treat it as a float
-				gl.uniform1f(uLoc, value);
-			} else if (typeof value === 'boolean') {
-				// Value is a boolean, treat it as an integer (0 or 1)
-				gl.uniform1i(uLoc, value ? 1 : 0);
-			} else {
-				throw new Error(`Unsupported data type "${typeof value}" for uniform "${name}".`);
+			setUniformValue(uLoc, name, value);
+		}
+	}
+
+	/** Sets one custom uniform, inferring the gl.uniform* call from the value's type and structure. */
+	function setUniformValue(uLoc: WebGLUniformLocation, name: string, value: UniformValue): void {
+		if (Array.isArray(value)) {
+			// Value is an array, treat it as a vector (e.g., vec2, vec3, vec4)
+			switch (value.length) {
+				case 2:
+					gl.uniform2fv(uLoc, value);
+					break;
+				case 3:
+					gl.uniform3fv(uLoc, value);
+					break;
+				case 4:
+					gl.uniform4fv(uLoc, value);
+					break;
+				default:
+					console.warn(`Unsupported array length for uniform "${name}". Expected 2, 3, or 4.`); // prettier-ignore
 			}
+		} else if (typeof value === 'number') {
+			// Value is a number, treat it as a float
+			gl.uniform1f(uLoc, value);
+		} else if (typeof value === 'boolean') {
+			// Value is a boolean, treat it as an integer (0 or 1)
+			gl.uniform1i(uLoc, value ? 1 : 0);
+		} else {
+			throw new Error(`Unsupported data type "${typeof value}" for uniform "${name}".`);
 		}
 	}
 
@@ -564,6 +627,9 @@ function createRenderableFactory(
 		createRenderable_GivenInfo,
 		createRenderable_Instanced,
 		createRenderable_Instanced_GivenInfo,
+		createPersistentRenderable,
+		createPersistentRenderable_Instanced,
+		createPersistentRenderable_Instanced_GivenInfo,
 	};
 }
 
@@ -617,6 +683,11 @@ function getAttribInfo_Instanced(
 	};
 }
 
+/** Returns the texture info of a model with at most one texture, bound to 'u_sampler'. */
+function getTextureInfo(texture: WebGLTexture | undefined): TextureInfo[] {
+	return texture === undefined ? [] : [{ texture, uniformName: 'u_sampler' }];
+}
+
 /**
  * Accumulates the stride from the provided attribute info object.
  * Each attribute tells us how many components it uses.
@@ -625,6 +696,14 @@ function getStrideFromAttributeInfo(attribInfo: AttributeInfo): number {
 	return attribInfo.reduce((totalElements, currentAttrib) => {
 		return totalElements + currentAttrib.numComponents;
 	}, 0);
+}
+
+/** Converts data to a typed array, after checking it holds a whole number of strides of its layout. */
+function toTypedArray(data: InputArray, attribInfo: AttributeInfo): TypedArray {
+	const stride = getStrideFromAttributeInfo(attribInfo);
+	if (data.length % stride !== 0)
+		throw new Error(`Data length (${data.length}) is not divisible by its stride (${stride}). Check to make sure the specified attribInfo is correct.`); // prettier-ignore
+	return ensureTypedArray(data);
 }
 
 /**

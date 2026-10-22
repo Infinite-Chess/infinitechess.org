@@ -10,7 +10,7 @@
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
-import type { RenderableInstanced } from '../../../webgl/Renderable.js';
+import type { PersistentRenderableInstanced } from '../../../webgl/Renderable.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
@@ -28,7 +28,7 @@ import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import specialrighthighlights from './specialrighthighlights.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
-import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
+import { createPersistentRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
 // State -----------------------------------------------------------------------
 
@@ -41,18 +41,18 @@ let selectedPieceLegalMoves: LegalMoves | undefined;
  * A buffer model that contains the single square
  * highlight immediately underneath the selected piece.
  */
-let model_SelectedPiece: RenderableInstanced | undefined;
+let model_SelectedPiece: PersistentRenderableInstanced | undefined;
 
 /**
  * A model using instanced-rendering for rendering the
  * non-capturing selected piece's legal move highlights
  */
-let model_NonCapture: RenderableInstanced | undefined;
+let model_NonCapture: PersistentRenderableInstanced | undefined;
 /**
  * A model using instanced-rendering for rendering the
  * capturing selected piece's legal move highlights
  */
-let model_Capture: RenderableInstanced | undefined;
+let model_Capture: PersistentRenderableInstanced | undefined;
 
 // Init Listeners --------------------------------------------------------------
 
@@ -76,11 +76,7 @@ GameBus.addEventListener('piece-selected', (event) => {
 GameBus.addEventListener('piece-unselected', () => {
 	pieceSelected = undefined;
 	selectedPieceLegalMoves = undefined;
-
-	// Erase models
-	model_SelectedPiece = undefined;
-	model_NonCapture = undefined;
-	model_Capture = undefined;
+	disposeSelectedPieceModels();
 });
 
 // Rendering -------------------------------------------------------------------
@@ -117,6 +113,7 @@ function regenerateAll(): void {
 /** Regenerates the models of the selected piece's legal move highlights. */
 function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	if (!pieceSelected) return;
+	disposeSelectedPieceModels();
 
 	// The model of the selected piece's legal moves
 	const selectedPieceColor = typeutil.getColorFromType(pieceSelected.type);
@@ -140,7 +137,7 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	const coords = pieceSelected.coords;
 	const offsetCoord = coordutil.subtractCoords(coords, legalmovemodel.getOffset());
 	const instanceData: bigint[] = [...offsetCoord];
-	model_SelectedPiece = createRenderable_Instanced(
+	model_SelectedPiece = createPersistentRenderable_Instanced(
 		vertexData,
 		piecemodels.castBigIntArrayToFloat32(instanceData),
 		'TRIANGLES',
@@ -149,6 +146,16 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	);
 
 	frametracker.onVisualChange();
+}
+
+/** Frees and erases the models of the selected piece's legal move highlights. */
+function disposeSelectedPieceModels(): void {
+	model_SelectedPiece?.dispose();
+	model_NonCapture?.dispose();
+	model_Capture?.dispose();
+	model_SelectedPiece = undefined;
+	model_NonCapture = undefined;
+	model_Capture = undefined;
 }
 
 /**

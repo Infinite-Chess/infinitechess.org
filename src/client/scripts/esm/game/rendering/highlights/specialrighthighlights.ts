@@ -8,7 +8,7 @@
 
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Coords } from '../../../../../../shared/util/coordutil.js';
-import type { RenderableInstanced } from '../../../webgl/Renderable.js';
+import type { PersistentRenderableInstanced } from '../../../webgl/Renderable.js';
 
 import coordutil from '../../../../../../shared/util/coordutil.js';
 
@@ -22,7 +22,7 @@ import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import squarerendering from '../../../board/rendering/squarerendering.js';
-import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
+import { createPersistentRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
 /** The special rights plus signs, offset by the legal move model's offset. */
-let model: RenderableInstanced | undefined;
+let model: PersistentRenderableInstanced | undefined;
 
 // Events ----------------------------------------------------------------------
 
@@ -45,6 +45,7 @@ GameBus.addEventListener('game-loaded', () => {
 });
 GameBus.addEventListener('game-unloaded', () => {
 	// Erase the model so it doesn't carry over to next loaded game
+	model?.dispose();
 	model = undefined;
 });
 GameBus.addEventListener('view-move', () => {
@@ -96,7 +97,8 @@ function regenModel(): void {
 		squaresToHighlight.push(...offsetCoord);
 	}
 	const vertexData: number[] = instancedshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
-	model = createRenderable_Instanced(
+	model?.dispose();
+	model = createPersistentRenderable_Instanced(
 		vertexData,
 		piecemodels.castBigIntArrayToFloat32(squaresToHighlight),
 		'TRIANGLES',

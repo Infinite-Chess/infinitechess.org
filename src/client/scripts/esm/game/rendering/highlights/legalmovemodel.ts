@@ -16,7 +16,7 @@ import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organ
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
-import type { RenderableInstanced } from '../../../webgl/Renderable.js';
+import type { Renderable, PersistentRenderableInstanced } from '../../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -41,6 +41,7 @@ import perspective from '../perspective.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import {
 	createRenderable,
+	createPersistentRenderable_Instanced,
 	createRenderable_Instanced,
 } from '../../../board/rendering/renderable.js';
 
@@ -244,7 +245,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 	legalMoves: LegalMoves,
 	friendlyColor: Player,
 	highlightColor: Color,
-): { NonCaptureModel: RenderableInstanced; CaptureModel: RenderableInstanced } {
+): { NonCaptureModel: PersistentRenderableInstanced; CaptureModel: PersistentRenderableInstanced } {
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
 	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
@@ -276,7 +277,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 
 	return {
 		// The NON-CAPTURING legal move highlights model
-		NonCaptureModel: createRenderable_Instanced(
+		NonCaptureModel: createPersistentRenderable_Instanced(
 			vertexData_NonCapture,
 			piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture),
 			'TRIANGLES',
@@ -284,7 +285,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 			true,
 		),
 		// The CAPTURING legal move highlights model
-		CaptureModel: createRenderable_Instanced(
+		CaptureModel: createPersistentRenderable_Instanced(
 			vertexData_Capture,
 			piecemodels.castBigIntArrayToFloat32(instanceData_Capture),
 			'TRIANGLES',
@@ -304,7 +305,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 function generateModelForSlideHighlightOutlines(
 	coords: Coords,
 	legalMoves: LegalMoves,
-): RenderableInstanced {
+): Renderable {
 	const vertexData: number[] = instancedshapes.getDataBoxOutline();
 	/** The instance-specific position data. Stride 2 (2 instanceposition). Captures and non-captures share the same outline shape. */
 	const instanceData: bigint[] = [];
@@ -667,7 +668,7 @@ function getRayIterationInfo(
  * Rays are square highlights starting from a single coord
  * and going in one direction to infinity, unobstructed.
  */
-function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
+function genModelForRays(rays: Ray[], color: Color): Renderable {
 	const vertexData = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: bigint[] = [];
 

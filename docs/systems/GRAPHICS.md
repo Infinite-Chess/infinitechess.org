@@ -116,8 +116,8 @@ just a list of integer coordinates and a color, returning a ready-to-render obje
 
 Once you have vertex data, pass it to
 [`createRenderable()`](/src/client/scripts/esm/board/rendering/renderable.ts) or
-[`createRenderable_Instanced()`](/src/client/scripts/esm/board/rendering/renderable.ts) to create a
-GPU-ready object that can instantly be rendered.
+[`createRenderable_Instanced()`](/src/client/scripts/esm/board/rendering/renderable.ts) to create an
+object that can instantly be rendered.
 
 They accept arguments for vertex data, instance data (if using instanced rendering), information on
 how you packed your vertex data with the position & color attributes, the drawing mode to use
@@ -131,11 +131,12 @@ when rendering. Position is dependent on the board position (`meshes.getModelPos
 is dependant on the board scale (`boardpos.getBoardScaleAsNumber()`). The render method uses these
 to automatically transform the points to world space when rendering.
 
-The `Renderable` object also has properties for updating its vertex/instance data internally,
-allowing you the option to skip generating a whole new Renderable every single frame. This is
-optimal when you have arbitrarily many objects to render, and their positions change infrequently.
-[`piecemodels.ts`](/src/client/scripts/esm/board/rendering/piecemodels.ts) for example does this
-when updating the model of the piece sprites.
+A `Renderable` is meant to be rendered the frame it's built; it reuses the context's buffers rather
+than creating new ones. A model kept across frames uses the matching `createPersistentRenderable*()`
+instead, which takes the same arguments and returns a `PersistentRenderable` owning its GPU buffers:
+update its vertex or instance data in place instead of rebuilding it, as
+[`piecemodels.ts`](/src/client/scripts/esm/board/rendering/piecemodels.ts) does for the piece
+sprites, and call its `dispose()` before replacing or dropping it.
 
 ## Shader Picking
 

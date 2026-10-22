@@ -6,7 +6,7 @@
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
-import type { Renderable } from '../../webgl/Renderable.js';
+import type { PersistentRenderable } from '../../webgl/Renderable.js';
 
 import camera from '../../board/rendering/camera.js';
 import gameslot from '../chess/gameslot.js';
@@ -15,7 +15,7 @@ import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { VIDEO_MODE } from '../config.js';
-import { createRenderable } from '../../board/rendering/renderable.js';
+import { createPersistentRenderable } from '../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ const CROSSHAIR_COLOR: Color = [1, 1, 1, 1];
 let enabled = false;
 
 /** The buffer model of the mouse crosshair when in perspective mode. */
-let crosshairModel: Renderable;
+let crosshairModel: PersistentRenderable | undefined;
 
 // Listeners -------------------------------------------------------------------
 
@@ -130,7 +130,8 @@ function initCrosshairModel(): void {
             innerSide,  -innerSide,       r, g, b, a,
             -innerSide,  -innerSide,      r, g, b, a,
 	]);
-	crosshairModel = createRenderable(data, 2, 'TRIANGLES', 'color', true);
+	crosshairModel?.dispose();
+	crosshairModel = createPersistentRenderable(data, 2, 'TRIANGLES', 'color', true);
 }
 
 /** Renders the crosshair at the center of the screen, inverting the colors beneath it. */
@@ -140,7 +141,7 @@ function renderCrosshair(): void {
 
 	camera.renderWithoutPerspectiveRotations(() => {
 		gamescene.getGameContext().executeWithInverseBlending(() => {
-			crosshairModel.render();
+			crosshairModel!.render(); // Built by enable()
 		});
 	});
 }

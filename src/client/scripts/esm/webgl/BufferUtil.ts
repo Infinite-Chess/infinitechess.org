@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/BufferUtil.ts
 
 /**
- * GPU buffers: creating one from vertex data, and rewriting a slice of one in place.
+ * GPU buffers: creating one from vertex data, and rewriting a slice or all of one.
  */
 
 // Types -----------------------------------------------------------------------
@@ -81,8 +81,16 @@ function createFromData(gl: WebGL2RenderingContext, data: TypedArray): WebGLBuff
 	return buffer;
 }
 
+/** Replaces a buffer's whole contents with the data, for buffers refilled every draw. */
+function refill(gl: WebGL2RenderingContext, buffer: WebGLBuffer, data: TypedArray): void {
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+	gl.bufferData(gl.ARRAY_BUFFER, data, gl.STREAM_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
 export default {
 	// Functions
 	updateIndices,
 	createFromData,
+	refill,
 };

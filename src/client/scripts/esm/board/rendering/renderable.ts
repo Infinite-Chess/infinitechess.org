@@ -8,16 +8,11 @@
  * Callers rendering into any other board's context go through its `ctx.renderable` instead.
  */
 
-import type { ProgramMap } from '../../webgl/ProgramManager.js';
 import type {
-	AttributeInfo,
-	AttributeInfoInstanced,
-	InputArray,
-	PrimitiveType,
 	Renderable,
+	PersistentRenderable,
 	RenderableFactory,
-	RenderableInstanced,
-	TextureInfo,
+	PersistentRenderableInstanced,
 } from '../../webgl/Renderable.js';
 
 // State -----------------------------------------------------------------------
@@ -35,59 +30,46 @@ function init(factory: RenderableFactory): void {
 // Creating Renderables --------------------------------------------------------
 
 /** Creates a renderable model in the game's context. See {@link RenderableFactory}. */
-function createRenderable(
-	data: InputArray,
-	numPositionComponents: 2 | 3,
-	mode: PrimitiveType,
-	shader: keyof ProgramMap,
-	usingColor: boolean,
-	texture?: WebGLTexture,
-): Renderable {
-	return gameFactory.createRenderable(data, numPositionComponents, mode, shader, usingColor, texture); // prettier-ignore
+function createRenderable(...args: Parameters<RenderableFactory['createRenderable']>): Renderable {
+	return gameFactory.createRenderable(...args);
 }
 
 /** Creates an instanced renderable model in the game's context. */
 function createRenderable_Instanced(
-	vertexData: InputArray,
-	instanceData: InputArray,
-	mode: PrimitiveType,
-	shader: keyof ProgramMap,
-	usingColor: boolean,
-	texture?: WebGLTexture,
-): RenderableInstanced {
-	return gameFactory.createRenderable_Instanced(vertexData, instanceData, mode, shader, usingColor, texture); // prettier-ignore
-}
-
-/** Creates a renderable model in the game's context, given explicit attribute info. */
-function createRenderable_GivenInfo<K extends keyof ProgramMap>(
-	data: InputArray,
-	attribInfo: AttributeInfo,
-	mode: PrimitiveType,
-	shader: K,
-	textures: TextureInfo[] = [],
+	...args: Parameters<RenderableFactory['createRenderable_Instanced']>
 ): Renderable {
-	return gameFactory.createRenderable_GivenInfo(data, attribInfo, mode, shader, textures);
+	return gameFactory.createRenderable_Instanced(...args);
 }
 
 /** Creates an instanced renderable model in the game's context, given explicit attribute info. */
-function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
-	vertexData: InputArray,
-	instanceData: InputArray,
-	attribInfoInstanced: AttributeInfoInstanced,
-	mode: PrimitiveType,
-	shader: K,
-	textures: TextureInfo[] = [],
-): RenderableInstanced {
-	return gameFactory.createRenderable_Instanced_GivenInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, textures); // prettier-ignore
+function createRenderable_Instanced_GivenInfo(
+	...args: Parameters<RenderableFactory['createRenderable_Instanced_GivenInfo']>
+): Renderable {
+	return gameFactory.createRenderable_Instanced_GivenInfo(...args);
+}
+
+/** Creates a renderable model in the game's context, kept across frames. */
+function createPersistentRenderable(
+	...args: Parameters<RenderableFactory['createPersistentRenderable']>
+): PersistentRenderable {
+	return gameFactory.createPersistentRenderable(...args);
+}
+
+/** Creates an instanced renderable model in the game's context, kept across frames. */
+function createPersistentRenderable_Instanced(
+	...args: Parameters<RenderableFactory['createPersistentRenderable_Instanced']>
+): PersistentRenderableInstanced {
+	return gameFactory.createPersistentRenderable_Instanced(...args);
 }
 
 // Exports ---------------------------------------------------------------------
 
 export {
 	createRenderable,
-	createRenderable_GivenInfo,
 	createRenderable_Instanced,
 	createRenderable_Instanced_GivenInfo,
+	createPersistentRenderable,
+	createPersistentRenderable_Instanced,
 };
 
 export default { init };

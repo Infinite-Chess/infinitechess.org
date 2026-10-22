@@ -12,7 +12,7 @@ import type { Animation } from './animation/animation.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { BDCoords, Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
-import type { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
+import type { Renderable, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -209,8 +209,8 @@ function render(
 	inverted: boolean,
 	entityWidthVPixels: number,
 ): void {
-	const models: TypeGroup<RenderableInstanced> = {};
-	const models_hovered: TypeGroup<RenderableInstanced> = {};
+	const models: TypeGroup<Renderable> = {};
+	const models_hovered: TypeGroup<Renderable> = {};
 
 	const color: Color = [1, 1, 1, MINI_IMAGE_OPACITY];
 	const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);

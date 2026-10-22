@@ -9,7 +9,7 @@ import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { ArrowPiece } from '../../../board/rendering/arrows/arrows.js';
-import type { RenderableInstanced } from '../../../webgl/Renderable.js';
+import type { PersistentRenderableInstanced } from '../../../webgl/Renderable.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import bdcoords from '../../../../../../shared/util/bdcoords.js';
@@ -35,9 +35,9 @@ interface ArrowLegalMoves {
 	/** The calculated legal moves of the piece. */
 	legalMoves: LegalMoves;
 	/** The buffer model for rendering the non-capturing legal moves of the piece. */
-	model_NonCapture: RenderableInstanced;
+	model_NonCapture: PersistentRenderableInstanced;
 	/** The buffer model for rendering the capturing legal moves of the piece. */
-	model_Capture: RenderableInstanced;
+	model_Capture: PersistentRenderableInstanced;
 	/** The [r,g,b,a] values these legal move highlights should be rendered.
 	 * Depends on whether the piece is ours, a premove, or an opponent's piece. */
 	color: Color;
@@ -85,8 +85,10 @@ function update(): void {
 				const integerCoords = bdcoords.coordsToBigInt(arrow.piece.coords);
 				return coordutil.areCoordsEqual(integerCoords, thisHoveredArrow.piece.coords);
 			})
-		)
+		) {
+			disposeModels(thisHoveredArrow);
 			hoveredArrowsLegalMoves.splice(i, 1); // No longer being hovered over. Delete its legal moves.
+		}
 	}
 
 	for (const pieceHovered of hoveredArrows) {
@@ -190,6 +192,7 @@ function regenModelsOfHoveredPieces(): void {
 				hoveredArrow.color,
 			);
 		// Overwrite the model inside piecesHoveredOver
+		disposeModels(hoveredArrow);
 		hoveredArrow.model_NonCapture = NonCaptureModel;
 		hoveredArrow.model_Capture = CaptureModel;
 	});
@@ -197,7 +200,14 @@ function regenModelsOfHoveredPieces(): void {
 
 /** Erases the cached legal moves of the hovered arrow indicators */
 function reset(): void {
+	hoveredArrowsLegalMoves.forEach((hoveredArrow) => disposeModels(hoveredArrow));
 	hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
+}
+
+/** Frees the GPU models of a hovered arrow's legal moves. */
+function disposeModels(hoveredArrow: ArrowLegalMoves): void {
+	hoveredArrow.model_NonCapture.dispose();
+	hoveredArrow.model_Capture.dispose();
 }
 
 // Exports ---------------------------------------------------------------------
