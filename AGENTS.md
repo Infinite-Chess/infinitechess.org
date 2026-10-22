@@ -219,10 +219,10 @@ followed, tell me.
     parked issue in full, inside a collapsed `<details>`.
 
 32. Raise parked issues one at a time. Once we've committed the current work, mention the single
-    _next_ most pressing issue only. Per rule 3, do **not** flood me with multiple issues at once. I
-    will decide if we should focus on it next from there. If I ask you for a prompt to have another
-    agent look into it, after giving it to me, consider it delegated, and remove it from the scratch
-    file.
+    issue most related to that work only. Per rule 3, do **not** flood me with multiple issues at
+    once. I will decide if we should focus on it next from there. If I ask you for a prompt to have
+    another agent look into it, after giving it to me, consider it delegated, and remove it from the
+    scratch file.
 
 33. If you realize two implementations of one idea exist, park that per rule 32 too. If they
     disagree, that's a live bug. If it only became a second implementation after your changes, then
