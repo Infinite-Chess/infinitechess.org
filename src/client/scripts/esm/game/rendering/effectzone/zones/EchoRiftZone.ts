@@ -122,6 +122,12 @@ export class EchoRiftZone extends BaseZone {
 			this.baseBrightness + noiseValue * this.brightnessVariation;
 	}
 
+	/** Also preloads the glass cracks, which play only while the ambience is on. */
+	public override fadeInAmbience(transitionDurationMs: number): void {
+		gamesound.preloadGlassCracks();
+		super.fadeInAmbience(transitionDurationMs);
+	}
+
 	public getUniforms(): Record<string, UniformValue> {
 		return {};
 	}

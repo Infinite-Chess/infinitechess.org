@@ -1,8 +1,8 @@
 // src/client/scripts/esm/board/gamesound.ts
 
 /**
- * Manages individual game sound files: lazy-fetches and caches each AudioBuffer
- * on first play, then plays it via AudioManager.
+ * Manages individual game sound files: fetches and caches each AudioBuffer when
+ * preloaded, then plays it via AudioManager. A sound not yet preloaded won't play.
  */
 
 import type { SoundObject } from '../audio/AudioManager.js';
@@ -19,6 +19,10 @@ type SoundName =
 	| 'viola_staccato_c3' | 'marimba_c2' | 'marimba_c2_soft' | 'base_staccato_c2'
 	| 'notify' | 'low_time'
 	| 'glass_crack_1' | 'glass_crack_2' | 'glass_crack_3' | 'glass_crack_4' | 'glass_crack_5'; // prettier-ignore
+
+// Constants -------------------------------------------------------------------
+
+const GLASS_CRACKS: SoundName[] = ['glass_crack_1', 'glass_crack_2', 'glass_crack_3', 'glass_crack_4', 'glass_crack_5']; // prettier-ignore
 
 // Cache -----------------------------------------------------------------------
 
@@ -47,6 +51,11 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 /** Pre-fetches and caches a sound without playing it. */
 async function preload(soundName: SoundName): Promise<void> {
 	await getBuffer(soundName);
+}
+
+/** Preloads the glass cracks, which only the far-off Echo Rift zone plays. */
+function preloadGlassCracks(): void {
+	for (const soundName of GLASS_CRACKS) preload(soundName);
 }
 
 // Playing Sounds --------------------------------------------------------------
@@ -132,12 +141,7 @@ function playLowtime(): void {
 
 /** Plays a random glass crack, at a slightly varied pitch. */
 function playGlassCrack(): void {
-	const rand = Math.random();
-	const soundName: SoundName = rand < 0.2 ? 'glass_crack_1'
-							   : rand < 0.4 ? 'glass_crack_2'
-							   : rand < 0.6 ? 'glass_crack_3'
-							   : rand < 0.8 ? 'glass_crack_4'
-							   				: 'glass_crack_5'; // prettier-ignore
+	const soundName = GLASS_CRACKS[Math.floor(Math.random() * GLASS_CRACKS.length)]!;
 	const PLAYRATE_BASE_OFFSET = -0.2;
 	const PLAYRATE_VARIATION = 0.07;
 	const playrate = 1 + (Math.random() * 2 - 1) * PLAYRATE_VARIATION + PLAYRATE_BASE_OFFSET;
@@ -155,6 +159,7 @@ function playGlassCrack(): void {
 export default {
 	// Cache
 	preload,
+	preloadGlassCracks,
 	// Playing Sounds
 	playSoundEffect,
 	// Named Play Functions
