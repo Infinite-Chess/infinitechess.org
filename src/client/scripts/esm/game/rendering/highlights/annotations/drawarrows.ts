@@ -95,22 +95,7 @@ function update(arrows: Arrow[]): void {
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
 			if (!pointerWorld) return stopDrawing(); // Maybe we're looking into sky?
-
-			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
-			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
-
-			if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
-				if (closestEntityToWorld) {
-					// Snap to nearest hovered entity
-					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
-				} else {
-					// Snap to the current emanated (blue line) snap
-					drag_start = coordutil.copyCoords(snapCoords!);
-				}
-			} else {
-				// No snap
-				drag_start = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
-			}
+			drag_start = snapping.getSnappedSquare(pointerWorld);
 		}
 	} else {
 		// Currently drawing an arrow
@@ -143,23 +128,7 @@ function stopDrawing(): void {
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arrow } {
 	if (!pointerWorld) return { changed: false }; // Probably stopped drawing while looking into sky?
 
-	let drag_end: Coords;
-
-	const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
-	const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
-
-	if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
-		if (closestEntityToWorld) {
-			// Snap to nearest hovered entity
-			drag_end = coordutil.copyCoords(closestEntityToWorld.coords);
-		} else {
-			// Snap to the current snap
-			drag_end = [...snapCoords!];
-		}
-	} else {
-		// No snap
-		drag_end = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
-	}
+	const drag_end = snapping.getSnappedSquare(pointerWorld);
 
 	// Skip if end equals start (no arrow drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { changed: false };

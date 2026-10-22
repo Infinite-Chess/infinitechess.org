@@ -100,22 +100,7 @@ function update(rays: Ray[]): void {
 			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
 			if (!pointerWorld) return stopDrawing(); // Could have double click dragged while looking into sky?
-
-			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
-			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
-
-			if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
-				if (closestEntityToWorld) {
-					// Snap to nearest hovered entity
-					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
-				} else {
-					// Snap to the current emanated (blue line) snap
-					drag_start = coordutil.copyCoords(snapCoords!);
-				}
-			} else {
-				// No snap
-				drag_start = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
-			}
+			drag_start = snapping.getSnappedSquare(pointerWorld);
 		}
 	} else {
 		// Currently drawing a ray

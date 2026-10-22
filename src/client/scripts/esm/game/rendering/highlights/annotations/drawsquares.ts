@@ -104,44 +104,12 @@ function update(highlights: Coords[]): void {
 		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
 		const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT);
 		if (!pointerWorld) return; // Maybe we're looking into sky?
-		const pointerSquare: Coords = space.convertWorldSpaceToCoords_Rounded(
-			boardpos,
-			pointerWorld,
-		);
 
-		const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
-		const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
-
-		if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
-			// Zoomed out & snapping one thing => Snapping behavior
-			if (closestEntityToWorld) {
-				// Snap to nearest hovered entity. Toggle the highlight on its coords.
-				const index = highlights.findIndex((coords) =>
-					coordutil.areCoordsEqual(coords, closestEntityToWorld.coords),
-				);
-				if (index !== -1)
-					highlights.splice(index, 1); // Already highlighted, Remove
-				else highlights.push(closestEntityToWorld.coords); // Add
-			} else if (snapCoords) {
-				// Snap to the current emanated (blue line) snap. Toggle the highlight on its coords.
-				const index = highlights.findIndex((coords) =>
-					coordutil.areCoordsEqual(coords, snapCoords),
-				);
-				if (index !== -1)
-					throw Error('Snap is present, but the highlight already exists. If it exists than it should have been snapped to.'); // prettier-ignore
-				highlights.push(snapCoords); // Add
-			}
-		} else {
-			// Zoomed in OR zoomed out with no snap => Normal behavior
-			// Check if the square is already highlighted
-			const index = highlights.findIndex((coords) =>
-				coordutil.areCoordsEqual(coords, pointerSquare),
-			);
-
-			if (index !== -1)
-				highlights.splice(index, 1); // Remove
-			else highlights.push(pointerSquare); // Add
-		}
+		// Toggle the highlight on the square
+		const square = snapping.getSnappedSquare(pointerWorld);
+		const index = highlights.findIndex((coords) => coordutil.areCoordsEqual(coords, square));
+		if (index !== -1) highlights.splice(index, 1);
+		else highlights.push(square);
 	}
 }
 

@@ -84,9 +84,6 @@ type ClosestEntity = {
 	coords: Coords;
 	/** The euclidean distance in coordinates from the mouse to the entity. */
 	dist: number;
-	type: 'miniimage' | 'square';
-	/** The index of the entity within its home list. */
-	index: number;
 };
 
 // Constants -------------------------------------------------------------------
@@ -150,7 +147,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 		const coords = imagesHovered.images[i]!;
 		const dist = imagesHovered.dists![i]!;
 		if (closestEntity === undefined || dist <= closestEntity.dist)
-			closestEntity = { coords, dist, type: 'miniimage', index: i };
+			closestEntity = { coords, dist };
 	}
 
 	// Square Highlights and Individual legal move hints
@@ -158,7 +155,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 		const coords = highlightsHovered.squares[i]!;
 		const dist = highlightsHovered.dists![i]!;
 		if (closestEntity === undefined || dist <= closestEntity.dist)
-			closestEntity = { coords, dist, type: 'square', index: i };
+			closestEntity = { coords, dist };
 	}
 
 	return closestEntity;
@@ -172,6 +169,16 @@ function isSnappingEnabledThisFrame(): boolean {
 	if (perspective.getEnabled() && !perspective.isMouseLocked()) return false;
 
 	return true;
+}
+
+/**
+ * The square a pointer at the given world coords lands on: the closest hovered
+ * entity, else the emanated (blue line) snap, else the square beneath it.
+ */
+function getSnappedSquare(world: DoubleCoords): Coords {
+	const closestEntity = getClosestEntityToWorld(world);
+	if (closestEntity) return coordutil.copyCoords(closestEntity.coords);
+	return getWorldSnapCoords(world) ?? space.convertWorldSpaceToCoords_Rounded(boardpos, world);
 }
 
 /** Snaps the provided world coords to the nearest snappable coords. */
@@ -631,9 +638,8 @@ export default {
 	ENTITY_WIDTH_VPIXELS,
 	// Entity Hovering
 	getEntityWidthWorld,
-	getClosestEntityToWorld,
 	// Snapping
-	getWorldSnapCoords,
+	getSnappedSquare,
 	transitionToHoveredIfClicked,
 	getAnnoteSnapPoints,
 	// Rendering
