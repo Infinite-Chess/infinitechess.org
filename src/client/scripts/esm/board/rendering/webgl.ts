@@ -59,11 +59,7 @@ let gl: WebGL2RenderingContext;
  */
 function createContext(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	// Without `alpha: false` in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	const newContext = canvasElement.getContext('webgl2', {
-		alpha: false,
-		stencil: true,
-		preserveDrawingBuffer: true, // Reduces likelihood of context lost?
-	}); // Stencil required for masking world border stuff
+	const newContext = canvasElement.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
 	if (!newContext) {
 		// WebGL2 not supported
 		alert(t.shared.errors.webgl_unsupported);
