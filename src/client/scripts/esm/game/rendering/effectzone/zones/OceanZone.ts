@@ -10,7 +10,6 @@ import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
 
 import camera from '../../../../board/rendering/camera.js';
 import deltatime from '../../../../board/deltatime.js';
-import { GameBus } from '../../../../board/GameBus.js';
 import { BaseZone } from '../BaseZone.js';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
@@ -49,9 +48,7 @@ export class OceanZone extends BaseZone {
 		this.colorGradePass.saturation = 0.6;
 		this.colorGradePass.tint = [0.9, 0.95, 1.0]; // Slight blue
 
-		// Initialize the WaterPass with the current canvas dimensions.
-		const canvas = camera.getCanvas();
-		this.waterPass = new WaterPass(programManager, canvas.width, canvas.height);
+		this.waterPass = new WaterPass(programManager);
 
 		// Initialize the three permanent ripple sources. Their location will be updated each frame.
 		this.sources = [{ center: [0, 0] }, { center: [0, 0] }, { center: [0, 0] }];
@@ -60,12 +57,6 @@ export class OceanZone extends BaseZone {
 		this.rotationDirection = Math.random() < 0.5 ? 1 : -1;
 
 		this.ambience = new SoundscapePlayer(UndercurrentSoundscape.config);
-
-		// Create event listener for screen resize to update water pass resolution.
-		GameBus.addEventListener('canvas-resize', (event) => {
-			const { width, height } = event.detail;
-			this.waterPass.setResolution(width, height);
-		});
 	}
 
 	public update(): void {

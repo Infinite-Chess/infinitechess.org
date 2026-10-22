@@ -40,15 +40,13 @@ class LiveBoard extends RenderContext {
 	constructor(params: LiveBoardParams) {
 		super(params);
 		this.sound = params.sound;
-		const { width, height } = this.canvas;
-		this.ripples = WaterRipples.create(this.programManager, width, height);
+		this.ripples = WaterRipples.create(this.programManager);
 		this.pipeline = new PostProcessingPipeline(this.gl, this.programManager);
 	}
 
 	/** Resizes everything sized to the canvas. Call whenever its pixel buffer resizes. */
 	resize(width: number, height: number): void {
 		this.pipeline.resize(width, height);
-		WaterRipples.resize(this.ripples, width, height);
 	}
 }
 

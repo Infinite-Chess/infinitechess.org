@@ -25,11 +25,6 @@ import { WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePa
 export interface Ripples {
 	pass: WaterRipplePass;
 	droplets: RippleState[];
-	/**
-	 * ACTUAL ripple lifetime, dependent on screen ratio, as the wider
-	 * the screen is than tall, the longer drops take to travel across.
-	 */
-	lifetime: number;
 }
 
 // Constants -------------------------------------------------------------------
@@ -52,24 +47,9 @@ const RIPPLE_LIFETIME_MULTIPLIER = 0.5;
 
 // Functions -------------------------------------------------------------------
 
-/** Creates a board's ripples, sized to its canvas. */
-function create(programManager: ProgramManager, width: number, height: number): Ripples {
-	return {
-		pass: new WaterRipplePass(programManager, width, height),
-		droplets: [],
-		lifetime: getLifetime(width, height),
-	};
-}
-
-/** Resizes the ripples to their board's new canvas dimensions. */
-function resize(ripples: Ripples, width: number, height: number): void {
-	ripples.pass.setResolution(width, height);
-	ripples.lifetime = getLifetime(width, height);
-}
-
-/** The lifetime of a ripple, in seconds, on a canvas of the given dimensions. */
-function getLifetime(width: number, height: number): number {
-	return RIPPLE_LIFETIME_BASE + RIPPLE_LIFETIME_MULTIPLIER * (width / height);
+/** Creates a board's ripples. */
+function create(programManager: ProgramManager): Ripples {
+	return { pass: new WaterRipplePass(programManager), droplets: [] };
 }
 
 /**
@@ -158,7 +138,8 @@ function clear(board: LiveBoard): void {
  * effect is a pure 2D post-processing one, not an effect on the rendered board.
  */
 function update(board: LiveBoard, suppressed: boolean): void {
-	const { droplets, lifetime, pass } = board.ripples;
+	const { droplets, pass } = board.ripples;
+	const lifetime = getLifetime(board.canvas);
 	const now = Date.now();
 
 	// Filter out old droplets
@@ -178,6 +159,14 @@ function update(board: LiveBoard, suppressed: boolean): void {
 }
 
 /**
+ * The lifetime of a ripple, in seconds, on the given canvas. The wider
+ * it is than tall, the longer drops take to travel across.
+ */
+function getLifetime(canvas: HTMLCanvasElement): number {
+	return RIPPLE_LIFETIME_BASE + RIPPLE_LIFETIME_MULTIPLIER * (canvas.width / canvas.height);
+}
+
+/**
  * Returns the WaterRipplePass instance this frame to be added to
  * the post-processing pipeline, if there are any visible drops.
  */
@@ -188,7 +177,6 @@ function getPass(board: LiveBoard): PostProcessPass[] {
 
 export default {
 	create,
-	resize,
 	addRipple,
 	clear,
 	update,
