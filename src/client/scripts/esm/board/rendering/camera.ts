@@ -307,7 +307,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		debug = !debug;
 		onVisualChange?.(); // Visual change, render the screen this frame
 		onPositionChange();
-		GameBus.dispatch('camera-debug-toggle');
 
 		console.log(`Toggled camera debug: ${debug}`);
 	}

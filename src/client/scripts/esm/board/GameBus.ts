@@ -104,8 +104,6 @@ interface GameBusEvents {
 
 	/** Fire when the keybind assigned to toggling the engine debug mode is pressed. */
 	'engine-debug': void;
-	/** Dispatched when the camera's debug view is toggled on or off. */
-	'camera-debug-toggle': void;
 
 	// =========== Rendering ============
 

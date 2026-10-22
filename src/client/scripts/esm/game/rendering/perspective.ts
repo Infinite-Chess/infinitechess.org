@@ -6,16 +6,16 @@
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
-import type { PersistentRenderable } from '../../webgl/Renderable.js';
 
 import camera from '../../board/rendering/camera.js';
 import gameslot from '../chess/gameslot.js';
 import gamescene from './gamescene.js';
+import primitives from '../../board/rendering/primitives.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { VIDEO_MODE } from '../config.js';
-import { createPersistentRenderable } from '../../board/rendering/renderable.js';
+import { createRenderable } from '../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -31,16 +31,6 @@ const CROSSHAIR_COLOR: Color = [1, 1, 1, 1];
 
 /** Whether perspective mode is enabled. */
 let enabled = false;
-
-/** The buffer model of the mouse crosshair when in perspective mode. */
-let crosshairModel: PersistentRenderable | undefined;
-
-// Listeners -------------------------------------------------------------------
-
-// Listen for canvas resize, FOV, and camera debug-toggle events to reinit the crosshair
-GameBus.addEventListener('canvas-resize', () => initCrosshairModel());
-document.addEventListener('fov-change', () => initCrosshairModel());
-GameBus.addEventListener('camera-debug-toggle', () => initCrosshairModel());
 
 // Functions -------------------------------------------------------------------
 
@@ -62,7 +52,6 @@ function enable(): void {
 
 	enabled = true;
 	lockMouse();
-	initCrosshairModel();
 	GameBus.dispatch('perspective-toggle');
 }
 
@@ -108,40 +97,19 @@ function isMouseLocked(): boolean {
 	return document.pointerLockElement === camera.getCanvas();
 }
 
-/** Builds the crosshair's buffer model, sized to the current screen. */
-function initCrosshairModel(): void {
-	if (!enabled) return;
-
-	const screenHeight = camera.getScreenHeightWorld();
-
-	const innerSide =
-		((CROSSHAIR_THICKNESS / 2) * screenHeight) / camera.getCanvasHeightVirtualPixels();
-
-	const [r, g, b, a] = CROSSHAIR_COLOR;
-
-	// prettier-ignore
-	const data = new Float32Array([
-		//       Vertex         Color
-            -innerSide, -innerSide,       r, g, b, a,
-            -innerSide,  innerSide,       r, g, b, a,
-            innerSide,  innerSide,        r, g, b, a,
-
-            innerSide,  innerSide,        r, g, b, a,
-            innerSide,  -innerSide,       r, g, b, a,
-            -innerSide,  -innerSide,      r, g, b, a,
-	]);
-	crosshairModel?.dispose();
-	crosshairModel = createPersistentRenderable(data, 2, 'TRIANGLES', 'color', true);
-}
-
 /** Renders the crosshair at the center of the screen, inverting the colors beneath it. */
 function renderCrosshair(): void {
 	if (!enabled) return;
 	if (VIDEO_MODE) return; // Don't render while recording
 
+	const halfWidth =
+		((CROSSHAIR_THICKNESS / 2) * camera.getScreenHeightWorld()) /
+		camera.getCanvasHeightVirtualPixels();
+	const data = primitives.Quad_Color(-halfWidth, -halfWidth, halfWidth, halfWidth, CROSSHAIR_COLOR); // prettier-ignore
+
 	camera.renderWithoutPerspectiveRotations(() => {
 		gamescene.getGameContext().executeWithInverseBlending(() => {
-			crosshairModel!.render(); // Built by enable()
+			createRenderable(data, 2, 'TRIANGLES', 'color', true).render();
 		});
 	});
 }
