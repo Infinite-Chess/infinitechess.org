@@ -297,8 +297,8 @@ disagree, study more siblings before trusting either.
   correct home. A file that fits no rung's subject is usually carrying two.
 - Script names: multi-word basenames are lowercase compounds under `src/client/` and `src/shared/`
   (`editorsave.ts`; dashes fine), and camelCase under `src/server/` and `src/tests/`
-  (`refreshTokenManager.ts`). PascalCase is reserved for modules reusable outside this project
-  (`AudioManager.ts`).
+  (`refreshTokenManager.ts`). PascalCase is reserved for modules whose main export is a class
+  (`LiveBoard.ts`), or that are reusable outside this project (`AudioManager.ts`).
 
 ### File anatomy
 

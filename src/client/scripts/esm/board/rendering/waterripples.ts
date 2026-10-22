@@ -1,4 +1,4 @@
-// src/client/scripts/esm/board/rendering/WaterRipples.ts
+// src/client/scripts/esm/board/rendering/waterripples.ts
 
 /**
  * This script manages the animated water ripple effect for extremely large moves.

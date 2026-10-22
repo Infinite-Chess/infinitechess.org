@@ -23,7 +23,7 @@ import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import { Mouse } from '../input.js';
-import Transition from '../rendering/transitions/Transition.js';
+import transition from '../rendering/transitions/transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -148,7 +148,7 @@ function hideCollapse(): void {
 
 /** Undoes the last view transition. */
 function callback_Back(): void {
-	Transition.undoTransition();
+	transition.undoTransition();
 	GameBus.dispatch('board-nav');
 }
 
@@ -184,7 +184,7 @@ function callback_Expand(): void {
 			? { left: 1n, right: 8n, bottom: 1n, top: 8n }
 			: (box as BoundingBox);
 
-	Transition.zoomToCoordsBox(definedBox);
+	transition.zoomToCoordsBox(definedBox);
 	GameBus.dispatch('board-nav');
 }
 
@@ -192,7 +192,7 @@ function callback_Expand(): void {
 function callback_Recenter(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // Game not loaded yet
-	Transition.zoomToCoordsBox(gamefile.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
+	transition.zoomToCoordsBox(gamefile.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
 	GameBus.dispatch('board-nav');
 }
 

@@ -38,7 +38,7 @@ import piecemodels from '../../board/rendering/piecemodels.js';
 import { GameBus } from '../../board/GameBus.js';
 import coordinates from './coordinates.js';
 import texturecache from '../../chess/rendering/texturecache.js';
-import WaterRipples from '../../board/rendering/WaterRipples.js';
+import waterripples from '../../board/rendering/waterripples.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import draganimation from './dragging/draganimation.js';
 import promotionlines from '../../board/rendering/promotionlines.js';
@@ -123,7 +123,7 @@ function render(): void {
 	// First gather all post processing effects this frame
 	const passes: PostProcessPass[] = [];
 	// Append water ripples of really far moves!
-	passes.push(...WaterRipples.getPass(gameContext));
+	passes.push(...waterripples.getPass(gameContext));
 	// Add the current effect zone passes
 	passes.push(...effectZoneManager.getActivePostProcessPasses());
 	// Set them in the pipeline

@@ -32,7 +32,7 @@ import boardpos from '../../../board/rendering/boardpos.js';
 import miniimage from '../miniimage.js';
 import { Mouse } from '../../input.js';
 import movehints from './movehints.js';
-import Transition from '../transitions/Transition.js';
+import transition from '../transitions/transition.js';
 import primitives from '../../../board/rendering/primitives.js';
 import perspective from '../perspective.js';
 import drawsquares from './annotations/drawsquares.js';
@@ -413,17 +413,19 @@ function transitionToHoveredIfClicked(): void {
 	];
 
 	// Transition to the whole group if non-empty, otherwise to the single snapped point.
-	let transition: (() => void) | undefined;
-	if (groupHovered.length > 0) transition = () => Transition.singleZoomToCoordsList(groupHovered);
+	let startTransition: (() => void) | undefined;
+	if (groupHovered.length > 0)
+		startTransition = () => transition.singleZoomToCoordsList(groupHovered);
 	else {
 		const snap = snapPointerWorld(world);
-		if (snap !== undefined) transition = () => Transition.singleZoomToBDCoords(snap.coords);
+		if (snap !== undefined)
+			startTransition = () => transition.singleZoomToBDCoords(snap.coords);
 	}
-	if (transition === undefined) return; // Nothing to transition to
+	if (startTransition === undefined) return; // Nothing to transition to
 
 	if (mouse.isMouseClicked(Mouse.LEFT)) {
 		mouse.claimMouseClick(Mouse.LEFT);
-		transition();
+		startTransition();
 	} else if (mouse.isMouseDown(Mouse.LEFT)) {
 		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}

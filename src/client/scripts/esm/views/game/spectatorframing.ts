@@ -15,7 +15,7 @@ import gameslot from '../../game/chess/gameslot.js';
 import snapping from '../../game/rendering/highlights/snapping.js';
 import gamescene from '../../game/rendering/gamescene.js';
 import boarddrag from '../../game/rendering/boarddrag.js';
-import Transition from '../../game/rendering/transitions/Transition.js';
+import transition from '../../game/rendering/transitions/transition.js';
 import perspective from '../../game/rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 import boardframing from '../../board/rendering/boardframing.js';
@@ -85,14 +85,14 @@ function start(toggle: HTMLButtonElement): void {
 function onToggle(toggle: HTMLButtonElement): void {
 	if (mode !== 'off') return switchOff(toggle);
 	// Anything still carrying the camera would count as the viewer moving it
-	Transition.terminate();
+	transition.terminate();
 	gamescene.getGameContext().boardpos.eraseMomentum();
 	reframe();
 	if (doesViewStray(RETURN_TOLERANCE)) {
-		Transition.initTransitionFromArea(framing.target, false); // Records the view itself
+		transition.initTransitionFromArea(framing.target, false); // Records the view itself
 		mode = 'returning';
 	} else {
-		Transition.recordView();
+		transition.recordView();
 		mode = 'following';
 	}
 	renderToggle(toggle);
@@ -134,7 +134,7 @@ function reframe(): void {
 function steer(toggle: HTMLButtonElement): void {
 	if (mode === 'off') return;
 	if (mode === 'returning') {
-		if (Transition.areTransitioning()) return; // Our own, back to the game
+		if (transition.areTransitioning()) return; // Our own, back to the game
 		mode = 'following';
 	}
 	if (!isCameraMoving()) boardframing.glide(gamescene.getGameContext(), framing);
@@ -146,7 +146,7 @@ function isCameraMoving(): boolean {
 	const { boardpos } = gamescene.getGameContext();
 	return (
 		boarddrag.isBoardDragging() ||
-		Transition.areTransitioning() ||
+		transition.areTransitioning() ||
 		boardpos.boardHasMomentum() ||
 		boardpos.getScaleVel() !== 0
 	);

@@ -23,7 +23,7 @@ import gameslot from '../../chess/gameslot.js';
 import gamescene from '../gamescene.js';
 import movehints from '../highlights/movehints.js';
 import boardview from '../boardview.js';
-import Transition from '../transitions/Transition.js';
+import transition from '../transitions/transition.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../../board/GameBus.js';
 import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
@@ -293,7 +293,7 @@ function panAlongLineToward(targetCoords: BDCoords, direction: Vec2): void {
 		...line2GeneralForm,
 	)!; // We know it will be defined because they are PERPENDICULAR
 
-	Transition.startPanTransition(telCoords, false);
+	transition.startPanTransition(telCoords, false);
 }
 
 // Exports ---------------------------------------------------------------------

@@ -36,7 +36,7 @@ import keybinds from '../keybinds.js';
 import { Mouse } from '../input.js';
 import gamescene from '../rendering/gamescene.js';
 import droparrows from '../rendering/dragging/droparrows.js';
-import Transition from '../rendering/transitions/Transition.js';
+import transition from '../rendering/transitions/transition.js';
 import gamesession from './gamesession.js';
 import preferences from '../../util/preferences.js';
 import perspective from '../rendering/perspective.js';
@@ -195,7 +195,7 @@ function update(): void {
 	if (!hoverSquare) return; // Looking into sky
 
 	// Only exit during a transition after updating hover square
-	if (Transition.areTransitioning()) return;
+	if (transition.areTransitioning()) return;
 
 	// What should selection.ts do?
 

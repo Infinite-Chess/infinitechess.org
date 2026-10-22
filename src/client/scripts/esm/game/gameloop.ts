@@ -37,7 +37,7 @@ import boardview from './rendering/boardview.js';
 import droparrows from './rendering/dragging/droparrows.js';
 import dragarrows from './rendering/dragging/dragarrows.js';
 import maskeddraw from '../webgl/maskeddraw.js';
-import Transition from './rendering/transitions/Transition.js';
+import transition from './rendering/transitions/transition.js';
 import gamesession from './chess/gamesession.js';
 import annotations from './rendering/highlights/annotations/annotations.js';
 import { GameBus } from '../board/GameBus.js';
@@ -45,7 +45,7 @@ import perspective from './rendering/perspective.js';
 import LocalStorage from '../util/LocalStorage.js';
 import guimoveslist from './gui/guimoveslist.js';
 import frametracker from '../board/rendering/frametracker.js';
-import WaterRipples from '../board/rendering/WaterRipples.js';
+import waterripples from '../board/rendering/waterripples.js';
 import draganimation from './rendering/dragging/draganimation.js';
 import frameprofiler from '../board/frameprofiler.js';
 import guiboardcontrols from './gui/guiboardcontrols.js';
@@ -143,11 +143,11 @@ function update(): void {
 	guiclock.update(gamefile);
 
 	boardnav.update(); // Update board dragging, and WASD to move, scroll to zoom
-	if (!Transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
+	if (!transition.areTransitioning()) boardpos.update(); // Updates the board's position and scale according to its velocity
 
 	boarddrag.dragBoard(); // Calculate new board position if it's being dragged. After boardnav.update(), boardpos.update()
 	// BEFORE boardview.recalcVariables(), as that needs to be called after the board position is updated.
-	Transition.update();
+	transition.update();
 	GameBus.dispatch('position-board'); // AFTER everything above moves the board, BEFORE boardview.recalcVariables()
 	// AFTER boarddrag.dragBoard() or picking up the board has a spring back effect to it
 	// AFTER transition.update() since that updates the board position
@@ -165,7 +165,7 @@ function update(): void {
 	selection.update();
 	arrowinteraction.update();
 	const gameBoard = gamescene.getGameContext();
-	WaterRipples.update(gameBoard, perspective.getEnabled());
+	waterripples.update(gameBoard, perspective.getEnabled());
 	// NEEDS TO BE AFTER arrowinteraction.update() because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE boarddrag.checkIfBoardSingleGrabbed() because that shift arrows needs to overwrite this.
 	animation.update(gameBoard);

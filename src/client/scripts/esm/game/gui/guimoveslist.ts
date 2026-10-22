@@ -29,7 +29,7 @@ import selection from '../chess/selection.js';
 import animation from '../../board/rendering/animation/animation.js';
 import gamescene from '../rendering/gamescene.js';
 import holdrepeat from '../../components/holdrepeat.js';
-import Transition from '../rendering/transitions/Transition.js';
+import transition from '../rendering/transitions/transition.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from '../chess/movesequence.js';
@@ -477,7 +477,7 @@ function scrollMovesTableToStart(): void {
 function zoomToPlyDestination(gamefile: GameFile, index: number): void {
 	const move = gamefile.moves[index]!;
 	const coordsBox = bounds.getBoxFromCoordsList([move.endCoords]);
-	Transition.zoomToCoordsBox(coordsBox);
+	transition.zoomToCoordsBox(coordsBox);
 }
 
 /** Navigates the game to view the move at `index`, mirroring the nav buttons' behavior. */

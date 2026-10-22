@@ -12,7 +12,7 @@ import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import gamesound from '../../gamesound.js';
-import WaterRipples from '../WaterRipples.js';
+import waterripples from '../waterripples.js';
 
 // Move Configs ----------------------------------------------------------------
 
@@ -111,7 +111,7 @@ function playMove(
 	destination: Coords,
 ): void {
 	if (bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
-		WaterRipples.addRipple(board, destination);
+		waterripples.addRipple(board, destination);
 		board.camera.shake.trigger(0.25);
 	} else if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
 		const eAboveBell = bd.log10(distanceMoved) - bd.log10(BELL_CONFIG.minDist);
