@@ -88,6 +88,8 @@ jobs:
       # That file is gitignored and only fetched by the build, so fetch it here.
       - name: Fetch engine wasm
         run: npm run setup:engine
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # tee mirrors the report into the job summary. `shell: bash` adds -o
       # pipefail (the default `bash -e` lacks it), else the pipe masks the
@@ -116,6 +118,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests
         run: npm test
@@ -140,6 +144,8 @@ jobs:
 
       - name: Run build
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

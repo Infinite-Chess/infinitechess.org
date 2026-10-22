@@ -139,9 +139,11 @@ async function syncLatestRelease(localVersion: string, hasLocalCopy: boolean): P
 
 /** Fetches and validates the latest release's metadata from the GitHub API. */
 async function fetchLatestRelease(): Promise<z.infer<typeof releaseDataSchema>> {
-	const response = await fetch(LATEST_RELEASE_API_URL, {
-		headers: { 'User-Agent': 'Infinite-Chess-Build-Script' },
-	});
+	const headers = new Headers({ 'User-Agent': 'Infinite-Chess-Build-Script' });
+	// CI's token lifts the 60/hour per-IP limit, which other jobs sharing the runner's IP use up.
+	const token = process.env['GITHUB_TOKEN'];
+	if (token) headers.set('Authorization', `Bearer ${token}`);
+	const response = await fetch(LATEST_RELEASE_API_URL, { headers });
 	if (!response.ok) throw new Error(`Could not check for a new version: GitHub API returned ${response.status} ${await response.text()}`); // prettier-ignore
 
 	const rawReleaseData = await response.json();

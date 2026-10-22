@@ -92,7 +92,8 @@ is `rimraf dist` only, and never touches `pkg/`).
    `touch src/client/pkg/apeiron/pkg/.local-build`.
 2. Read the `.engine-version` stamp (the tag of the copy on disk).
 3. **Fetch the latest release** from `LATEST_RELEASE_API_URL`
-   (`…/Infinite-Chess/apeiron/releases/latest`), zod-validated.
+   (`…/Infinite-Chess/apeiron/releases/latest`), zod-validated, authenticated with `GITHUB_TOKEN`
+   when set (CI sets it).
 4. **Up-to-date check** — if the stamped tag equals the remote tag _and_ `apeiron_bg.wasm` +
    `apeiron.js` exist, do nothing.
 5. **New version** — find the asset `apeiron-wasm.zip`, fetch it fully into memory, `unzipSync` (via
