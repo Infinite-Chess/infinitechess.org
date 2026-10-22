@@ -100,11 +100,6 @@ function edit(basegame: GameFile): void {
 	updateTempo(basegame);
 }
 
-/** Called when a move is pushed in a timed engine game; reschedules the low-time sound. */
-function push(clocks: ClockData): void {
-	rescheduleLowtime(clocks);
-}
-
 /** Stops clock sound and resets low-time state. */
 function stopClocks(basegame?: GameFile): void {
 	clearTimeout(lowtimeTimeoutID);
@@ -204,7 +199,6 @@ export default {
 	set,
 	update,
 	edit,
-	push,
 	stopClocks,
 	showClocksAtViewedMove,
 	// Tempo

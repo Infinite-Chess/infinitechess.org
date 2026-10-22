@@ -8,13 +8,16 @@ import jsutil from '../../../../shared/util/jsutil.js';
 
 import deltatime from './deltatime.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
+
+/** Milliseconds to average the fps over */
+const FPS_WINDOW_MS = 1000;
+
+// State -----------------------------------------------------------------------
 
 /** In millis since the start of the program (updated at the beginning of each frame). */
 let runTime: number;
 
-/** Milliseconds to average the fps over */
-const FPS_WINDOW_MS = 1000;
 /** Contains an ordered array of the timestamps of all frames over the last second */
 const frames: number[] = [];
 let fps = 0;
@@ -23,8 +26,8 @@ let monitorRefreshRate = 0;
 
 // Functions -------------------------------------------------------------------
 
+/** Records a new frame from its timestamp (ms). Call at the start of every frame. */
 function update(runtime: number): void {
-	// milliseconds
 	runTime = runtime;
 	deltatime.update(runtime);
 
@@ -48,6 +51,7 @@ function trimFrames(): void {
 	frames.splice(0, indexToSplit);
 }
 
+/** Recomputes the fps from the frames within the window. */
 function updateFPS(): void {
 	fps = (frames.length * 1000) / FPS_WINDOW_MS;
 }

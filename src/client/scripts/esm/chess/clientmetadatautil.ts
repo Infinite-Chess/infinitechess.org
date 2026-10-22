@@ -61,7 +61,7 @@ function buildSourceVariantMetadata(gamefile: GameFile): SourceVariantMetaData {
 /**
  * Parses the elo and confidence from WhiteElo/BlackElo metadata.
  * ONLY HAS AS MUCH PRECISION as what's in the metadata.
- * DOES NOT KNOW whether their current rating is now confident, if thir WhiteElo/BlackElo was not confident.
+ * DOES NOT KNOW whether their current rating is now confident, if their WhiteElo/BlackElo was not confident.
  */
 function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
 	const [elo, emptyStr] = whiteBlackElo.split('?'); // emptyStr will be '' if the '?' is present, otherwise it will be undefined.

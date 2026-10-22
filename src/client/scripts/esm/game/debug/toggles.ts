@@ -34,7 +34,7 @@ function testOutGame(): void {
 }
 
 /** Debug toggles that are only for in a game. */
-function testInGame(gamefile: GameFile, mesh: Mesh | undefined): void {
+function testInGame(gamefile: GameFile, mesh: Mesh): void {
 	if (listener_document.isKeyDown('Digit1')) {
 		console.log(jsutil.deepCopyObject(gamefile));
 		console.log('Estimated gamefile memory usage: ' + estimateMemorySizeOf(gamefile));
@@ -43,7 +43,7 @@ function testInGame(gamefile: GameFile, mesh: Mesh | undefined): void {
 	if (listener_document.isKeyDown('Digit4')) specialrighthighlights.toggle(); // Highlights special rights and en passant
 
 	if (listener_document.isKeyDown('Tab')) guiboardcontrols.callback_Arrows();
-	if (mesh && listener_document.isKeyDown('KeyR')) {
+	if (listener_document.isKeyDown('KeyR')) {
 		piecemodels.regenAll(gamescene.getGameContext(), gamefile, mesh);
 		console.log('Regenerated piece models.');
 	}

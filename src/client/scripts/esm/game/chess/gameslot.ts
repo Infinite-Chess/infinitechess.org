@@ -67,7 +67,12 @@ export type LoadOptions = {
 	  }
 );
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
+
+/** The delay, in millis, until the latest-played move is animated, after rejoining a game. */
+const LATEST_MOVE_ANIMATION_DELAY_MS = 150;
+
+// State -----------------------------------------------------------------------
 
 /** The currently loaded game. */
 let loadedGamefile: GameFile | undefined;
@@ -83,15 +88,10 @@ let viewColor: Player;
  * move when rejoining a game, after a short delay
  */
 let animateLastMoveTimeoutID: ReturnType<typeof setTimeout> | undefined;
-/**
- * The delay, in millis, until the latest-played
- * move is animated, after rejoining a game.
- */
-const delayOfLatestMoveAnimationOnRejoinMs = 150;
 
 // Functions -------------------------------------------------------------------
 
-/**  Returns the gamefile currently loaded */
+/** Returns the gamefile currently loaded */
 function getGamefile(): GameFile | undefined {
 	return loadedGamefile;
 }
@@ -106,6 +106,7 @@ function isGameLive(): boolean {
 	return loadedGamefile !== undefined && !gamefileutility.isGameOver(loadedGamefile);
 }
 
+/** Whether we're viewing the loaded game from white's perspective. */
 function areViewingWhite(): boolean {
 	if (!loadedGamefile) throw Error("Cannot ask if loaded game is from white's perspective when there isn't a loaded game."); // prettier-ignore
 	return viewColor === p.WHITE;
@@ -130,17 +131,11 @@ function flipView(): void {
  */
 function loadGamefile(loadOptions: LoadOptions): Promise<{ graphical: Promise<void> }> {
 	if (loadedGamefile) throw new Error('Must unloadGame() before loading a new one.');
-	// console.log("Loading gamefile...");
 
 	// The game should be considered loaded once the LOGICAL stuff is finished.
-	// Any canvas loading animation should close only when thre GRAPHICAL stuff is finished.
+	// Any canvas loading animation should close only when the GRAPHICAL stuff is finished.
 
 	return loadLogical(loadOptions).then(() => {
-		// console.log('LOGICAL loaded.');
-
-		// This is where we used to play the game start sound, but now we
-		// play it in lobby.ts before the hard navigation to the game page.
-
 		// Start GRAPHICAL loading immediately and hand its promise to the caller.
 		return { graphical: loadGraphical() };
 	});
@@ -205,19 +200,16 @@ async function loadGraphical(): Promise<void> {
 			// A small delay to animate the most recently played move.
 			if (moveutil.areWeViewingLatestMove(loadedGamefile!)) return; // Already viewing the latest move
 			movesequence.viewFront(loadedGamefile!, mesh!, true); // Ensure we are viewing the front, regardless where they navigated
-		}, delayOfLatestMoveAnimationOnRejoinMs);
+		}, LATEST_MOVE_ANIMATION_DELAY_MS);
 
 	// Init the star field void animation
 	starfield.init();
-
-	// console.log('GRAPHICAL loaded.');
 }
 
 /** The canvas will no longer render the current game */
 function unloadGame(): void {
 	if (!loadedGamefile)
 		throw Error('Should not be calling to unload game when there is no game loaded.');
-	// console.error("Unloading gamefile...");
 
 	loadedGamefile = undefined;
 	mesh = undefined;
@@ -257,6 +249,8 @@ function concludeGame(playSound = true): void {
 
 	if (playSound) gamesound.playNotify(true);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getGamefile,

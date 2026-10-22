@@ -27,8 +27,8 @@ function init(canvas: HTMLCanvasElement): void {
 	listener_document = CreateInputListener(document);
 }
 
-/** Returns the overlay element covering the entire canvas. */
-function getCanvas(): HTMLElement {
+/** Returns the board canvas. */
+function getCanvas(): HTMLCanvasElement {
 	return element_canvas;
 }
 

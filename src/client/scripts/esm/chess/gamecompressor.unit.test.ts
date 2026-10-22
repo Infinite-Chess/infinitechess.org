@@ -55,7 +55,7 @@ describe('gamecompressor', () => {
 		});
 	});
 
-	describe('GameToPosition', () => {
+	describe('gameToPosition', () => {
 		it('should return the same state if halfmoves is 0', () => {
 			const initialState: VariantOptions = {
 				position: new Map(),
@@ -66,7 +66,7 @@ describe('gamecompressor', () => {
 				},
 			};
 
-			const result = gamecompressor.GameToPosition(initialState, [], 0);
+			const result = gamecompressor.gameToPosition(initialState, [], 0);
 			expect(result).toBe(initialState);
 		});
 	});

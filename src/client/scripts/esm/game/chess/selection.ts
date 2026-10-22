@@ -64,7 +64,7 @@ type MoveHandler = (gamefile: GameFile, mesh: Mesh | undefined, moveTagged: Move
  */
 type ViewedPositionBrancher = (gamefile: GameFile) => void;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The currently selected piece, if there is one */
 let pieceSelected: Piece | undefined;
@@ -138,7 +138,7 @@ function getLegalMovesOfSelectedPiece(): LegalMoves | undefined {
 	return legalMoves;
 }
 
-/** Returns *true* if a pawn is currently promoting (promotion UI open). */
+/** Returns the square a pawn is currently promoting on (promotion UI open), if any. */
 function getSquarePawnIsCurrentlyPromotingOn(): CoordsTagged | undefined {
 	return pawnIsPromotingOn;
 }
@@ -166,7 +166,7 @@ function setViewedPositionBrancher(handler: ViewedPositionBrancher): void {
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update(): void {
 	guipromotion.update();
-	if (mouse.isMouseDown(Mouse.MIDDLE)) return unselectPiece(); // Right-click deselects everything
+	if (mouse.isMouseDown(Mouse.MIDDLE)) return unselectPiece(); // Middle-click deselects everything
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;
@@ -189,7 +189,6 @@ function update(): void {
 	// 1. The draganimation hover coords, if present. The droparrows and dragarrows features can change this.
 	// 2. Fallback to current mouse coords.
 	hoverSquare = draganimation.getHoveredCoords() ?? mouse.getTileMouseOver_Integer(); // Update the tile the mouse is hovering over, if any.
-	// console.log('Hover square:', hoverSquare);
 
 	updateHoverSquareLegal(gamefile); // Update whether the hover square is legal to move to.
 	if (!hoverSquare) return; // Looking into sky
@@ -234,12 +233,12 @@ function updateHoverSquareLegal(gamefile: GameFile): void {
 	const legal = legalmoves.checkIfMoveLegal(
 		gamefile,
 		legalMoves!,
-		pieceSelected!.coords,
+		pieceSelected.coords,
 		hoverSquare,
 		colorOfSelectedPiece,
 	);
 	hoverSquareLegal =
-		(legal && canMovePieceType(pieceSelected!.type)) ||
+		(legal && canMovePieceType(pieceSelected.type)) ||
 		(gamesession.getGameType() === 'editor' &&
 			!coordutil.areCoordsEqual(hoverSquare, pieceSelected.coords) &&
 			(gamefile.gameRules.worldBorder === undefined ||
@@ -270,29 +269,21 @@ function testIfPieceSelected(gamefile: GameFile, mesh: Mesh | undefined): void {
 	// We have clicked, test if we clicked a piece...
 
 	const pieceClicked = boardutil.getPieceFromCoords(gamefile.pieces, hoverSquare!);
-	// if (pieceClicked) console.log(typeutil.debugType(pieceClicked?.type));
 
 	// Is the type selectable by us? (not necessarily moveable)
 	const selectionLevel = canSelectPieceType(gamefile, pieceClicked?.type);
-	// console.log('Selection Level:', selectionLevel);
 	if (selectionLevel === 0)
 		return; // Can't select this piece type
-	else if (selectionLevel >= 1 && mouse.isMouseClicked(mouseKeybind)) {
+	else if (mouse.isMouseClicked(mouseKeybind)) {
 		// CAN select this piece type
-		/** Just quickly make sure that, if we already have selected a piece,
-		 * AND we just clicked a piece that's legal to MOVE to,
-		 * that we don't select it instead! */
-		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
+		if (pieceSelected && hoverSquareLegal) return; // Legal to move onto: testIfPieceMoved() captures it instead.
 		mouse.claimMouseClick(mouseKeybind); // Claim the mouse click so that annotations does use it to Collapse annotations.
 		// If we are viewing past moves, forward to front instead!!
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
 		selectPiece(gamefile, pieceClicked!, false); // Select, but don't start dragging
 	} else if (selectionLevel === 2 && mouse.isMouseDown(mouseKeybind)) {
 		// Can DRAG this piece type
-		/** Just quickly make sure that, if we already have selected a piece,
-		 * AND we just clicked a piece that's legal to MOVE to,
-		 * that we don't select it instead! */
-		if (pieceSelected && hoverSquareLegal) return; // Return. Don't select it, NOR make the move, let testIfPieceMoved() catch that.
+		if (pieceSelected && hoverSquareLegal) return; // Legal to move onto: testIfPieceMoved() captures it instead.
 		mouse.claimMouseDown(mouseKeybind); // Claim the mouse down so board dragging doesn't use it
 		mouse.cancelMouseClick(mouseKeybind); // Cancel the click so annotation doesn't clear when the mouse released in a few frames, simulating a click.
 		if (viewFrontIfNotViewingLatestMove(gamefile, mesh)) return; // Forwarded to front, DON'T select the piece.
@@ -388,7 +379,7 @@ function canMovePieceType(pieceType: number): boolean {
 	// It is our piece type...
 	const isOurTurn = gamesession.isItOurTurn();
 	if (isOurTurn) return true; // Can always move pieces on our turn
-	return preferences.getPremoveEnabled(); // If it's not out turn, can only move if premoving is enabled.
+	return preferences.getPremoveEnabled(); // If it's not our turn, can only move if premoving is enabled.
 }
 
 /** Returns true if the type belongs to our opponent, no matter what kind of game we're in. */
@@ -403,8 +394,6 @@ function isOpponentType(gamefile: GameFile, type: number): boolean {
 
 /**
  * Selects the provided piece. If the piece is already selected, it will be deselected.
- * @param gamefile
- * @param piece
  * @param drag - If true, the piece starts being dragged. This also means it won't be deselected if you clicked the selected piece again.
  */
 function selectPiece(gamefile: GameFile, piece: Piece, drag: boolean): void {
@@ -478,7 +467,6 @@ function reselectPiece(): void {
 
 /** Unselects the currently selected piece. Cancels pawns currently promoting, closes the promotion UI. */
 function unselectPiece(): void {
-	// console.error("Unselecting piece");
 	if (pieceSelected === undefined) return; // No piece to unselect.
 	pieceSelected = undefined;
 	isOpponentPiece = false;
@@ -513,8 +501,6 @@ function initSelectedPieceInfo(gamefile: GameFile, piece: Piece): void {
 			legalmoves.calculateAll(gamefile, piece),
 		);
 	}
-
-	// console.log('Selected Legal Moves:', legalMoves);
 
 	GameBus.dispatch('piece-selected', { piece: pieceSelected, legalMoves: legalMoves! });
 }
@@ -552,8 +538,6 @@ function moveGamefilePiece(gamefile: GameFile, mesh: Mesh | undefined, coords: C
 			? premoves.addPremove(gamefile, mesh, moveTagged).changes
 			: movesequence.makeMove(gamefile, mesh, moveTagged, 'detect').changes);
 
-	// Not actually needed? Test it. To my knowledge, animation.ts will automatically cancel previous animations, since now it handles playing the sound for drops.
-	// if (wasBeingDragged) animation.clearAnimations(); // We still need to clear any other animations in progress BEFORE we make the move (in case a secondary needs to be animated)
 	// Don't animate the main piece if it's being dragged, but still animate secondary pieces affected by the move (like the rook in castling).
 	const animateMain = !wasBeingDragged;
 	graphicalchanges.animateMove(gamescene.getGameContext(), changes, true, animateMain, isPremove);
@@ -602,26 +586,31 @@ function renderGhostPiece(): void {
 	const rawType = typeutil.getRawType(pieceSelected.type);
 	if (piecethemes.SVGLESS_TYPES.has(rawType)) return; // No svg/texture for this piece (void), don't render the ghost image.
 
-	pieces.renderGhostPiece(pieceSelected!.type, hoverSquare);
+	pieces.renderGhostPiece(pieceSelected.type, hoverSquare);
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
-	isAPieceSelected,
+	// Getters
 	getPieceSelected,
-	setEditorMoveHandler,
-	setViewedPositionBrancher,
-	reselectPiece,
-	unselectPiece,
+	isAPieceSelected,
+	isOpponentPieceSelected,
+	arePremoving,
 	getLegalMovesOfSelectedPiece,
 	getSquarePawnIsCurrentlyPromotingOn,
 	promoteToType,
+	setEditorMoveHandler,
+	setViewedPositionBrancher,
+	// Updating
 	update,
-	renderGhostPiece,
-	isOpponentPieceSelected,
-	arePremoving,
-	selectPiece,
+	// Can Select/Move/Drop Piece Type
 	canSelectPieceType,
 	isOpponentType,
+	// Selection & Moving
+	selectPiece,
+	reselectPiece,
+	unselectPiece,
+	// Rendering
+	renderGhostPiece,
 };

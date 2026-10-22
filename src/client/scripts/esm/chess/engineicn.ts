@@ -9,6 +9,8 @@ import type { LongFormatIn } from '../../../../shared/chess/logic/icn/icnconvert
 
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
 
+// Functions -------------------------------------------------------------------
+
 /**
  * Conforms a freshly compressed longform to what Apeiron reads, in place: metadata is reduced to
  * Variant, the only tag Apeiron reads. Redundant beside the explicit position, but it selects
@@ -27,6 +29,8 @@ function prepareForEngine(longform: LongFormatIn): void {
 function serialize(longform: LongFormatIn): string {
 	return icnconverter.LongToShort_Format(longform, icnconverter.COMPACT_FORMAT_OPTIONS);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	prepareForEngine,

@@ -1,8 +1,8 @@
 // src/client/scripts/esm/game/chess/gamesession.ts
 
 /**
- * The current game session's lightweight state: what *kind* of game is loaded (local / online /
- * engine / editor), whether it's still loading, and the shared load-finish / unload lifecycle.
+ * The current game session's lightweight state: what *kind* of game is loaded (online / analysis /
+ * editor), whether it's still loading, and the shared load-finish / unload lifecycle.
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
@@ -62,7 +62,7 @@ function getGameType(): GameSession['type'] {
 	return session.type;
 }
 
-/** Returns our role in the game, if a participant, in either an online/engine game. */
+/** Returns our role in an online game, or undefined if spectating. */
 function getRole(): Player | undefined {
 	if (session.type === 'online') return session.role;
 	throw Error("Can't get our color in this type of game: " + session.type);

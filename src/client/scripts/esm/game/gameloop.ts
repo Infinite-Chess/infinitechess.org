@@ -123,7 +123,7 @@ function gameLoop(runtime: number): void {
 	requestAnimationFrame(gameLoop); // Loop again
 }
 
-// Update the game every single frame
+/** Updates every game module, in dependency order. Runs every frame. */
 function update(): void {
 	camera.shake.update();
 	toggles.testOutGame();
@@ -192,17 +192,15 @@ function update(): void {
 	boarddrag.checkIfBoardSingleGrabbed();
 
 	guiboardcontrols.updateCoords(); // Update the coordinates on the side bar
-
-	// preferences.update(); // ONLY USED for temporarily micro adjusting theme properties & colors
 }
 
 /**
  * Tests if by clicking an empty region of the board,
  * we need to clear premoves and collapse annotations.
  */
-function testIfEmptyBoardRegionClicked(gamefile: GameFile, mesh: Mesh | undefined): void {
+function testIfEmptyBoardRegionClicked(gamefile: GameFile, mesh: Mesh): void {
 	const mouseKeybind = keybinds.getCollapseMouseButton();
-	if (mouseKeybind === undefined) return; // No button is assigned to collaping annotes / cancelling premoves currently
+	if (mouseKeybind === undefined) return; // No button is assigned to collapsing annotes / cancelling premoves currently
 
 	if (mouse.isMouseClicked(mouseKeybind)) {
 		mouse.claimMouseClick(mouseKeybind);

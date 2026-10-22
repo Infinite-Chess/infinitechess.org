@@ -12,7 +12,7 @@ import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves.js';
 import { EventBus } from '../../../../shared/util/EventBus.js';
 
 interface GameBusEvents {
-	// =========== Game Lifecycle ============
+	// --- Game Lifecycle ---
 
 	/** Dispatched when the LOGICAL part of a game is finished loading (not GRAPHICAL). */
 	'game-loaded': void;
@@ -24,11 +24,12 @@ interface GameBusEvents {
 	 * not 'graphical-loaded', to resume work a load was blocking.
 	 */
 	'load-ended': void;
+	/** Dispatched when the loaded game is unloaded. */
 	'game-unloaded': void;
 	/** Dispatched when games end, and the termination is shown on screen. */
 	'game-concluded': void;
 
-	// =========== Moves ============
+	// --- Moves ---
 
 	/** Dispatched when a physical (not premove or simulated) move is made by us, NOT our opponent. */
 	'user-move-played': void;
@@ -48,7 +49,7 @@ interface GameBusEvents {
 	 */
 	'moves-changed': void;
 
-	// =========== Viewed Position ============
+	// --- Viewed Position ---
 
 	/**
 	 * Dispatched whenever the locally-viewed position changes: navigating history forward/backward
@@ -61,12 +62,12 @@ interface GameBusEvents {
 	 */
 	'view-front': void;
 
-	// =========== Piece Selection ============
+	// --- Piece Selection ---
 
 	'piece-selected': { piece: Piece; legalMoves: LegalMoves };
 	'piece-unselected': void;
 
-	// =========== Board View ============
+	// --- Board View ---
 
 	/** Dispatched when the board's view orientation is flipped (white ⇄ black perspective). */
 	'board-flipped': void;
@@ -84,12 +85,12 @@ interface GameBusEvents {
 	 */
 	'position-board': void;
 
-	// =========== Annotations ============
+	// --- Annotations ---
 
 	/** Dispatched when the number of drawn rays changes. Carries the new count. */
 	'ray-count-change': number;
 
-	// =========== Input ============
+	// --- Input ---
 
 	/**
 	 * Dispatched when the board is about to be pinched. Tells any
@@ -100,12 +101,12 @@ interface GameBusEvents {
 	/** Fire at the very END of every frame, so the input listeners drop their per-frame state. */
 	'reset-listener-events': void;
 
-	// =========== Debug ============
+	// --- Debug ---
 
 	/** Fire when the keybind assigned to toggling the engine debug mode is pressed. */
 	'engine-debug': void;
 
-	// =========== Rendering ============
+	// --- Rendering ---
 
 	/** Dispatched when the canvas is resized. Carries its new dimensions, in pixels. */
 	'canvas-resize': { width: number; height: number };

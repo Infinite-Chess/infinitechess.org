@@ -329,7 +329,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 			variant,
 			additional,
 		);
-		const new_gamestate = gamecompressor.GameToPosition(
+		const new_gamestate = gamecompressor.gameToPosition(
 			variantOptions,
 			loadedGamefile.moves,
 			loadedGamefile.moves.length,

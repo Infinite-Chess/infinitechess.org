@@ -24,7 +24,7 @@ import { listener_document, listener_canvas } from './listeners.js';
 
 // Constants -------------------------------------------------------------------
 
-/** The accelleration/deceleration rate of the board velocity. */
+/** The acceleration/deceleration rate of the board velocity. */
 const PAN_ACCEL = {
 	'2D': 145,
 	'3D': 75,
@@ -55,7 +55,7 @@ const SCALE_VEL_CAP = {
 };
 
 /** Dampener multiplied to the wheel delta before applying it to the scale velocity. */
-const WHEEL_MULTIPLIER = 0.015; // Default: 0.015
+const WHEEL_MULTIPLIER = 0.015;
 
 // Panning & Zooming Controls WASD/Space/Shift/Wheel ---------------------------
 
@@ -133,14 +133,14 @@ function detectPanning(): void {
 			panVel[1] /= ratio;
 		}
 	} else {
-		panVel = deccelPanVel(panVel);
+		panVel = decelPanVel(panVel);
 	}
 
 	boardpos.setPanVel(panVel); // Set the pan velocity
 }
 
-/** Accelerates the given pan velocity in the provided vector direction. */
-function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
+/** Accelerates the given pan velocity, in place, in the provided direction. */
+function accelPanVel(panVel: DoubleCoords, angleDegs: number): void {
 	const baseAngle = -camera.getRotZ();
 	const dirOfTravel = baseAngle + angleDegs;
 	const angleRad = vectors.degreesToRadians(dirOfTravel);
@@ -148,11 +148,10 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	const accelToUse = perspective.getEnabled() ? PAN_ACCEL['3D'] : PAN_ACCEL['2D'];
 	panVel[0] += deltatime.get() * accelToUse * XYComponents[0];
 	panVel[1] += deltatime.get() * accelToUse * XYComponents[1];
-	return panVel;
 }
 
-/** Deccelerates the given pan velocity towards zero, without skipping past it. */
-function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
+/** Decelerates the given pan velocity towards zero, without skipping past it. */
+function decelPanVel(panVel: DoubleCoords): DoubleCoords {
 	if (panVel[0] === 0 && panVel[1] === 0) return panVel; // Already stopped
 
 	const rateToUse = perspective.getEnabled() ? PAN_ACCEL['3D'] : PAN_ACCEL['2D'];
@@ -200,26 +199,24 @@ function detectZooming(): void {
 		if (scaleVel > capToUse) scaleVel = capToUse;
 		else if (scaleVel < -capToUse) scaleVel = -capToUse;
 	} else {
-		scaleVel = deccelerateScaleVel(scaleVel);
+		scaleVel = decelScaleVel(scaleVel);
 	}
 
 	boardpos.setScaleVel(scaleVel);
 }
 
-/** Deccelerates the given scale velocity towards zero, without skipping past it. */
-function deccelerateScaleVel(scaleVel: number): number {
+/** Decelerates the given scale velocity towards zero, without skipping past it. */
+function decelScaleVel(scaleVel: number): number {
 	if (scaleVel === 0) return scaleVel; // Already stopped
 
-	const deccelerationToUse = docutil.isMouseSupported()
-		? SCALE_ACCEL.DESKTOP
-		: SCALE_ACCEL.MOBILE;
+	const decelerationToUse = docutil.isMouseSupported() ? SCALE_ACCEL.DESKTOP : SCALE_ACCEL.MOBILE;
 
 	if (scaleVel > 0) {
-		scaleVel -= deltatime.get() * deccelerationToUse;
+		scaleVel -= deltatime.get() * decelerationToUse;
 		if (scaleVel < 0) scaleVel = 0;
 	} else {
 		// scaleVel < 0
-		scaleVel += deltatime.get() * deccelerationToUse;
+		scaleVel += deltatime.get() * decelerationToUse;
 		if (scaleVel > 0) scaleVel = 0;
 	}
 

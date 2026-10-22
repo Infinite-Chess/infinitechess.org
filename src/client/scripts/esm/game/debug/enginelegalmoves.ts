@@ -20,15 +20,15 @@ import frametracker from '../../board/rendering/frametracker.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 import squarerendering from '../../board/rendering/squarerendering.js';
 
+// Types -----------------------------------------------------------------------
+
 /** A move request dispatched to the engine worker for a specific position. */
 interface DebugMoveRequest {
 	/** Unique id for correlating this request with its response. */
 	id: number;
-	/** Compact ICN position key, used as the cache key. */
-	key: string;
 	/** The game state to compute legal moves for. */
 	gamefile: GameFile;
-	/** Compact ICN of the position (same as `key`). */
+	/** Compact ICN of the position, which is also its cache key. */
 	positionIcn: string;
 }
 
@@ -46,6 +46,8 @@ interface EngineLegalMovesDebugOptions {
 	release?: () => void;
 }
 
+// State -----------------------------------------------------------------------
+
 /** Whether the GameBus listeners have been registered. */
 let initialized = false;
 /** Whether the overlay is currently active. */
@@ -61,6 +63,8 @@ const legalMovesByPosition = new Map<string, string[]>();
 const requestKeyById = new Map<number, string>();
 /** Ordered queue of in-flight request ids, used for FIFO response matching. */
 const pendingRequestIds: number[] = [];
+
+// Functions -------------------------------------------------------------------
 
 /** Wires up the overlay's engine hooks and (once) its GameBus listeners. Call only when an engine exists. */
 function init(nextOptions: EngineLegalMovesDebugOptions): void {
@@ -118,10 +122,9 @@ function requestMovesForCurrentPosition(): void {
 	if ([...requestKeyById.values()].includes(key)) return;
 
 	const id = nextRequestId++;
-	const request = { id, key, gamefile, positionIcn: key };
 	requestKeyById.set(id, key);
 	pendingRequestIds.push(id);
-	options.requestMoves(request);
+	options.requestMoves({ id, gamefile, positionIcn: key });
 }
 
 /** Caches a request's returned moves against its position key and clears its pending state. */
@@ -168,7 +171,7 @@ function render(): void {
 	if (!moves?.length) return;
 
 	const coords = moves
-		.map(getMoveDestination)
+		.map((move) => getMoveDestination(move))
 		.filter((coord): coord is Coords => coord !== undefined);
 	if (coords.length === 0) return;
 
@@ -199,6 +202,8 @@ function clear(): void {
 	pendingRequestIds.length = 0;
 	frametracker.onVisualChange();
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	init,

@@ -35,7 +35,7 @@ import { GameBus } from '../../board/GameBus.js';
 import movesequence from '../chess/movesequence.js';
 import { listener_document } from '../listeners.js';
 
-// Renderer extension ----------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
 /**
  * An optional alternative renderer for the moves panel. The analysis page registers one to
@@ -57,14 +57,6 @@ interface MovesListRenderer {
 	onGameUnloaded(): void;
 }
 
-/** The registered tree renderer, if any; when set, it takes over all moves-panel rendering. */
-let renderer: MovesListRenderer | undefined;
-
-/** Registers the alternative moves renderer (the analysis move tree). */
-function registerRenderer(r: MovesListRenderer): void {
-	renderer = r;
-}
-
 // Elements --------------------------------------------------------------------
 
 const element_First = document.getElementById('btn-move-first') as HTMLButtonElement;
@@ -77,11 +69,31 @@ const element_GameResult = document.querySelector('.game-result')!;
 const element_ResultScore = element_GameResult.querySelector('.result-score')!;
 const element_ResultText = element_GameResult.querySelector('.result-text')!;
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** Navigation can never be spammed faster than this, capping the hold-to-repeat rate. */
-const minimumNavIntervalMs = 20;
+const MIN_NAV_INTERVAL_MS = 20;
+
+/**
+ * Visible move text is capped to this many characters (CSS ellipsis truncates further);
+ * the full move always lives in the ply's `title`. Guards against the rare multi-thousand
+ * character move blowing up layout/append cost.
+ */
+const MAX_VISIBLE_MOVE_CHARS = 50;
+
+// State -----------------------------------------------------------------------
+
+/** The registered tree renderer, if any; when set, it takes over all moves-panel rendering. */
+let renderer: MovesListRenderer | undefined;
+
+/** When we last navigated, for the {@link MIN_NAV_INTERVAL_MS} throttle. */
 let lastNav = 0;
+
+/**
+ * The moves (by reference) currently rendered as plies, parallel to `gamefile.moves`. The source
+ * of truth for diffing — premoves never enter `gamefile.moves`, so they're naturally excluded.
+ */
+const renderedMoves: MoveFull[] = [];
 
 // Events ----------------------------------------------------------------------
 
@@ -114,10 +126,18 @@ GameBus.addEventListener('game-concluded', () => {
 });
 GameBus.addEventListener('game-unloaded', () => clearMovesTable());
 
+// Renderer Extension ----------------------------------------------------------
+
+/** Registers the alternative moves renderer (the analysis move tree). */
+function registerRenderer(r: MovesListRenderer): void {
+	renderer = r;
+}
+
 // Move Navigation -------------------------------------------------------------
 
+/** Whether enough time has passed since the last navigation to navigate again. */
 function isOkayToNavigate(): boolean {
-	return Date.now() - lastNav >= minimumNavIntervalMs; // True if enough time has passed!
+	return Date.now() - lastNav >= MIN_NAV_INTERVAL_MS;
 }
 
 /** Rewinds the game by 1 move, unselecting any piece. Cancels premoves first, instead of rewinding. */
@@ -231,19 +251,6 @@ function showGameResult(): void {
 }
 
 // Moves Table -----------------------------------------------------------------
-
-/**
- * Visible move text is capped to this many characters (CSS ellipsis truncates further);
- * the full move always lives in the ply's `title`. Guards against the rare multi-thousand
- * character move blowing up layout/append cost.
- */
-const MAX_VISIBLE_MOVE_CHARS = 50;
-
-/**
- * The moves (by reference) currently rendered as plies, parallel to `gamefile.moves`. The source
- * of truth for diffing — premoves never enter `gamefile.moves`, so they're naturally excluded.
- */
-const renderedMoves: MoveFull[] = [];
 
 /**
  * Brings the rendered plies in line with `gamefile.moves`: finds the first index that
@@ -494,10 +501,14 @@ function navigateToPly(gamefile: GameFile, index: number): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	registerRenderer,
+	// Elements
 	element_MovesTable,
 	element_GameResult,
+	// Renderer Extension
+	registerRenderer,
+	// Move Navigation
 	update,
+	// Moves Table
 	getPlyDisplay,
 	scrollToPly,
 	scrollMovesTableToStart,

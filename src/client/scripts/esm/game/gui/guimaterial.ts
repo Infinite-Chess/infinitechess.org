@@ -26,7 +26,23 @@ import svgcache from '../../chess/rendering/svgcache.js';
 import gamesession from '../chess/gamesession.js';
 import { GameBus } from '../../board/GameBus.js';
 
-// Point values ----------------------------------------------------------------
+// Types -----------------------------------------------------------------------
+
+/** The net material surplus of each side at the currently-viewed move, and the point lead. */
+interface MaterialSurplus {
+	/** rawType => surplus count this side has over the other (only positive entries). */
+	white: Map<RawType, number>;
+	black: Map<RawType, number>;
+	/** Estimated point lead: positive if white is ahead, negative if black, 0 if even. */
+	pointLead: number;
+}
+
+// Elements --------------------------------------------------------------------
+
+const element_MaterialTop = document.getElementById('material-top')!;
+const element_MaterialBottom = document.getElementById('material-bottom')!;
+
+// Constants -------------------------------------------------------------------
 
 /**
  * Estimated point value of each raw piece type, used only to compute the `+X` lead
@@ -56,12 +72,7 @@ const RAW_PIECE_VALUES: Partial<Record<RawType, number>> = {
 	[rawTypes.AMAZON]: 16,
 };
 
-// Elements --------------------------------------------------------------------
-
-const element_MaterialTop = document.getElementById('material-top')!;
-const element_MaterialBottom = document.getElementById('material-bottom')!;
-
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * Whether the loaded game is balanced (see {@link isGameBalanced}).
@@ -124,15 +135,6 @@ function isStartPositionBalanced(position: ReadonlyMap<CoordsKey, number>): bool
 }
 
 // Rendering -------------------------------------------------------------------
-
-/** The net material surplus of each side at the currently-viewed move, and the point lead. */
-interface MaterialSurplus {
-	/** rawType => surplus count this side has over the other (only positive entries). */
-	white: Map<RawType, number>;
-	black: Map<RawType, number>;
-	/** Estimated point lead: positive if white is ahead, negative if black, 0 if even. */
-	pointLead: number;
-}
 
 /** Computes each side's surplus and the point lead from the piece counts at the viewed move. */
 function computeSurplus(): MaterialSurplus {

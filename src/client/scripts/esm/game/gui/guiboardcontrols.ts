@@ -320,7 +320,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 	let proposed: bigint;
 	try {
 		proposed = parseStringToBigInt(target.value);
-	} catch (_e) {
+	} catch {
 		console.log(`Entered: ${target.value}`);
 		toast.show(t.gamegui.invalid_coords, { error: true });
 		return;
@@ -365,9 +365,13 @@ initListeners();
 // Exports ---------------------------------------------------------------------
 
 export default {
-	updateCoords,
+	// View Toggles
 	callback_Arrows,
+	// Annotation Tools
 	isAnnotationsButtonEnabled,
+	// Board-View Navigation
 	callback_Expand,
 	callback_Recenter,
+	// Coordinate Fields
+	updateCoords,
 };

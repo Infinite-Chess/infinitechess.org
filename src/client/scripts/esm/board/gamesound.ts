@@ -24,6 +24,7 @@ type SoundName =
 
 const audioCache = new Map<SoundName, AudioBuffer>();
 
+/** Returns a sound's decoded buffer, fetching and caching it on first use. */
 async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined> {
 	const cached = audioCache.get(soundName);
 	if (cached) return cached;
@@ -46,7 +47,6 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 /** Pre-fetches and caches a sound without playing it. */
 async function preload(soundName: SoundName): Promise<void> {
 	await getBuffer(soundName);
-	// console.log(`Preloaded sound: ${soundName}`);
 }
 
 // Playing Sounds --------------------------------------------------------------
@@ -70,7 +70,7 @@ async function playSoundEffect(
 	} = {},
 ): Promise<SoundObject | undefined> {
 	if (!audioCache.has(soundName)) {
-		console.warn(`Sound "${soundName}" needs to be preloaded.`); // Don't play sound if it would inquire a delay to fetch
+		console.warn(`Sound "${soundName}" needs to be preloaded.`); // Don't play sound if it would incur a delay to fetch
 		return;
 	}
 	const buffer = await getBuffer(soundName);
@@ -94,19 +94,23 @@ async function playSoundEffect(
 
 // Named Play Functions --------------------------------------------------------
 
+/** Plays the viola staccato. */
 function playViola_c3({ volume }: { volume?: number } = {}): void {
 	playSoundEffect('viola_staccato_c3', { volume });
 }
 
+/** Plays the marimba, usually its softer variant. */
 function playMarimba(): void {
 	const audioName = Math.random() > 0.15 ? 'marimba_c2_soft' : 'marimba_c2';
 	playSoundEffect(audioName, { volume: 0.4 });
 }
 
+/** Plays the bass staccato. */
 function playBase({ playbackRate }: { playbackRate?: number } = {}): void {
 	playSoundEffect('base_staccato_c2', { volume: 0.8, playbackRate });
 }
 
+/** Plays the notify sound, optionally with reverb. */
 function playNotify(includeReverb: boolean): Promise<SoundObject | undefined> {
 	const options = includeReverb ? { reverbDuration: 1.5, reverbWetLevel: 0.7 } : {};
 	return playSoundEffect('notify', options);
@@ -121,10 +125,12 @@ async function playNotifyToCompletion(): Promise<void> {
 	if (sound) await sound.whenEnded;
 }
 
+/** Plays the low-time warning. */
 function playLowtime(): void {
 	playSoundEffect('low_time');
 }
 
+/** Plays a random glass crack, at a slightly varied pitch. */
 function playGlassCrack(): void {
 	const rand = Math.random();
 	const soundName: SoundName = rand < 0.2 ? 'glass_crack_1'
