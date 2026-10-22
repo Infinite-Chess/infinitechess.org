@@ -71,7 +71,6 @@
     "glob": "^11.0.0",
     "globals": "^15.15.0",
     "glsl-strip-comments": "^1.0.0",
-    "husky": "^9.1.7",
     "lightningcss": "^1.25.1",
     "lint-staged": "^16.2.7",
     "nodemon": "^3.1.10",
@@ -107,7 +106,7 @@
     "type-check": "tsc -b",
     "import-rules": "tsx scripts/modules/import-rules.ts",
     "check": "concurrently -m 100% --names format,types,lint,imports,test --prefix-colors \"grey,blue,magenta,cyan,green\" \"npm run format:check --silent\" \"npm run type-check --silent\" \"npm run lint --silent\" \"npm run import-rules --silent\" \"npm run test:quiet --silent\"",
-    "prepare": "husky || true"
+    "prepare": "git config core.hooksPath .githooks"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
