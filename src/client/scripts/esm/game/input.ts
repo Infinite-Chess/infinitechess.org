@@ -207,7 +207,7 @@ interface ClickInfo {
 
 // Constants -------------------------------------------------------------------
 
-const Mouse = {
+export const Mouse = {
 	LEFT: 0,
 	MIDDLE: 1,
 	RIGHT: 2,
@@ -260,7 +260,7 @@ const MOUSE_POS_HISTORY_WINDOW_MS = 80;
  * @param element - The HTML element to listen for events on.
  * @returns An object with methods to check the state of mouse and keyboard inputs.
  */
-function CreateInputListener(
+function createListener(
 	element: HTMLElement | typeof document,
 	{ keyboard = true, mouse = true }: { keyboard?: boolean; mouse?: boolean } = {},
 ): InputListener {
@@ -889,8 +889,11 @@ function isWithinClickTolerance(
 	return distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS;
 }
 
-export { Mouse, CreateInputListener };
+// Exports ---------------------------------------------------------------------
 
 export default {
+	// Input Listener
+	createListener,
+	// Helpers
 	getRelativeMousePosition,
 };
