@@ -46,7 +46,6 @@ const ProductionOnlySchema = z.object({
 	AWS_SECRET_ACCESS_KEY: z.string(),
 	/** Who our sent emails appear to be from, and where alerts to ourselves are sent. */
 	EMAIL_FROM_ADDRESS: z.string(),
-	GITHUB_API_KEY: z.string(),
 });
 
 // Creation --------------------------------------------------------------------
