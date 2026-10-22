@@ -39,10 +39,10 @@
 - Ad-hoc scripts — anything you write to answer a question rather than ship a change — go in the
   gitignored `sandbox/`, run from the repo root: `npx tsx sandbox/<name>.ts`. Written outside the
   repo they inherit no `node_modules` and no `"type": "module"`, so top-level `await` fails.
-- When changing legal-move, check, checkmate or game-end logic, run `npm run validate-icn` yourself
-  on the validator dataset (ask me for its path) before your first edit and after, adding
-  `--conclusions` when only game-end logic changed. For refactors and speed-ups the fingerprint must
-  not change.
+- When changing legal-move, check, checkmate or game-end logic, unless it is plainly
+  behavior-identical at a glance, run `npm run validate-icn` yourself on the validator dataset (ask
+  me for its path) before your first edit and after, adding `--conclusions` when only game-end logic
+  changed. For refactors and speed-ups the fingerprint must not change.
 - To send me a test email: `npx tsx scripts/send-test-email.ts <verify|reset|changed> <to>`.
 
 ## Agent rulebook
