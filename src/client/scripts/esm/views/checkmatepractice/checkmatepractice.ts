@@ -135,6 +135,10 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
  * The border distance this engine used to declare, kept for whoever gives it one again:
  *   // worldBorderDist: BigInt(Number.MAX_SAFE_INTEGER) // FREEZES the engine if you move to the border
  *   worldBorderDist: BigInt(1e15) // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
+ *
+ * TRIPWIRE — the session is declared 'online', though no server game exists. Online games wait for
+ * the server to conclude them, so a practice game never concludes and is never marked beaten, and
+ * an engine failure resigns over the socket. It needs a local session type of its own.
  */
 function startEngineGame(options: {
 	timeControl: '-';
