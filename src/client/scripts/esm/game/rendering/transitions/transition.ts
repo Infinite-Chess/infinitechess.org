@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/transitions/Transition.ts
+// src/client/scripts/esm/game/rendering/transitions/transition.ts
 
 /**
  * This handles the smooth transitioning from one area of the board to another.
@@ -52,7 +52,7 @@ type Transition =
 type ZoomTransition = {
 	/** The destination board location. */
 	destinationCoords: BDCoords;
-	/** The destination board location. */
+	/** The destination board scale. */
 	destinationScale: BigDecimal;
 };
 
@@ -129,7 +129,7 @@ let nextTransition: ZoomTransition | undefined;
 
 /** Precalculated total duration of the current transition. */
 let durationMillis: number;
-
+/** When the current transition started, from `Date.now()`. */
 let startTime: number;
 /** Whether the current transition is a Zooming Transition, vs a Panning Transition. */
 let isZoom: boolean;
@@ -536,7 +536,7 @@ function recordView(): void {
 	});
 }
 
-/** Undos the last transition by transitioning to that transition's  */
+/** Undoes the last transition by transitioning back to where it started. */
 function undoTransition(): void {
 	const previousTrans = teleportHistory.pop();
 	if (!previousTrans) return; // Nothing in history
@@ -785,7 +785,6 @@ function terminate(): void {
 
 export default {
 	// Initiating Transitions
-	areTransitioning,
 	startPanTransition,
 	zoomToCoordsBox,
 	singleZoomToCoordsList,
@@ -796,5 +795,6 @@ export default {
 	// Updating
 	update,
 	// Utility
+	areTransitioning,
 	terminate,
 };

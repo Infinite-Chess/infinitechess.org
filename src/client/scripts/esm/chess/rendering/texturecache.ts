@@ -7,7 +7,7 @@
  *
  * This is a FACTORY: {@link createTextureCache} builds one cache bound to a single
  * WebGL context (textures can't be shared across contexts). The module default export
- * is the interactive game's cache; the variant-preview tooltip creates its own.
+ * is the interactive game's cache; every other board creates its own.
  */
 
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
@@ -18,6 +18,8 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 
 import imagecache from './imagecache.js';
 import TextureLoader from '../../webgl/TextureLoader.js';
+
+// Types -----------------------------------------------------------------------
 
 /** One independent texture cache, as returned by {@link createTextureCache}. */
 export interface TextureCache {
@@ -64,12 +66,9 @@ function createTextureCache(): TextureCache {
 	}
 
 	function getTexture(type: number): WebGLTexture {
-		// 1. Check cache using type directly as the key
 		const cachedTexture = textureCache[type];
 		if (cachedTexture) return cachedTexture;
-		// If not found, it implies initTexturesForGame wasn't called or failed for this type.
-		else
-			throw new Error(`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`); // prettier-ignore
+		throw new Error(`TextureCache: Texture for type ${typeutil.debugType(type)} not found in cache. Was initTexturesForGame() called?`); // prettier-ignore
 	}
 
 	return {
@@ -78,7 +77,7 @@ function createTextureCache(): TextureCache {
 	};
 }
 
-// The interactive game's texture cache. All existing `texturecache.foo()` call sites use this.
+/** The interactive game's texture cache. */
 const gameTextureCache = createTextureCache();
 
 export default gameTextureCache;

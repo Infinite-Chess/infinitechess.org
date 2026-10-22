@@ -6,6 +6,7 @@
 
 import type { Color } from '../../../../../shared/types/color.js';
 import type { DoubleCoords } from '../../../../../shared/util/coordutil.js';
+import type { AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
@@ -21,10 +22,11 @@ import preferences from '../../util/preferences.js';
 import perspective from './perspective.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { SettingsBus } from '../../util/SettingsBus.js';
-import { AttributeInfoInstanced } from '../../webgl/Renderable.js';
-import { createRenderable_Instanced_GivenInfo } from '../../board/rendering/renderable.js';
+import { createRenderable_Instanced_GivenInfo } from './gamerenderable.js';
 
-/** A sigle star particle. */
+// Types -----------------------------------------------------------------------
+
+/** A single star particle. */
 type Star = {
 	/** Determines if the star should use the light or dark tile color theme. */
 	isLight: boolean;
@@ -40,6 +42,8 @@ type Star = {
 	/** The timestamp when the star was created. */
 	createdAt: number;
 };
+
+// Constants -------------------------------------------------------------------
 
 /** The attribute info of our instanced models' vertex data. */
 const ATTRIB_INFO: AttributeInfoInstanced = {
@@ -102,7 +106,7 @@ const CONFIG = {
 	// fadeDuration: 0.0,
 } as const;
 
-// Module State ----------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** All star objects. The entire star field. */
 const stars: Star[] = [];
@@ -132,10 +136,7 @@ SettingsBus.addEventListener('starfield-toggle', (e) => {
  */
 function init(): void {
 	if (isInitialized) throw Error('Starfield is already initialized.');
-	if (!couldStarfieldEverBeVisible()) {
-		// console.log("Starfield cannot ever be visible in this game, not initializing.");
-		return; // Starfield cannot be visible in this game
-	}
+	if (!couldStarfieldEverBeVisible()) return; // Starfield cannot be visible in this game
 
 	// First, calculate the initial desired number of stars.
 	desiredNumStars = getDesiredNumStars();
@@ -198,7 +199,7 @@ function createStar(randomizeAge: boolean): Star {
 	};
 }
 
-/** Calculate's this frames desired number of stars, dependant on your screen area. */
+/** Calculates this frame's desired number of stars, dependent on your screen area. */
 function getDesiredNumStars(): number {
 	const screenBox = camera.getScreenBoundingBox(false);
 	const paddedWidth = screenBox.right - screenBox.left + CONFIG.screenPadding * 2;
@@ -224,10 +225,7 @@ function update(): void {
 	if (!isInitialized) return;
 
 	// Call for a render this frame if the starfield is visible
-	if (isStarfieldVisible()) {
-		frametracker.onVisualChange();
-		// console.log("Starfield visible, requesting render.");
-	}
+	if (isStarfieldVisible()) frametracker.onVisualChange();
 
 	// Update the desired number of stars for this frame
 	desiredNumStars = getDesiredNumStars();
@@ -259,7 +257,7 @@ function update(): void {
 	}
 
 	// 2. Add new stars if we are below the desired count ---
-	// This can happen if the user enlarges their window.```
+	// This can happen if the user enlarges their window.
 	while (stars.length < desiredNumStars) {
 		// Randomize the age (since we may be creating a lot at once)
 		stars.push(createStar(true));
@@ -301,7 +299,7 @@ function isStarfieldVisible(): boolean {
 	// If voids are present in the game, there's also a good chance
 	// we can see the starfield underneath them.
 	// It would take too much effort to determine if the void mesh
-	// overlaps with the screen, so just assume the're visible.
+	// overlaps with the screen, so just assume they're visible.
 	const gamefile = gameslot.getGamefile()!; // Will be present since starfield is only initialized when we're in a game
 	if (boardutil.getPieceCountOfType(gamefile.pieces, r.VOID) > 0) return true; // Voids are PRESENT
 

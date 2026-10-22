@@ -3,7 +3,7 @@
 /**
  * Pure board geometry: computes the bounding box of the board a camera sees at a given
  * position and scale, tile widths, and square centers. The actual drawing of the tiles
- * (its textures & shaders) lives in the per-context {@link boardtiles}.
+ * (its textures & shaders) lives in the per-context `boardtiles`.
  */
 
 import type { Camera } from './camera.js';
@@ -20,12 +20,14 @@ const SQUARE_CENTER: number = 0.5;
 // BigDecimal constants
 const ONE = bd.fromBigInt(1n);
 
-// Public API ------------------------------------------------------------------
+// Geometry --------------------------------------------------------------------
 
+/** Returns {@link SQUARE_CENTER} as a BigDecimal. */
 function getSquareCenter(): BigDecimal {
 	return bd.fromNumber(SQUARE_CENTER);
 }
 
+/** Returns {@link SQUARE_CENTER}. */
 function getSquareCenterAsNumber(): number {
 	return SQUARE_CENTER;
 }

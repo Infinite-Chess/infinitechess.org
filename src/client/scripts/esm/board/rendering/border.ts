@@ -1,8 +1,7 @@
 // src/client/scripts/esm/board/rendering/border.ts
 
 /**
- * This script renders the border, and star field
- * animation of games with a world border.
+ * Draws the stencil mask of a board's playable region, just inside its world border.
  */
 
 import type RenderContext from './RenderContext.js';
@@ -69,8 +68,6 @@ function drawPlayableRegionMask(
 
 	ctx.renderable.createRenderable(vertexData, 2, 'TRIANGLES', 'color', true).render();
 }
-
-// Exports ---------------------------------------------------------------------
 
 export default {
 	drawPlayableRegionMask,

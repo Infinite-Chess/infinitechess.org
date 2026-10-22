@@ -42,7 +42,7 @@ void main() {
 
     // Generate a pseudo-random value for displacement per line, varying with quantized time
     // This replaces drawing from a noise texture
-    float randomOffset = fract(sin(lineIndex * 123.456 + quantizedTime * 789.0) * 4567.89); // Example magic numbers
+    float randomOffset = fract(sin(lineIndex * 123.456 + quantizedTime * 789.0) * 4567.89);
 
     // Map randomOffset (0-1) to desired displacement range (-tearMaxDisplacementUV to +tearMaxDisplacementUV)
     float tearOffset = (randomOffset * 2.0 - 1.0) * tearMaxDisplacementUV;

@@ -9,7 +9,7 @@
 
 import type { Color } from '../../../../../shared/types/color.js';
 
-// =========================================== Quads ==================================================
+// Quads -----------------------------------------------------------------------
 
 /** [TRIANGLES] Generates vertex data for a 2D quad with NO COLOR DATA. */
 // prettier-ignore
@@ -159,7 +159,7 @@ function DashedRect(left: number, bottom: number, right: number, top: number, th
 	return data;
 }
 
-// =========================================== Circles ================================================
+// Circles ---------------------------------------------------------------------
 
 /** [TRIANGLES] Generates vertex data for a solid-colored circle composed of triangles. */
 // prettier-ignore
@@ -201,7 +201,7 @@ function GlowDot(x: number, y: number, radius: number, resolution: number, [r1,g
 		const theta = (i / resolution) * 2 * Math.PI;
 		const thisX = x + radius * Math.cos(theta);
 		const thisY = y + radius * Math.sin(theta);
-		data.push(...[thisX, thisY,   r2, g2, b2, a2]);
+		data.push(thisX, thisY,   r2, g2, b2, a2);
 	}
 
 	return data;
@@ -324,7 +324,7 @@ function RadialGradient(x: number, y: number, radius: number, colors: Color[], s
 	return data;
 }
 
-// =========================================== Other Shapes ================================================
+// Other Shapes ----------------------------------------------------------------
 
 /** [TRIANGLES] Generates vertex data for a four-sided, hollow rectangular prism. */
 // prettier-ignore
@@ -361,7 +361,7 @@ function BoxTunnel(left: number, bottom: number, startZ: number, right: number, 
 	];
 }
 
-// =========================================== Exports ================================================
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Quads

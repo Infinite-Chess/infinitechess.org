@@ -6,11 +6,11 @@
  *
  * This is a FACTORY: {@link createMaskedDraw} builds one masker bound to a single WebGL
  * context + ProgramManager. The module default is the interactive game's masker (set at
- * runtime via {@link init}, since the gl/ProgramManager only exist once WebGL boots); the
- * variant-preview tooltip creates its own. Game-only callers use the default unchanged.
+ * runtime via {@link init}, since the gl/ProgramManager only exist once WebGL boots); every
+ * other board creates its own. Game-only callers use the default unchanged.
  */
 
-import { ProgramManager } from './ProgramManager.js';
+import type { ProgramManager } from './ProgramManager.js';
 
 // Types -----------------------------------------------------------------------
 

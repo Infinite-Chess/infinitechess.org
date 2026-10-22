@@ -12,6 +12,7 @@ import type { Animation } from './animation/animation.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
 import type { BDCoords, Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
+import type { Renderable, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -26,7 +27,6 @@ import space from './space.js';
 import animation from './animation/animation.js';
 import boardgeometry from './boardgeometry.js';
 import instancedshapes from './instancedshapes.js';
-import { RenderableInstanced, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -135,7 +135,7 @@ function forEachAnimatedPiece(
 			pieces.forEach((p) => callback(bdcoords.fromCoords(p.coords), p.type)),
 		);
 		animation.forEachActiveKeyframe(a.hideKeyframes, segmentInfo.segmentNum, (pieces) =>
-			pieces.map(coordutil.getKeyFromCoords).forEach((c) => activeHides.add(c)),
+			pieces.forEach((c) => activeHides.add(coordutil.getKeyFromCoords(c))),
 		);
 	}
 	return activeHides;
@@ -209,15 +209,17 @@ function render(
 	inverted: boolean,
 	entityWidthVPixels: number,
 ): void {
-	const models: TypeGroup<RenderableInstanced> = {};
-	const models_hovered: TypeGroup<RenderableInstanced> = {};
+	const models: TypeGroup<Renderable> = {};
+	const models_hovered: TypeGroup<Renderable> = {};
+
+	const color: Color = [1, 1, 1, MINI_IMAGE_OPACITY];
+	const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
+	const color_hovered: Color = [1, 1, 1, 1];
+	const vertexData_hovered = instancedshapes.getDataColoredTexture(color_hovered, inverted);
 
 	// Create the models
 	for (const [typeStr, thisInstanceData] of Object.entries(instanceData)) {
 		if (thisInstanceData.length === 0) continue; // No pieces of this type visible
-
-		const color = [1, 1, 1, MINI_IMAGE_OPACITY] as Color;
-		const vertexData: number[] = instancedshapes.getDataColoredTexture(color, inverted);
 
 		const type = Number(typeStr);
 		const texture: WebGLTexture = ctx.textures.getTexture(type);
@@ -233,11 +235,6 @@ function render(
 		// Create the hovered model if it's non empty
 		const hoveredData = instanceData_hovered[type];
 		if (hoveredData !== undefined && hoveredData.length > 0) {
-			const color_hovered = [1, 1, 1, 1] as Color;
-			const vertexData_hovered = instancedshapes.getDataColoredTexture(
-				color_hovered,
-				inverted,
-			);
 			models_hovered[type] = ctx.renderable.createRenderable_Instanced_GivenInfo(
 				vertexData_hovered,
 				new Float32Array(hoveredData),

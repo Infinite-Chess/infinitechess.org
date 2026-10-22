@@ -92,15 +92,17 @@ is `rimraf dist` only, and never touches `pkg/`).
    `touch src/client/pkg/apeiron/pkg/.local-build`.
 2. Read the `.engine-version` stamp (the tag of the copy on disk).
 3. **Fetch the latest release** from `LATEST_RELEASE_API_URL`
-   (`…/Infinite-Chess/apeiron/releases/latest`), zod-validated. On any network/validation failure:
-   fall back to the existing local copy if present (build proceeds with the old engine), else error
-   out.
+   (`…/Infinite-Chess/apeiron/releases/latest`), zod-validated, authenticated with `GITHUB_TOKEN`
+   when set (CI sets it).
 4. **Up-to-date check** — if the stamped tag equals the remote tag _and_ `apeiron_bg.wasm` +
    `apeiron.js` exist, do nothing.
 5. **New version** — find the asset `apeiron-wasm.zip`, fetch it fully into memory, `unzipSync` (via
    `fflate`) **before** touching disk (so a bad download doesn't destroy the working copy), then
    wipe `pkg/` wholesale and write every entry at its archive-relative path (recreating the
    `snippets/` tree). Finally, stamp `.engine-version` with the new tag.
+
+If any of steps 3–5 fails, the build proceeds with the local copy, or fails with the reason when
+there is none. `copyEngineToDist()` likewise fails it if the pkg lacks the glue or `.wasm`.
 
 The wipe (rather than overwrite-in-place) matters: without it, each release's hash-named `snippets/`
 dir would accumulate in the persistent prod `pkg/`, and stale pre-rename files could linger.

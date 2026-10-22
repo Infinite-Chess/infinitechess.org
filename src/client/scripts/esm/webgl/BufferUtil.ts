@@ -1,7 +1,7 @@
 // src/client/scripts/esm/webgl/BufferUtil.ts
 
 /**
- * GPU buffers: creating one from vertex data, and rewriting a slice of one in place.
+ * GPU buffers: creating one from vertex data, and rewriting a slice or all of one.
  */
 
 // Types -----------------------------------------------------------------------
@@ -16,7 +16,7 @@
  */
 export type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The draw hint when creating buffers on the gpu. Supposedly, dynamically
  * choosing which hint based on your needs offers very minor performance improvement.
@@ -61,7 +61,7 @@ function updateIndices(
 }
 
 /**
- * Creates a WebGL buffer from the provided Float32Array data and binds it to the ARRAY_BUFFER target.
+ * Creates a WebGL buffer from the provided vertex data and binds it to the ARRAY_BUFFER target.
  * The buffer is populated with the data and then unbound.
  * @param data - The vertex data to be copied into the buffer.
  * @returns The created WebGL buffer.
@@ -81,8 +81,16 @@ function createFromData(gl: WebGL2RenderingContext, data: TypedArray): WebGLBuff
 	return buffer;
 }
 
+/** Replaces a buffer's whole contents with the data, for buffers refilled every draw. */
+function refill(gl: WebGL2RenderingContext, buffer: WebGLBuffer, data: TypedArray): void {
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+	gl.bufferData(gl.ARRAY_BUFFER, data, gl.STREAM_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
 export default {
 	// Functions
 	updateIndices,
 	createFromData,
+	refill,
 };

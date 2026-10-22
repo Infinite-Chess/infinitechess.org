@@ -7,12 +7,12 @@
 
 import type { UniformValue } from '../../../../webgl/Renderable.js';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
+import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
 
 import gamesound from '../../../../board/gamesound.js';
 import PerlinNoise from '../../../../util/PerlinNoise.js';
 import preferences from '../../../../util/preferences.js';
 import { BaseZone } from '../BaseZone.js';
-import { ProgramManager } from '../../../../webgl/ProgramManager.js';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
 import { VoronoiDistortionPass } from '../../../../webgl/postprocessing/passes/VoronoiDistortionPass.js';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
@@ -36,7 +36,7 @@ export class EchoRiftZone extends BaseZone {
 	/** How much the brightness will vary above and below the base brightness. */
 	private brightnessVariation: number = 0.07;
 
-	// ============ State ============
+	// --- State ---
 
 	/** The next timestamp the voronoi distortion pass will update the time value, revealing a different pattern. */
 	private nextCrackTime: number = Date.now();
@@ -107,10 +107,6 @@ export class EchoRiftZone extends BaseZone {
 
 	public update(): void {
 		// Update cracking of the voronoi distortion effect.
-
-		// voronoiDistortionPass.time = 632663;
-		// voronoiDistortionPass.time = Date.now() / 1000;
-		// voronoiDistortionPass.time = Math.floor(performance.now() / 400) * 10;
 		if (Date.now() > this.nextCrackTime) {
 			this.voronoiDistortionPass.time = performance.now() / 10;
 			this.nextCrackTime =
@@ -132,6 +128,5 @@ export class EchoRiftZone extends BaseZone {
 
 	public override getPasses(): PostProcessPass[] {
 		return [this.voronoiDistortionPass, this.colorGradePass];
-		// return [this.colorGradePass];
 	}
 }

@@ -17,7 +17,7 @@ import deltatime from '../board/deltatime.js';
 import boarddrag from './rendering/boarddrag.js';
 import selection from './chess/selection.js';
 import { Mouse } from './input.js';
-import Transition from './rendering/transitions/Transition.js';
+import transition from './rendering/transitions/transition.js';
 import perspective from './rendering/perspective.js';
 import guipromotion from './gui/guipromotion.js';
 import { listener_document, listener_canvas } from './listeners.js';
@@ -65,7 +65,7 @@ function update(): void {
 
 	boarddrag.checkIfBoardDropped(); // Needs to be before exiting from teleporting
 
-	if (Transition.areTransitioning()) return; // Exit if teleporting
+	if (transition.areTransitioning()) return; // Exit if teleporting
 
 	// Keyboard
 	detectPanning(); // Movement (WASD)

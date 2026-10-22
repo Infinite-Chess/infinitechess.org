@@ -58,7 +58,7 @@ class RenderContext {
 	readonly boardtiles: BoardTiles;
 
 	/** The color the screen is cleared to each frame in this context. */
-	#clearColor: Vec3;
+	#clearColor: Vec3 = webgl.CLEAR_COLOR;
 
 	constructor(params: RenderContextParams) {
 		this.gl = params.gl;
@@ -69,7 +69,6 @@ class RenderContext {
 		this.textures = params.textures;
 		this.maskedDraw = params.maskedDraw;
 		this.frames = params.frames;
-		this.#clearColor = [0.5, 0.5, 0.5]; // Fallback sky color. Replaced by boardtiles.ts.
 		this.renderable = createRenderableFactory(this.gl, this.programManager, this.camera);
 		this.boardtiles = createBoardTiles(this);
 	}

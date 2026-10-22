@@ -15,15 +15,15 @@
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
-import type { RawType } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
 import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import typeutil, { players } from '../../../../../shared/chess/util/typeutil.js';
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Stores fetched SVG elements, keyed by their unique svg id (e.g., 'pawn-white'). These ids are on the svg elements themselves. */
-const cachedPieceSVGs: { [pieceType: string]: SVGElement } = {};
+const cachedPieceSVGs: { [svgId: string]: SVGElement } = {};
 
 /** Tracks promises for ongoing SVG file fetch requests, using the file URL as the key, to prevent duplicates. */
 const processingCache: { [key: string]: Promise<void> } = {};
@@ -75,7 +75,6 @@ async function fetchLocation(location: string): Promise<void> {
 
 				Array.from(doc.getElementsByTagName('svg')).forEach((svg) => {
 					cachedPieceSVGs[svg.id] = svg;
-					// console.log(`Fetched piece svg at location ${location}`);
 				});
 			} catch (error) {
 				// Remove the failed promise from the cache to allow retrying
@@ -83,8 +82,6 @@ async function fetchLocation(location: string): Promise<void> {
 				throw error;
 			}
 		})();
-	} else {
-		// console.log(`Already fetching piece svg at location ${location}. Not sending duplicate request. Waiting..`);
 	}
 
 	await processingCache[url];
@@ -94,8 +91,6 @@ async function fetchLocation(location: string): Promise<void> {
  * Tints an SVG element by applying a multiplication filter using the specified color.
  * The tint is applied by multiplying the original colors with the provided [r, g, b, a] values.
  * For example, white (1,1,1) becomes the tint color and black (0,0,0) remains black.
- * @param svgElement
- * @param color
  */
 function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	// Ensure a <defs> element exists in the SVG
@@ -129,9 +124,8 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
 	defs.appendChild(filter);
 
 	// Apply the filter to the SVG element.
-	// svgElement.setAttribute('filter', `url(#${filterId})`);
 	{
-		// FIREFOX PATCH. Without this block, in firefox when converting the svg to an image, the filter is not applied.
+		// FIREFOX PATCH. Setting the filter on the <svg> itself isn't applied when firefox converts it to an image.
 		// Create a <g> element to wrap all children (except <defs>)
 		const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
 		group.setAttribute('filter', `url(#${filterId})`);
@@ -161,18 +155,22 @@ function tintSVG(svgElement: SVGElement, color: Color): SVGElement {
  */
 function getNeededSVGLocations(types: number[]): Set<string> {
 	const locations: Set<RawType> = new Set();
-	typeloop: for (const type of types) {
+	for (const type of types) {
 		const [raw, c] = typeutil.splitType(type);
-		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const checks: string[] = piecethemes.getSVGColorPriority(c);
-		for (const c of checks) {
-			const id = baseId + c;
-			if (id in cachedPieceSVGs) continue typeloop;
-		}
-		locations.add(raw);
+		if (findCachedSVG(raw, c) === undefined) locations.add(raw);
 	}
 
 	return piecethemes.getLocationsForTypes(locations);
+}
+
+/** Returns a raw type's cached svg, in its color's priority order, if any is cached. */
+function findCachedSVG(raw: RawType, color: Player): SVGElement | undefined {
+	const baseId = typeutil.getRawTypeStr(raw);
+	for (const ext of piecethemes.getSVGColorPriority(color)) {
+		const svg = cachedPieceSVGs[baseId + ext];
+		if (svg !== undefined) return svg;
+	}
+	return undefined;
 }
 
 /**
@@ -186,31 +184,27 @@ function getNeededSVGLocations(types: number[]): Set<string> {
 function getSVGIDs(types: number[], width?: number, height?: number): SVGElement[] {
 	let failed: boolean = false;
 	const svgs: SVGElement[] = [];
-	l: for (const type of types) {
+	for (const type of types) {
 		const [raw, c] = typeutil.splitType(type);
-		const tint = piecethemes.getBaseColorForType(raw, c);
-		const baseId = `${typeutil.getRawTypeStr(raw)}`;
-		const colorExts: string[] = piecethemes.getSVGColorPriority(c);
-		for (const c of colorExts) {
-			const id = baseId + c;
-			if (!(id in cachedPieceSVGs)) continue;
-			// Clone the SVG element
-			const cloned = cachedPieceSVGs[id]!.cloneNode(true) as SVGElement;
-
-			cloned.id = String(type); // Override 'pawn-white' with the integer piece type
-
-			// Set width and height if specified
-			if (width !== undefined) cloned.setAttribute('width', width.toString());
-			if (height !== undefined) cloned.setAttribute('height', height.toString());
-
-			// Tint if non-white
-			if (tint.some((channel) => channel !== 1)) tintSVG(cloned, tint);
-
-			svgs.push(cloned);
-			continue l;
+		const source = findCachedSVG(raw, c);
+		if (source === undefined) {
+			console.error(`SVG at path "${piecethemes.getLocationForType(raw)}" does not contain an svg with extensions ${piecethemes.getSVGColorPriority(c)} for ${typeutil.getRawTypeStr(raw)}`); // prettier-ignore
+			failed = true;
+			continue;
 		}
-		console.error(`SVG at path "${piecethemes.getLocationForType(raw)}" does not contain an svg with extensions ${colorExts} for ${baseId}`); // prettier-ignore
-		failed = true;
+
+		const cloned = source.cloneNode(true) as SVGElement;
+		cloned.id = String(type); // Override 'pawn-white' with the integer piece type
+
+		// Set width and height if specified
+		if (width !== undefined) cloned.setAttribute('width', width.toString());
+		if (height !== undefined) cloned.setAttribute('height', height.toString());
+
+		// Tint if non-white
+		const tint = piecethemes.getBaseColorForType(raw, c);
+		if (tint.some((channel) => channel !== 1)) tintSVG(cloned, tint);
+
+		svgs.push(cloned);
 	}
 	if (failed) throw Error('SVG theme is missing ids for pieces');
 	return svgs;
@@ -236,16 +230,7 @@ async function getSilhouetteSVG(rawType: RawType): Promise<SVGElement> {
  * @throws If the piece hasn't been fetched yet.
  */
 function getCachedSilhouetteSVG(rawType: RawType): SVGElement {
-	const baseId = typeutil.getRawTypeStr(rawType);
-	const colorExts = piecethemes.getSVGColorPriority(players.BLACK);
-	let source: SVGElement | undefined;
-	for (const ext of colorExts) {
-		const id = baseId + ext;
-		if (id in cachedPieceSVGs) {
-			source = cachedPieceSVGs[id];
-			break;
-		}
-	}
+	const source = findCachedSVG(rawType, players.BLACK);
 	if (source === undefined) throw new Error(`No cached SVG found for raw piece type ${rawType}`);
 
 	const clone = source.cloneNode(true) as SVGElement;
@@ -254,21 +239,10 @@ function getCachedSilhouetteSVG(rawType: RawType): SVGElement {
 	return clone;
 }
 
-/**
- * Appends all cached SVG elements directly to the document body for debugging purposes.
- * This allows visual inspection of the SVGs currently held in the cache.
- */
-function showCache(): void {
-	for (const svg of Object.values(cachedPieceSVGs)) {
-		document.body.appendChild(svg);
-	}
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	getSVGElements,
 	getSilhouetteSVG,
 	getCachedSilhouetteSVG,
-	showCache,
 };

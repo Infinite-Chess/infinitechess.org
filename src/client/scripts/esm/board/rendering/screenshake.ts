@@ -49,9 +49,9 @@ export interface ScreenShake {
 // Shake Parameters
 
 /** Maximum rotation in any direction (in degrees). */
-const MAX_ROTATION_DEGREES = 1.7; // Default: 2.1
+const MAX_ROTATION_DEGREES = 1.7;
 /** Maximum translation in any direction (in world units). */
-const MAX_TRANSLATION = 0.23; // Default: 0.28
+const MAX_TRANSLATION = 0.23;
 
 /** How quickly trauma fades. Higher is faster. */
 const TRAUMA_DECAY = 1.2;
@@ -69,7 +69,6 @@ function createScreenShake(hooks: ScreenShakeHooks = {}): ScreenShake {
 	// Functions -------------------------------------------------------------------
 
 	function trigger(amount: number): void {
-		// console.log("Shake trauma added: " + amount);
 		trauma = Math.min(trauma + amount, 1.0);
 		onTraumaChange?.();
 	}
@@ -91,8 +90,6 @@ function createScreenShake(hooks: ScreenShakeHooks = {}): ScreenShake {
 	function getShakeMatrix(): Mat4 {
 		if (trauma <= 0) return mat4.create(); // Returns an identity matrix
 
-		// The intensity of the shake is proportional to the square of the trauma.
-		// This makes small amounts of trauma barely noticeable, and large amounts very dramatic.
 		const shakePower = trauma;
 
 		/** Generates a random value in a [-1, 1] range. */

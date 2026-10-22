@@ -123,7 +123,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	 * Used for applying zone effects to selective light/dark tiles.
 	 */
 	async function initMaskTexture(): Promise<void> {
-		// Using 256x256 instead of 2x2 avoids creating an ring of higher moire around the camera in perspective mode.
+		// Using 256x256 instead of 2x2 avoids creating a ring of higher moire around the camera in perspective mode.
 
 		const tilesMask_IMG: HTMLImageElement = await checkerboardgenerator.createCheckerboardIMG(
 			'white',
@@ -133,6 +133,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		tilesMask = TextureLoader.loadTexture(ctx.gl, tilesMask_IMG, { mipmaps: false });
 	}
 
+	/** Generates the checkerboard tile textures from the current tile colors. */
 	async function initTextures(): Promise<void> {
 		const lightTilesCssColor = colorutil.arrayToCssColor(tileColors.light);
 		const darkTilesCssColor = colorutil.arrayToCssColor(tileColors.dark);
@@ -168,13 +169,6 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		const avgG = (tileColors.light[1] + tileColors.dark[1]) / 2;
 		const avgB = (tileColors.light[2] + tileColors.dark[2]) / 2;
 
-		// BEFORE STAR FIELD ANIMATION
-		// const dimAmount = 0.27; // Default: 0.27
-		// const skyR = avgR - dimAmount;
-		// const skyG = avgG - dimAmount;
-		// const skyB = avgB - dimAmount;
-
-		// AFTER STAR FIELD ANIMATION
 		const baseDim = 0.27;
 		const multiplierDim = 0.6;
 		const skyR = (avgR - baseDim) * multiplierDim;
@@ -182,7 +176,6 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		const skyB = (avgB - baseDim) * multiplierDim;
 
 		ctx.setClearColor([skyR, skyG, skyB]);
-		// ctx.setClearColor([0,0,0]); // Solid Black
 	}
 
 	// Rendering -------------------------------------------------------------------
@@ -191,14 +184,13 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 	function render(noiseTextures?: NoiseTextures, uniforms?: Record<string, UniformValue>): void {
 		// This prevents tearing when rendering in the same z-level and in perspective.
 		ctx.executeWithDepthFunc_ALWAYS(() => {
-			renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transprent boards look correct.
+			renderSolidCover(); // This is needed even outside of perspective, so when we zoom out, the rendered fractal transparent boards look correct.
 			renderFractalBoards(noiseTextures, uniforms);
 		});
 	}
 
 	/** Renders a box tunnel and floor around the camera, tinted the average tile color. */
 	function renderSolidCover(): void {
-		// const dist = camera.DIST_TO_RENDER_BOARD;
 		const dist = ctx.camera.getZFar() / Math.SQRT2;
 		const z = getRelativeZ();
 		const cameraZ = ctx.camera.getPosition(true)[2];
@@ -216,6 +208,7 @@ function createBoardTiles(ctx: RenderContext): BoardTiles {
 		model.render();
 	}
 
+	/** Renders the main board, and the fractal board beneath it while the main one fades out. */
 	function renderFractalBoards(
 		noiseTextures?: NoiseTextures,
 		uniforms?: Record<string, UniformValue>,

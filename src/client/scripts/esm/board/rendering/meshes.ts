@@ -8,6 +8,7 @@
  * [World Space] - DOES NOT require positional or scale transformations when rendering.
  */
 
+import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import type { Color } from '../../../../../shared/types/color.js';
 import type { Camera } from './camera.js';
 import type { BoardPos } from './boardpos.js';
@@ -21,7 +22,6 @@ import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import bdcoords from '../../../../../shared/util/bdcoords.js';
-import { Vec3 } from '../../../../../shared/util/math/vectors.js';
 import coordutil, { BDCoords, Coords, DoubleCoords } from '../../../../../shared/util/coordutil.js';
 
 import primitives from './primitives.js';
@@ -189,36 +189,6 @@ function RectWorld(bpos: BoardPos, boundingBox: BoundingBox, color: Color): numb
 	return primitives.Rect(left, bottom, right, top, color);
 }
 
-// /**
-//  * [World Space, TRIANGLES] Generates the vertex data of a filled rectangle.
-//  */
-// function RectWorld_Filled(boundingBox: BoundingBox, color: Color): number[] {
-// 	const boundingBoxBD = expandTileBoundingBoxToEncompassWholeSquare(boundingBox);
-// 	const { left, right, bottom, top } = applyWorldTransformationsToBoundingBox(boundingBoxBD);
-// 	return primitives.Quad_Color(left, bottom, right, top, color);
-// }
-
-// Transforming Vertices -------------------------------------------------------
-
-/** Applies a rotational & translational transformation to an array of points. */
-// function applyTransformToPoints(points: DoubleCoords[], rotation: number, translation: DoubleCoords): DoubleCoords[] {
-// 	// convert rotation angle to radians
-// 	const cos = Math.cos(rotation);
-// 	const sin = Math.sin(rotation);
-
-// 	// apply rotation matrix and translation vector to each point
-// 	const transformedPoints = points.map(point => {
-// 		const xRot = point[0] * cos - point[1] * sin;
-// 		const yRot = point[0] * sin + point[1] * cos;
-// 		const xTrans = xRot + translation[0];
-// 		const yTrans = yRot + translation[1];
-// 		return [xTrans, yTrans] as DoubleCoords;
-// 	});
-
-// 	// return transformed points as an array of length-2 arrays
-// 	return transformedPoints;
-// }
-
 // Other Generic Rendering Methods ---------------------------------------------
 
 /** Returns the position and uniform scale needed to render a board-space model. */
@@ -238,7 +208,7 @@ function getBoardRenderTransform(
  * Returns a model's transformed position that should be used when rendering its buffer model.
  *
  * Any model that has a bigint offset, should be able to subtract that offset
- * from our board position to obtain a number small emough for the gpu to render.
+ * from our board position to obtain a number small enough for the gpu to render.
  *
  * Typically this will always include numbers smaller than 10,000
  */
@@ -271,7 +241,6 @@ export default {
 	QuadWorld_ColorTexture,
 	getPieceTexCoords,
 	RectWorld,
-	// RectWorld_Filled,
 	// Other Generic Rendering Methods
 	getBoardRenderTransform,
 };

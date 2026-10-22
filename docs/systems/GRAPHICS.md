@@ -46,17 +46,17 @@ range, to prevent visual artifacts.
 [`space.ts`](/src/client/scripts/esm/board/rendering/space.ts) provides key conversion functions for
 converting from one coordinate space to the other.
 
-- `convertCoordToWorldSpace(coords)` — Grid → World. You may first have to cast BigInt coords to
-  BigDecimal coords via `bdcoords.FromCoords(coords)`.
-- `convertWorldSpaceToCoords(worldCoords)` — World → Grid (includes decimal precision).
-- `convertWorldSpaceToCoords_Rounded(worldCoords)` — World → Grid, returning the integer tile
-  coordinates the world space position is over.
+- `convertCoordToWorldSpace(coords, position, scale)` — Grid → World, given a board's position and
+  scale. You may first have to cast BigInt coords to BigDecimal coords via
+  `bdcoords.fromCoords(coords)`.
+- `convertWorldSpaceToCoords(boardpos, worldCoords)` — World → Grid (includes decimal precision).
+- `convertWorldSpaceToCoords_Rounded(boardpos, worldCoords)` — World → Grid, returning the integer
+  tile coordinates the world space position is over.
 
 [`mouse.ts`](/src/client/scripts/esm/game/mouse.ts) can be used to locate the mouse position in
 either coordinate space.
 
 - `getMouseWorld()` — Mouse position in world space.
-- `getTileMouseOver_Float()` — Mouse position in grid space (with decimal precision).
 - `getTileMouseOver_Integer()` — Mouse position in grid space, returning the integer tile
   coordinates the mouse is over.
 
@@ -115,9 +115,9 @@ just a list of integer coordinates and a color, returning a ready-to-render obje
 ## Rendering Vertex Data
 
 Once you have vertex data, pass it to
-[`createRenderable()`](/src/client/scripts/esm/board/rendering/renderable.ts) or
-[`createRenderable_Instanced()`](/src/client/scripts/esm/board/rendering/renderable.ts) to create a
-GPU-ready object that can instantly be rendered.
+[`createRenderable()`](/src/client/scripts/esm/game/rendering/gamerenderable.ts) or
+[`createRenderable_Instanced()`](/src/client/scripts/esm/game/rendering/gamerenderable.ts) to create
+an object that can instantly be rendered.
 
 They accept arguments for vertex data, instance data (if using instanced rendering), information on
 how you packed your vertex data with the position & color attributes, the drawing mode to use
@@ -127,15 +127,16 @@ The returned `Renderable` object has a `render()` property for instantly renderi
 generated your vertex data in world space, you don't have to specify transformation arguments when
 rendering for the item to appear in the correct place. If however your vertex data is in grid space
 (which is common for instance rendering), you should provide the `position` and `scale` arguments
-when rendering. Position is dependent on the board position (`meshes.getModelPosition()`), and scale
-is dependant on the board scale (`boardpos.getBoardScaleAsNumber()`). The render method uses these
-to automatically transform the points to world space when rendering.
+when rendering, both from `meshes.getBoardRenderTransform()`, which derives them from the board's
+position and scale. The render method uses these to automatically transform the points to world
+space when rendering.
 
-The `Renderable` object also has properties for updating its vertex/instance data internally,
-allowing you the option to skip generating a whole new Renderable every single frame. This is
-optimal when you have arbitrarily many objects to render, and their positions change infrequently.
-[`piecemodels.ts`](/src/client/scripts/esm/board/rendering/piecemodels.ts) for example does this
-when updating the model of the piece sprites.
+A `Renderable` is meant to be rendered the frame it's built; it reuses the context's buffers rather
+than creating new ones. A model kept across frames uses the matching `createPersistentRenderable*()`
+instead, which takes the same arguments and returns a `PersistentRenderable` owning its GPU buffers:
+update its vertex or instance data in place instead of rebuilding it, as
+[`piecemodels.ts`](/src/client/scripts/esm/board/rendering/piecemodels.ts) does for the piece
+sprites, and call its `dispose()` before replacing or dropping it.
 
 ## Shader Picking
 
@@ -154,8 +155,9 @@ we use:
 Other shaders can allow for more unique properties for each instance, such as `'arrows'` for the
 indicator arrows rendering, which allows a unique position, color (for opacity), and rotation, per
 arrow instance, or `'starfield'` which allows a unique position, color, and size, for each animated
-star. For a full list of available shaders and their compatible vertex data packing, see
-[`ProgramManager.ts`](/src/client/scripts/esm/webgl/ProgramManager.ts).
+star. For a full list of available shaders, see
+[`ProgramManager.ts`](/src/client/scripts/esm/webgl/ProgramManager.ts); each declares its vertex
+data packing in its GLSL.
 
 ## Integrating Into the Render Loop
 
@@ -220,17 +222,16 @@ Wiring notes for the factory pattern:
 
 - Modules whose game instance needs no `gl` (camera, boardpos, texturecache) build it at module
   load: `export default createX(...)`.
-- Modules whose game instance only exists after WebGL boots hold a `let gameInstance` set by a
-  runtime `init()`, and their free exports delegate to it (maskeddraw, renderable). This keeps
-  game-only callers writing `maskeddraw.execute(...)` unchanged. Either way the game ends up with
-  exactly ONE instance, but the two are wired opposite: `maskeddraw.init()` builds the masker for
+- Modules whose game instance only exists after WebGL boots hold it in a `let` set by a runtime
+  `init()`, and their free exports delegate to it (maskeddraw, gamerenderable). This keeps game-only
+  callers writing `maskeddraw.execute(...)` unchanged. Either way the game ends up with exactly ONE
+  instance, but the two are wired opposite: `maskeddraw.init()` builds the masker for
   `RenderContext` to take, while `RenderContext` builds the renderable factory for
-  `Renderable.init()` to take.
-- The renderable factory is split across two files: the generic `createRenderableFactory` lives in
-  [`webgl/Renderable.ts`](/src/client/scripts/esm/webgl/Renderable.ts) with the model types, while
-  the free create-functions live in
-  [`board/rendering/renderable.ts`](/src/client/scripts/esm/board/rendering/renderable.ts), so
-  `webgl/` stays free of any one board's wiring.
+  `gamerenderable.init()` to take.
+- The generic `createRenderableFactory` and the model types live in
+  [`webgl/Renderable.ts`](/src/client/scripts/esm/webgl/Renderable.ts); the game's free
+  create-functions live in
+  [`game/rendering/gamerenderable.ts`](/src/client/scripts/esm/game/rendering/gamerenderable.ts).
 
 Rule of thumb: **only make something a factory if two boards genuinely need two of it.** Otherwise
 leave it a singleton reading the game's context, or thread `ctx` if the preview must share the exact

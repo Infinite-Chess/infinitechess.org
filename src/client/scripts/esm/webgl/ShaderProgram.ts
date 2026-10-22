@@ -12,7 +12,7 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 
 	// Caches for attribute and uniform locations to avoid expensive lookups
 	private attributeLocations: Map<string, number> = new Map();
-	private uniformLocations: Map<string, WebGLUniformLocation> = new Map();
+	private uniformLocations: Map<string, WebGLUniformLocation | null> = new Map();
 
 	/**
 	 * Creates, compiles, and links a WebGL program from vertex and fragment shader source.
@@ -27,6 +27,8 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 		const fragmentShader = this.compileShader(gl.FRAGMENT_SHADER, fragmentSource);
 
 		this.program = this.createProgram(vertexShader, fragmentShader);
+		gl.deleteShader(vertexShader);
+		gl.deleteShader(fragmentShader);
 	}
 
 	/** Activates this shader program for use in rendering. */
@@ -36,7 +38,8 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 
 	/** Looks up and caches the location of a vertex attribute. */
 	public getAttributeLocation(name: Attribute): number {
-		if (this.attributeLocations.has(name)) return this.attributeLocations.get(name)!; // Pre-cached location
+		const cached = this.attributeLocations.get(name);
+		if (cached !== undefined) return cached; // Pre-cached location
 		// Manually fetch location (more expensive)
 		const location = this.gl.getAttribLocation(this.program, name);
 		// It's common for unused attributes to be optimized out, so this isn't
@@ -48,12 +51,13 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 
 	/** Looks up and caches the location of a uniform. */
 	public getUniformLocation(name: Uniform): WebGLUniformLocation | null {
-		if (this.uniformLocations.has(name)) return this.uniformLocations.get(name)!; // Pre-cached location
+		const cached = this.uniformLocations.get(name);
+		if (cached !== undefined) return cached; // Pre-cached location
 		// Manually fetch location (more expensive)
 		const location = this.gl.getUniformLocation(this.program, name);
 		// Unused uniforms are also common.
 		if (location === null) console.warn(`Uniform "${name}" not found in shader program.`);
-		this.uniformLocations.set(name, location!); // Cache the location
+		this.uniformLocations.set(name, location); // Cache the location
 		return location;
 	}
 
@@ -83,7 +87,7 @@ export class ShaderProgram<Attribute extends string, Uniform extends string> {
 	/**
 	 * Creates a shader of the given type, from the specified source code.
 	 * @param type - `gl.VERTEX_SHADER` or `gl.FRAGMENT_SHADER`
-	 * @param sourceText - The shader source code, in GLSL version 1.00
+	 * @param source - The shader source code, in GLSL ES 3.00
 	 */
 	private compileShader(type: number, source: string): WebGLShader {
 		const shader = this.gl.createShader(type);

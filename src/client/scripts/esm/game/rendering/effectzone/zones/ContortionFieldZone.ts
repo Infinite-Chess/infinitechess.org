@@ -6,11 +6,11 @@
 
 import type { UniformValue } from '../../../../webgl/Renderable.js';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
+import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
 
 import deltatime from '../../../../board/deltatime.js';
 import { BaseZone } from '../BaseZone.js';
 import { SineWavePass } from '../../../../webgl/postprocessing/passes/SineWavePass.js';
-import { ProgramManager } from '../../../../webgl/ProgramManager.js';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape.js';
 
@@ -18,7 +18,7 @@ export class ContortionFieldZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 3;
 
-	/** Post Processing Effect creating heat waves. */
+	/** Post Processing Effect creating sine waves. */
 	private sineWavePass: SineWavePass;
 
 	/** How fast the sine waves oscillate. */

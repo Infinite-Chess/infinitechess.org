@@ -7,7 +7,7 @@ uniform sampler2D u_sceneTexture;
 uniform float u_masterStrength; // 0.0 = no effect, 1.0 = full effect
 uniform vec2 u_amplitude;
 uniform vec2 u_frequency;
-uniform float u_angle; // The new angle in radians
+uniform float u_angle; // The angle of the primary wave axis, in radians
 uniform float u_time;
 
 in vec2 v_uv;

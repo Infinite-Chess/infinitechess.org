@@ -45,7 +45,7 @@ import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
 import arrowscalculator from '../../../board/rendering/arrows/arrowscalculator.js';
 import arrowinteraction from '../arrows/arrowinteraction.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -130,7 +130,7 @@ function update(): void {
 
 	if (candidate !== undefined) {
 		// Keep rendering while the candidate animation is active,
-		// OR there's an active drag.
+		// OR there's an active drag (its slide zone is animated).
 		frametracker.onVisualChange();
 
 		if (isDragActive) {
@@ -138,7 +138,6 @@ function update(): void {
 			slideZonePhase =
 				(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * deltatime.get()) %
 				(SLIDE_ZONE_GRADIENT.COLORS.length * SLIDE_ZONE_GRADIENT.SPACING);
-			frametracker.onVisualChange(); // Render this frame (slide zone is being animated)
 		}
 	}
 }
@@ -255,11 +254,7 @@ function findCandidateHoveredArrow(): HoveredArrow | undefined {
  * Determines if the mouse is in the slide zone and updates drag position accordingly.
  */
 function manageActiveDrag(mouseWorld: DoubleCoords): void {
-	// Slide zone depth in world space units
-	const slideZoneDepth =
-		2.0 *
-		arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext()) *
-		SLIDE_ZONE_WIDTH;
+	const slideZoneDepth = getSlideZoneDepth();
 	// Always use the 2D screen box for slide zone boundaries, even in perspective mode.
 	const screenBox = camera.getScreenBoundingBox(false);
 	const dir = candidate!.direction;
@@ -275,6 +270,12 @@ function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	} else {
 		updateOnScreenDrag();
 	}
+}
+
+/** The depth of the slide zone along the screen edge, in world space units. */
+function getSlideZoneDepth(): number {
+	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext());
+	return 2.0 * halfWidth * SLIDE_ZONE_WIDTH;
 }
 
 /** Mouse is in the slide zone — compute intersection and keep piece off-screen. */
@@ -420,11 +421,7 @@ function renderSlideZone(): void {
 	if (!isDragActive || !candidate) return;
 
 	const screenBox = camera.getScreenBoundingBox(false);
-	// Slide zone depth in world space units
-	const depth =
-		2.0 *
-		arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext()) *
-		SLIDE_ZONE_WIDTH;
+	const depth = getSlideZoneDepth();
 	const dir = candidate.direction;
 
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.

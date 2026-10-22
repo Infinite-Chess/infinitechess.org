@@ -18,7 +18,7 @@ import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import listeners from '../listeners.js';
-import Transition from '../rendering/transitions/Transition.js';
+import transition from '../rendering/transitions/transition.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 
@@ -193,7 +193,7 @@ function unloadGame(): void {
 	perspective.disable();
 	gameslot.unloadGame();
 	boardpos.eraseMomentum();
-	Transition.terminate();
+	transition.terminate();
 	// unloadGame() is its only hide, and all board pages ship it hidden.
 	listeners.getCanvas().classList.add('visibility-hidden');
 }

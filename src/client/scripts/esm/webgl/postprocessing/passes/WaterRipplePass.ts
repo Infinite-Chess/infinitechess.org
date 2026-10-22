@@ -7,7 +7,7 @@ import type { ProgramManager, ProgramMap } from '../../ProgramManager.js';
 export interface RippleState {
 	/** The center of the droplet in UV coordinates [0-1, 0-1]. */
 	center: [number, number];
-	/** The time snapshot in millseconds the ripple was created. */
+	/** The time snapshot in milliseconds the ripple was created. */
 	timeCreated: number;
 }
 
@@ -34,7 +34,7 @@ export class WaterRipplePass implements PostProcessPass {
 	public oscillationSpeed: number = 40.0;
 	/** The density of the rings in the ripple, in waves per UV unit. */
 	public frequency: number = 50.0;
-	/** How sharply the trailing waves decay. Hhigher values create a shorter tail. */
+	/** How sharply the trailing waves decay. Higher values create a shorter tail. */
 	public falloff: number = 200.0;
 
 	/** The brightness of the white glow on the wave crests. */
@@ -44,44 +44,23 @@ export class WaterRipplePass implements PostProcessPass {
 
 	// --- Internal State ---
 	private activeDroplets: RippleState[] = [];
-	private resolution: [number, number] = [1, 1];
 	// Pre-allocated arrays for performance to avoid creating new arrays every frame
 	private centersArray: Float32Array = new Float32Array(WaterRipplePass.MAX_DROPLETS * 2);
 	private timesArray: Float32Array = new Float32Array(WaterRipplePass.MAX_DROPLETS);
 
-	/**
-	 * Creates a new WaterRipplePass.
-	 * @param programManager - The ProgramManager instance to retrieve shader programs.
-	 * @param width - The current width of the canvas.
-	 * @param height - The current height of the canvas.
-	 */
-	constructor(programManager: ProgramManager, width: number, height: number) {
+	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('water_ripple');
-		this.setResolution(width, height);
 	}
 
 	/**
 	 * Updates the pass with the current list of active droplets.
-	 * Call this every frame from your main application loop.
+	 * Call this every frame.
 	 * @param droplets An array of active droplet states.
 	 */
 	public updateDroplets(droplets: RippleState[]): void {
 		// Clamp the number of droplets to the maximum allowed by the shader
 		const count = Math.min(droplets.length, WaterRipplePass.MAX_DROPLETS);
 		this.activeDroplets = droplets.slice(-count); // Keep the most recent droplets
-	}
-
-	/**
-	 * Informs the pass of the current rendering resolution.
-	 * This is crucial for correcting aspect ratio distortion,
-	 * preventing ripples from not being circular on non-square screens.
-	 * Call this whenever the canvas is resized.
-	 * @param width The width of the canvas.
-	 * @param height The height of the canvas.
-	 */
-	public setResolution(width: number, height: number): void {
-		this.resolution[0] = width;
-		this.resolution[1] = height;
 	}
 
 	// prettier-ignore
@@ -111,7 +90,7 @@ export class WaterRipplePass implements PostProcessPass {
 		gl.uniform1f(this.program.getUniformLocation('u_falloff'), this.falloff);
 		gl.uniform1f(this.program.getUniformLocation('u_glintIntensity'), this.glintIntensity);
 		gl.uniform1f(this.program.getUniformLocation('u_glintExponent'), this.glintExponent);
-		gl.uniform2fv(this.program.getUniformLocation('u_resolution'), this.resolution);
+		gl.uniform2f(this.program.getUniformLocation('u_resolution'), gl.canvas.width, gl.canvas.height);
 
 		if (dropletCount > 0) {
 			// Use subarray to only send data for active droplets

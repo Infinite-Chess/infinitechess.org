@@ -15,7 +15,7 @@
  * Previous: 256x256 transparent no mips (grey lines, no antialiasing, max moire)
  *
  * Antialiasing helps with smoothing the edges between squares,
- * and prevents tiles gittering when scrolling slowly.
+ * and prevents tiles jittering when scrolling slowly.
  */
 
 interface Options {
@@ -59,6 +59,7 @@ class TextureLoader {
 			gl.generateMipmap(gl.TEXTURE_2D);
 
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); // Smooth edges, mipmap interpollation (half-blurry all the time, EXCEPT with LOD bias of +0.5)
+			// Alternatives for testing:
 			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_LINEAR); // DEFAULT if not set. Jagged edges, mipmap interpollation (never blurry, though always jaggy)
 			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST); // Smooth edges, mipmap snapping (clear on some zoom levels, full blurry at others)
 			// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST); // Jagged edges, mipmap snapping (jagged all the time)
@@ -80,6 +81,7 @@ class TextureLoader {
 	}
 }
 
+/** Whether the value is a power of two. */
 function isPowerOfTwo(value: number): boolean {
 	return (value & (value - 1)) === 0;
 }

@@ -110,8 +110,8 @@ with a 1-year cache. The strategy splits by how each asset is invalidated:
 - **`generate:types`** (runs before every build/dev): `tsx` scripts generate TypeScript types from
   the translation TOMLs. See [TRANSLATIONS.md](/docs/systems/TRANSLATIONS.md).
 - **[build/engine-wasm.ts](/build/engine-wasm.ts)**: downloads the latest Apeiron WASM release from
-  GitHub into `src/client/pkg/apeiron/pkg/` (version-stamped). Network-failure tolerant — falls back
-  to the existing local copy.
+  GitHub into `src/client/pkg/apeiron/pkg/` (version-stamped). If the release can't be fetched it
+  falls back to the existing local copy, and fails the build when there is none.
 
 ## `npm run dev`
 

@@ -33,7 +33,7 @@ import LiveBoard from '../../../board/rendering/LiveBoard.js';
 import animation from '../../../board/rendering/animation/animation.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
-import WaterRipples from '../../../board/rendering/WaterRipples.js';
+import waterripples from '../../../board/rendering/waterripples.js';
 import boardframing from '../../../board/rendering/boardframing.js';
 import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
@@ -139,7 +139,7 @@ async function load(featuredBoard: FeaturedBoard, game: FeaturedGame): Promise<v
 
 	// The previous game's effects
 	animation.clearAnimations(board);
-	WaterRipples.clear(board);
+	waterripples.clear(board);
 	board.camera.shake.clear();
 	board.arrows.mode = arrows.isGameTooLarge(gamefile) ? 0 : arrows.DEFAULT_MODE;
 	const framing = boardframing.create(board, gamefile, FRAMING_CONFIG);
@@ -234,7 +234,7 @@ function update(featuredBoard: FeaturedBoard): void {
 	boardframing.glide(board, shown.framing);
 	const boundingBox = boardgeometry.getBoundingBoxOfBoard(board.camera, boardpos.getBoardPos(), boardpos.getBoardScale()); // prettier-ignore
 	arrows.update(board, shown.gamefile, boundingBox, []);
-	WaterRipples.update(board, false);
+	waterripples.update(board, false);
 	animation.update(board);
 	arrowshifts.executeArrowShifts(board, shown.gamefile, []);
 	clock.update(shown.gamefile);
@@ -249,7 +249,7 @@ function render(featuredBoard: FeaturedBoard): void {
 	board.clearScreen(); // BEFORE pipeline.begin(), whose clear needs the full stencil mask this restores
 	board.maskedDraw.onFrameStart();
 
-	const passes = WaterRipples.getPass(board);
+	const passes = waterripples.getPass(board);
 	board.pipeline.setPasses(passes);
 	if (passes.length > 0) board.pipeline.begin();
 

@@ -10,13 +10,13 @@
  * animations, arrows or ripples ever leak onto another.
  */
 
-import type { Ripples } from './WaterRipples.js';
+import type { Ripples } from './waterripples.js';
 import type { Animation } from './animation/animation.js';
 import type { ArrowsState } from './arrows/arrows.js';
 import type { RenderContextParams } from './RenderContext.js';
 
 import arrows from './arrows/arrows.js';
-import WaterRipples from './WaterRipples.js';
+import waterripples from './waterripples.js';
 import RenderContext from './RenderContext.js';
 import { PostProcessingPipeline } from '../../webgl/postprocessing/PostProcessingPipeline.js';
 
@@ -40,15 +40,13 @@ class LiveBoard extends RenderContext {
 	constructor(params: LiveBoardParams) {
 		super(params);
 		this.sound = params.sound;
-		const { width, height } = this.canvas;
-		this.ripples = WaterRipples.create(this.programManager, width, height);
+		this.ripples = waterripples.create(this.programManager);
 		this.pipeline = new PostProcessingPipeline(this.gl, this.programManager);
 	}
 
 	/** Resizes everything sized to the canvas. Call whenever its pixel buffer resizes. */
 	resize(width: number, height: number): void {
 		this.pipeline.resize(width, height);
-		WaterRipples.resize(this.ripples, width, height);
 	}
 }
 

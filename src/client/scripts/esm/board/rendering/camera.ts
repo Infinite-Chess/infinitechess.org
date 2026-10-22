@@ -11,9 +11,8 @@
  * modelMatrix  is custom for each rendered object, translating it how desired.
  *
  * This is a FACTORY: {@link createCamera} builds one independent camera instance.
- * The module default export is the interactive game's camera; the variant-preview
- * tooltip creates its own separate instance so its rotation/zoom never collide with
- * the game's.
+ * The module default export is the interactive game's camera; every other board
+ * creates its own separate instance so its rotation/zoom never collide with the game's.
  */
 
 import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
@@ -166,7 +165,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	let fieldOfView: number;
 
 	/** If true, the camera is stationed farther back. */
-	let DEBUG: boolean = false;
+	let debug: boolean = false;
 
 	/** The webgl context. */
 	let gl: WebGL2RenderingContext;
@@ -241,8 +240,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 			const rotXRad = rotX * (Math.PI / 180);
 			mat4.rotate(viewMat, viewMat, rotXRad, [1, 0, 0]);
 		}
-		// const rotYRad = rotY * (Math.PI / 180);
-		// mat4.rotate(viewMatrix, viewMatrix, rotYRad, [0,1,0])
 		const rotZRad = rotZ * (Math.PI / 180);
 		mat4.rotate(viewMat, viewMat, rotZRad, [0, 0, 1]);
 
@@ -291,7 +288,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 
 	/** Returns the devMode-sensitive camera position. */
 	function getPosition(ignoreDevmode?: boolean): Vec3 {
-		return jsutil.deepCopyObject(!ignoreDevmode && DEBUG ? POSITION_DEV_MODE : POSITION);
+		return jsutil.deepCopyObject(!ignoreDevmode && debug ? POSITION_DEV_MODE : POSITION);
 	}
 
 	function getZFar(): number {
@@ -307,20 +304,19 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	}
 
 	function toggleDebug(): void {
-		DEBUG = !DEBUG;
+		debug = !debug;
 		onVisualChange?.(); // Visual change, render the screen this frame
 		onPositionChange();
-		GameBus.dispatch('camera-debug-toggle');
 
-		console.log(`Toggled camera debug: ${DEBUG}`);
+		console.log(`Toggled camera debug: ${debug}`);
 	}
 
 	function getDebug(): boolean {
-		return DEBUG;
+		return debug;
 	}
 
 	function getScreenBoundingBox(
-		debugMode: boolean = DEBUG,
+		debugMode: boolean = debug,
 		pad: boolean = false,
 	): DoubleBoundingBox {
 		const box = jsutil.deepCopyObject(
@@ -357,7 +353,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		};
 	}
 
-	function getScreenHeightWorld(debugMode: boolean = DEBUG): number {
+	function getScreenHeightWorld(debugMode: boolean = debug): number {
 		const boundingBox = getScreenBoundingBox(debugMode);
 		return boundingBox.top - boundingBox.bottom;
 	}
@@ -391,16 +387,9 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		projMatrix = mat4.create(); // Same for every shader program
 
 		syncCanvasDimensions();
-		initPerspective(); // Initiates perspective, including the projection matrix
+		initProjMatrix();
 
 		initViewMatrix(); // Camera
-
-		// World matrix only needs to be initiated when rendering objects
-	}
-
-	/** Rebuilds the projection matrix, which is all that perspective setup amounts to. */
-	function initPerspective(): void {
-		initProjMatrix();
 	}
 
 	function resyncCanvasBuffer(): void {
@@ -422,7 +411,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 
 		resyncCanvasBuffer();
 		recalcCanvasVariables(); // Recalculate canvas-dependant variables (aspect, screenBoundingBox)
-		initPerspective(); // Projection matrix must stay in sync with the updated aspect ratio
+		initProjMatrix(); // Projection matrix must stay in sync with the updated aspect ratio
 
 		onVisualChange?.(); // Visual change, render the screen this frame
 
@@ -431,9 +420,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	}
 
 	function recalcCanvasVariables(): void {
-		aspect =
-			(gl.canvas as HTMLCanvasElement).clientWidth /
-			(gl.canvas as HTMLCanvasElement).clientHeight;
+		aspect = canvas.clientWidth / canvas.clientHeight;
 		initScreenBoundingBox();
 	}
 
@@ -460,9 +447,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 		if (!ignoreRotations) applyPerspectiveRotations(newViewMatrix);
 
 		viewMatrix = newViewMatrix;
-
-		// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
-		// because the combined transformMatrix is recalculated on every draw call.
 	}
 
 	/**
@@ -471,8 +455,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	 */
 	function initProjMatrix(): void {
 		mat4.perspective(projMatrix, fieldOfView, aspect, Z_NEAR, Z_FAR);
-		// We NO LONGER send the updated matrix to the shaders as a uniform anymore,
-		// because the combined transformMatrix is recalculated on every draw call.
 		onVisualChange?.();
 	}
 
@@ -483,7 +465,6 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	function initScreenBoundingBox(): void {
 		// Camera dist
 		let dist = POSITION[2];
-		// const dist = 7;
 		const thetaY = fieldOfView / 2; // Radians
 
 		// Length of missing side:
@@ -579,7 +560,7 @@ function createCamera(hooks: CameraHooks = {}): Camera {
 	};
 }
 
-// The interactive game's camera instance. All existing `camera.foo()` call sites use this.
+/** The interactive game's camera. */
 const gameCamera = createCamera({
 	onVisualChange: () => frametracker.onVisualChange(),
 	onCanvasResize: (detail: { width: number; height: number }): void => {

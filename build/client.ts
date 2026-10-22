@@ -16,6 +16,8 @@ import stripComments from 'glsl-strip-comments';
 import { transform, browserslistToTargets } from 'lightningcss';
 import esbuild, { BuildOptions, Metafile, Plugin, PluginBuild } from 'esbuild';
 
+import jsutil from '../src/shared/util/jsutil.js';
+
 import { getESBuildLogStatusLogger } from './plugins.js';
 import { getEngineGlueUrl, getEngineVersion } from './engine-wasm.js';
 
@@ -143,7 +145,7 @@ const GLSLMinifyPlugin = {
 				return {
 					errors: [
 						{
-							text: `Failed to minify GLSL file: ${error instanceof Error ? error.message : String(error)}`,
+							text: `Failed to minify GLSL file: ${jsutil.getErrorMessage(error)}`,
 							location: { file: args.path },
 						},
 					],
@@ -179,10 +181,8 @@ function writeManifest(metafile: Metafile): void {
 
 	// The engine glue can't be an esbuild entry point (it's served unbundled); copyEngineToDist
 	// hashes it separately, so fold its URL in here so templates resolve it like any other asset.
-	const engineGlueUrl = getEngineGlueUrl();
-	if (engineGlueUrl !== undefined) manifest['engine'] = engineGlueUrl;
-	const engineVersion = getEngineVersion();
-	if (engineVersion !== undefined) manifest['engineVersion'] = engineVersion;
+	manifest['engine'] = getEngineGlueUrl();
+	manifest['engineVersion'] = getEngineVersion();
 
 	fs.writeFileSync('./dist/manifest.json', JSON.stringify(manifest, null, 2));
 }

@@ -14,10 +14,7 @@ import type { Vec3 } from '../../../../../shared/util/math/vectors.js';
 
 // Constants -------------------------------------------------------------------
 
-/**
- * The default screen clear color, used to initialize a fresh context and as the
- * fallback for {@link clearScreen}. Per-context sky colors live on each RenderContext.
- */
+/** The screen clear color of a fresh context, until its board tiles set its sky color. */
 const CLEAR_COLOR: Vec3 = [0.5, 0.5, 0.5]; // Grey
 
 /**
@@ -36,7 +33,7 @@ const DEFAULT_DEPTH_FUNC = 'LEQUAL';
 
 /**
  * Whether to cull (skip) rendering back faces.
- * We can prevent the rasteurizer from calculating pixels on faces facing AWAY from us with backface culling.
+ * We can prevent the rasterizer from calculating pixels on faces facing AWAY from us with backface culling.
  *
  * IF WE AREN'T CAREFUL about all vertices going into the same clockwise/counterclockwise
  * direction, then some objects will be invisible!
@@ -45,7 +42,7 @@ const CULLING = false;
 
 /**
  * If true, whether a face is determined as a front face depends
- * on whether it's vertices move in a clockwise direction, otherwise counterclockwise.
+ * on whether its vertices move in a clockwise direction, otherwise counterclockwise.
  */
 const FRONT_FACE_IS_CW = true;
 
@@ -62,11 +59,7 @@ let gl: WebGL2RenderingContext;
  */
 function createContext(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 	// Without `alpha: false` in the options, shading yields incorrect colors! This removes the alpha component of the back buffer.
-	const newContext = canvasElement.getContext('webgl2', {
-		alpha: false,
-		stencil: true,
-		preserveDrawingBuffer: true, // Reduces likelihood of context lost?
-	}); // Stencil required for masking world border stuff
+	const newContext = canvasElement.getContext('webgl2', { alpha: false, stencil: true }); // Stencil required for masking world border stuff
 	if (!newContext) {
 		// WebGL2 not supported
 		alert(t.shared.errors.webgl_unsupported);
@@ -86,7 +79,7 @@ function createContext(canvasElement: HTMLCanvasElement): WebGL2RenderingContext
 		newContext.enable(newContext.CULL_FACE);
 		const dir = FRONT_FACE_IS_CW ? newContext.CW : newContext.CCW;
 		newContext.frontFace(dir); // Specifies what faces are considered front, depending on their vertices direction.
-		newContext.cullFace(newContext.BACK); // Skip rendering back faces. Alertnatively we could skip rendering FRONT faces.
+		newContext.cullFace(newContext.BACK); // Skip rendering back faces. Alternatively we could skip rendering FRONT faces.
 	}
 
 	newContext.clearStencil(0); // Good practice, although 0 is the default
@@ -103,7 +96,7 @@ function init(canvasElement: HTMLCanvasElement): WebGL2RenderingContext {
 // Rendering State -------------------------------------------------------------
 
 /**
- * Clears color buffer and depth buffers.
+ * Clears the color, depth and stencil buffers.
  * Needs to be called every frame.
  * @param glCtx - The context to clear.
  * @param color - The color to clear to. Defaults to the game clear color.
@@ -134,7 +127,7 @@ function enableBlending_Inverse(glCtx: WebGL2RenderingContext): void {
 }
 
 /**
- * Executes a function (typically a render function) while the depth function paramter
+ * Executes a function (typically a render function) while the depth function parameter
  * is `ALWAYS`. Objects will be rendered no matter if they are behind or on top of other objects.
  * This is useful for preventing tearing when objects are on the same z-level in perspective.
  * @param glCtx - The context to affect.
@@ -144,7 +137,7 @@ function executeWithDepthFunc_ALWAYS(glCtx: WebGL2RenderingContext, func: () => 
 	// This prevents tearing when rendering in the same z-level and in perspective.
 	glCtx.depthFunc(glCtx.ALWAYS); // Temporary toggle the depth function to ALWAYS.
 	func();
-	glCtx.depthFunc(glCtx[DEFAULT_DEPTH_FUNC]); // Return to the original blending.
+	glCtx.depthFunc(glCtx[DEFAULT_DEPTH_FUNC]); // Return to the default depth function.
 }
 
 /**
@@ -259,6 +252,8 @@ function executeWithInverseBlending(glCtx: WebGL2RenderingContext, func: () => v
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	CLEAR_COLOR,
 	// Context Creation
 	createContext,
 	init,
