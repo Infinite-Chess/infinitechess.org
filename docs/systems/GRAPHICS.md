@@ -46,17 +46,17 @@ range, to prevent visual artifacts.
 [`space.ts`](/src/client/scripts/esm/board/rendering/space.ts) provides key conversion functions for
 converting from one coordinate space to the other.
 
-- `convertCoordToWorldSpace(coords)` — Grid → World. You may first have to cast BigInt coords to
-  BigDecimal coords via `bdcoords.FromCoords(coords)`.
-- `convertWorldSpaceToCoords(worldCoords)` — World → Grid (includes decimal precision).
-- `convertWorldSpaceToCoords_Rounded(worldCoords)` — World → Grid, returning the integer tile
-  coordinates the world space position is over.
+- `convertCoordToWorldSpace(coords, position, scale)` — Grid → World, given a board's position and
+  scale. You may first have to cast BigInt coords to BigDecimal coords via
+  `bdcoords.fromCoords(coords)`.
+- `convertWorldSpaceToCoords(boardpos, worldCoords)` — World → Grid (includes decimal precision).
+- `convertWorldSpaceToCoords_Rounded(boardpos, worldCoords)` — World → Grid, returning the integer
+  tile coordinates the world space position is over.
 
 [`mouse.ts`](/src/client/scripts/esm/game/mouse.ts) can be used to locate the mouse position in
 either coordinate space.
 
 - `getMouseWorld()` — Mouse position in world space.
-- `getTileMouseOver_Float()` — Mouse position in grid space (with decimal precision).
 - `getTileMouseOver_Integer()` — Mouse position in grid space, returning the integer tile
   coordinates the mouse is over.
 
@@ -127,9 +127,9 @@ The returned `Renderable` object has a `render()` property for instantly renderi
 generated your vertex data in world space, you don't have to specify transformation arguments when
 rendering for the item to appear in the correct place. If however your vertex data is in grid space
 (which is common for instance rendering), you should provide the `position` and `scale` arguments
-when rendering. Position is dependent on the board position (`meshes.getModelPosition()`), and scale
-is dependant on the board scale (`boardpos.getBoardScaleAsNumber()`). The render method uses these
-to automatically transform the points to world space when rendering.
+when rendering, both from `meshes.getBoardRenderTransform()`, which derives them from the board's
+position and scale. The render method uses these to automatically transform the points to world
+space when rendering.
 
 A `Renderable` is meant to be rendered the frame it's built; it reuses the context's buffers rather
 than creating new ones. A model kept across frames uses the matching `createPersistentRenderable*()`
@@ -221,12 +221,12 @@ Wiring notes for the factory pattern:
 
 - Modules whose game instance needs no `gl` (camera, boardpos, texturecache) build it at module
   load: `export default createX(...)`.
-- Modules whose game instance only exists after WebGL boots hold a `let gameInstance` set by a
-  runtime `init()`, and their free exports delegate to it (maskeddraw, renderable). This keeps
-  game-only callers writing `maskeddraw.execute(...)` unchanged. Either way the game ends up with
-  exactly ONE instance, but the two are wired opposite: `maskeddraw.init()` builds the masker for
+- Modules whose game instance only exists after WebGL boots hold it in a `let` set by a runtime
+  `init()`, and their free exports delegate to it (maskeddraw, renderable). This keeps game-only
+  callers writing `maskeddraw.execute(...)` unchanged. Either way the game ends up with exactly ONE
+  instance, but the two are wired opposite: `maskeddraw.init()` builds the masker for
   `RenderContext` to take, while `RenderContext` builds the renderable factory for
-  `Renderable.init()` to take.
+  `renderable.init()` to take.
 - The renderable factory is split across two files: the generic `createRenderableFactory` lives in
   [`webgl/Renderable.ts`](/src/client/scripts/esm/webgl/Renderable.ts) with the model types, while
   the free create-functions live in

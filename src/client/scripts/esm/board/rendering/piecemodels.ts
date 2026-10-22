@@ -120,7 +120,7 @@ function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undef
  * Must be called whenever we add more undefineds placeholders to the this piece list.
  *
  * SLOWEST. Minimize calling.
- * @param type - The type of piece of which to generate the model for (e.g. "pawnsW")
+ * @param type - The type of piece of which to generate the model for
  */
 function genTypeModel(
 	ctx: RenderContext,
@@ -360,7 +360,7 @@ function overwritebufferdata(mesh: Mesh, piece: Piece): void {
 
 /**
  * Deletes the instance data of the specified piece within its piece type mesh
- * by overwriting it with Infinity's, then sends that change off to the gpu.
+ * by overwriting it with placeholders (NaN on the gpu), then sends that change off to the gpu.
  *
  * FAST, much faster than regenerating the entire mesh
  * whenever a piece moves or something is captured/generated!

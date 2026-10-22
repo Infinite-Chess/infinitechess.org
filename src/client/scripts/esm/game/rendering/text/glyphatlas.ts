@@ -82,7 +82,7 @@ const ATLAS_WIDTH = 512;
 
 /**
  * The Unicode replacement character (U+FFFD '?'). Rendered whenever
- * {@link render} encounters a character that is not in the atlas.
+ * `textrenderer` encounters a character that is not in the atlas.
  */
 const REPLACEMENT_CHAR = '\uFFFD';
 
