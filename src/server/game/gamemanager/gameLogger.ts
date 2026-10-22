@@ -62,7 +62,7 @@ function log(servergame: ServerGame): RatingData | undefined {
 	} catch (error) {
 		// This block will only execute if the transaction throws an error, causing a rollback.
 		const errorMessage = jsutil.getErrorMessage(error);
-		const errorStack = error instanceof Error ? error.stack : 'No stack trace available';
+		const errorStack = jsutil.getErrorStack(error);
 		void logEvents.addAndPrint(
 			`FATAL: Game log transaction failed and was rolled back for Game ID ${servergame.match.id}. Check unloggedGames log. Error: ${errorMessage}\n${errorStack}`,
 			'errLog',
@@ -339,7 +339,7 @@ function getICNOfGame(servergame: ServerGame, metadata: MetaData): string {
 		);
 	} catch (error: unknown) {
 		const errMessage = jsutil.getErrorMessage(error);
-		const errStack = error instanceof Error ? error.stack : 'No stack trace available';
+		const errStack = jsutil.getErrorStack(error);
 		// Re-throw error with additional context, the orchestrator will catch it and roll back the transaction.
 		throw Error(`Error converting game to ICN: ${errMessage}\n${errStack}`);
 	}
