@@ -1,8 +1,7 @@
 // src/client/scripts/esm/webgl/postprocessing/PostProcessingPipeline.ts
 
-import type { PostProcessPass } from './PostProcessPass.js';
-
 import type { ProgramManager } from '../ProgramManager.js';
+import type { PostProcessPass } from './PostProcessPass.js';
 
 import { PassThroughPass } from './passes/PassThroughPass.js';
 

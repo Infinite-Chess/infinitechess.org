@@ -9,8 +9,8 @@
 import type { BaseZone } from './BaseZone.js';
 import type { BoardTiles } from '../../../board/rendering/boardtiles.js';
 import type { UniformValue } from '../../../webgl/Renderable.js';
-import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass.js';
 import type { ProgramManager } from '../../../webgl/ProgramManager.js';
+import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass.js';
 
 import ImageLoader from '../../../util/ImageLoader.js';
 import preferences from '../../../util/preferences.js';

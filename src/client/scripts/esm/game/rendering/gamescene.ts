@@ -46,8 +46,8 @@ import arrowsgraphics from '../../board/rendering/arrows/arrowsgraphics.js';
 import arrowinteraction from './arrows/arrowinteraction.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from './effectzone/EffectZoneManager.js';
-import gamerenderable, { createRenderable } from './gamerenderable.js';
 import selectedpiecehighlightline from './highlights/selectedpiecehighlightline.js';
+import gamerenderable, { createRenderable } from './gamerenderable.js';
 
 // State -----------------------------------------------------------------------
 

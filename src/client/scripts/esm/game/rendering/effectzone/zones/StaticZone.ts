@@ -6,8 +6,8 @@
  */
 
 import type { UniformValue } from '../../../../webgl/Renderable.js';
-import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 
 import { BaseZone } from '../BaseZone.js';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';

@@ -7,9 +7,9 @@
 
 import type LiveBoard from './LiveBoard.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
+import type { RippleState } from '../../webgl/postprocessing/passes/WaterRipplePass.js';
 import type { ProgramManager } from '../../webgl/ProgramManager.js';
 import type { PostProcessPass } from '../../webgl/postprocessing/PostProcessPass.js';
-import type { RippleState } from '../../webgl/postprocessing/passes/WaterRipplePass.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
