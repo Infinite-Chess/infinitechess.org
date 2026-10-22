@@ -112,7 +112,7 @@ function refresh(): void {
 	const options: RequestOptions = {
 		method: 'GET',
 		hostname: 'api.github.com',
-		path: `/repos/${env.GITHUB_REPO}/contributors`,
+		path: `/repos/${env.GITHUB_REPO}/contributors?per_page=100`, // GitHub's max page size; the default is 30
 		headers: {
 			Accept: 'application/vnd.github+json',
 			Authorization: `Bearer ${env.GITHUB_API_KEY}`,
