@@ -34,7 +34,7 @@ import preferences from '../../util/preferences.js';
 import textrenderer from './text/textrenderer.js';
 import arrowscalculator from '../../board/rendering/arrows/arrowscalculator.js';
 import arrowinteraction from './arrows/arrowinteraction.js';
-import { createRenderable } from '../../board/rendering/renderable.js';
+import { createRenderable } from './gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 

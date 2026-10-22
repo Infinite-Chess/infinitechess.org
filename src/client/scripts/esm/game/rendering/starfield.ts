@@ -22,7 +22,7 @@ import preferences from '../../util/preferences.js';
 import perspective from './perspective.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { SettingsBus } from '../../util/SettingsBus.js';
-import { createRenderable_Instanced_GivenInfo } from '../../board/rendering/renderable.js';
+import { createRenderable_Instanced_GivenInfo } from './gamerenderable.js';
 
 // Types -----------------------------------------------------------------------
 

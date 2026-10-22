@@ -1,4 +1,4 @@
-// src/client/scripts/esm/board/rendering/renderable.ts
+// src/client/scripts/esm/game/rendering/gamerenderable.ts
 
 /**
  * Free create-functions that delegate to the interactive game's renderable factory.

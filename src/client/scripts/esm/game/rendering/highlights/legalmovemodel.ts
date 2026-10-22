@@ -43,7 +43,7 @@ import {
 	createRenderable,
 	createPersistentRenderable_Instanced,
 	createRenderable_Instanced,
-} from '../../../board/rendering/renderable.js';
+} from '../gamerenderable.js';
 
 // Types -----------------------------------------------------------------------
 

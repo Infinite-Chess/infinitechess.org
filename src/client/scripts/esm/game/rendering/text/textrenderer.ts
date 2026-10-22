@@ -14,7 +14,7 @@ import type { DoubleBoundingBox } from '../../../../../../shared/util/math/bound
 
 import primitives from '../../../board/rendering/primitives.js';
 import glyphatlas from './glyphatlas.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
 
 // Functions -------------------------------------------------------------------
 

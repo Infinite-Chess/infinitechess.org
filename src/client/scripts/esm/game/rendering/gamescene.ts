@@ -46,7 +46,7 @@ import arrowsgraphics from '../../board/rendering/arrows/arrowsgraphics.js';
 import arrowinteraction from './arrows/arrowinteraction.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from './effectzone/EffectZoneManager.js';
-import renderable, { createRenderable } from '../../board/rendering/renderable.js';
+import gamerenderable, { createRenderable } from './gamerenderable.js';
 import selectedpiecehighlightline from './highlights/selectedpiecehighlightline.js';
 
 // State -----------------------------------------------------------------------
@@ -81,7 +81,7 @@ function init(canvas: HTMLCanvasElement): void {
 		frames: frametracker,
 		sound: true,
 	});
-	renderable.init(gameContext.renderable); // Point the free create-functions at this context's factory
+	gamerenderable.init(gameContext.renderable); // Point the free create-functions at this context's factory
 	gameContext.boardtiles.init();
 
 	effectZoneManager = new EffectZoneManager(gl, programManager);

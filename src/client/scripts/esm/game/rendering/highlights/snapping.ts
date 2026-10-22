@@ -39,7 +39,7 @@ import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
 import preferences from '../../../util/preferences.js';
 import texturecache from '../../../chess/rendering/texturecache.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 
 // Types -----------------------------------------------------------------------

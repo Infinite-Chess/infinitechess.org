@@ -28,7 +28,7 @@ import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import specialrighthighlights from './specialrighthighlights.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
-import { createPersistentRenderable_Instanced } from '../../../board/rendering/renderable.js';
+import { createPersistentRenderable_Instanced } from '../gamerenderable.js';
 
 // State -----------------------------------------------------------------------
 

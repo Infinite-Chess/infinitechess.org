@@ -18,7 +18,7 @@ import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import boardview from '../boardview.js';
 import perspective from '../perspective.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
 
 // Types -----------------------------------------------------------------------
 

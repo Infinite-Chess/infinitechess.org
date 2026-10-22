@@ -32,7 +32,7 @@ import boardpos from '../../../../board/rendering/boardpos.js';
 import { Mouse } from '../../../input.js';
 import preferences from '../../../../util/preferences.js';
 import { GameBus } from '../../../../board/GameBus.js';
-import { createRenderable } from '../../../../board/rendering/renderable.js';
+import { createRenderable } from '../../gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 

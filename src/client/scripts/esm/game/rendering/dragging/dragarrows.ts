@@ -45,7 +45,7 @@ import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
 import arrowscalculator from '../../../board/rendering/arrows/arrowscalculator.js';
 import arrowinteraction from '../arrows/arrowinteraction.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
 
 // Types -----------------------------------------------------------------------
 

@@ -15,7 +15,7 @@ import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { VIDEO_MODE } from '../config.js';
-import { createRenderable } from '../../board/rendering/renderable.js';
+import { createRenderable } from './gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 

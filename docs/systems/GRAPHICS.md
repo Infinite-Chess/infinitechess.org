@@ -115,9 +115,9 @@ just a list of integer coordinates and a color, returning a ready-to-render obje
 ## Rendering Vertex Data
 
 Once you have vertex data, pass it to
-[`createRenderable()`](/src/client/scripts/esm/board/rendering/renderable.ts) or
-[`createRenderable_Instanced()`](/src/client/scripts/esm/board/rendering/renderable.ts) to create an
-object that can instantly be rendered.
+[`createRenderable()`](/src/client/scripts/esm/game/rendering/gamerenderable.ts) or
+[`createRenderable_Instanced()`](/src/client/scripts/esm/game/rendering/gamerenderable.ts) to create
+an object that can instantly be rendered.
 
 They accept arguments for vertex data, instance data (if using instanced rendering), information on
 how you packed your vertex data with the position & color attributes, the drawing mode to use
@@ -223,16 +223,15 @@ Wiring notes for the factory pattern:
 - Modules whose game instance needs no `gl` (camera, boardpos, texturecache) build it at module
   load: `export default createX(...)`.
 - Modules whose game instance only exists after WebGL boots hold it in a `let` set by a runtime
-  `init()`, and their free exports delegate to it (maskeddraw, renderable). This keeps game-only
+  `init()`, and their free exports delegate to it (maskeddraw, gamerenderable). This keeps game-only
   callers writing `maskeddraw.execute(...)` unchanged. Either way the game ends up with exactly ONE
   instance, but the two are wired opposite: `maskeddraw.init()` builds the masker for
   `RenderContext` to take, while `RenderContext` builds the renderable factory for
-  `renderable.init()` to take.
-- The renderable factory is split across two files: the generic `createRenderableFactory` lives in
-  [`webgl/Renderable.ts`](/src/client/scripts/esm/webgl/Renderable.ts) with the model types, while
-  the free create-functions live in
-  [`board/rendering/renderable.ts`](/src/client/scripts/esm/board/rendering/renderable.ts), so
-  `webgl/` stays free of any one board's wiring.
+  `gamerenderable.init()` to take.
+- The generic `createRenderableFactory` and the model types live in
+  [`webgl/Renderable.ts`](/src/client/scripts/esm/webgl/Renderable.ts); the game's free
+  create-functions live in
+  [`game/rendering/gamerenderable.ts`](/src/client/scripts/esm/game/rendering/gamerenderable.ts).
 
 Rule of thumb: **only make something a factory if two boards genuinely need two of it.** Otherwise
 leave it a singleton reading the game's context, or thread `ctx` if the preview must share the exact

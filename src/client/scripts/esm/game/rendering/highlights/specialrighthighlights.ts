@@ -22,7 +22,7 @@ import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import squarerendering from '../../../board/rendering/squarerendering.js';
-import { createPersistentRenderable_Instanced } from '../../../board/rendering/renderable.js';
+import { createPersistentRenderable_Instanced } from '../gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 

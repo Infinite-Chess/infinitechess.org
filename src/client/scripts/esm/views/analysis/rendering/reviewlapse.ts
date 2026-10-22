@@ -16,7 +16,7 @@ import gamescene from '../../../game/rendering/gamescene.js';
 import gamereview from '../gamereview.js';
 import drawarrows from '../../../game/rendering/highlights/annotations/drawarrows.js';
 import boardglyphs from '../../../board/rendering/glyphs/boardglyphs.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../../../game/rendering/gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 
