@@ -10,7 +10,7 @@
 import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 import type { TypedArray } from './BufferUtil.js';
 import type { ShaderProgram } from './ShaderProgram.js';
-import type { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
+import type { AttributeName, ProgramManager, ProgramMap } from './ProgramManager.js';
 
 import mat4 from './gl-matrix.js';
 import BufferUtil from './BufferUtil.js';
@@ -53,7 +53,7 @@ export type PrimitiveType =
 /** An object describing a single attribute inside our vertex data, and how many components it has per stride/vertex. */
 interface Attribute {
 	/** The name of the attribute. */
-	name: Attributes_All;
+	name: AttributeName;
 	/** How many values the attribute has in a single stride/vertex of our data array. */
 	numComponents: number;
 }

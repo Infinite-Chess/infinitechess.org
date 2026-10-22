@@ -36,106 +36,21 @@ import fsSource_voronoiDistortion from '../../../shaders/voronoi_distortion/frag
 
 // Types -----------------------------------------------------------------------
 
-// Attribute and Uniform Union Types for each ShaderProgram
-
-// Generic Shaders
-type Attributes_Color = 'a_position' | 'a_color';
-type Uniforms_Color = 'u_transformmatrix';
-type Attributes_ColorInstanced = 'a_position' | 'a_color' | 'a_instanceposition';
-type Uniforms_ColorInstanced = 'u_transformmatrix';
-type Attributes_Texture = 'a_position' | 'a_texturecoord';
-type Uniforms_Texture = 'u_transformmatrix' | 'u_sampler';
-type Attributes_TextureInstanced = 'a_position' | 'a_texturecoord' | 'a_instanceposition';
-type Uniforms_TextureInstanced = 'u_transformmatrix' | 'u_sampler';
-type Attributes_ColorTexture = 'a_position' | 'a_texturecoord' | 'a_color';
-type Uniforms_ColorTexture = 'u_transformmatrix' | 'u_sampler';
-// Specialized Shaders
-type Attributes_MiniImages = 'a_position' | 'a_texturecoord' | 'a_color' | 'a_instanceposition';
-type Uniforms_MiniImages = 'u_transformmatrix' | 'u_sampler' | 'u_size';
-type Attributes_Highlights = 'a_position' | 'a_color' | 'a_instanceposition';
-type Uniforms_Highlights = 'u_transformmatrix' | 'u_size';
-type Attributes_Arrows =
+/** Every vertex attribute name across the shaders. */
+export type AttributeName =
 	| 'a_position'
-	| 'a_instanceposition'
-	| 'a_instancecolor'
-	| 'a_instancerotation';
-type Uniforms_Arrows = 'u_transformmatrix';
-type Attributes_ArrowImages =
-	| 'a_position'
+	| 'a_color'
 	| 'a_texturecoord'
 	| 'a_instanceposition'
-	| 'a_instancecolor';
-type Uniforms_ArrowImages = 'u_transformmatrix' | 'u_sampler';
-type Attributes_Starfield =
-	| 'a_position'
-	| 'a_instanceposition'
 	| 'a_instancecolor'
+	| 'a_instancerotation'
 	| 'a_instancesize';
-type Uniforms_Starfield = 'u_transformmatrix';
-// Surface Level Effects
-type Attributes_BoardUberShader = 'a_position' | 'a_texturecoord' | 'a_color';
-type Uniforms_BoardUberShader =
-	// Global Uniforms
-	| 'u_colorTexture'
-	| 'u_maskTexture'
-	| 'u_perlinNoiseTexture'
-	| 'u_whiteNoiseTexture'
-	| 'u_resolution'
-	| 'u_pixelDensity'
-	// Uber-Shader Logic
-	| 'u_effectTypeA'
-	| 'u_effectTypeB'
-	| 'u_transitionProgress'
-	// "Spectral Edge" Uniforms (Effect Type 4)
-	| 'u4_flowDistance'
-	| 'u4_flowDirectionVec'
-	| 'u4_gradientRepeat'
-	| 'u4_maskOffset'
-	| 'u4_strength'
-	| 'u4_color1'
-	| 'u4_color2'
-	| 'u4_color3'
-	| 'u4_color4'
-	| 'u4_color5'
-	| 'u4_color6'
-	// "Iridescence" Uniforms (Effect Type 5)
-	| 'u5_flowDistance'
-	| 'u5_flowDirectionVec'
-	| 'u5_gradientRepeat'
-	| 'u5_maskOffset'
-	| 'u5_strength'
-	| 'u5_color1'
-	| 'u5_color2'
-	| 'u5_color3'
-	| 'u5_color4'
-	| 'u5_color5'
-	| 'u5_color6'
-	// "Ember Verge" Uniforms (Effect Type 11)
-	| 'u11_flowDistance'
-	| 'u11_flowDirectionVec'
-	| 'u11_gradientRepeat'
-	| 'u11_maskOffset'
-	| 'u11_strength'
-	| 'u11_color1'
-	| 'u11_color2'
-	| 'u11_color3'
-	| 'u11_color4'
-	| 'u11_color5'
-	| 'u11_color6'
-	// "Dusty Wastes" Uniforms (Effect Type 6)
-	| 'u6_strength'
-	| 'u6_noiseTiling'
-	| 'u6_uvOffset1'
-	| 'u6_uvOffset2'
-	// "Static Zone" Uniforms (Effect Type 7)
-	| 'u7_strength'
-	| 'u7_uvOffset'
-	| 'u7_pixelWidth'
-	| 'u7_pixelSize';
-// Post Processing Shaders
-type Attributes_PostPass = never;
+
+/** A shader drawn through a Renderable, which leaves its attribute and uniform names unchecked. */
+type Program_Renderable = ShaderProgram<string, string>;
+
+// Post Processing Shader Uniforms
 type Uniforms_PostPass = 'u_sceneTexture';
-type Attributes_ColorGrade = never;
 type Uniforms_ColorGrade =
 	| 'u_sceneTexture'
 	| 'u_masterStrength'
@@ -145,14 +60,12 @@ type Uniforms_ColorGrade =
 	| 'u_saturation'
 	| 'u_tintColor'
 	| 'u_hueOffset';
-type Attributes_Vignette = never;
 type Uniforms_Vignette =
 	| 'u_sceneTexture'
 	| 'u_masterStrength'
 	| 'u_radius'
 	| 'u_softness'
 	| 'u_intensity';
-type Attributes_SineWave = never;
 type Uniforms_SineWave =
 	| 'u_sceneTexture'
 	| 'u_masterStrength'
@@ -160,7 +73,6 @@ type Uniforms_SineWave =
 	| 'u_frequency'
 	| 'u_time'
 	| 'u_angle';
-type Attributes_Water = never;
 type Uniforms_Water =
 	| 'u_sceneTexture'
 	| 'u_masterStrength'
@@ -171,7 +83,6 @@ type Uniforms_Water =
 	| 'u_strength'
 	| 'u_oscillationSpeed'
 	| 'u_frequency';
-type Attributes_WaterRipple = never;
 type Uniforms_WaterRipple =
 	| 'u_sceneTexture'
 	| 'u_centers'
@@ -185,7 +96,6 @@ type Uniforms_WaterRipple =
 	| 'u_glintExponent'
 	| 'u_falloff'
 	| 'u_resolution';
-type Attributes_HeatWave = never;
 type Uniforms_HeatWave =
 	| 'u_sceneTexture'
 	| 'u_masterStrength'
@@ -193,7 +103,6 @@ type Uniforms_HeatWave =
 	| 'u_time'
 	| 'u_strength'
 	| 'u_resolution';
-type Attributes_VoronoiDistortion = never;
 type Uniforms_VoronoiDistortion =
 	| 'u_sceneTexture'
 	| 'u_masterStrength'
@@ -203,7 +112,6 @@ type Uniforms_VoronoiDistortion =
 	| 'u_ridgeThickness'
 	| 'u_ridgeStrength'
 	| 'u_resolution';
-type Attributes_Glitch = never; // Glitch pass does not use attributes
 type Uniforms_Glitch =
 	| 'u_sceneTexture'
 	| 'u_masterStrength'
@@ -216,114 +124,58 @@ type Uniforms_Glitch =
 	| 'u_resolution'
 	| 'u_devicePixelRatio';
 
-/** The Super Union of all possible attributes. */
-export type Attributes_All =
-	| Attributes_Color
-	| Attributes_ColorInstanced
-	| Attributes_Texture
-	| Attributes_TextureInstanced
-	| Attributes_ColorTexture
-	| Attributes_MiniImages
-	| Attributes_Highlights
-	| Attributes_Arrows
-	| Attributes_ArrowImages
-	| Attributes_Starfield
-	| Attributes_BoardUberShader
-	| Attributes_PostPass
-	| Attributes_ColorGrade
-	| Attributes_Vignette
-	| Attributes_SineWave
-	| Attributes_Water
-	| Attributes_WaterRipple
-	| Attributes_HeatWave
-	| Attributes_VoronoiDistortion
-	| Attributes_Glitch;
-
-// Each ShaderProgram type
-
-// Generic Shaders
-type Program_Color = ShaderProgram<Attributes_Color, Uniforms_Color>;
-type Program_ColorInstanced = ShaderProgram<Attributes_ColorInstanced, Uniforms_ColorInstanced>;
-type Program_Texture = ShaderProgram<Attributes_Texture, Uniforms_Texture>;
-type Program_TextureInstanced = ShaderProgram<
-	Attributes_TextureInstanced,
-	Uniforms_TextureInstanced
->;
-type Program_ColorTexture = ShaderProgram<Attributes_ColorTexture, Uniforms_ColorTexture>;
-// Specialized Shaders
-type Program_MiniImages = ShaderProgram<Attributes_MiniImages, Uniforms_MiniImages>;
-type Program_Highlights = ShaderProgram<Attributes_Highlights, Uniforms_Highlights>;
-type Program_Arrows = ShaderProgram<Attributes_Arrows, Uniforms_Arrows>;
-type Program_ArrowImages = ShaderProgram<Attributes_ArrowImages, Uniforms_ArrowImages>;
-type Program_Starfield = ShaderProgram<Attributes_Starfield, Uniforms_Starfield>;
-// Surface Level Effects
-type Program_BoardUberShader = ShaderProgram<Attributes_BoardUberShader, Uniforms_BoardUberShader>;
-// Post Processing Shaders
-type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
-type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
-type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
-type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
-type Program_Water = ShaderProgram<Attributes_Water, Uniforms_Water>;
-type Program_WaterRipple = ShaderProgram<Attributes_WaterRipple, Uniforms_WaterRipple>;
-type Program_HeatWave = ShaderProgram<Attributes_HeatWave, Uniforms_HeatWave>;
-type Program_VoronoiDistortion = ShaderProgram<
-	Attributes_VoronoiDistortion,
-	Uniforms_VoronoiDistortion
->;
-type Program_Glitch = ShaderProgram<Attributes_Glitch, Uniforms_Glitch>;
-
 export interface ProgramMap {
 	// --- Generic Shaders ---
 
 	/** Renders meshes with colored vertices. */
-	color: Program_Color;
+	color: Program_Renderable;
 	/** Instance renders a mesh with colored vertices. */
-	colorInstanced: Program_ColorInstanced;
+	colorInstanced: Program_Renderable;
 	/** Renders a textured mesh. */
-	texture: Program_Texture;
+	texture: Program_Renderable;
 	/** Instance renders a textured mesh. */
-	textureInstanced: Program_TextureInstanced;
+	textureInstanced: Program_Renderable;
 	/** Renders a textured mesh with colored vertices. */
-	colorTexture: Program_ColorTexture;
+	colorTexture: Program_Renderable;
 
 	// --- Specialized Shaders ---
 
 	/** Renders mini images. */
-	miniImages: Program_MiniImages;
+	miniImages: Program_Renderable;
 	/** Instance renders square highlights of a given size. */
-	highlights: Program_Highlights;
+	highlights: Program_Renderable;
 	/** Renders arrows (not the images, but the arrow tip). */
-	arrows: Program_Arrows;
+	arrows: Program_Renderable;
 	/** Renders arrow images. */
-	arrowImages: Program_ArrowImages;
+	arrowImages: Program_Renderable;
 	/** Renders the starfield squares. */
-	starfield: Program_Starfield;
+	starfield: Program_Renderable;
 
 	// --- Surface Level Effects ---
 
 	/** Renders textured surfaces with a masked noise texture animated behind them. */
-	board_uber_shader: Program_BoardUberShader;
+	board_uber_shader: Program_Renderable;
 
 	// --- Post Processing Shaders ---
 
 	/** Post Processing Pass-Through Shader. Zero effects. */
-	post_pass: Program_PostPass;
+	post_pass: ShaderProgram<never, Uniforms_PostPass>;
 	/** Post Processing Color Grading Shader. Several color effects. */
-	color_grade: Program_ColorGrade;
+	color_grade: ShaderProgram<never, Uniforms_ColorGrade>;
 	/** Post Processing Vignette Effect. */
-	vignette: Program_Vignette;
+	vignette: ShaderProgram<never, Uniforms_Vignette>;
 	/** Post Processing Dual Axis Sine Wave Distortion Effect. */
-	sine_wave: Program_SineWave;
+	sine_wave: ShaderProgram<never, Uniforms_SineWave>;
 	/** Post Processing Water Pond Distortion Effect. */
-	water: Program_Water;
+	water: ShaderProgram<never, Uniforms_Water>;
 	/** Post Processing Water Ripple Distortion Effect. */
-	water_ripple: Program_WaterRipple;
+	water_ripple: ShaderProgram<never, Uniforms_WaterRipple>;
 	/** Post Processing Heat Wave Distortion Effect. */
-	heat_wave: Program_HeatWave;
+	heat_wave: ShaderProgram<never, Uniforms_HeatWave>;
 	/** Post Processing Voronoi Cellular Noise Distortion Effect. */
-	voronoi_distortion: Program_VoronoiDistortion;
+	voronoi_distortion: ShaderProgram<never, Uniforms_VoronoiDistortion>;
 	/** Post Processing Glitch Effect. */
-	glitch: Program_Glitch;
+	glitch: ShaderProgram<never, Uniforms_Glitch>;
 }
 
 /** The vertex and fragment shader source codes for a shader. */
@@ -372,8 +224,7 @@ const SHADER_SOURCES: Record<keyof ProgramMap, ShaderSource> = {
  */
 export class ProgramManager {
 	private readonly gl: WebGL2RenderingContext;
-	// The cache stores programs by their key from ProgramMap. We use a base
-	// ShaderProgram type here internally, but the public `get` method provides full type safety.
+	/** Compiled programs by name. The public `get` returns each as its own ProgramMap type. */
 	private programCache: Map<keyof ProgramMap, ShaderProgram<string, string>> = new Map();
 
 	constructor(gl: WebGL2RenderingContext) {
@@ -385,7 +236,7 @@ export class ProgramManager {
 	 *
 	 * @template K - The key (name) of the program to retrieve.
 	 * @param programName - The name of the shader program (e.g., 'color', 'texture').
-	 * @returns The fully-typed ShaderProgram instance.
+	 * @returns The ShaderProgram instance, typed per {@link ProgramMap}.
 	 */
 	public get<K extends keyof ProgramMap>(programName: K): ProgramMap[K] {
 		// 1. Check if the program is already in the cache.

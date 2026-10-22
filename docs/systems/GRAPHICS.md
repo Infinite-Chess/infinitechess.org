@@ -155,8 +155,9 @@ we use:
 Other shaders can allow for more unique properties for each instance, such as `'arrows'` for the
 indicator arrows rendering, which allows a unique position, color (for opacity), and rotation, per
 arrow instance, or `'starfield'` which allows a unique position, color, and size, for each animated
-star. For a full list of available shaders and their compatible vertex data packing, see
-[`ProgramManager.ts`](/src/client/scripts/esm/webgl/ProgramManager.ts).
+star. For a full list of available shaders, see
+[`ProgramManager.ts`](/src/client/scripts/esm/webgl/ProgramManager.ts); each declares its vertex
+data packing in its GLSL.
 
 ## Integrating Into the Render Loop
 
