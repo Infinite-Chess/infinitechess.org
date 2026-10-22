@@ -25,9 +25,9 @@
 
 - The shell is zsh locally, bash on runners: always quote glob patterns in command args (e.g.
   `grep --include='*.ts'`), or zsh's nomatch aborts the command before it runs.
-- Line 1 of every script is its file path, written automatically by a hook when committing — don't
-  maintain it. Lines 3-7+ usually hold a brief description of the script's purpose, enough to
-  understand it without reading the whole thing.
+- Line 1 of every script is its file path, and its imports are ordered, both automatically by a hook
+  when committing — don't maintain either. Lines 3-7+ usually hold a brief description of the
+  script's purpose, enough to understand it without reading the whole thing.
 - TypeScript indents with tabs, not spaces. Prettier enforces styling automatically.
 - `npm run lint --silent` names every unused import — use it instead of working out removals by
   hand.
@@ -305,7 +305,8 @@ disagree, study more siblings before trusting either.
 - Line 1 is the file-path comment (hook-written). Lines 3–7+: a doc-comment describing what the
   script **is**.
 - Sections in order: imports → Types → Elements → Constants → Schemas → State → functional groups →
-  Exports. Every section gets a `// Section name -------` divider — never `=====` bars. Pad the
+  Exports. A script with at least two top-level constants, variables or functions gives every
+  section a `// Section name -------` divider; one with fewer gets none. Never `=====` bars. Pad the
   dashes so the line is exactly 80 characters. `// --- Name ---` may only mark sub-divisions.
 - Constants UPPER_SNAKE_CASE; mutable state camelCase under `// State`.
 - Locals follow whichever casing dominates the surrounding script — camelCase or snake_case
