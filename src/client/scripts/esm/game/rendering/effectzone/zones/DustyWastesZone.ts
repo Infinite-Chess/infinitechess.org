@@ -8,12 +8,12 @@
 
 import type { UniformValue } from '../../../../webgl/Renderable.js';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
+import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
 
 import deltatime from '../../../../board/deltatime.js';
 import { BaseZone } from '../BaseZone.js';
 import { GlitchPass } from '../../../../webgl/postprocessing/passes/GlitchPass.js';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
-import { ProgramManager } from '../../../../webgl/ProgramManager.js';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
 export class DustyWastesZone extends BaseZone {
@@ -25,7 +25,7 @@ export class DustyWastesZone extends BaseZone {
 
 	// --- Wind Effect Properties ---
 	/** The opacity of the wind effect. */
-	private windOpacity: number = 0.4; // Default: 0.35
+	private windOpacity: number = 0.4;
 
 	/** How many times the noise texture should tile the screen. */
 	private noiseTiling: number = 1.25;
@@ -61,7 +61,7 @@ export class DustyWastesZone extends BaseZone {
 	/** Maximum allowed glitch intensity ("trauma") before clamping. */
 	private maxTrauma: number = 2.0;
 
-	// ============ State ============
+	// --- State ---
 
 	// --- Wind Animation State ---
 	/** The wind direction in radians. 0 is to the right. */
@@ -82,7 +82,7 @@ export class DustyWastesZone extends BaseZone {
 	constructor(programManager: ProgramManager) {
 		super();
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.brightness = -0.2; // Default: 0.7
+		this.colorGradePass.brightness = -0.2;
 		this.colorGradePass.tint = [1.0, 0.75, 0.7]; // Slight red tint
 
 		this.glitchPass = new GlitchPass(programManager);
@@ -176,12 +176,6 @@ export class DustyWastesZone extends BaseZone {
 
 		// --- Wind update logic ---
 
-		// Optional animation of other properties
-
-		// this.windSpeed = math.getSineWaveVariation(Date.now() / 1000, 0, 0.9);
-		// this.windDirectionsOffset = math.getSineWaveVariation(Date.now() / 1000, 0, 2.5);
-		// this.windSpeedsOffset = math.getSineWaveVariation(Date.now() / 1000, 1, 2.0);
-
 		// Animate the wind direction.
 
 		this.windDirection += this.windRotationSpeed * this.windRotationParity * deltaTime;
@@ -198,11 +192,11 @@ export class DustyWastesZone extends BaseZone {
 			Math.sin(angle2) * this.windSpeed * this.windSpeedsOffset,
 		];
 
-		// 3. Integrate: Add the displacement for this frame (velocity * deltaTime) to the total offset.
-		this.uvOffset1[0] += (velocity1[0]! * deltaTime) % 1;
-		this.uvOffset1[1] += (velocity1[1]! * deltaTime) % 1;
-		this.uvOffset2[0] += (velocity2[0]! * deltaTime) % 1;
-		this.uvOffset2[1] += (velocity2[1]! * deltaTime) % 1;
+		// Integrate: Add the displacement for this frame (velocity * deltaTime) to the total offset, wrapped.
+		this.uvOffset1[0] = (this.uvOffset1[0] + velocity1[0]! * deltaTime) % 1;
+		this.uvOffset1[1] = (this.uvOffset1[1] + velocity1[1]! * deltaTime) % 1;
+		this.uvOffset2[0] = (this.uvOffset2[0] + velocity2[0]! * deltaTime) % 1;
+		this.uvOffset2[1] = (this.uvOffset2[1] + velocity2[1]! * deltaTime) % 1;
 
 		// --- Glitch update logic ---
 
@@ -231,7 +225,7 @@ export class DustyWastesZone extends BaseZone {
 		this.glitchPass.time += deltaTime;
 	}
 
-	// Copied from GlitchZone for combined effect
+	/** Picks a random delay until the next glitch burst. */
 	private randomizeNextGlitchTimer(): void {
 		this.timeUntilNextGlitch =
 			this.minInterval + Math.random() * (this.maxInterval - this.minInterval);

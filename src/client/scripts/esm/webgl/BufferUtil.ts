@@ -16,7 +16,7 @@
  */
 export type TypedArray = Float32Array | Int32Array | Int16Array | Int8Array;
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The draw hint when creating buffers on the gpu. Supposedly, dynamically
  * choosing which hint based on your needs offers very minor performance improvement.
@@ -61,7 +61,7 @@ function updateIndices(
 }
 
 /**
- * Creates a WebGL buffer from the provided Float32Array data and binds it to the ARRAY_BUFFER target.
+ * Creates a WebGL buffer from the provided vertex data and binds it to the ARRAY_BUFFER target.
  * The buffer is populated with the data and then unbound.
  * @param data - The vertex data to be copied into the buffer.
  * @returns The created WebGL buffer.

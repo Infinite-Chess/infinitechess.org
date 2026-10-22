@@ -6,8 +6,7 @@
  *
  * This is a FACTORY: {@link createBoardPos} builds one independent board-position
  * instance tied to a specific camera. The module default export is the interactive
- * game's; the variant-preview tooltip creates its own so its position/zoom never
- * collide with the game's. All existing `boardpos.foo()` call sites use the game one.
+ * game's; every other board creates its own so its position/zoom never collide with the game's.
  */
 
 import type { Camera } from './camera.js';
@@ -58,7 +57,7 @@ export interface BoardPos {
 	areZoomedOut(): boolean;
 	/**
 	 * This is true when your device is physically incapable
-	 * of reprenting single tiles with a single of your monitor's pixels.
+	 * of representing single tiles with a single of your monitor's pixels.
 	 * On retina displays you have to zoom out even more to reach this.
 	 */
 	isScaleSmallForInvisibleTiles(): boolean;
@@ -86,12 +85,12 @@ const ONE = bd.fromBigInt(1n);
  * @param onVisualChange - Flags the render loop when the position/scale changes.
  */
 function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
-	// Variables -------------------------------------------------------------------
+	// State -----------------------------------------------------------------------
 
 	/**
 	 * The position of the board in front of the camera.
 	 * The camera never moves, only the board beneath it.
-	 * A positon of [0,0] places the [0,0] square in the center of the screen.
+	 * A position of [0,0] places the [0,0] square in the center of the screen.
 	 */
 	let boardPos: BDCoords = bdcoords.fromCoords([0n, 0n]); // Coordinates
 	/** The current board panning velocity. */
@@ -142,15 +141,13 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 		if (!bd.hasDefaultPrecision(newPos[1]))
 			throw Error(`Cannot set board position Y to [${newPos[1].divex}] ${bd.toApproximateString(newPos[1])}. Does not have default precision.`); // prettier-ignore
 
-		// console.log(`New board position [${(boardPos[0].divex)},${boardPos[1].divex}]`, coordutil.stringifyBDCoords(boardPos));
 		boardPos = jsutil.deepCopyObject(newPos); // Copy
 		onVisualChange?.();
 	}
 
 	function setBoardScale(newScale: BigDecimal): void {
 		if (bd.compare(newScale, ZERO) <= 0)
-			return console.error(`Cannot set scale to a negative: ${bd.toApproximateString(newScale)}`); // prettier-ignore
-		// console.error("New scale:", bd.toApproximateString(newScale));
+			return console.error(`Cannot set scale to a non-positive: ${bd.toApproximateString(newScale)}`); // prettier-ignore
 
 		// Cap the scale
 		if (bd.compare(newScale, MAXIMUM_SCALE) > 0) {
@@ -267,7 +264,7 @@ function createBoardPos(cam: Camera, onVisualChange?: () => void): BoardPos {
 	};
 }
 
-// The interactive game's board position. All existing `boardpos.foo()` call sites use this.
+/** The interactive game's board position. */
 const gameBoardPos = createBoardPos(camera, () => frametracker.onVisualChange());
 
 export default gameBoardPos;

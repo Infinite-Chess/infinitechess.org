@@ -6,8 +6,6 @@
  *
  * This is a FACTORY: {@link createFrameTracker} builds one tracker per board. The module
  * default export is the interactive game's; every other board owns its own, on its RenderContext.
- *
- * ZERO dependancies.
  */
 
 // Types -----------------------------------------------------------------------
@@ -43,7 +41,7 @@ function createFrameTracker(): FrameTracker {
 	};
 }
 
-// The interactive game's frame tracker. All existing `frametracker.foo()` call sites use this.
+/** The interactive game's frame tracker. */
 const gameFrameTracker = createFrameTracker();
 
 export default gameFrameTracker;

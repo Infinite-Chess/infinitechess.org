@@ -129,7 +129,7 @@ function isAnnotationsButtonEnabled(): boolean {
 
 /** Erases every annotation, or collapses the drawn rays. */
 function callback_Collapse(): void {
-	annotations.Collapse();
+	annotations.collapse();
 }
 
 /** Replaces the erase button with the collapse button. */

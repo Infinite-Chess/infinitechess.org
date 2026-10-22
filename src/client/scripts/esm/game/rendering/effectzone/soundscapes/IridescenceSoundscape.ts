@@ -9,6 +9,8 @@
 
 import type { LayerConfig } from '../../../../audio/SoundLayer.js';
 
+// Constants -------------------------------------------------------------------
+
 /** The first two layers of the Iridescence soundscape (lower pitch). */
 const layers12: LayerConfig[] = [
 	{
@@ -152,6 +154,8 @@ const layers34: LayerConfig[] = [
 		],
 	},
 ];
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	layers12,

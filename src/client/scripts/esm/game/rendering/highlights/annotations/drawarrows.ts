@@ -34,24 +34,16 @@ import preferences from '../../../../util/preferences.js';
 import { GameBus } from '../../../../board/GameBus.js';
 import { createRenderable } from '../../../../board/rendering/renderable.js';
 
-// Events ----------------------------------------------------------------------
-
-// Stop drawing arrow if the board steals our pointer to pinch.
-GameBus.addEventListener('steal-pointer', (e) => {
-	if (pointerId !== e.detail.pointerId) return; // Not the pointer drawing the arrow, don't stop using it.
-	stopDrawing();
-});
-
 // Constants -------------------------------------------------------------------
 
 /** Properties for the drawn arrows.*/
 const ARROW = {
 	/** Width of the arrow's rectangular body, where 1.0 spans a full square. */
-	BODY_WIDTH: 0.24, // Default: 0.24
+	BODY_WIDTH: 0.24,
 	/** Width of the base of the arrowhead (perpendicular to arrow direction), where 1.0 spans a full square. */
-	TIP_WIDTH: 0.55, // Default: 0.55
+	TIP_WIDTH: 0.55,
 	/** Length of the arrowhead (along arrow direction), where 1.0 spans a full square. */
-	TIP_LENGTH: 0.37, // Default: 0.37
+	TIP_LENGTH: 0.37,
 	/**
 	 * The minimum desired length of the arrow's body, as a proportion of the total arrow length.
 	 * E.g., 0.5 means the body should try to be at least 50% of the total arrow length.
@@ -60,7 +52,7 @@ const ARROW = {
 	 * Valid range: [0.0, 1.0]. 0.0 means no minimum proportional body length is enforced beyond
 	 * what's left after the tip takes ARROW.TIP_LENGTH. 1.0 means the arrow tries to be all body.
 	 */
-	MIN_BODY_PROPORTION: 0.4, // Default: 0.4   Example: Body should be at least 30% of total arrow length
+	MIN_BODY_PROPORTION: 0.4,
 	/** Offset of the arrow's base from the starting coordinate, in percentage of 1 tile width. */
 	BASE_OFFSET: 0.35,
 };
@@ -68,12 +60,22 @@ const ARROW = {
 const ZERO = bd.fromBigInt(0n);
 const ONE = bd.fromBigInt(1n);
 
+// State -----------------------------------------------------------------------
+
 /** This will be defined if we are CURRENTLY drawing an arrow. */
 let drag_start: Coords | undefined;
 /** The ID of the pointer that is drawing the arrow. */
 let pointerId: string | undefined;
 /** The last known position of the pointer drawing an arrow. */
 let pointerWorld: DoubleCoords | undefined;
+
+// Events ----------------------------------------------------------------------
+
+// Stop drawing arrow if the board steals our pointer to pinch.
+GameBus.addEventListener('steal-pointer', (e) => {
+	if (pointerId !== e.detail.pointerId) return; // Not the pointer drawing the arrow, don't stop using it.
+	stopDrawing();
+});
 
 // Updating --------------------------------------------------------------------
 
@@ -102,7 +104,7 @@ function update(arrows: Arrow[]): void {
 					// Snap to nearest hovered entity
 					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
 				} else {
-					// Snap to the current eminated (blue line) snap
+					// Snap to the current emanated (blue line) snap
 					drag_start = coordutil.copyCoords(snapCoords!);
 				}
 			} else {
@@ -125,6 +127,7 @@ function update(arrows: Arrow[]): void {
 	}
 }
 
+/** Stops drawing the arrow, discarding it. */
 function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
@@ -140,7 +143,6 @@ function stopDrawing(): void {
 function addDrawnArrow(arrows: Arrow[]): { changed: boolean; deletedArrow?: Arrow } {
 	if (!pointerWorld) return { changed: false }; // Probably stopped drawing while looking into sky?
 
-	// console.log("Adding drawn arrow");
 	let drag_end: Coords;
 
 	const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
@@ -199,6 +201,7 @@ function createArrow(start: Coords, end: Coords): Arrow {
 
 // Rendering -------------------------------------------------------------------
 
+/** Renders the arrows, including the one currently being drawn. */
 function render(arrows: Arrow[]): void {
 	// Add the arrow currently being drawn
 	const drawingCurrentlyDrawn = drag_start ? addDrawnArrow(arrows) : { changed: false };
@@ -222,9 +225,7 @@ function render(arrows: Arrow[]): void {
 }
 
 /**
- * Generates vertex data for a single arrow.
- * @param startWorld - The starting coordinates [x, y] of the arrow's base (world space).
- * @param endWorld - The ending coordinates [x, y] of the arrow's tip (world space).
+ * Generates the world-space vertex data for a single arrow, clamped to the view.
  * @param color - The color [r, g, b, a] of the arrow.
  * @returns The vertex data for the arrow (x,y, r,g,b,a).
  */
@@ -397,7 +398,6 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 		// Tip gets the rest of the total length.
 		actualTipLength = length - actualBodyLength;
 		// Scale body width and tip width based on how their actual length compares to their desired length.
-		// desiredTipLength is guaranteed > ARROW_DRAW_THRESHOLD here.
 		const ratio = actualTipLength / desiredTipLength;
 		actualBodyWidth = bodyWidthArg * ratio;
 		actualTipWidth = tipWidthArg * ratio;

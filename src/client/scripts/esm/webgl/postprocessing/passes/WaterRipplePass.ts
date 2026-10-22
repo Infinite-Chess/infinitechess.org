@@ -7,7 +7,7 @@ import type { ProgramManager, ProgramMap } from '../../ProgramManager.js';
 export interface RippleState {
 	/** The center of the droplet in UV coordinates [0-1, 0-1]. */
 	center: [number, number];
-	/** The time snapshot in millseconds the ripple was created. */
+	/** The time snapshot in milliseconds the ripple was created. */
 	timeCreated: number;
 }
 
@@ -34,7 +34,7 @@ export class WaterRipplePass implements PostProcessPass {
 	public oscillationSpeed: number = 40.0;
 	/** The density of the rings in the ripple, in waves per UV unit. */
 	public frequency: number = 50.0;
-	/** How sharply the trailing waves decay. Hhigher values create a shorter tail. */
+	/** How sharply the trailing waves decay. Higher values create a shorter tail. */
 	public falloff: number = 200.0;
 
 	/** The brightness of the white glow on the wave crests. */
@@ -62,7 +62,7 @@ export class WaterRipplePass implements PostProcessPass {
 
 	/**
 	 * Updates the pass with the current list of active droplets.
-	 * Call this every frame from your main application loop.
+	 * Call this every frame.
 	 * @param droplets An array of active droplet states.
 	 */
 	public updateDroplets(droplets: RippleState[]): void {

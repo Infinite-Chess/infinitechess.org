@@ -5,8 +5,7 @@
  *
  * The game's factory is owned by its RenderContext; {@link init} points these functions at
  * it, so game-only callers write `createRenderable(...)` without threading a context.
- * Callers rendering into a different context (the variant-preview tooltip) go through their
- * own `ctx.renderable` instead.
+ * Callers rendering into any other board's context go through its `ctx.renderable` instead.
  */
 
 import type { ProgramMap } from '../../webgl/ProgramManager.js';
@@ -21,13 +20,19 @@ import type {
 	TextureInfo,
 } from '../../webgl/Renderable.js';
 
+// State -----------------------------------------------------------------------
+
 /** The interactive game's renderable factory, supplied at runtime by {@link init}. */
 let gameFactory: RenderableFactory;
+
+// Initialization --------------------------------------------------------------
 
 /** Points the free create-functions at the interactive game's factory. */
 function init(factory: RenderableFactory): void {
 	gameFactory = factory;
 }
+
+// Creating Renderables --------------------------------------------------------
 
 /** Creates a renderable model in the game's context. See {@link RenderableFactory}. */
 function createRenderable(
@@ -75,6 +80,8 @@ function createRenderable_Instanced_GivenInfo<K extends keyof ProgramMap>(
 ): RenderableInstanced {
 	return gameFactory.createRenderable_Instanced_GivenInfo(vertexData, instanceData, attribInfoInstanced, mode, shader, textures); // prettier-ignore
 }
+
+// Exports ---------------------------------------------------------------------
 
 export {
 	createRenderable,

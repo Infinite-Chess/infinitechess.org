@@ -27,7 +27,7 @@ import squarerendering from '../../../../board/rendering/squarerendering.js';
 // Constants -------------------------------------------------------------------
 
 /** The color of preset squares for the variant. */
-const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.19   Transparent orange (makes preset squares less noticeable/distracting)
+const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.24]; // Transparent orange (makes preset squares less noticeable/distracting)
 
 /**
  * To make single Square highlight more visible than rays (which
@@ -35,7 +35,7 @@ const PRESET_SQUARE_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.19   Transpa
  */
 const OPACITY_OFFSET = 0.08;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The preset square overrides if provided from the ICN.
@@ -70,13 +70,15 @@ function getSquaresBelowWorld(
 	const dists: number[] = [];
 
 	const entityHalfWidthWorld = snapping.getEntityWidthWorld() / 2;
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
 
 	// Iterate through each highlight to see if the mouse world is within ENTITY_WIDTH_VPIXELS of it
 	highlights.forEach((coords) => {
 		const coordsWorld = space.convertCoordToWorldSpace(
 			bdcoords.fromCoords(coords),
-			boardpos.getBoardPos(),
-			boardpos.getBoardScale(),
+			boardPos,
+			boardScale,
 		);
 		const dist_cheby = vectors.chebyshevDistanceDoubles(coordsWorld, world);
 		if (dist_cheby < entityHalfWidthWorld) {
@@ -121,7 +123,7 @@ function update(highlights: Coords[]): void {
 					highlights.splice(index, 1); // Already highlighted, Remove
 				else highlights.push(closestEntityToWorld.coords); // Add
 			} else if (snapCoords) {
-				// Snap to the current eminated (blue line) snap. Toggle the highlight on its coords.
+				// Snap to the current emanated (blue line) snap. Toggle the highlight on its coords.
 				const index = highlights.findIndex((coords) =>
 					coordutil.areCoordsEqual(coords, snapCoords),
 				);
@@ -158,13 +160,14 @@ function getPresetOverrides(): Coords[] | undefined {
 	return preset_squares;
 }
 
-/** Clears the preset ray overrides from the ICN. */
+/** Clears the preset square overrides from the ICN. */
 function clearPresetOverrides(): void {
 	preset_squares = undefined;
 }
 
 // Rendering -------------------------------------------------------------------
 
+/** Renders the preset squares, the square highlights, and the hovered ones brighter. */
 function render(highlights: Coords[]): void {
 	const presetSquares =
 		preset_squares ?? variantrules.getSquarePresets(gameslot.getGamefile()!.variant?.mod);
@@ -193,7 +196,7 @@ function render(highlights: Coords[]): void {
 
 	// Render hovered highlights
 
-	if (!boardpos.areZoomedOut()) return; // Don't increase opacity of highlighgts when zoomed in
+	if (!boardpos.areZoomedOut()) return; // Don't increase opacity of highlights when zoomed in
 
 	const allHovered = getAllSquaresHovered(highlights);
 	if (allHovered.length > 0) {

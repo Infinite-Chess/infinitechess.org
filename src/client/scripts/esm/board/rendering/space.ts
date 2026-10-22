@@ -1,7 +1,7 @@
 // src/client/scripts/esm/board/rendering/space.ts
 
 /**
- * This script converts world-space coordinates to square coordinates, and vice verca.
+ * This script converts world-space coordinates to square coordinates, and vice versa.
  *
  * Where square coordinates are where the pieces are located,
  * world-space coordinates are where in space objects are actually rendered.
@@ -91,6 +91,7 @@ function convertCoordToWorldSpace(
 	return [getAxis(coords[0], position[0]), getAxis(coords[1], position[1])];
 }
 
+/** Takes a square coordinate, returns its world-space location, ignoring the square center. */
 function convertCoordToWorldSpace_IgnoreSquareCenter(
 	coords: BDCoords,
 	position: BDCoords,

@@ -10,6 +10,7 @@
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
@@ -23,14 +24,13 @@ import piecemodels from '../../../board/rendering/piecemodels.js';
 import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
-import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
+import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import specialrighthighlights from './specialrighthighlights.js';
-import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
 import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The current piece selected, if there is one. */
 let pieceSelected: Piece | undefined;
@@ -44,12 +44,12 @@ let selectedPieceLegalMoves: LegalMoves | undefined;
 let model_SelectedPiece: RenderableInstanced | undefined;
 
 /**
- * An model using instanced-rendering for rendering the
+ * A model using instanced-rendering for rendering the
  * non-capturing selected piece's legal move highlights
  */
 let model_NonCapture: RenderableInstanced | undefined;
 /**
- * An model using instanced-rendering for rendering the
+ * A model using instanced-rendering for rendering the
  * capturing selected piece's legal move highlights
  */
 let model_Capture: RenderableInstanced | undefined;
@@ -106,7 +106,7 @@ function render(): void {
  * and the models of pieces legal moves of which we're currently hovering over their arrow,
  * and the model of the special rights highlights.
  *
- * Basically everything that relies on {@link model_Offset}
+ * Basically everything that relies on the legal move model's offset.
  */
 function regenerateAll(): void {
 	regenSelectedPieceLegalMovesHighlightsModel();
@@ -114,13 +114,12 @@ function regenerateAll(): void {
 	specialrighthighlights.regenModel();
 }
 
-// Regenerates the model for all highlighted legal moves.
+/** Regenerates the models of the selected piece's legal move highlights. */
 function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	if (!pieceSelected) return;
-	// console.log("Regenerating legal moves model..");
 
 	// The model of the selected piece's legal moves
-	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
+	const selectedPieceColor = typeutil.getColorFromType(pieceSelected.type);
 	const color_options = {
 		isOpponentPiece: selection.isOpponentPieceSelected(),
 		isPremove: selection.arePremoving(),
@@ -128,7 +127,7 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	const color: Color = preferences.getLegalMoveHighlightColor(color_options);
 	const { NonCaptureModel, CaptureModel } =
 		legalmovemodel.generateModelsForPiecesLegalMoveHighlights(
-			pieceSelected!.coords,
+			pieceSelected.coords,
 			selectedPieceLegalMoves!,
 			selectedPieceColor,
 			color,
@@ -137,8 +136,8 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	model_Capture = CaptureModel;
 
 	// The selected piece highlight model
-	const vertexData: number[] = legalmoveshapes.getDataLegalMoveSquare(color);
-	const coords = pieceSelected!.coords;
+	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
+	const coords = pieceSelected.coords;
 	const offsetCoord = coordutil.subtractCoords(coords, legalmovemodel.getOffset());
 	const instanceData: bigint[] = [...offsetCoord];
 	model_SelectedPiece = createRenderable_Instanced(

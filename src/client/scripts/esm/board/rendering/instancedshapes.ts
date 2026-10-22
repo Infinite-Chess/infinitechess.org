@@ -6,9 +6,6 @@
  *
  * Many are used for rendering legal moves, like the square, dot, or corner triangles.
  * The plus sign is used for special rights highlighting.
- *
- * The vertex data returned from any shape in this script
- * ALWAYS has a stride length of 6 (x,y, r,g,b,a)
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
@@ -19,7 +16,7 @@ import primitives from './primitives.js';
 import preferences from '../../util/preferences.js';
 import boardgeometry from './boardgeometry.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Properties for the dots that are rendered on legal squares without an occupying piece.
@@ -59,18 +56,18 @@ const BOX_OUTLINE = {
 };
 
 /**
- * Properties for the plus sign that is rendered when the special rights highlighing
+ * Properties for the plus sign that is rendered when the special rights highlighting
  * debug mode is enabled, next to each piece that has its special rights.
  */
 const PLUS_SIGN = {
 	/** Default position of the plus sign center within a square ([0,0] is square center, [0.5,0.5] is top-right corner) */
-	POSITION: [0.3, 0.3] as DoubleCoords, // Default: [0.3, 0.3]
+	POSITION: [0.3, 0.3] as DoubleCoords,
 	/** Length of both arms (horizontal and vertical) where 1.0 spans full square */
-	ARM_LENGTH: 0.4, // Default: 0.4
+	ARM_LENGTH: 0.4,
 	/** Width of the plus sign arms */
-	EDGE_WIDTH: 0.12, // Default: 0.12
+	EDGE_WIDTH: 0.12,
 	/** Added to color alpha for better visibility */
-	OPACITY_OFFSET: 0.2, // Default: 0.2
+	OPACITY_OFFSET: 0.2,
 };
 
 // Functions -------------------------------------------------------------------
@@ -328,6 +325,8 @@ function getDataColoredTexture(color: Color, inverted: boolean): number[] {
 	}
 	return primitives.Quad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getDataLegalMoveSquare,

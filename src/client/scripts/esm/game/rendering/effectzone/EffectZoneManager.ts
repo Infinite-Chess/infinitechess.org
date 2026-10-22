@@ -10,6 +10,7 @@ import type { BaseZone } from './BaseZone.js';
 import type { BoardTiles } from '../../../board/rendering/boardtiles.js';
 import type { UniformValue } from '../../../webgl/Renderable.js';
 import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass.js';
+import type { ProgramManager } from '../../../webgl/ProgramManager.js';
 
 import ImageLoader from '../../../util/ImageLoader.js';
 import preferences from '../../../util/preferences.js';
@@ -19,7 +20,6 @@ import { OceanZone } from './zones/OceanZone.js';
 import { StaticZone } from './zones/StaticZone.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import { EchoRiftZone } from './zones/EchoRiftZone.js';
-import { ProgramManager } from '../../../webgl/ProgramManager.js';
 import { EmberVergeZone } from './zones/EmberVergeZone.js';
 import { DustyWastesZone } from './zones/DustyWastesZone.js';
 import { IridescenceZone } from './zones/IridescenceZone.js';
@@ -205,7 +205,6 @@ export class EffectZoneManager {
 			targetZoneForDistance !== this.currentZone
 		) {
 			// A new transition needs to start.
-			// console.log('Starting transition to new zone.');
 			this.transitionTargetZone = targetZoneForDistance;
 			this.transitionStartTime = Date.now();
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
@@ -219,7 +218,6 @@ export class EffectZoneManager {
 			this.transitionTargetZone !== this.currentZone // And we're not already reversing
 		) {
 			// The user has changed their mind and is moving back. We need to reverse the transition.
-			// console.log(`Reversing transition. Now going from ${this.transitionTargetZone.name} to ${this.currentZone.name}`);
 
 			// 1. The 'from' and 'to' zones are swapped.
 			const oldTarget = this.transitionTargetZone;
@@ -245,18 +243,11 @@ export class EffectZoneManager {
 				? Math.min((Date.now() - this.transitionStartTime) / this.transitionDuration, 1.0)
 				: 0.0;
 
-		// Debugging
-		// console.log(
-		// 	`Current: ${fromZone.name}, `,
-		// 	`Target: ${toZone.name}, `,
-		// 	`Alpha: ${transitionAlpha.toFixed(2)}`
-		// );
-
 		// Update individual zone states
 		this.currentZone.update();
 		if (this.transitionTargetZone) this.transitionTargetZone.update();
 
-		// Only all for an animation frame if the current zone isn't the origin, or if we're mid-transition.
+		// Only call for an animation frame if the current zone isn't the origin, or if we're mid-transition.
 		// This ensures cpu usage isn't spiked from Zone Effects when near origin.
 		if (
 			(this.currentZone !== this.zones['The Beginning'] &&

@@ -39,7 +39,7 @@ export class WaterPass implements PostProcessPass {
 	private centersArray: Float32Array = new Float32Array(WaterPass.MAX_SOURCES * 2);
 
 	/**
-	 * Creates a new PondPass.
+	 * Creates a new WaterPass.
 	 * @param programManager - The ProgramManager instance to retrieve the shader program.
 	 * @param width - The current width of the canvas.
 	 * @param height - The current height of the canvas.

@@ -19,7 +19,7 @@ import piecethemes from '../../../../../shared/chess/util/piecethemes.js';
 import svgcache from './svgcache.js';
 import svgtoimageconverter from '../../util/svgtoimageconverter.js';
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The cache storing HTMLImageElement objects for each piece type.
@@ -41,17 +41,13 @@ async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
 	);
 	if (types.length === 0) return;
 
-	// console.log("Needed piece types to load image cache:", types);
-
 	try {
 		// 2. Get SVG elements using the existing svgcache
 		// No width/height needed here as normalization will handle sizing later
 		const svgElements = await svgcache.getSVGElements(types);
-		// console.log(`Retrieved ${svgElements.length} SVG elements.`);
 
 		// 3. Convert SVGs to initial Image elements
 		const initialImages = await svgtoimageconverter.convertSVGsToImages(svgElements);
-		// console.log(`Converted ${initialImages.length} SVGs to initial images.`);
 
 		// 4. Normalize images and populate the cache
 		// Patches firefox bug that darkens the image (when it is partially transparent) caused by double-multiplying the RGB channels by the alpha channel
@@ -66,20 +62,15 @@ async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
 				.normalizeImagePixelData(img, 512) // High size to retain resolution during the drawing and re-serialization.
 				.then((normalizedImg) => {
 					cachedImages[Number(img.id)] = normalizedImg;
-					// Optional: Log successful caching of a specific type
-					// console.log(`Cached normalized image for type ${typeutil.debugType(Number(img.id))}`);
 				})
 				.catch((error) => {
 					console.error(`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`, error); // prettier-ignore
-					// Decide how to handle normalization failures - potentially throw?
 				});
 			normalizationPromises.push(promise);
 		}
 
 		// Wait for all normalizations to complete
 		await Promise.all(normalizationPromises);
-
-		// console.log(`Image cache initialization complete. Cached ${Object.keys(cachedImages).length} images.`);
 	} catch (error) {
 		console.error('Error during image cache initialization:', error);
 		// Clear cache on failure to avoid partial state
@@ -98,10 +89,6 @@ function getPieceImage(type: number): HTMLImageElement {
 	const image = cachedImages[type];
 	if (!image)
 		throw new Error(`Image for piece type ${typeutil.debugType(type)} not found in cache. Was initImagesForGame() called?`); // prettier-ignore
-	// Optional: Return a clone to prevent external modification of the cached element?
-	// For simple display, returning the direct reference is usually fine and more performant.
-	// If you plan to modify the image attributes (like style) elsewhere, cloning might be safer:
-	// return image.cloneNode(true) as HTMLImageElement;
 	return image;
 }
 

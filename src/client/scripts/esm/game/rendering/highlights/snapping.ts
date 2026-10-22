@@ -4,7 +4,7 @@
  * This script:
  * * Enables mouse-ray snapping to pieces, square annotes, and other rays when zoomed out,
  * making it easy to line up long distance shots without having to do big number math.
- * * Manages all renderd entities when zoomed out.
+ * * Manages all rendered entities when zoomed out.
  * * Initiates transitions to all mini images and square annotes clicked.
  */
 
@@ -52,7 +52,7 @@ type Snap = {
 	color: Color;
 	/** The type of piece to render at the snap point, if applicable */
 	type?: number;
-	/** The source that eminated the line we are snapping to, if we are snapping. */
+	/** The source that emanated the line we are snapping to, if we are snapping. */
 	source?: BDCoords;
 };
 
@@ -316,7 +316,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	/**
 	 * At this point, there is no intersections of lines to snap to.
 	 *
-	 * Next, eminate lines in all directions from each entity, seeing where they cross
+	 * Next, emanate lines in all directions from each entity, seeing where they cross
 	 * existing lines, calculating what we should snap to.
 	 */
 
@@ -377,7 +377,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 
 /**
  * Returns a snap for every ray / line intersection point currently below the pointer.
- * Does not include eminated blue line snap points.
+ * Does not include emanated blue line snap points.
  */
 function getHoveredRaySnaps(world: DoubleCoords): Snap[] {
 	if (!isSnappingEnabledThisFrame()) return [];
@@ -424,7 +424,7 @@ function transitionToHoveredIfClicked(): void {
 
 /**
  * Finds the entity which snapping point to a line near the mouse is closest to the mouse.
- * Eminates lines from each entity in all directions, and checks if they intersect any of the lines close to the mouse.
+ * Emanates lines from each entity in all directions, and checks if they intersect any of the lines close to the mouse.
  */
 function findClosestEntityOfGroup(
 	entities: BDCoords[],
@@ -435,17 +435,17 @@ function findClosestEntityOfGroup(
 	let closestEntitySnap: { snap: Snap; dist: BigDecimal } | undefined;
 
 	for (const entityCoords of entities) {
-		// Eminate lines in all directions from the entity coords
-		const eminatingLines = searchVectors.map((l) =>
+		// Emanate lines in all directions from the entity coords
+		const emanatingLines = searchVectors.map((l) =>
 			vectors.getLineGeneralFormFromCoordsAndVecBD(entityCoords, l),
 		);
 
 		// Calculate their intersections with each individual line close to the mouse
-		for (const eminatedLine of eminatingLines) {
+		for (const emanatedLine of emanatingLines) {
 			for (const highlightLine of closeLines) {
 				// Do they intersect?
 				const intersection = geometry.intersectLineAndSegment(
-					eminatedLine,
+					emanatedLine,
 					highlightLine.line.coefficients,
 					highlightLine.line.start,
 					highlightLine.line.end,
@@ -538,7 +538,7 @@ function render(): void {
 
 		// If the pointer is over any entity or ray intersection, render a glow dot / mini image
 		// at EVERY hovered ray intersection (entities are rendered fully opaque elsewhere).
-		// No eminated snapping (requiring blue snap lines) happens in this case.
+		// No emanated snapping (requiring blue snap lines) happens in this case.
 		const raySnaps = getHoveredRaySnaps(pointerWorld);
 		if (raySnaps.length > 0 || getAllEntitiesWorldHovers(pointerWorld).length > 0) {
 			allSnaps.push(...raySnaps);
@@ -601,8 +601,6 @@ function render(): void {
 
 /** Builds the translucent mini image of a piece, centered on the given world coords. */
 function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
-	const dataGhost: number[] = [];
-
 	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords(camera);
 
 	const entityWorldWidth = getEntityWidthWorld();
@@ -616,10 +614,8 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable
 	// prettier-ignore
 	const data = primitives.Quad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, GHOST_IMAGE_OPACITY);
 
-	dataGhost.push(...data);
-
 	return createRenderable(
-		dataGhost,
+		data,
 		2,
 		'TRIANGLES',
 		'colorTexture',

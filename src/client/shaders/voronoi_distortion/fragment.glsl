@@ -113,11 +113,6 @@ void main() {
     total_offset.x /= aspect_ratio;
 
 
-	// [DEBUG] Visualize the raw distance field.
-	// out_color = vec4(vec3(d1), 1.0);
-	// return;
-
-
     // Get the fully distorted color
 
     // Apply the calculated offset to the original texture coordinates

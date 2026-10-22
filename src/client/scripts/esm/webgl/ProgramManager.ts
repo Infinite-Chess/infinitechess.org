@@ -9,7 +9,7 @@ import vsSource_color from '../../../shaders/color/vertex.glsl';
 import fsSource_color from '../../../shaders/color/fragment.glsl';
 import fsSource_water from '../../../shaders/water/fragment.glsl';
 import vsSource_arrows from '../../../shaders/arrows/vertex.glsl';
-import fsSource_glitch from '../../../shaders/glitch/fragment.glsl'; // Import the new glitch fragment shader
+import fsSource_glitch from '../../../shaders/glitch/fragment.glsl';
 import vsSource_texture from '../../../shaders/texture/vertex.glsl';
 import fsSource_texture from '../../../shaders/texture/fragment.glsl';
 import vsSource_postPass from '../../../shaders/post_pass/vertex.glsl';
@@ -34,7 +34,7 @@ import fsSource_boardUberShader from '../../../shaders/board_uber_shader/fragmen
 import vsSource_textureInstanced from '../../../shaders/texture/instanced/vertex.glsl';
 import fsSource_voronoiDistortion from '../../../shaders/voronoi_distortion/fragment.glsl';
 
-// =============================== Type Definitions ===============================
+// Types -----------------------------------------------------------------------
 
 // Attribute and Uniform Union Types for each ShaderProgram
 
@@ -110,6 +110,18 @@ type Uniforms_BoardUberShader =
 	| 'u5_color4'
 	| 'u5_color5'
 	| 'u5_color6'
+	// "Ember Verge" Uniforms (Effect Type 11)
+	| 'u11_flowDistance'
+	| 'u11_flowDirectionVec'
+	| 'u11_gradientRepeat'
+	| 'u11_maskOffset'
+	| 'u11_strength'
+	| 'u11_color1'
+	| 'u11_color2'
+	| 'u11_color3'
+	| 'u11_color4'
+	| 'u11_color5'
+	| 'u11_color6'
 	// "Dusty Wastes" Uniforms (Effect Type 6)
 	| 'u6_strength'
 	| 'u6_noiseTiling'
@@ -133,8 +145,6 @@ type Uniforms_ColorGrade =
 	| 'u_saturation'
 	| 'u_tintColor'
 	| 'u_hueOffset';
-// type Attributes_Posterize = never; // Moved to dev-utils
-// type Uniforms_Posterize = 'u_sceneTexture' | 'u_masterStrength' | 'u_levels'; // Moved to dev-utils
 type Attributes_Vignette = never;
 type Uniforms_Vignette =
 	| 'u_sceneTexture'
@@ -221,7 +231,6 @@ export type Attributes_All =
 	| Attributes_BoardUberShader
 	| Attributes_PostPass
 	| Attributes_ColorGrade
-	// | Attributes_Posterize // Moved to dev-utils
 	| Attributes_Vignette
 	| Attributes_SineWave
 	| Attributes_Water
@@ -252,7 +261,6 @@ type Program_BoardUberShader = ShaderProgram<Attributes_BoardUberShader, Uniform
 // Post Processing Shaders
 type Program_PostPass = ShaderProgram<Attributes_PostPass, Uniforms_PostPass>;
 type Program_ColorGrade = ShaderProgram<Attributes_ColorGrade, Uniforms_ColorGrade>;
-// type Program_Posterize = ShaderProgram<Attributes_Posterize, Uniforms_Posterize>; // Moved to dev-utils
 type Program_Vignette = ShaderProgram<Attributes_Vignette, Uniforms_Vignette>;
 type Program_SineWave = ShaderProgram<Attributes_SineWave, Uniforms_SineWave>;
 type Program_Water = ShaderProgram<Attributes_Water, Uniforms_Water>;
@@ -265,7 +273,7 @@ type Program_VoronoiDistortion = ShaderProgram<
 type Program_Glitch = ShaderProgram<Attributes_Glitch, Uniforms_Glitch>;
 
 export interface ProgramMap {
-	// ======= Generic Shaders =======
+	// --- Generic Shaders ---
 
 	/** Renders meshes with colored vertices. */
 	color: Program_Color;
@@ -278,32 +286,30 @@ export interface ProgramMap {
 	/** Renders a textured mesh with colored vertices. */
 	colorTexture: Program_ColorTexture;
 
-	// ======= Specialized Shaders =======
+	// --- Specialized Shaders ---
 
 	/** Renders mini images. */
 	miniImages: Program_MiniImages;
-	/** Renders mini images. Instance renders square highlights of a given size. */
+	/** Instance renders square highlights of a given size. */
 	highlights: Program_Highlights;
-	/** Renders arrows (not the images, but tha arrow tip). */
+	/** Renders arrows (not the images, but the arrow tip). */
 	arrows: Program_Arrows;
 	/** Renders arrow images. */
 	arrowImages: Program_ArrowImages;
 	/** Renders the starfield squares. */
 	starfield: Program_Starfield;
 
-	// ====== Surface Level Effects =======
+	// --- Surface Level Effects ---
 
 	/** Renders textured surfaces with a masked noise texture animated behind them. */
 	board_uber_shader: Program_BoardUberShader;
 
-	// ======= Post Processing Shaders =======
+	// --- Post Processing Shaders ---
 
 	/** Post Processing Pass-Through Shader. Zero effects. */
 	post_pass: Program_PostPass;
 	/** Post Processing Color Grading Shader. Several color effects. */
 	color_grade: Program_ColorGrade;
-	// /** Post Processing Posterize Shader. */ // Moved to dev-utils
-	// posterize: Program_Posterize; // Moved to dev-utils
 	/** Post Processing Vignette Effect. */
 	vignette: Program_Vignette;
 	/** Post Processing Dual Axis Sine Wave Distortion Effect. */
@@ -328,10 +334,10 @@ type ShaderSource = {
 	fragment: string;
 };
 
-// =============================== Implementation ===============================
+// Constants -------------------------------------------------------------------
 
 /** A mapping from program names to their corresponding shader sources. */
-const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
+const SHADER_SOURCES: Record<keyof ProgramMap, ShaderSource> = {
 	// Generic Shaders
 	color: { vertex: vsSource_color, fragment: fsSource_color },
 	colorInstanced: { vertex: vsSource_colorInstanced, fragment: fsSource_color },
@@ -349,7 +355,6 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	// Post Processing Shaders
 	post_pass: { vertex: vsSource_postPass, fragment: fsSource_postPass },
 	color_grade: { vertex: vsSource_postPass, fragment: fsSource_colorGrade },
-	// posterize: { vertex: vsSource_postPass, fragment: fsSource_posterize }, // Moved to dev-utils
 	vignette: { vertex: vsSource_postPass, fragment: fsSource_vignette },
 	sine_wave: { vertex: vsSource_postPass, fragment: fsSource_sineWave },
 	water: { vertex: vsSource_postPass, fragment: fsSource_water },
@@ -359,6 +364,8 @@ const shaderSources: Record<keyof ProgramMap, ShaderSource> = {
 	glitch: { vertex: vsSource_postPass, fragment: fsSource_glitch },
 };
 
+// Program Cache ---------------------------------------------------------------
+
 /**
  * A factory and cache for creating and managing ShaderProgram instances.
  * Ensures that each shader program is only compiled and linked once.
@@ -367,7 +374,7 @@ export class ProgramManager {
 	private readonly gl: WebGL2RenderingContext;
 	// The cache stores programs by their key from ProgramMap. We use a base
 	// ShaderProgram type here internally, but the public `get` method provides full type safety.
-	private programCache: Map<keyof ProgramMap, ShaderProgram<any, any>> = new Map();
+	private programCache: Map<keyof ProgramMap, ShaderProgram<string, string>> = new Map();
 
 	constructor(gl: WebGL2RenderingContext) {
 		this.gl = gl;
@@ -377,7 +384,7 @@ export class ProgramManager {
 	 * Retrieves a compiled and linked ShaderProgram from the cache, or creates it if it doesn't exist.
 	 *
 	 * @template K - The key (name) of the program to retrieve.
-	 * @param programName - The name of the shader program (e.g., 'phong', 'unlit').
+	 * @param programName - The name of the shader program (e.g., 'color', 'texture').
 	 * @returns The fully-typed ShaderProgram instance.
 	 */
 	public get<K extends keyof ProgramMap>(programName: K): ProgramMap[K] {
@@ -389,11 +396,9 @@ export class ProgramManager {
 		}
 
 		// 2. If not, get the source code for the requested program.
-		const sources = shaderSources[programName];
-		if (!sources) throw Error(`Shader sources for program "${programName}" not found.`);
+		const sources = SHADER_SOURCES[programName];
 
 		// 3. Create a new ShaderProgram instance.
-		// console.log(`Compiling and linking shader program: ${programName}`);
 		const program = new ShaderProgram(this.gl, sources.vertex, sources.fragment);
 
 		// 4. Store it in the cache for future requests.

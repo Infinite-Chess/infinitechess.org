@@ -17,10 +17,11 @@
 import type { Vec3 } from '../../../../shared/util/math/vectors.js';
 import type { TypedArray } from './BufferUtil.js';
 
+import type { ShaderProgram } from './ShaderProgram.js';
+import type { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
+
 import mat4 from './gl-matrix.js';
 import BufferUtil from './BufferUtil.js';
-import { ShaderProgram } from './ShaderProgram.js';
-import { Attributes_All, ProgramManager, ProgramMap } from './ProgramManager.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -191,6 +192,9 @@ function createRenderableFactory(
 	programManager: ProgramManager,
 	cam: ViewSource,
 ): RenderableFactory {
+	/** Scratch matrix reused by every draw call. */
+	const transformMatrix: Mat4 = mat4.create();
+
 	function createRenderable(
 		/** The array of vertex data of the mesh to be rendered. */
 		data: InputArray,
@@ -442,7 +446,7 @@ function createRenderableFactory(
 		let currentOffsetBytes = 0; // how many bytes inside the buffer to start from.
 
 		for (const attrib of attribInfo) {
-			const attribLoc = shaderProgram.getAttributeLocation(attrib.name as A)!;
+			const attribLoc = shaderProgram.getAttributeLocation(attrib.name as A);
 			// Tell WebGL how to pull out the values from the vertex data and into the attribute in the shader code...
 			gl.vertexAttribPointer(
 				attribLoc,
@@ -470,7 +474,7 @@ function createRenderableFactory(
 	 * @param position - The positional translation of the object: `[x,y,z]`
 	 * @param scale - The scale transformation of the object: `[x,y,z]`
 	 * @param uniforms - An object with custom uniform names for the keys, and their value for the values. A custom uniform example is 'u_size'. Uniforms that are NOT custom are [transformMatrix, uSampler]
-	 * @param texture - The texture to bind, if applicable (we should be using the texcoord attribute).
+	 * @param textures - The textures to bind, if any (we should be using the texcoord attribute).
 	 */
 	function setUniforms<A extends string, U extends string>(
 		shaderProgram: ShaderProgram<A, U>,
@@ -544,18 +548,14 @@ function createRenderableFactory(
 	}
 
 	/**
-	 * Calculates the final Model-View-Projection matrix for a given object.
-	 * This combines the camera's view and projection with the object's model matrix.
+	 * Calculates the final Model-View-Projection matrix for a given object:
+	 * projection * view * scale * translation. Overwrites {@link transformMatrix}.
 	 */
 	function genTransformMatrix(position: Vec3, scale: Vec3): Mat4 {
 		const { projMatrix, viewMatrix } = cam.getProjAndViewMatrixes();
-		const modelMatrix = genModelMatrix(position, scale);
-
-		// Multiply the matrices in order: projection * view * model (world)
-		const transformMatrix = mat4.create();
 		mat4.multiply(transformMatrix, projMatrix, viewMatrix);
-		mat4.multiply(transformMatrix, transformMatrix, modelMatrix);
-
+		mat4.scale(transformMatrix, transformMatrix, scale);
+		mat4.translate(transformMatrix, transformMatrix, position);
 		return transformMatrix;
 	}
 
@@ -628,10 +628,8 @@ function getStrideFromAttributeInfo(attribInfo: AttributeInfo): number {
 }
 
 /**
- * Ensures the input is a Float32Array. If the input is already a typed array,
- * it is returned as-is. If it's a number array, a new Float32Array is created.
- * @param data - The input data, which can be either a number array or a typed array.
- * @returns A Float32Array representation of the input data.
+ * Ensures the input is a typed array. If it already is, it is returned as-is.
+ * If it's a number array, a new Float32Array is created.
  */
 function ensureTypedArray(data: InputArray): TypedArray {
 	if (!Array.isArray(data)) return data; // If it's already a TypedArray, return it.
@@ -640,18 +638,6 @@ function ensureTypedArray(data: InputArray): TypedArray {
 		console.warn('Performance Warning: Float32Array generated from a very large number array (over 1 million in length). It is suggested to start with a Float32Array when computing your data!'); // prettier-ignore
 	}
 	return new Float32Array(data);
-}
-
-/**
- * Generates a model matrix given a position and scale to transform it by!
- * The gpu works with matrices REALLY FAST, so this is the most optimal way
- * to translate our models into position.
- */
-function genModelMatrix(position: Vec3, scale: Vec3): Mat4 {
-	const modelMatrix = mat4.create();
-	mat4.scale(modelMatrix, modelMatrix, scale);
-	mat4.translate(modelMatrix, modelMatrix, position);
-	return modelMatrix;
 }
 
 export { createRenderableFactory };

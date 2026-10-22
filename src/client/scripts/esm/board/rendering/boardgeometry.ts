@@ -20,12 +20,14 @@ const SQUARE_CENTER: number = 0.5;
 // BigDecimal constants
 const ONE = bd.fromBigInt(1n);
 
-// Public API ------------------------------------------------------------------
+// Geometry --------------------------------------------------------------------
 
+/** Returns {@link SQUARE_CENTER} as a BigDecimal. */
 function getSquareCenter(): BigDecimal {
 	return bd.fromNumber(SQUARE_CENTER);
 }
 
+/** Returns {@link SQUARE_CENTER}. */
 function getSquareCenterAsNumber(): number {
 	return SQUARE_CENTER;
 }

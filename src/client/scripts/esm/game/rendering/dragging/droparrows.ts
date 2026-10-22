@@ -111,7 +111,7 @@ function shiftArrows(): void {
 	const selectedPiece = selection.getPieceSelected()!;
 	const board = gamescene.getGameContext();
 
-	// Modify the arrow indicators to reflect the potentialcapture
+	// Modify the arrow indicators to reflect the potential capture
 
 	let newLocationOfSelectedPiece: Coords | undefined;
 

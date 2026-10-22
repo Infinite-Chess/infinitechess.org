@@ -46,8 +46,8 @@ import arrowsgraphics from '../../board/rendering/arrows/arrowsgraphics.js';
 import arrowinteraction from './arrows/arrowinteraction.js';
 import { ProgramManager } from '../../webgl/ProgramManager.js';
 import { EffectZoneManager } from './effectzone/EffectZoneManager.js';
+import renderable, { createRenderable } from '../../board/rendering/renderable.js';
 import selectedpiecehighlightline from './highlights/selectedpiecehighlightline.js';
-import Renderable, { createRenderable } from '../../board/rendering/renderable.js';
 
 // State -----------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ let programManager: ProgramManager;
 /** The interactive game's live board (gl, camera, boardpos, textures, animations, arrows...). */
 let gameContext: LiveBoard;
 /** Manager of Effect Zones */
-let effectZoneManager: EffectZoneManager | undefined;
+let effectZoneManager: EffectZoneManager;
 
 // /**
 //  * Replaces the starfield with a gradient color flow inside void.
@@ -81,7 +81,7 @@ function init(canvas: HTMLCanvasElement): void {
 		frames: frametracker,
 		sound: true,
 	});
-	Renderable.init(gameContext.renderable); // Point the free create-functions at this context's factory
+	renderable.init(gameContext.renderable); // Point the free create-functions at this context's factory
 	gameContext.boardtiles.init();
 
 	effectZoneManager = new EffectZoneManager(gl, programManager);
@@ -102,7 +102,7 @@ function getGameContext(): LiveBoard {
 
 /** Advances the effect zone to whichever zone the visible board now falls in. */
 function updateEffectZone(): void {
-	effectZoneManager!.update(getFurthestTileVisible());
+	effectZoneManager.update(getFurthestTileVisible());
 }
 
 /** Returns the absolute value of the furthest tile from the origin on our screen. */
@@ -118,14 +118,14 @@ function getFurthestTileVisible(): bigint {
 
 // Render ----------------------------------------------------------------------
 
-/** Renders everthing in-game, and applies post processing effects to the final image. */
+/** Renders everything in-game, and applies post processing effects to the final image. */
 function render(): void {
 	// First gather all post processing effects this frame
 	const passes: PostProcessPass[] = [];
 	// Append water ripples of really far moves!
 	passes.push(...WaterRipples.getPass(gameContext));
 	// Add the current effect zone passes
-	passes.push(...effectZoneManager!.getActivePostProcessPasses());
+	passes.push(...effectZoneManager.getActivePostProcessPasses());
 	// Set them in the pipeline
 	const pipeline = gameContext.pipeline;
 	pipeline.setPasses(passes);
@@ -208,7 +208,7 @@ function renderScene(): void {
 
 /** Renders items that need to be able to be masked by the world border. */
 function renderTilesAndPromoteLines(gamefile: GameFile): void {
-	effectZoneManager!.renderBoard(gameContext.boardtiles);
+	effectZoneManager.renderBoard(gameContext.boardtiles);
 
 	// The start box determines how far out promotion lines are rendered.
 	// In editor mode, don't provide it, so the lines extend to the screen edges.
@@ -226,8 +226,8 @@ function renderOutlineofScreenBox(): void {
 
 	const { left, right, bottom, top } = camera.getScreenBoundingBox(false);
 
-	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
 	const color: Color = [0, 0, 0, 0.5]; // Transparent Black
+	// const color: Color = [0.65,0.15,0, 1]; // Maroon (matches light brown wood theme)
 	const data = primitives.Rect(left, bottom, right, top, color);
 
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();

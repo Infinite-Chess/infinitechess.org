@@ -3,11 +3,12 @@
 /**
  * This is a DEBUGGING script for rendering special right and enpassant highlights.
  *
- * Enable by pressing `7`.
+ * Enable by pressing `4`.
  */
 
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Coords } from '../../../../../../shared/util/coordutil.js';
+import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
 import coordutil from '../../../../../../shared/util/coordutil.js';
 
@@ -19,20 +20,22 @@ import piecemodels from '../../../board/rendering/piecemodels.js';
 import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
-import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
+import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import squarerendering from '../../../board/rendering/squarerendering.js';
-import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The color of the special rights indicator. */
 const SPECIAL_RIGHTS_COLOR: Color = [0, 0.27, 0.15, 0.3];
-/* The color of the enpassant indicator. */
+/** The color of the enpassant indicator. */
 const ENPASSANT_COLOR: Color = [0.5, 0, 1, 0.3];
+
+// State -----------------------------------------------------------------------
 
 /** Whether to render special right and enpassant highlights */
 let enabled = false;
+/** The special rights plus signs, offset by the legal move model's offset. */
 let model: RenderableInstanced | undefined;
 
 // Events ----------------------------------------------------------------------
@@ -50,17 +53,20 @@ GameBus.addEventListener('view-move', () => {
 
 // Functions -------------------------------------------------------------------
 
+/** Turns the highlights on. */
 function enable(): void {
 	enabled = true;
 	regenModel();
 	frametracker.onVisualChange();
 }
 
+/** Turns the highlights off. */
 function disable(): void {
 	enabled = false;
 	frametracker.onVisualChange();
 }
 
+/** Toggles the highlights. */
 function toggle(): void {
 	enabled = !enabled;
 	console.log(`Toggled special rights highlights: ${enabled}`);
@@ -68,6 +74,7 @@ function toggle(): void {
 	frametracker.onVisualChange();
 }
 
+/** Renders the special rights and en passant highlights, if enabled. */
 function render(): void {
 	if (!enabled) return; // Not enabled
 
@@ -75,10 +82,10 @@ function render(): void {
 	renderEnPassant();
 }
 
+/** Regenerates the special rights model, if enabled. */
 function regenModel(): void {
 	if (!enabled) return; // Not enabled
 
-	// console.log('Regenerating specialrights model');
 	const gamefile = gameslot.getGamefile()!;
 	const model_Offset: Coords = legalmovemodel.getOffset();
 	// Instance data
@@ -88,9 +95,7 @@ function regenModel(): void {
 		const offsetCoord = coordutil.subtractCoords(coords, model_Offset);
 		squaresToHighlight.push(...offsetCoord);
 	}
-	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveCornerTris(SPECIAL_RIGHTS_COLOR);
-	// const vertexData: number[] = legalmoveshapes.getDataLegalMoveSquare(SPECIAL_RIGHTS_COLOR);
-	const vertexData: number[] = legalmoveshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
+	const vertexData: number[] = instancedshapes.getDataPlusSign(SPECIAL_RIGHTS_COLOR);
 	model = createRenderable_Instanced(
 		vertexData,
 		piecemodels.castBigIntArrayToFloat32(squaresToHighlight),
@@ -100,6 +105,7 @@ function regenModel(): void {
 	);
 }
 
+/** Renders a plus sign beside each piece with its special rights. */
 function renderSpecialRights(): void {
 	if (!model) throw Error('Specialrights model not initialized');
 
@@ -111,6 +117,7 @@ function renderSpecialRights(): void {
 	model.render(position, scale);
 }
 
+/** Highlights the en passant square, if there is one. */
 function renderEnPassant(): void {
 	const gamefile = gameslot.getGamefile()!;
 	if (!gamefile.state.global.enpassant) return; // No enpassant gamefile property

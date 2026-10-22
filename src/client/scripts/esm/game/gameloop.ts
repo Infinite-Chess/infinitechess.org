@@ -169,7 +169,7 @@ function update(): void {
 	// NEEDS TO BE AFTER arrowinteraction.update() because this modifies the arrow indicator list.
 	// NEEDS TO BE BEFORE boarddrag.checkIfBoardSingleGrabbed() because that shift arrows needs to overwrite this.
 	animation.update(gameBoard);
-	draganimation.updateDragLocation(); // BEFORE droparrows.shiftArrows() so that can overwrite this.
+	draganimation.updateDragLocation(); // AFTER selection.update() (reads its promotion square), BEFORE droparrows.shiftArrows() so that can overwrite this.
 	droparrows.shiftArrows(); // Shift the arrows of the dragged piece AFTER selection.update() makes any moves made!
 	dragarrows.update(); // AFTER droparrows.shiftArrows(), BEFORE executeArrowShifts().
 	arrowinteraction.executeArrowShifts(); // Execute any arrow modifications made by animation.js or arrowsdrop.js. BEFORE arrowlegalmovehighlights.update()
@@ -208,7 +208,7 @@ function testIfEmptyBoardRegionClicked(gamefile: GameFile, mesh: Mesh | undefine
 		mouse.claimMouseClick(mouseKeybind);
 
 		premoves.cancelPremoves(gamefile, mesh);
-		annotations.Collapse();
+		annotations.collapse();
 	}
 }
 

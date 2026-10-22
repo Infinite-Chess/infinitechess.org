@@ -31,7 +31,7 @@ import { SettingsBus } from '../../../../util/SettingsBus.js';
 interface Annotes {
 	/** First type of annotation: A square highlight. */
 	Squares: Coords[];
-	/** Second type of annoation: An arrow draw from one square to another. */
+	/** Second type of annotation: An arrow drawn from one square to another. */
 	Arrows: Arrow[];
 	/**
 	 * Third type of annotation: A ray of infinite square highlights,
@@ -40,7 +40,7 @@ interface Annotes {
 	Rays: Ray[];
 }
 
-/** Second type of annoation: An arrow draw from one square to another. */
+/** Second type of annotation: An arrow drawn from one square to another. */
 export interface Arrow {
 	start: Coords;
 	end: Coords;
@@ -55,7 +55,7 @@ export interface Arrow {
 	yRatio: number;
 }
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The annotations tied to specific move plies, when lingering annotations is OFF. */
 const annotes_plies: Annotes[] = [];
@@ -159,10 +159,10 @@ function update(): void {
 
 /**
  * Collapses all annotations. The behavior is:
- * A. Atleast 1 ray => Erase all rays and add more Squares at all their intersections.
+ * A. At least 1 ray => Erase all rays and add more Squares at all their intersections.
  * B. Else => Erase all annotes.
  */
-function Collapse(): void {
+function collapse(): void {
 	const annotes = getRelevantAnnotes();
 
 	if (annotes.Rays.length > 0) {
@@ -192,6 +192,7 @@ function getPresetOverrides(): PresetAnnotes | undefined {
 	return { squares, rays };
 }
 
+/** Erases every annotation and preset override, and stops any drawing. */
 function resetState(): void {
 	annotes_plies.length = 0;
 	clearAnnotes(annotes_linger);
@@ -210,6 +211,7 @@ function render_belowPieces(): void {
 	drawrays.render(annotes.Rays);
 }
 
+/** Renders the annotations that should be rendered above the pieces */
 function render_abovePieces(): void {
 	const annotes = getRelevantAnnotes();
 	drawarrows.render(annotes.Arrows);
@@ -223,7 +225,7 @@ export default {
 	getRays,
 
 	update,
-	Collapse,
+	collapse,
 	getPresetOverrides,
 	resetState,
 	render_belowPieces,

@@ -9,6 +9,7 @@ import type LiveBoard from './LiveBoard.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type { ProgramManager } from '../../webgl/ProgramManager.js';
 import type { PostProcessPass } from '../../webgl/postprocessing/PostProcessPass.js';
+import type { RippleState } from '../../webgl/postprocessing/passes/WaterRipplePass.js';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
 import vectors from '../../../../../shared/util/math/vectors.js';
@@ -16,7 +17,7 @@ import bdcoords from '../../../../../shared/util/bdcoords.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 
 import space from './space.js';
-import { RippleState, WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePass.js';
+import { WaterRipplePass } from '../../webgl/postprocessing/passes/WaterRipplePass.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -25,8 +26,8 @@ export interface Ripples {
 	pass: WaterRipplePass;
 	droplets: RippleState[];
 	/**
-	 * ACTUAL ripple lifetime, dependent on screen ratio, as the more
-	 * wider the screen is taller, the longer drops take to travel across.
+	 * ACTUAL ripple lifetime, dependent on screen ratio, as the wider
+	 * the screen is than tall, the longer drops take to travel across.
 	 */
 	lifetime: number;
 }
@@ -102,12 +103,11 @@ function addRipple(board: LiveBoard, sourceCoords: Coords): void {
 
 	// Don't let the ripple source be too far off-screen
 	if (!bounds.boxContainsSquareDouble(paddedScreenBox, sourceWorldSpace)) {
-		// console.log("Ripple source outside of padded screen.");
 		const vectorToSource = coordutil.subtractBDCoords(
 			bdcoords.fromCoords(sourceCoords),
 			boardpos.getBoardPos(),
 		);
-		const closestVector = vectors.findClosestPredefinedVector(vectorToSource, false); // [-1-1, -1-1]
+		const closestVector = vectors.findClosestPredefinedVector(vectorToSource, false); // Each component -1, 0 or 1
 
 		if (closestVector[0] === 0n) {
 			rippleX = 0;

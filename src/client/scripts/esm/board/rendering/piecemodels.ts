@@ -9,6 +9,7 @@ import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type { TypeGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type RenderContext from './RenderContext.js';
 import type { BoardPreview } from '../../../../../shared/chess/logic/boardpreviewer.js';
+import type { AttributeInfoInstanced, RenderableInstanced } from '../../webgl/Renderable.js';
 
 import vectors from '../../../../../shared/util/math/vectors.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
@@ -21,7 +22,6 @@ import { rawTypes as r } from '../../../../../shared/chess/util/typeutil.js';
 
 import meshes from './meshes.js';
 import instancedshapes from './instancedshapes.js';
-import { AttributeInfoInstanced, RenderableInstanced } from '../../webgl/Renderable.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ export interface Mesh {
 	types: TypeGroup<MeshData>;
 }
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * A tiny z offset, to prevent the pieces from tearing with highlights while in perspective.
@@ -66,15 +66,9 @@ const Z: number = 0.005;
 /**
  * The interval at which to modify the mesh's linear offset once you travel this distance.
  * 10,000 was arbitrarily chosen because once you reach uniform translations much bigger
- * than that, the rendering of the pieces start to get somewhat gittery.
+ * than that, the rendering of the pieces starts to get somewhat jittery.
  */
 const REGEN_RANGE = 10_000n;
-
-// /**
-//  * The distance of which panning will noticably distort the pieces mesh.
-//  * If we ever shift the piece models by more than this, we should regenerate them instead.
-//  */
-// const DISTANCE_AT_WHICH_MESH_GLITCHES = Number.MAX_SAFE_INTEGER; // ~9 Quadrillion
 
 /** The instance data array stride, per piece. */
 const STRIDE_PER_PIECE = 2; // instanceposition: (x,y)
@@ -107,7 +101,6 @@ function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undef
 
 	// For each piece type in the game, generate its mesh
 	for (const type of boardsim.existingTypes) {
-		// [43] pawn(white)
 		if (typeutil.getRawType(type) === r.VOID)
 			mesh.types[type] = genVoidModel(ctx, boardsim, mesh, type); // Custom mesh generation logic for voids
 		else mesh.types[type] = genTypeModel(ctx, boardsim, mesh, type); // Normal generation logic for all pieces with a texture
@@ -186,8 +179,6 @@ function getInstanceDataForTypeRange(
 	mesh: Mesh,
 	type: number,
 ): InstanceData {
-	// const range = boardsim.pieces.typeRanges.get(type)!;
-	// const instanceData64: Float64Array = new Float64Array((range.end - range.start) * STRIDE_PER_PIECE); // Initialize with all 0's
 	const instanceData: InstanceData = []; // Initialize empty
 
 	let currIndex: number = 0;
@@ -288,7 +279,7 @@ function shiftAll(ctx: RenderContext, mesh: Mesh): void {
 
 /**
  * Shifts the vertex data of the piece model and reinits it on the gpu.
- * Faster than {@link regenType} or {@link genTypeModel}.
+ * Faster than {@link genTypeModel}.
  * @param meshData - An object containing the infinite resolution bigint instanceData, and the actual model.
  * @param diffXOffset - The x-amount to shift the model's vertex data.
  * @param diffYOffset - The y-amount to shift the model's vertex data.
@@ -388,7 +379,7 @@ function deletebufferdata(mesh: Mesh, piece: Piece): void {
 // Rendering -------------------------------------------------------------------
 
 /**
- * Renders ever piece type mesh of the game, EXCLUDING voids,
+ * Renders every piece type mesh of the game, EXCLUDING voids,
  * translating and scaling them into position.
  */
 function renderAll(ctx: RenderContext, mesh: Mesh | undefined): void {

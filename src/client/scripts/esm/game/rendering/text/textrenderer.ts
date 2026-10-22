@@ -81,13 +81,8 @@ function render(
 ): void {
 	if (text.length === 0) return;
 
-	const totalWidth = getTextWidth(text, size);
-
-	// Compute world-space X of the left edge of the first character.
-	let cursorX: number;
-	if (align === 'left') cursorX = coords[0];
-	else if (align === 'center') cursorX = coords[0] - totalWidth / 2;
-	else cursorX = coords[0] - totalWidth; // 'right'
+	// World-space X of the left edge of the first character.
+	let cursorX = getTextBounds(text, coords, size, align).left;
 
 	// Vertical extents are constant for all glyphs (text is vertically centred on y).
 	const bottom = coords[1] - size / 2;

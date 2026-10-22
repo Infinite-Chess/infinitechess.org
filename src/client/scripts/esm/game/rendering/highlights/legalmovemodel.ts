@@ -16,6 +16,7 @@ import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organ
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
+import type { RenderableInstanced } from '../../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -37,13 +38,10 @@ import boardview from '../boardview.js';
 import preferences from '../../../util/preferences.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import perspective from '../perspective.js';
-import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
-import { AttributeInfoInstanced, RenderableInstanced } from '../../../webgl/Renderable.js';
 import {
 	createRenderable,
 	createRenderable_Instanced,
-	createRenderable_Instanced_GivenInfo,
 } from '../../../board/rendering/renderable.js';
 
 // Types -----------------------------------------------------------------------
@@ -59,15 +57,6 @@ type RayIterationInfo = {
 };
 
 // Constants -------------------------------------------------------------------
-
-/** The attribute info for all legal move highlight instanced rendering models. */
-const ATTRIB_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [
-		{ name: 'a_position', numComponents: 2 },
-		{ name: 'a_color', numComponents: 4 },
-	],
-	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
-};
 
 /**
  * An offset applied to the legal move highlights mesh, to keep all of the
@@ -105,7 +94,7 @@ const SCREEN_MULTIPLIER = {
 
 const ZERO: BigDecimal = bd.fromBigInt(0n);
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The current view box to generate visible legal moves inside.
@@ -148,8 +137,6 @@ function updateRenderRange(): boolean {
 
 	// Regenerate the legal move highlights render range bounding box
 
-	// console.log("Recalculating bounding box of render range.");
-
 	const [newWidth, newHeight] = perspective.getEnabled()
 		? getDimensionsOfPerspectiveViewRange()
 		: getDimensionsOfOrthographicViewRange();
@@ -168,8 +155,6 @@ function updateRenderRange(): boolean {
 
 	/** Update our offset to the nearest grid-point multiple of {@link REGEN_RANGE} */
 	model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
-
-	// console.log("Shifted offset of highlights.");
 
 	return true; // A change was made
 }
@@ -264,14 +249,14 @@ function generateModelsForPiecesLegalMoveHighlights(
 
 	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
 	const vertexData_NonCapture: number[] = usingDots
-		? legalmoveshapes.getDataLegalMoveDot(highlightColor)
-		: legalmoveshapes.getDataLegalMoveSquare(highlightColor);
+		? instancedshapes.getDataLegalMoveDot(highlightColor)
+		: instancedshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the NON-CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
 	const instanceData_NonCapture: bigint[] = [];
 	/** The vertex data OF A SINGLE INSTANCE of the CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
 	const vertexData_Capture: number[] = usingDots
-		? legalmoveshapes.getDataLegalMoveCornerTris(highlightColor)
-		: legalmoveshapes.getDataLegalMoveSquare(highlightColor);
+		? instancedshapes.getDataLegalMoveCornerTris(highlightColor)
+		: instancedshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
 	const instanceData_Capture: bigint[] = [];
 
@@ -524,7 +509,7 @@ function pushRay(
 	// The cheapest way to test whether a piece occupies each square of this ray.
 	const isPieceOnCoords = getOptimalPieceOnCoordsChecker(gamefile.pieces, step, startCoords);
 
-	// Recursively adds the coords to the instance data list, shifting by the step size.
+	// Iteratively adds the coords to the instance data list, shifting by the step size.
 	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
 	for (let i = 0; i < iterationCount; i++) {
 		legal: if (ignoreFunc(coords, targetCoords)) {
@@ -712,12 +697,12 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
 		}
 	}
 
-	return createRenderable_Instanced_GivenInfo(
+	return createRenderable_Instanced(
 		vertexData,
 		piecemodels.castBigIntArrayToFloat32(instanceData),
-		ATTRIB_INFO,
 		'TRIANGLES',
 		'colorInstanced',
+		true,
 	);
 }
 
@@ -728,9 +713,9 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
  * Will only be visible if camera debug mode is on, as this is normally outside of the screen edge.
  */
 function renderOutlineOfRenderBox(): void {
+	const color: Color = [1, 1, 1, 1]; // White
 	// const color: Color = [1,0,1, 1]; // Magenta
 	// const color: Color = [0.65, 0.15, 0, 1]; // Maroon (matches light brown wood theme)
-	const color: Color = [1, 1, 1, 1]; // White
 	const data = meshes.RectWorld(boardpos, boundingBoxOfRenderRange!, color);
 
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();

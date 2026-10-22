@@ -38,10 +38,12 @@ interface ArrowLegalMoves {
 	model_NonCapture: RenderableInstanced;
 	/** The buffer model for rendering the capturing legal moves of the piece. */
 	model_Capture: RenderableInstanced;
-	/** The [r,b,g,a] values these legal move highlights should be rendered.
+	/** The [r,g,b,a] values these legal move highlights should be rendered.
 	 * Depends on whether the piece is ours, a premove, or an opponent's piece. */
 	color: Color;
 }
+
+// State -----------------------------------------------------------------------
 
 /**
  * An array storing the LegalMoves, model and other info, for rendering the legal move highlights
@@ -95,12 +97,11 @@ function update(): void {
 /**
  * Call when a piece's arrow is hovered over.
  * Calculates their legal moves and model for rendering them.
- * @param piece - The piece this arrow is pointing to
+ * @param arrowPiece - The piece this arrow is pointing to
  */
 function onPieceIndicatorHover(arrowPiece: ArrowPiece): void {
-	// SHOULD WE JUST RETURN HERE INSTEAD OF ERROR???
 	if (!bdcoords.areCoordsIntegers(arrowPiece.coords))
-		throw Error('We should not be calculating legal moves for a hovered arrow pointing to a piece at floating point coordinates!'); // prettier-ignore
+		throw Error('Hovered arrow points to a piece at floating point coordinates.');
 
 	// Check if their legal moves and mesh have already been stored
 	if (
@@ -199,7 +200,7 @@ function reset(): void {
 	hoveredArrowsLegalMoves.length = 0; // Erase, otherwise their legal move highlights continue to render
 }
 
-// -------------------------------------------------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	update,

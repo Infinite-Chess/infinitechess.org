@@ -6,12 +6,12 @@
 
 import type { UniformValue } from '../../../../webgl/Renderable.js';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
+import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
 
 import camera from '../../../../board/rendering/camera.js';
 import deltatime from '../../../../board/deltatime.js';
 import { GameBus } from '../../../../board/GameBus.js';
 import { BaseZone } from '../BaseZone.js';
-import { ProgramManager } from '../../../../webgl/ProgramManager.js';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
 import { SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 import UndercurrentSoundscape from '../soundscapes/UndercurrentSoundscape.js';
@@ -32,7 +32,7 @@ export class OceanZone extends BaseZone {
 	/** The speed at which the circle of ripples rotates, in radians per second. */
 	private readonly ROTATION_SPEED: number = 0.02;
 
-	// ============ State ============
+	// --- State ---
 
 	/** The state of the three persistent ripple sources. */
 	private readonly sources: RippleSource[];

@@ -6,6 +6,7 @@
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
+import type { Renderable } from '../../webgl/Renderable.js';
 
 import camera from '../../board/rendering/camera.js';
 import gameslot from '../chess/gameslot.js';
@@ -14,15 +15,14 @@ import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
 import { VIDEO_MODE } from '../config.js';
-import { Renderable } from '../../webgl/Renderable.js';
 import { createRenderable } from '../../board/rendering/renderable.js';
 
 // Constants -------------------------------------------------------------------
 
-/** Multiplied by the perspective_sensitivity preference. Default: 0.13 */
+/** Multiplied by the perspective_sensitivity preference. */
 const SENSITIVITY_MULTIPLIER = 0.13;
 
-/** Default: 2.5 */
+/** The crosshair's width, in virtual pixels. */
 const CROSSHAIR_THICKNESS = 2.5;
 /** RGBA. Inverted against the buffer, so this is what BLACKS get dyed — whites appear black. */
 const CROSSHAIR_COLOR: Color = [1, 1, 1, 1];
@@ -44,15 +44,18 @@ GameBus.addEventListener('camera-debug-toggle', () => initCrosshairModel());
 
 // Functions -------------------------------------------------------------------
 
+/** Whether perspective mode is enabled. */
 function getEnabled(): boolean {
 	return enabled;
 }
 
+/** Toggles perspective mode. */
 function toggle(): void {
 	if (!enabled) enable();
 	else disable();
 }
 
+/** Enables perspective mode, locking the mouse. */
 function enable(): void {
 	if (enabled)
 		return console.error('Should not be enabling perspective when it is already enabled.');
@@ -63,6 +66,7 @@ function enable(): void {
 	GameBus.dispatch('perspective-toggle');
 }
 
+/** Disables perspective mode, resetting the camera's rotation. */
 function disable(): void {
 	if (!enabled) return;
 
@@ -72,7 +76,7 @@ function disable(): void {
 	GameBus.dispatch('perspective-toggle');
 }
 
-// Called when the mouse re-clicks the screen after ALREADY in perspective.
+/** Called when the mouse re-clicks the screen after ALREADY in perspective. */
 function relockMouse(): void {
 	if (!enabled) return;
 	if (isMouseLocked()) return;
@@ -80,6 +84,7 @@ function relockMouse(): void {
 	lockMouse();
 }
 
+/** Locks the pointer to the canvas. */
 function lockMouse(): void {
 	camera.getCanvas().requestPointerLock();
 }
@@ -98,11 +103,12 @@ function addRotation(mouseChangeX: number, mouseChangeY: number): void {
 	camera.setPerspectiveRotation(newRotX, newRotZ);
 }
 
+/** Whether the pointer is locked to the canvas. */
 function isMouseLocked(): boolean {
 	return document.pointerLockElement === camera.getCanvas();
 }
 
-// Buffer model of crosshair. Called whenever perspective is enabled, screen is resized, or devMode is toggled.
+/** Builds the crosshair's buffer model, sized to the current screen. */
 function initCrosshairModel(): void {
 	if (!enabled) return;
 
@@ -127,6 +133,7 @@ function initCrosshairModel(): void {
 	crosshairModel = createRenderable(data, 2, 'TRIANGLES', 'color', true);
 }
 
+/** Renders the crosshair at the center of the screen, inverting the colors beneath it. */
 function renderCrosshair(): void {
 	if (!enabled) return;
 	if (VIDEO_MODE) return; // Don't render while recording
@@ -138,7 +145,7 @@ function renderCrosshair(): void {
 	});
 }
 
-// Used when the promotion UI opens
+/** Unlocks the pointer. Used when the promotion UI opens. */
 function unlockMouse(): void {
 	if (!enabled) return;
 	document.exitPointerLock();

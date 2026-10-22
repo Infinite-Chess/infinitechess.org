@@ -19,6 +19,19 @@ import selection from '../../chess/selection.js';
 import preferences from '../../../util/preferences.js';
 import highlightline from './highlightline.js';
 
+// Types -----------------------------------------------------------------------
+
+/**
+ * Start and end of a line segment. PERFECT integers!
+ * We don't need to precalculate the line coefficients because of that.
+ */
+type Segment = {
+	start: Coords;
+	end: Coords;
+};
+
+// Lines -----------------------------------------------------------------------
+
 /**
  * Calculates all the lines formed from the highlight
  * lines of the current selected piece's legal moves.
@@ -26,7 +39,7 @@ import highlightline from './highlightline.js';
 function getLines(): Line[] {
 	const lines: Line[] = [];
 
-	const pieceSelected = selection.getPieceSelected()!;
+	const pieceSelected = selection.getPieceSelected();
 	if (!pieceSelected) return lines;
 
 	const pieceCoords = pieceSelected.coords;
@@ -84,15 +97,6 @@ function getLines(): Line[] {
 }
 
 /**
- * Start and end of a line segment. PERFECT integers!
- * We don't need to precalculate the line coefficients because of that.
- */
-type Segment = {
-	start: Coords;
-	end: Coords;
-};
-
-/**
  * Converts the selected piece's legal move highlight lines into
  * their ray and line segment components, depending on which slides are infinite or not.
  *
@@ -103,7 +107,7 @@ function getLineComponents(): { rays: Ray[]; segments: Segment[] } {
 	const rays: Ray[] = [];
 	const segments: Segment[] = [];
 
-	const pieceSelected = selection.getPieceSelected()!;
+	const pieceSelected = selection.getPieceSelected();
 	if (!pieceSelected) return { rays, segments };
 
 	const pieceCoords = pieceSelected.coords;
@@ -139,11 +143,11 @@ function getLineComponents(): { rays: Ray[]; segments: Segment[] } {
 
 	function processComponent(start: Coords, step: Vec2, limit: bigint | null): void {
 		if (limit === null) {
-			// Can slide infinitly => RAY
+			// Can slide infinitely => RAY
 			const coefficients = vectors.getLineGeneralFormFromCoordsAndVec(start, step);
 			rays.push({ start, vector: step, line: coefficients });
 		} else {
-			// Can't slide infinitly => SEGMENT
+			// Can't slide infinitely => SEGMENT
 			const end: Coords = [start[0] + step[0] * limit, start[1] + step[1] * limit];
 			segments.push({ start, end });
 		}
@@ -152,6 +156,9 @@ function getLineComponents(): { rays: Ray[]; segments: Segment[] } {
 	return { rays, segments };
 }
 
+// Rendering -------------------------------------------------------------------
+
+/** [Zoomed out] Renders the selected piece's legal move highlight lines. */
 function render(): void {
 	if (!boardpos.areZoomedOut()) return; // Quit if we're not even zoomed out.
 
@@ -161,8 +168,12 @@ function render(): void {
 	highlightline.genLinesModel(lines).render();
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
+	// Lines
 	getLines,
 	getLineComponents,
+	// Rendering
 	render,
 };

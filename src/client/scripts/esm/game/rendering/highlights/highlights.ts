@@ -6,6 +6,10 @@
  * Last move
  * Check
  * Legal moves (of selected piece and hovered arrows)
+ * Special rights (debug)
+ * Premoves
+ * Square and ray annotations
+ * Legal move hints while in check
  */
 
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
@@ -19,15 +23,7 @@ import positionhighlights from '../../../board/rendering/positionhighlights.js';
 import legalmovehighlights from './legalmovehighlights.js';
 import specialrighthighlights from './specialrighthighlights.js';
 
-/**
- * Renders all highlights, including:
- *
- * Last move highlight
- * Red Check highlight
- * Legal move highlights
- * Hovered arrows legal move highlights
- * Outline of highlights render box
- */
+/** Renders all highlights below the pieces. */
 function render(boardsim: Board): void {
 	positionhighlights.render(gamescene.getGameContext(), boardsim);
 	if (!boardpos.areZoomedOut()) {

@@ -96,9 +96,12 @@ function returnMeshPiece(mesh: Mesh, change: Change): void {
  * We don't use boardchanges because a custom compositor is needed.
  * @param moveChanges - the changes to animate
  * @param forward - whether this is a forward or back animation
- * @param animateMain - Whether the main piece targeted by the move should be animated. All secondary pieces are guaranteed animated. If this is false, the main piece animation will be instantanious, only playing the SOUND.
+ * @param animateMain - Whether the main piece targeted by the move should be animated.
+ * 		All secondary pieces are guaranteed animated. If this is false, the main piece
+ * 		animation will be instantaneous, only playing the SOUND.
  * @param premove - Whether this animation is for a premove.
- * @param force_instant - Whether to FORCE instant animation, EVEN secondary pieces won't be animated. Enable when you are playing a premove in the game.
+ * @param force_instant - Whether to FORCE instant animation, EVEN secondary pieces won't be
+ * 		animated. Enable when you are playing a premove in the game.
  */
 function animateMove(
 	board: LiveBoard,
@@ -128,7 +131,7 @@ function animateMove(
 			pushToArrayMap(showKeyframes, change.order, change.piece);
 		} else if (change.action === 'move') {
 			const instant =
-				(change.main && !animateMain) || !preferences.getAnimationsMode() || force_instant; // Whether the animation should be instantanious, only playing the SOUND.
+				(change.main && !animateMain) || !preferences.getAnimationsMode() || force_instant; // Whether the animation should be instantaneous, only playing the SOUND.
 			let waypoints = change.path ?? [change.piece.coords, change.endCoords];
 
 			// Put all pieces captured last in the last keyframe
@@ -169,7 +172,7 @@ function animateMove(
 				newHideFrames.set(
 					k,
 					v.map((p) => p.coords),
-				); // Mutate to remove unnessacary info
+				); // Mutate to remove unnecessary info
 
 			// Hide where the moved piece is actually
 			pushToArrayMap(newHideFrames, last, waypoints[last]);
