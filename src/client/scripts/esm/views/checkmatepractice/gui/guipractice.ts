@@ -2,10 +2,12 @@
 
 /** Handles our Practice page, containing our practice selection menu. */
 
-import typeutil from '../../../../../../shared/chess/util/typeutil.js';
-import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import validcheckmates from '../../../../../../shared/chess/util/validcheckmates.js';
-import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
+import typeutil, {
+	players as p,
+	ext as e,
+	rawTypes as r,
+} from '../../../../../../shared/chess/util/typeutil.js';
 
 import svgcache from '../../../chess/rendering/svgcache.js';
 import validatorama from '../../../util/validatorama.js';
@@ -175,18 +177,16 @@ function appendPieceContainers(
 	piecelistW: HTMLElement,
 	piecelistB: HTMLElement,
 ): void {
-	for (const [, amount, shortPiece] of checkmateID.matchAll(/([0-9]+)([a-zA-Z]+)/g)) {
-		const pieceType = icnposition.getTypeFromAbbr(shortPiece!);
-		const piecelist =
-			typeutil.getColorFromType(pieceType) === p.WHITE ? piecelistW : piecelistB;
+	for (const { amount, type } of checkmatepractice.getPieceRuns(checkmateID)) {
+		const piecelist = typeutil.getColorFromType(type) === p.WHITE ? piecelistW : piecelistB;
 
-		for (let j = 0; j < Number(amount); j++) {
+		for (let j = 0; j < amount; j++) {
 			const pieceDiv = document.createElement('div');
-			pieceDiv.className = `checkmatepiece ${pieceType}`;
+			pieceDiv.className = `checkmatepiece ${type}`;
 
 			const containerDiv = document.createElement('div');
 			// prettier-ignore
-			const collation = (j === 0 ? '' : (shortPiece === 'Q' || shortPiece === 'AM' ? ' collated' : ' collated-strong'));
+			const collation = (j === 0 ? '' : (type === r.QUEEN + e.W || type === r.AMAZON + e.W ? ' collated' : ' collated-strong'));
 			containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
 			containerDiv.appendChild(pieceDiv);
 			piecelist.appendChild(containerDiv);
