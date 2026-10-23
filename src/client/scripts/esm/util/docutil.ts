@@ -183,7 +183,8 @@ function updateCookie(cookieName: string, value: string, days: number): void {
  * @param cookieName - The name of the cookie you would like to delete.
  */
 function deleteCookie(cookieName: string): void {
-	document.cookie = cookieName + '=; Max-Age=-99999999;';
+	// The path must match the cookie's, '/' for every cookie of ours, or this misses it on sub-paths.
+	document.cookie = cookieName + '=; Max-Age=-99999999; path=/';
 }
 
 // DOM -------------------------------------------------------------------------
