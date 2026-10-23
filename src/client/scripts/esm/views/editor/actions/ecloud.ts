@@ -14,7 +14,6 @@ import toast from '../../../components/toast.js';
 import esave from './esave.js';
 import eactions from './eactions.js';
 import savesapi from '../../../savedpositions/savesapi.js';
-import eautosave from './eautosave.js';
 import savestore from '../../../savedpositions/savestore.js';
 import egamerules from '../egamerules.js';
 import boardeditor from '../boardeditor.js';
@@ -75,8 +74,6 @@ async function saveCloud(position_name: string): Promise<void> {
 
 	toast.show(translations.editor.saved_to_cloud);
 	boardeditor.markPositionClean();
-	eautosave.markPositionDirty();
-	void eautosave.autosaveCurrentPositionOnce();
 }
 
 /**

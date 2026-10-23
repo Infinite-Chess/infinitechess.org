@@ -8,7 +8,6 @@ import type { EditorSaveState } from '../../../savedpositions/storetypes.js';
 
 import toast from '../../../components/toast.js';
 import eactions from './eactions.js';
-import eautosave from './eautosave.js';
 import savestore from '../../../savedpositions/savestore.js';
 import egamerules from '../egamerules.js';
 import boardeditor from '../boardeditor.js';
@@ -50,8 +49,6 @@ async function saveLocal(position_name: string): Promise<void> {
 		// A pending re-save supersedes this one, and reports once it lands.
 		if (positionSavePending === undefined) {
 			boardeditor.markPositionClean();
-			eautosave.markPositionDirty();
-			void eautosave.autosaveCurrentPositionOnce();
 			toast.show(translations.editor.saved_in_browser);
 		}
 	} catch (err) {

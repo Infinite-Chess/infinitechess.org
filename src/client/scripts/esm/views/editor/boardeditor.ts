@@ -60,9 +60,6 @@ async function init(
 ): Promise<void> {
 	await guipalette.initUI(); // First: the tools below mark their piece in it.
 
-	if (dirty) markPositionDirty();
-	else markPositionClean();
-
 	etoolmanager.setTool('normal');
 	drawingtool.init();
 
@@ -109,6 +106,10 @@ async function init(
 	// Also set gameConclusion to undefined. Otherwise, starting from a position that
 	// would have otherwise been checkmate/stalemate will prevent us from selecting pieces.
 	gamefile.gameConclusion = undefined;
+
+	// Once the position's rules are in place: marking it clean flushes them into the autosave.
+	if (dirty) markPositionDirty();
+	else markPositionClean();
 
 	eclipboard.addEventListeners();
 	eautosave.startPositionAutosave();
@@ -160,10 +161,11 @@ function markPositionDirty(): void {
 	eautosave.markPositionDirty();
 }
 
-/** Marks the current board position as clean (saved). */
+/** Marks the current board position as clean (saved), and flushes the autosave to record it. */
 function markPositionClean(): void {
 	positionDirty = false;
 	guipositionheader.updateDirtyIndicator(false);
+	flushAutosave();
 }
 
 // Active Position -------------------------------------------------------------
@@ -186,7 +188,7 @@ function isActivePosition(name: string, storage_type: StorageType): boolean {
 function setActivePosition(new_position: ActivePosition): void {
 	active_position = new_position;
 	guipositionheader.updateActivePositionElement(new_position.name);
-	flushActivePositionToAutosave();
+	flushAutosave();
 }
 
 /** Clears the active position and marks the position as dirty. */
@@ -194,14 +196,14 @@ function clearActivePosition(): void {
 	active_position = undefined;
 	markPositionDirty();
 	guipositionheader.updateActivePositionElement(undefined);
-	flushActivePositionToAutosave();
+	flushAutosave();
 }
 
 /**
- * Immediately flushes the autosave so a page refresh immediately
- * after a save/delete operation reflects the current active position.
+ * Immediately flushes the autosave so a page refresh right after a save, delete or
+ * active-position change reflects the current active position and dirty state.
  */
-function flushActivePositionToAutosave(): void {
+function flushAutosave(): void {
 	if (gameslot.getGamefile() === undefined) return; // Some callers run before the gamefile exists
 	eautosave.markPositionDirty();
 	void eautosave.autosaveCurrentPositionOnce();
