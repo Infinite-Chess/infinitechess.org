@@ -103,6 +103,7 @@ const STORAGE_KEY = 'ceval';
 /** How long persisted settings live in local storage; refreshed on every save. */
 const STORAGE_EXPIRY_MS = timeutil.toMillis(1, 'years');
 const DEFAULT_SETTINGS: CevalSettings = {
+	enabled: true,
 	multiPv: 1,
 	hashMb: 16,
 	depth: 20,
@@ -114,6 +115,8 @@ const DEFAULT_SETTINGS: CevalSettings = {
 /** Engine settings in localStorage. Ranges omitted on purpose — {@link loadSettings} clamps. */
 type CevalSettings = z.infer<typeof CevalSettingsSchema>;
 const CevalSettingsSchema = z.strictObject({
+	/** Whether the engine is toggled on. */
+	enabled: z.boolean(),
 	/** Number of engine lines to search & display (1-5). */
 	multiPv: z.int(),
 	/** Transposition table size in MB. */
@@ -227,7 +230,11 @@ function maxThreads(): number {
 
 /** Saves the current settings to local storage. */
 function persistSettings(): void {
-	LocalStorage.saveItem(STORAGE_KEY, settings, STORAGE_EXPIRY_MS);
+	try {
+		LocalStorage.saveItem(STORAGE_KEY, settings, STORAGE_EXPIRY_MS);
+	} catch (error) {
+		console.warn('[ceval] Could not save the engine settings:', error);
+	}
 }
 
 // Winning Chances -------------------------------------------------------------
@@ -832,8 +839,13 @@ function isBlocked(): boolean {
 	return blockReason !== undefined;
 }
 
-/** Switches the engine on or off, keeping the last eval to restore when it comes back on. */
+/**
+ * Switches the engine on or off, persisting the choice and keeping the last eval to restore
+ * when it comes back on.
+ */
 function setEnabled(value: boolean): void {
+	settings = { ...settings, enabled: value };
+	persistSettings();
 	if (enabled === value) return;
 	enabled = value;
 	if (enabled) {

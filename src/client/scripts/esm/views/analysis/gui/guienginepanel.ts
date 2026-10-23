@@ -55,10 +55,6 @@ const element_HashValue = document.getElementById('setting-hash-value')!;
 const element_Depth = document.getElementById('setting-depth') as HTMLInputElement;
 const element_DepthValue = document.getElementById('setting-depth-value')!;
 
-// Constants -------------------------------------------------------------------
-
-const ENABLED_STORAGE_KEY = 'ceval.enabled';
-
 // State -----------------------------------------------------------------------
 
 /**
@@ -104,15 +100,13 @@ function init(): void {
 
 	// Restore the persisted on/off state once the first game finishes loading.
 	GameBus.addEventListener('game-loaded', () => {
-		const wanted = localStorage.getItem(ENABLED_STORAGE_KEY) !== 'false';
-		if (wanted && !ceval.isEnabled()) setEngineEnabled(true);
+		if (ceval.getSettings().enabled) setEngineEnabled(true);
 	});
 }
 
-/** Turns local evaluation on or off, persisting the choice. */
+/** Turns local evaluation on or off. */
 function setEngineEnabled(value: boolean): void {
 	element_Toggle.checked = value;
-	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
 	ceval.setEnabled(value);
 	// Only hide here; showing happens in onEngineUpdate, synchronized with the value it displays —
 	// showing it eagerly on enable would flash an uninitialized (0%, all-white) bar for a frame.
