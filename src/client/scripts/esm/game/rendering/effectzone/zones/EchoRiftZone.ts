@@ -21,6 +21,8 @@ export class EchoRiftZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 8;
 
+	protected override readonly downsamplesSound = true;
+
 	private colorGradePass: ColorGradePass;
 
 	/** Post Processing Effect bending light through a crystalline voronoi distortion pattern structure. */

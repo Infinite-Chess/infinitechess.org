@@ -17,6 +17,8 @@ export class StaticZone extends BaseZone {
 	/** The unique integer id this effect zone gets. */
 	readonly effectType: number = 7;
 
+	protected override readonly downsamplesSound = true;
+
 	private colorGradePass: ColorGradePass;
 
 	/** How many pixels wide the white noise texture is. */
