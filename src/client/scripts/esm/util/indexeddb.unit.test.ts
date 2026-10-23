@@ -25,14 +25,14 @@ describe('IndexedDB storage functional behavior', () => {
 
 	it('saves and loads an item', async () => {
 		await IndexedDB.saveItem('pos:1', { fen: 'start' });
-		const value = await IndexedDB.loadItem<{ fen: string }>('pos:1');
+		const value = await IndexedDB.loadItem('pos:1');
 		expect(value).toEqual({ fen: 'start' });
 	});
 
 	it('overwrites an existing item with the same key', async () => {
 		await IndexedDB.saveItem('k', 'one');
 		await IndexedDB.saveItem('k', 'two');
-		const value = await IndexedDB.loadItem<string>('k');
+		const value = await IndexedDB.loadItem('k');
 		expect(value).toBe('two');
 	});
 
@@ -101,7 +101,7 @@ describe('IndexedDB storage functional behavior', () => {
 	it('saves an item with custom expiry time', async () => {
 		const expiryMillis = 10000; // 10 seconds
 		await IndexedDB.saveItem('k', 'value', expiryMillis);
-		const value = await IndexedDB.loadItem<string>('k');
+		const value = await IndexedDB.loadItem('k');
 		expect(value).toBe('value');
 	});
 

@@ -10,23 +10,28 @@
 
 import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 
+import * as z from 'zod';
+
 import timeutil from '../../../../shared/util/timeutil.js';
 
 import { createHandoff } from './createhandoff.js';
-
-// Types -----------------------------------------------------------------------
-
-/** A pending position handed off to the board editor from another page. */
-interface EditorHandoff {
-	/** The position for the editor to open, in place of its autosave. */
-	variantOptions: VariantOptions;
-}
 
 // Constants -------------------------------------------------------------------
 
 /** How long a stashed handoff stays valid before being auto-discarded. */
 const EXPIRY_MS = timeutil.toMillis(5, 'minutes');
 
+// Schemas ---------------------------------------------------------------------
+
+/** A pending position handed off to the board editor from another page. */
+const EditorHandoffSchema = z.strictObject({
+	/**
+	 * The position for the editor to open, in place of its autosave. Checked for object-ness
+	 * only: it can hold millions of pieces, and walking them would freeze the page.
+	 */
+	variantOptions: z.custom<VariantOptions>((v) => typeof v === 'object' && v !== null),
+});
+
 // Exports ---------------------------------------------------------------------
 
-export default createHandoff<EditorHandoff>('board-editor-handoff', EXPIRY_MS);
+export default createHandoff('board-editor-handoff', EXPIRY_MS, EditorHandoffSchema);

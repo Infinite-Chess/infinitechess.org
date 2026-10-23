@@ -16,7 +16,7 @@ import jsutil from '../../../../shared/util/jsutil.js';
 /** An entry in IndexedDB storage */
 interface Entry {
 	/** The actual value of the entry */
-	value: any;
+	value: unknown;
 	/** The timestamp the entry will become stale, at which point it should be deleted. */
 	expires?: number;
 }
@@ -167,23 +167,19 @@ async function saveItem<T>(key: string, value: T, expiryMillis?: number): Promis
 }
 
 /**
- * Loads an item from browser IndexedDB storage
+ * Loads an item from browser IndexedDB storage. Callers must validate the value.
  * @param key - The name/key of the item in storage
- * @returns A promise that resolves to the entry value, or undefined if not found
+ * @returns The entry's value, or undefined if absent, expired, or not one of our entries.
  * @throws If IndexedDB is unavailable, or the read fails.
  */
-async function loadItem<T>(key: string): Promise<T | undefined> {
-	const save = await withRead<any>((store) => store.get(key));
+async function loadItem(key: string): Promise<unknown> {
+	const save = await withRead<unknown>((store) => store.get(key));
 	if (save === undefined) return undefined;
-
-	// Check if the item has expired or is in old format
-	if (hasItemExpired(save)) {
+	if (!isEntry(save) || hasItemExpired(save)) {
 		await deleteItem(key);
 		return undefined;
 	}
-
-	// Not expired, return the value
-	return save.value as T;
+	return save.value;
 }
 
 /**
@@ -198,28 +194,20 @@ async function deleteItem(key: string): Promise<void> {
 
 // Expiry ----------------------------------------------------------------------
 
-/**
- * Checks if an entry has expired
- * @param save - The entry to check. The latest format is { value: any, expires: number }
- * @returns True if the entry has expired
- */
-function hasItemExpired(save: unknown): boolean {
-	// Verify it's an object, and the `expires` property is present.
-	// Checking in this way will allow typescript afterward to know it has that property.
-	if (
-		typeof save !== 'object' ||
-		save === null ||
-		// This is true EVEN if the property is present but set to undefined!
-		!('expires' in save) ||
-		(save.expires !== undefined && typeof save.expires !== 'number')
-	) {
-		console.log(`IndexedDB item was in an old format. Deleting it...`);
-		return true;
-	}
+/** Whether a stored value is one of the entries we wrote. */
+function isEntry(save: unknown): save is Entry {
+	return (
+		typeof save === 'object' &&
+		save !== null &&
+		'value' in save &&
+		'expires' in save &&
+		(save.expires === undefined || typeof save.expires === 'number')
+	);
+}
 
-	if (save.expires === undefined) return false; // Never expires
-
-	return Date.now() >= save.expires;
+/** Whether an entry is past its expiry. */
+function hasItemExpired(save: Entry): boolean {
+	return save.expires !== undefined && Date.now() >= save.expires;
 }
 
 /**
@@ -240,7 +228,8 @@ async function eraseExpiredItems(): Promise<void> {
 		request.onsuccess = () => {
 			const cursor = request.result;
 			if (cursor) {
-				if (hasItemExpired(cursor.value)) {
+				const save: unknown = cursor.value;
+				if (!isEntry(save) || hasItemExpired(save)) {
 					keysToDelete.push(cursor.key as string);
 				}
 				cursor.continue();
