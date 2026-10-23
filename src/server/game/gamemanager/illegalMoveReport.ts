@@ -1,4 +1,4 @@
-// src/server/game/gamemanager/cheatReport.ts
+// src/server/game/gamemanager/illegalMoveReport.ts
 
 /**
  * Handles the `report` game action: a player claiming their opponent's
@@ -36,7 +36,7 @@ import gameStateBuilder from './gameStateBuilder.js';
  * that move and aborts the game; an invalid one is refused and logged to hackLog.
  */
 function onReport(servergame: ServerGame, ourRole: Player, messageContents: ReportMessage): void {
-	console.log('Received cheat report! - Check hackLog.txt for more details.');
+	console.log('Received illegal-move report! - Check hackLog.txt for more details.');
 
 	const opponentColor = typeutil.invertPlayer(ourRole);
 
@@ -54,7 +54,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 
 	const engineGame = gameUtility.isEngineGame(servergame);
 	if (!servervalidation.isGameReportable(servergame.validateMoves, engineGame)) {
-		const errString = `Player tried to report cheating in a game that doesn't support cheat reports. Variant: ${gameUtility.getVariantCode(servergame.match.variant) ?? 'Custom'}. Report message: ${logEvents.truncate(JSON.stringify(messageContents))}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
+		const errString = `Player tried to report an illegal move in a game that doesn't support reports. Variant: ${gameUtility.getVariantCode(servergame.match.variant) ?? 'Custom'}. Report message: ${logEvents.truncate(JSON.stringify(messageContents))}. Reporter color: ${ourRole}. Game ID: ${servergame.match.id}`;
 		logEvents.add(errString, 'hackLog');
 		gameSockets.sendToColor(
 			servergame.match,
@@ -72,7 +72,7 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 		perpetratingMoveIndex,
 	);
 	if (colorThatPlayedPerpetratingMove === ourRole) {
-		const errString = `Silly goose player tried to report themselves for cheating. Report message: ${logEvents.truncate(JSON.stringify(messageContents))}. Reporter color: ${ourRole}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
+		const errString = `Silly goose player tried to report their own move. Report message: ${logEvents.truncate(JSON.stringify(messageContents))}. Reporter color: ${ourRole}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
 		logEvents.add(errString, 'hackLog');
 		gameSockets.sendToColor(
 			servergame.match,
@@ -87,14 +87,14 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 	const perpetratingMove = servergame.moves.pop();
 	if (!perpetratingMove) return; // A client can report before any move was played.
 
-	// Cheating report was valid, terminate the game.
+	// The report was valid: terminate the game.
 
 	const opponentsMoveNumber = messageContents.opponentsMoveNumber;
 
-	const errText = `Cheating reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${logEvents.escapeUntrusted(messageContents.reason)} Color who reported: ${ourRole}. Probably cheater color: ${opponentColor}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
+	const errText = `Illegal move reported! Perpetrating move: ${perpetratingMove.token}. Move number: ${opponentsMoveNumber}. The report description: ${logEvents.escapeUntrusted(messageContents.reason)} Color who reported: ${ourRole}. Offender color: ${opponentColor}.\nThe game: ${gameUtility.getSimplifiedGameString(servergame)}`;
 	logEvents.add(errText, 'hackLog');
 
-	// Notify all players a cheat was detected
+	// Notify everyone the illegal move was caught
 	for (const [colorStr, { socket: ws }] of Object.entries(servergame.match.playerData)) {
 		if (!ws) continue; // Not connected, can't send message
 		if (Number(colorStr) === opponentColor) {
@@ -111,14 +111,14 @@ function onReport(servergame: ServerGame, ourRole: Player, messageContents: Repo
 }
 
 /**
- * Concludes a game after a valid cheat report.
+ * Concludes a game after a valid illegal-move report.
  * Custom version of gameLifecycle.conclude
- * @param cheaterColor - The color whose (now-popped) perpetrating move triggered the report.
+ * @param offenderColor - The color whose (now-popped) perpetrating move triggered the report.
  */
 function concludeReportedGame(
 	servergame: ServerGame,
 	conclusion: GameConclusion,
-	cheaterColor: Player,
+	offenderColor: Player,
 ): void {
 	// If the game already concluded before this report, it was already logged
 	// to the permanent database — the overturn must update that record below.
@@ -126,13 +126,13 @@ function concludeReportedGame(
 	const originalConclusion = servergame.gameConclusion;
 
 	// Ahead of the conclusion, so it lands in the log the states below carry.
-	chat.appendNotice(servergame, cheaterColor, 'cheat-detected');
+	chat.appendNotice(servergame, offenderColor, 'cheat-detected');
 
 	gameLifecycle.applyConclusion(servergame, conclusion);
 
 	// Everyone gets the full state, not just the conclusion, because the popped move may still be
-	// sitting on their board: the cheater played it, so they're a move ahead of the server (whosTurn
-	// included), and any spectator who joined after it was played has it too — an initial load
+	// sitting on their board: the offender played it, so they're a move ahead of the server
+	// (whosTurn included), and any spectator who joined after it was played has it too — an initial load
 	// replays the move list unvalidated, so they never ran the check that refuses it live.
 	const state = gameStateBuilder.buildFullState(servergame);
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
@@ -155,7 +155,7 @@ function concludeReportedGame(
 	gameLifecycle.finalize(servergame); // Max of one report per game.
 
 	// Update the already-logged game record to reflect the overturn (aborted, one fewer move...).
-	if (wasLogged) gameLogger.updateOverturned(servergame, originalConclusion!, cheaterColor);
+	if (wasLogged) gameLogger.updateOverturned(servergame, originalConclusion!, offenderColor);
 }
 
 // Exports ---------------------------------------------------------------------

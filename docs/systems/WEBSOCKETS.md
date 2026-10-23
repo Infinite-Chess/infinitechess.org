@@ -382,8 +382,8 @@ fetched state into the same `gamestate` shape and no socket is opened at all.
 
 `gamestate` is the universal repair message.
 [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts) rewinds and forwards our board until
-it matches the server's move list, validates each opponent move as it goes (reporting cheating where
-the game permits it), and applies the conclusion.
+it matches the server's move list, validates each opponent move as it goes (reporting an illegal one
+where the game permits it), and applies the conclusion.
 
 - If the server's list is a strict **prefix** of ours, the game hasn't concluded, and we're allowed
   to submit the difference, we don't rewind — we just submit the missing moves.
@@ -398,11 +398,11 @@ the game permits it), and applies the conclusion.
   leaving our board deliberately short of the server's. `inSync` goes back to false and the route is
   never marked synced, so held intents stay held.
 
-A refusal self-heals wherever a cheat report is possible: the server pops the offending move,
-aborts, and pushes a fresh `gamestate` to everyone
-([cheatReport.ts](/src/server/game/gamemanager/cheatReport.ts)). Where it isn't (spectators, engine
-games, server-validated games), the board stays a move behind indefinitely — intended, not an
-oversight.
+A refusal self-heals wherever an illegal-move report is possible: the server pops the offending
+move, aborts, and pushes a fresh `gamestate` to everyone
+([illegalMoveReport.ts](/src/server/game/gamemanager/illegalMoveReport.ts)). Where it isn't
+(spectators, engine games, server-validated games), the board stays a move behind indefinitely —
+intended, not an oversight.
 
 Clock values in any incoming game message are ping-adjusted **at receipt** (half the last RTT
 subtracted from the ticking color) inside `onlinegamerouter.receiveMessage`, before any buffering,

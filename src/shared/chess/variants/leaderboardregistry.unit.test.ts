@@ -1,8 +1,9 @@
 // src/shared/chess/variants/leaderboardregistry.unit.test.ts
 
 /**
- * Catches a variant being put on a leaderboard without server validation. Only unvalidated
- * games can be cheat-reported, and an overturn never reverses ratings, so a rated one must never be.
+ * Catches a variant being put on a leaderboard without server validation. Only unvalidated games
+ * can be reported for an illegal move, and an overturn never reverses ratings, so a rated one must
+ * never be.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';

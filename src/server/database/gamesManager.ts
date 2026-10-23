@@ -179,8 +179,8 @@ function insert(record: GamesRecord): void {
 }
 
 /**
- * Updates specific columns of a logged game. Used when a
- * cheat report overturns an already-logged game's conclusion.
+ * Updates specific columns of a logged game. Used when an
+ * illegal-move report overturns an already-logged game's conclusion.
  * @param game_id - The game to update.
  * @param updates - Only the columns to change and their new values. `game_id` is not updatable.
  * @throws If invalid arguments are provided, or if a database error occurs.
@@ -197,7 +197,7 @@ function update(game_id: number, updates: Partial<GamesRecord>): void {
 }
 
 /**
- * Deletes a game row (cascades to player_games). Used when a cheat report overturns a
+ * Deletes a game row (cascades to player_games). Used when an illegal-move report overturns a
  * game down to zero moves — which is never stored, so the whole record is removed.
  * @param game_id - The game to delete.
  * @throws If a database error occurs.

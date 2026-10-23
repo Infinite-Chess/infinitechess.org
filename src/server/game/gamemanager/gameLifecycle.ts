@@ -6,7 +6,7 @@
  *
  * 1. **Concluded** — the result is set and broadcast, and the clocks stop.
  * 2. **Freed** — both players may join a new game, and the game is logged to the database.
- * 3. **Finalized** — the result is locked in; cheat reports are no longer accepted.
+ * 3. **Finalized** — the result is locked in; illegal-move reports are no longer accepted.
  * 4. **Evicted** — the rematch window closed (both left, a rematch started, or one of them
  *    joined another game), so it drops out of memory.
  */
@@ -42,9 +42,10 @@ import chatEntriesManager from '../../database/chatEntriesManager.js';
 // Constants -------------------------------------------------------------------
 
 /**
- * The cushion time, after a cheat-reportable game concludes, before its result is locked in
- * (finalized). This gives the opponent a little time to overturn the conclusion with a cheat report
- * — which updates the already-logged database record. This only delays the finalized (locked) flag.
+ * The cushion time, after a reportable game concludes, before its result is locked in
+ * (finalized). This gives the opponent a little time to overturn the conclusion with an
+ * illegal-move report — which updates the already-logged database record. This only delays the
+ * finalized (locked) flag.
  */
 const FINALIZE_CUSHION_MS = 1000 * 8;
 
@@ -126,8 +127,8 @@ function consoleLogGameOver(servergame: ServerGame): void {
  * — they dropped inside the reconnection cushion, which stays silent until it elapses.
  */
 function announceAnyoneAlreadyGone(servergame: ServerGame): void {
-	// A cheat report concludes the game a SECOND time (`timeEnded` marks the first). By then every
-	// cushion below was started by leaveRematchWindow, which writes this notice itself — so skip.
+	// An illegal-move report concludes the game a SECOND time (`timeEnded` marks the first). By then
+	// every cushion below was started by leaveRematchWindow, which writes this notice itself — so skip.
 	if (servergame.match.timeEnded !== undefined) return;
 
 	for (const [color, data] of Object.entries(servergame.match.playerData)) {
@@ -157,14 +158,14 @@ function free(servergame: ServerGame): void {
 	}
 
 	// Log the game into the database the instant it concludes.
-	// A cheat report may still update the record until it's finalized.
+	// An illegal-move report may still update the record until it's finalized.
 	logConcludedGame(servergame);
 
 	const engineGame = gameUtility.isEngineGame(servergame);
 	if (!servervalidation.isGameReportable(servergame.validateMoves, engineGame)) {
 		finalize(servergame); // Nothing can overturn the result. Lock it in now.
 	} else {
-		// Give the opponent a cushion to overturn the result with a cheat report before locking it.
+		// Give the opponent a cushion to overturn the result by reporting an illegal move, before locking it.
 		servergame.match.finalizeTimeoutID = setTimeout(() => {
 			finalize(servergame);
 			// Nothing evicts here: leaveRematchWindow does it as the last player leaves.
@@ -179,7 +180,7 @@ function free(servergame: ServerGame): void {
 /**
  * Logs a concluded game into the permanent database (computing rating changes for rated games)
  * and drops its live-game persistence row. Runs once, at conclusion, from {@link free}.
- * A cheat-reportable game's result may still be overturned by a cheat report until it finalizes,
+ * A reportable game's result may still be overturned by an illegal-move report until it finalizes,
  * in which case the logged record is updated in place.
  */
 function logConcludedGame(servergame: ServerGame): void {
@@ -209,7 +210,7 @@ function logConcludedGame(servergame: ServerGame): void {
 // 3. Finalizing ---------------------------------------------------------------
 
 /**
- * Finalizes a concluded game: locks in its result permanently. Afterward, cheat reports are
+ * Finalizes a concluded game: locks in its result permanently. Afterward, illegal-move reports are
  * no longer accepted. Game is ALREADY logged into the db at conclusion. This only flips the
  * flag, measures rating abuse, queues the game for engine-assistance detection, and tells
  * clients the result can no longer change. Idempotent. Finalized !== evicted: the game may linger
