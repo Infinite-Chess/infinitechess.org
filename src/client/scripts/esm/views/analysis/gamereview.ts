@@ -10,15 +10,14 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EngineAssets } from '../../../../../shared/chess/util/engineregistry.js';
-import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
 import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
+import type { AnalysisInfo, EngineRefusal } from '../../../../../shared/chess/util/engineglue.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
 import type {
 	AnalysisCommand,
-	AnalysisInfo,
 	AnalysisResponse,
 	EvaluateResult,
 	SearchedResult,
@@ -27,6 +26,8 @@ import type {
 import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
+import winchance from '../../../../../shared/chess/util/winchance.js';
+import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -36,7 +37,6 @@ import ceval from './ceval.js';
 import movetree from './movetree.js';
 import gameslot from '../../game/chess/gameslot.js';
 import moveevals from './moveevals.js';
-import engineicn from '../../chess/engineicn.js';
 import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
 import gamecompressor from '../../chess/gamecompressor.js';
@@ -190,8 +190,6 @@ function isLapseKey(key: string): key is LapseKey {
 	return (LAPSE_KEYS as readonly string[]).includes(key);
 }
 
-/** Effective cp a forced mate maps to for win-probability purposes (mate-in-1 equivalent). */
-const MATE_CP = 1800;
 /** Cp values are clamped to this for average-centipawn-loss, mirroring lichess. */
 const ACPL_CLAMP = 1000;
 /** How many plies of a position's best line the review keeps, mirroring lichess. */
@@ -286,12 +284,6 @@ GameBus.addEventListener('game-unloaded', resetState);
 
 // Win probability & accuracy (lichess formulas) -------------------------------
 
-/** Maps a mover-POV cp to a win probability [0,1]. */
-function cpToWinProb(cp: number): number {
-	// Remap ceval's shared winning-chances sigmoid from [-1, 1] to a probability [0, 1].
-	return 0.5 + 0.5 * ceval.cpToWinningChances(cp, MATE_CP);
-}
-
 /** Lichess per-move accuracy% from the win probabilities before/after the move. */
 function moveAccuracyPercent(wpBefore: number, wpAfter: number): number {
 	const wpLossPct = (wpBefore - wpAfter) * 100;
@@ -315,7 +307,7 @@ function volatilityWeight(ply: number): number {
 	for (let i = start; i < start + size; i++) {
 		const cp = effectiveWhiteCp[i];
 		if (cp === undefined) continue;
-		const winPct = cpToWinProb(cp) * 100;
+		const winPct = winchance.cpToWinProbability(cp) * 100;
 		count++;
 		sum += winPct;
 		sumOfSquares += winPct * winPct;
@@ -858,7 +850,7 @@ function resolveWhiteCp(index: number): number | undefined {
 	if (result.legalMoveCount === 0) {
 		// Terminal: the game's result scores it, a win as a mate.
 		const victor = terminalVictorAt(index);
-		effectiveWhiteCp[index] = victor ? (victor === p.WHITE ? MATE_CP : -MATE_CP) : 0;
+		effectiveWhiteCp[index] = victor ? (victor === p.WHITE ? 1 : -1) * winchance.MATE_CP : 0;
 		return effectiveWhiteCp[index];
 	}
 
@@ -879,7 +871,7 @@ function resolveWhiteCp(index: number): number | undefined {
 
 /** The result's score from the side-to-move's perspective, as an effective cp. */
 function stmCp(result: SearchedResult): number | undefined {
-	if (result.mate !== undefined) return result.mate > 0 ? MATE_CP : -MATE_CP;
+	if (result.mate !== undefined) return result.mate > 0 ? winchance.MATE_CP : -winchance.MATE_CP;
 	return result.cp;
 }
 
@@ -939,8 +931,8 @@ function classifyMove(i: number, before: SearchedResult): MoveReview {
 
 	// Win probabilities from the mover's perspective, before and after their move.
 	const moverSign = mover === p.WHITE ? 1 : -1;
-	const wpBefore = cpToWinProb(moverSign * effectiveWhiteCp[i]!);
-	const wpAfter = cpToWinProb(moverSign * effectiveWhiteCp[i + 1]!);
+	const wpBefore = winchance.cpToWinProbability(moverSign * effectiveWhiteCp[i]!);
+	const wpAfter = winchance.cpToWinProbability(moverSign * effectiveWhiteCp[i + 1]!);
 	review.wpLoss = Math.max(0, wpBefore - wpAfter);
 	review.accuracy = moveAccuracyPercent(wpBefore, wpAfter);
 

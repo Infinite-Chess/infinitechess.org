@@ -16,7 +16,11 @@
  * @author FirePlank
  */
 
-import type { EngineWasmModule, WasmEngine, WasmMove } from '../../../chess/enginewasm.js';
+import type {
+	GameplayWasmEngine,
+	GameplayWasmModule,
+	WasmMove,
+} from '../../../../../../shared/chess/util/engineglue.js';
 import type {
 	ApeironMoveRequest,
 	EngineInitRequest,
@@ -25,28 +29,9 @@ import type {
 } from './engineprotocol.js';
 
 import jsutil from '../../../../../../shared/util/jsutil.js';
+import engineicn from '../../../../../../shared/chess/logic/icn/engineicn.js';
 
-import engineicn from '../../../chess/engineicn.js';
 import enginewasm from '../../../chess/enginewasm.js';
-
-// Types -----------------------------------------------------------------------
-
-/** The gameplay engine glue's exports. */
-interface GameplayWasmModule extends EngineWasmModule {
-	Engine: {
-		/** Constructs an engine at the position described by `icn`, with the search config. */
-		from_icn: (icn: string, config: Record<string, number>) => GameplayEngine;
-	};
-}
-
-/** One wasm engine instance, bound to the position it was constructed at. */
-interface GameplayEngine extends WasmEngine {
-	/**
-	 * Searches for the best move, bounded by `timeLimit` ms; `silent` skips the search's
-	 * console logging. Null when the search produced no move.
-	 */
-	get_best_move_with_time: (timeLimit: number, silent: boolean) => WasmMove | null;
-}
 
 // State -----------------------------------------------------------------------
 
@@ -89,7 +74,7 @@ async function initWasm(msg: EngineInitRequest): Promise<void> {
  * posts a null move, which the page treats as the engine resigning.
  */
 function respondToMoveRequest(data: ApeironMoveRequest): void {
-	let engine: GameplayEngine | undefined;
+	let engine: GameplayWasmEngine | undefined;
 	try {
 		const engineColor = data.youAreColor;
 

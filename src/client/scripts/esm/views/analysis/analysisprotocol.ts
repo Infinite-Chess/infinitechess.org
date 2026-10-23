@@ -10,11 +10,11 @@
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
-import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
+import type { AnalysisInfo, EngineRefusal } from '../../../../../shared/chess/util/engineglue.js';
 
 import * as z from 'zod';
 
-import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
+import engineglue from '../../../../../shared/chess/util/engineglue.js';
 
 // Requests --------------------------------------------------------------------
 
@@ -91,28 +91,6 @@ export type AnalysisResponse =
 	/** The search threw (likely a wasm panic, which poisons the module) — the main thread must respawn the worker. */
 	| { type: 'searcherror'; message: string };
 
-/** A streamed engine info update (one per completed depth). */
-export interface AnalysisInfo {
-	depth: number;
-	/** Deepest ply reached by any line, including quiescence extensions. */
-	seldepth: number;
-	nodes: number;
-	nps: number;
-	timeMs: number;
-	/** TT fill in permille (0-1000). */
-	hashfull: number;
-	lines: AnalysisLine[];
-}
-
-/** One PV of an info update. Moves are compact ICN tokens ("x,y>x,y=Q"). */
-interface AnalysisLine {
-	moves: string[];
-	/** Centipawns from the side-to-move's perspective. Absent when mating. */
-	cp?: number;
-	/** Full moves to mate from the side-to-move's perspective (negative = getting mated). */
-	mate?: number;
-}
-
 // Schemas ---------------------------------------------------------------------
 
 /** An `evaluate` result for a position the engine took (see {@link SearchedResultSchema}). */
@@ -144,5 +122,5 @@ const SearchedResultSchema = z.strictObject({
  */
 export const EvaluateResultSchema = z.union([
 	SearchedResultSchema,
-	z.strictObject({ requestId: z.int(), refused: z.enum(apeironcard.ENGINE_REFUSALS) }),
+	z.strictObject({ requestId: z.int(), refused: z.enum(engineglue.ENGINE_REFUSALS) }),
 ]);

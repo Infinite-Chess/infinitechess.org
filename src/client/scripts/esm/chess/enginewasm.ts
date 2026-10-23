@@ -6,42 +6,14 @@
  */
 
 import type { Player, RawType } from '../../../../shared/chess/util/typeutil.js';
+import type {
+	EngineWasmInitOutput,
+	EngineWasmModule,
+} from '../../../../shared/chess/util/engineglue.js';
 
 import math from '../../../../shared/util/math/math.js';
 import icnposition from '../../../../shared/chess/logic/icn/icnposition.js';
 import typeutil, { rawTypes as r } from '../../../../shared/chess/util/typeutil.js';
-
-// Types -----------------------------------------------------------------------
-
-/** The exports every engine glue module provides. */
-export interface EngineWasmModule {
-	/** wasm-bindgen's init. Compiles and instantiates the .wasm alongside the glue, unless handed its bytes. */
-	default: (init?: { module_or_path: BufferSource }) => Promise<EngineWasmInitOutput>;
-	/** Starts the rayon thread pool. Absent on single-threaded engine builds. */
-	initThreadPool?: (threads: number) => Promise<void>;
-}
-
-/** What a glue module's init hands back. */
-interface EngineWasmInitOutput {
-	/** The instance's linear memory, shared when the build is multithreaded. */
-	memory: WebAssembly.Memory;
-}
-
-/** What every engine instance exposes, whatever the build. */
-export interface WasmEngine {
-	/** Every legal move in the position. */
-	get_legal_moves_js: () => WasmMove[];
-	/** Releases the wasm-side allocation. Mandatory — wasm memory isn't GC'd. */
-	free: () => void;
-}
-
-/** A move as wasm reports it: `from`/`to` are compact ICN coords ("x,y"). */
-export interface WasmMove {
-	from: string;
-	to: string;
-	/** The engine's own single-letter piece code, NOT a site abbreviation. */
-	promotion?: string | null;
-}
 
 // Wasm Loading ----------------------------------------------------------------
 

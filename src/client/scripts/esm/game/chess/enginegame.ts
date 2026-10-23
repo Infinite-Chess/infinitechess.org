@@ -19,6 +19,7 @@ import type {
 } from './engines/engineprotocol.js';
 
 import timeutil from '../../../../../shared/util/timeutil.js';
+import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
 import interpolate from '../../../../../shared/util/interpolate.js';
 import movevalidation from '../../../../../shared/chess/logic/movevalidation.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
@@ -28,7 +29,6 @@ import toast from '../../components/toast.js';
 import gameslot from './gameslot.js';
 import premoves from './premoves.js';
 import selection from './selection.js';
-import engineicn from '../../chess/engineicn.js';
 import enginewasm from '../../chess/enginewasm.js';
 import { GameBus } from '../../board/GameBus.js';
 import gamesession from './gamesession.js';

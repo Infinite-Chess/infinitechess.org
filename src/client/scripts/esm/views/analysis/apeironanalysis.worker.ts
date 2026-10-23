@@ -25,59 +25,25 @@
  * when the glue (and its `snippets/` + .wasm) are real served files; bundling them here breaks it.
  */
 
-import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
-import type { EngineWasmModule, WasmEngine, WasmMove } from '../../chess/enginewasm.js';
 import type {
 	AnalysisCommand,
-	AnalysisInfo,
 	AnalysisResponse,
 	EvaluateResult,
 	GoOptions,
 	SearchedResult,
 } from './analysisprotocol.js';
+import type {
+	AnalysisInfo,
+	AnalysisWasmEngine,
+	AnalysisWasmModule,
+	EngineRefusal,
+	WasmMove,
+} from '../../../../../shared/chess/util/engineglue.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import engineglue from '../../../../../shared/chess/util/engineglue.js';
 
 import enginewasm from '../../chess/enginewasm.js';
-
-// Types -----------------------------------------------------------------------
-
-/** The analysis engine glue's exports. */
-interface AnalysisWasmModule extends EngineWasmModule {
-	Engine: {
-		/** Constructs an engine at the position described by `icn`. Throws a refusal ({@link asRefusal}). */
-		from_icn: (icn: string, config: Record<string, never>) => AnalysisWasmEngine;
-	};
-	/** Sizes the transposition table, in megabytes. Must be called before any search. */
-	set_hash_size: (hashMb: number) => void;
-	/** Byte offset of the shared stop flag, which the page writes to abort a search. */
-	stop_flag_ptr: () => number;
-	/** Parks the Lazy SMP helper threads once a position is finished. */
-	stop_analysis_helpers: () => void;
-	/** Clears the transposition table and all other cross-position search state. */
-	reset_engine_state: () => void;
-}
-
-/** One wasm engine instance, holding the position it is searching. */
-interface AnalysisWasmEngine extends WasmEngine {
-	/** Moves the instance to a new position, keeping the warm transposition table. Throws like `from_icn`. */
-	set_position: (icn: string) => void;
-	/**
-	 * Runs iterative deepening from `start_depth` toward `max_depth` (default 64), invoking
-	 * `onInfo` after each completed depth and returning the final one. Blocks until it finishes,
-	 * exhausts `slice_ms` (0 = unbounded) or `max_nodes`, or the page writes the shared stop flag.
-	 */
-	analyse: (
-		options: {
-			multi_pv: number;
-			max_depth?: number;
-			start_depth: number;
-			slice_ms: number;
-			max_nodes?: number;
-		},
-		onInfo: (info: AnalysisInfo) => void,
-	) => AnalysisInfo | null;
-}
 
 // Constants -------------------------------------------------------------------
 
@@ -318,16 +284,10 @@ function placeEngine(
 		existing.set_position(icn);
 		return existing;
 	} catch (e) {
-		const refusal = asRefusal(e);
+		const refusal = engineglue.asRefusal(e);
 		if (refusal === undefined) throw e;
 		return refusal;
 	}
-}
-
-/** The engine's refusal of a position (it throws its `compression::Refusal` name), else undefined. */
-function asRefusal(e: unknown): EngineRefusal | undefined {
-	if (e === 'Uncompressible') return 'too_spread_out';
-	return undefined;
 }
 
 /** Yields one macrotask so queued messages (stop / position / go) are processed. */
@@ -359,7 +319,7 @@ function postLegalMoves(requestId: number, icn: string): void {
 	} catch (e) {
 		// A wasm throw here would otherwise leak the engine and hang the main thread's request
 		// (no response ever posted). Reply empty so the debug overlay just shows nothing.
-		if (asRefusal(e) === undefined) console.error('[Analysis Engine] Legal-move enumeration failed', e); // prettier-ignore
+		if (engineglue.asRefusal(e) === undefined) console.error('[Analysis Engine] Legal-move enumeration failed', e); // prettier-ignore
 		postMessage({ type: 'legalmoves', requestId, moves: [] } satisfies AnalysisResponse);
 	} finally {
 		legalMoveEngine?.free();

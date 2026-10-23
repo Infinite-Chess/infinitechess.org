@@ -11,12 +11,12 @@ import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { CoordsKey } from '../../../../../shared/util/coordutil.js';
 import type { LegalMoves } from '../../../../../shared/chess/logic/legalmoves.js';
-import type { EngineWasmModule, WasmEngine } from '../../chess/enginewasm.js';
+import type { EngineWasmModule, WasmEngine } from '../../../../../shared/chess/util/engineglue.js';
 
 import coordutil from '../../../../../shared/util/coordutil.js';
+import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
 import legalmoves from '../../../../../shared/chess/logic/legalmoves.js';
 
-import engineicn from '../../chess/engineicn.js';
 import gamecompressor from '../../chess/gamecompressor.js';
 
 // Types -----------------------------------------------------------------------

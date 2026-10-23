@@ -8,23 +8,22 @@
  */
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
+import type { EngineSupportCode } from '../../../../../shared/chess/engines/apeironcard.js';
+import type { AnalysisInfo, EngineRefusal } from '../../../../../shared/chess/util/engineglue.js';
+import type { AnalysisCommand, AnalysisResponse } from './analysisprotocol.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
-import type { AnalysisCommand, AnalysisInfo, AnalysisResponse } from './analysisprotocol.js';
-import type {
-	EngineRefusal,
-	EngineSupportCode,
-} from '../../../../../shared/chess/engines/apeironcard.js';
 
 import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
 import timeutil from '../../../../../shared/util/timeutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
+import winchance from '../../../../../shared/chess/util/winchance.js';
+import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
-import engineicn from '../../chess/engineicn.js';
 import enginewasm from '../../chess/enginewasm.js';
 import { GameBus } from '../../board/GameBus.js';
 import LocalStorage from '../../util/LocalStorage.js';
@@ -248,18 +247,7 @@ function mateWinningChances(mate: number): number {
 /** White-POV cp → winning chances for the eval gauge. */
 function cpWinningChances(cp: number): number {
 	// Clamp at ±1200 so a mate (±1) always shows a higher gauge than any non-mate eval.
-	return cpToWinningChances(cp, 1200);
-}
-
-/**
- * Maps a centipawn score to winning chances in [-1, 1], from that score's POV.
- * Clamps to ±`clampCp` first, so a caller's mate sentinel can sit at the extreme.
- */
-function cpToWinningChances(cp: number, clampCp: number): number {
-	const clamped = math.clamp(cp, -clampCp, clampCp);
-	// Shallow curve (0.003) assumes players convert
-	// advantages less efficiently than a perfect engine would.
-	return 2 / (1 + Math.exp(-0.003 * clamped)) - 1;
+	return winchance.cpToWinningChances(cp, 1200);
 }
 
 // Worker Lifecycle ------------------------------------------------------------
@@ -986,7 +974,6 @@ export default {
 	maxThreads,
 	// Winning Chances
 	cpWinningChances,
-	cpToWinningChances,
 	// Legal-Moves Helper Worker
 	requestLegalMoves,
 	terminateLegalWorker,

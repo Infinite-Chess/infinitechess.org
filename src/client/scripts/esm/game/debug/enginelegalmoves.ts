@@ -7,13 +7,13 @@
 import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 
+import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
 import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import gamescene from '../rendering/gamescene.js';
-import engineicn from '../../chess/engineicn.js';
 import drawsquares from '../rendering/highlights/annotations/drawsquares.js';
 import { GameBus } from '../../board/GameBus.js';
 import frametracker from '../../board/rendering/frametracker.js';
