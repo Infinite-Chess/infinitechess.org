@@ -10,13 +10,13 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EngineAssets } from '../../../../../shared/chess/util/engineregistry.js';
+import type { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { EngineRefusal } from '../../../../../shared/chess/engines/apeironcard.js';
 import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
 import type { Player, PlayerGroup } from '../../../../../shared/chess/util/typeutil.js';
 import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
-import type { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type {
 	AnalysisCommand,
 	AnalysisInfo,
@@ -28,6 +28,7 @@ import type {
 import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
@@ -226,7 +227,7 @@ const REVIEW_HASH_MB = 16;
 const REVIEW_CACHE_SCHEMA_VERSION = 3;
 const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
-const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
+const REVIEW_CACHE_EXPIRY_MS = timeutil.toMillis(1, 'years');
 
 // Schemas ---------------------------------------------------------------------
 

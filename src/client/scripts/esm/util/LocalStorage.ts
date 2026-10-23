@@ -11,6 +11,7 @@
  */
 
 import jsonutil from '../../../../shared/util/jsonutil.js';
+import timeutil from '../../../../shared/util/timeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -27,8 +28,8 @@ interface Entry {
 /** For debugging. This prints to the console all save and delete operations. */
 const PRINT_CHANGES = false;
 
-const DEFAULT_EXPIRY_MS = 1000 * 60 * 60 * 24; // 24 hours
-// const DEFAULT_EXPIRY_MS = 1000 * 20; // 20 seconds
+const DEFAULT_EXPIRY_MS = timeutil.toMillis(24, 'hours');
+// const DEFAULT_EXPIRY_MS = timeutil.toMillis(20, 'seconds');
 
 // Initialization --------------------------------------------------------------
 

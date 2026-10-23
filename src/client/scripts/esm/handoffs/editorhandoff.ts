@@ -10,6 +10,8 @@
 
 import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 
+import timeutil from '../../../../shared/util/timeutil.js';
+
 import { createHandoff } from './createhandoff.js';
 
 // Types -----------------------------------------------------------------------
@@ -23,7 +25,7 @@ interface EditorHandoff {
 // Constants -------------------------------------------------------------------
 
 /** How long a stashed handoff stays valid before being auto-discarded. */
-const EXPIRY_MS = 1000 * 60 * 5; // 5 minutes
+const EXPIRY_MS = timeutil.toMillis(5, 'minutes');
 
 // Exports ---------------------------------------------------------------------
 

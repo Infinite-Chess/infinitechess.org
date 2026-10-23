@@ -6,6 +6,7 @@
  */
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 
 import gameslot from '../../game/chess/gameslot.js';
 import gamesound from '../../board/gamesound.js';
@@ -15,7 +16,7 @@ import gamesession from '../../game/chess/gamesession.js';
 // Constants -------------------------------------------------------------------
 
 /** Number of millis to wait before reminding us a 2nd time it's our move by playing a sound effect. */
-const MOVE_SOUND_REMINDER_MS: number = 1000 * 20; // 20 seconds
+const MOVE_SOUND_REMINDER_MS: number = timeutil.toMillis(20, 'seconds');
 
 /** The original tab title. We will always revert to this after temporarily changing the name name to alert player's it's their move. */
 const ORIGINAL_TITLE: string = document.title;

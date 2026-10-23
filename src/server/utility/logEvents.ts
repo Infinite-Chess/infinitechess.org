@@ -25,6 +25,7 @@ import { format, startOfISOWeek } from 'date-fns';
 import { promises as fsPromises } from 'fs';
 
 import jsutil from '../../shared/util/jsutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 import requestContext from './requestContext.js';
 
@@ -42,10 +43,10 @@ const LOGS_DIR = path.join(__dirname, '..', '..', '..', 'logs');
 const ROTATED_LOGS: readonly string[] = ['reqLog', 'wsInLog', 'wsOutLog'];
 
 /** Rotated log files whose bucket was last written to longer ago than this are deleted. */
-const LOG_RETENTION_MS = 1000 * 60 * 60 * 24 * 30 * 6; // ~6 months
+const LOG_RETENTION_MS = timeutil.toMillis(180, 'days'); // ~6 months
 
 /** How often the retention sweep runs. */
-const LOG_CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
+const LOG_CLEANUP_INTERVAL_MS = timeutil.toMillis(24, 'hours');
 
 /** Untrusted text longer than this is cut down before it reaches a log line. */
 const MAX_LOGGED_TEXT_LENGTH = 2048;

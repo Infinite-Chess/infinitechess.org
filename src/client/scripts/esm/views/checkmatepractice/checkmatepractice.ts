@@ -12,6 +12,7 @@ import type { Coords, CoordsKey } from '../../../../../shared/util/coordutil.js'
 
 import bimath from '../../../../../shared/util/math/bimath.js';
 import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import variantrules from '../../../../../shared/chess/logic/variantrules.js';
@@ -65,7 +66,7 @@ const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion'
  * @type {string[]}
  */
 let completedCheckmates: string[];
-const COMPLETED_EXPIRY_MS: number = 1000 * 60 * 60 * 24 * 365; // 1 year
+const COMPLETED_EXPIRY_MS: number = timeutil.toMillis(1, 'years');
 
 /**
  * The checkmate the current game was started with. Owned here rather than read back off

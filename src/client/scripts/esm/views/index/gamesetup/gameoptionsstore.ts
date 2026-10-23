@@ -10,6 +10,7 @@ import type { DisplaySelection } from '../../../board/variantselector/variantsel
 import * as z from 'zod';
 
 import modutil from '../../../../../../shared/chess/util/modutil.js';
+import timeutil from '../../../../../../shared/util/timeutil.js';
 import clockutil from '../../../../../../shared/chess/util/clockutil.js';
 import { VARIANT_CODES } from '../../../../../../shared/chess/util/variantcodes.js';
 
@@ -21,7 +22,7 @@ import IndexedDB from '../../../util/IndexedDB.js';
 const GAME_OPTIONS_NAME = 'game-setup-options';
 
 /** How long remembered options survive without a return to the lobby. */
-const EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
+const EXPIRY_MS = timeutil.toMillis(1, 'years');
 
 // Schemas ---------------------------------------------------------------------
 

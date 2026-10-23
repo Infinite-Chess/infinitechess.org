@@ -9,6 +9,8 @@
 import type { Request } from 'express';
 import type { TokenPayload } from '../utility/tokenSigner.js';
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import db from './database.js';
 import ip from '../utility/ip.js';
 import tokenSigner from '../utility/tokenSigner.js';
@@ -43,7 +45,7 @@ export type RefreshTokenRecord = {
  * The window where a "consumed" token is still accepted, allowing a
  * short grace period for concurrent requests during session renewal.
  */
-const GRACE_PERIOD_MS = 1000 * 10; // 10 seconds
+const GRACE_PERIOD_MS = timeutil.toMillis(10, 'seconds');
 
 // Finding ---------------------------------------------------------------------
 

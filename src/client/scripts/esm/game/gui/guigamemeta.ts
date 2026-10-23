@@ -37,7 +37,7 @@ GameBus.addEventListener('game-concluded', showResultBanner);
 // Started X ago ---------------------------------------------------------------
 
 /** Re-derives `#meta-started` no more than once a minute (the string only changes by the minute). */
-const REFRESH_INTERVAL_MS = 1000 * 60;
+const REFRESH_INTERVAL_MS = timeutil.toMillis(1, 'minutes');
 
 /** Creation epoch (ms), SSR'd onto the element for the client to re-derive the relative string. */
 const createdMs = Number(element_Started.dataset['created']);

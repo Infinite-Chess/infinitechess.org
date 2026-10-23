@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { request, RequestOptions } from 'node:https';
 
 import jsutil from '../../shared/util/jsutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 import env from '../config/env.js';
 import zodLogger from '../utility/zodLogger.js';
@@ -39,7 +40,7 @@ interface Contributor {
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** The interval to use GitHub's API to refresh the contributor list. */
-const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
+const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = timeutil.toMillis(3, 'hours');
 
 // Schemas ---------------------------------------------------------------------
 

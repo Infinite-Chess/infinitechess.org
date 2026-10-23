@@ -22,6 +22,7 @@ import type {
 import { attributesModule, classModule, h, init } from 'snabbdom';
 
 import gameurl from '../../../../../shared/chess/util/gameurl.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 import clockutil from '../../../../../shared/chess/util/clockutil.js';
 import playername from '../../../../../shared/components/playername.js';
 import { players } from '../../../../../shared/chess/util/typeutil.js';
@@ -69,8 +70,8 @@ const elements_disabledWhileInGame = [
 // Constants -------------------------------------------------------------------
 
 /** How long, in milliseconds, without page interaction before the user is unsubbed from the lobby. */
-const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-// const IDLE_TIMEOUT = 10 * 1000; // Testing: 10 seconds
+const IDLE_TIMEOUT = timeutil.toMillis(30, 'minutes');
+// const IDLE_TIMEOUT = timeutil.toMillis(10, 'seconds'); // Testing
 
 /**
  * How long after a lobby row loses its occupant that row stays unacceptable,

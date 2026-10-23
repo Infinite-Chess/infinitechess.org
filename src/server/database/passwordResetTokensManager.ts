@@ -8,6 +8,8 @@
  * See docs/systems/PASSWORD_RESET.md.
  */
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import db from './database.js';
 
 // Types -----------------------------------------------------------------------
@@ -29,7 +31,7 @@ interface PasswordResetTokenRecord {
  * How long a password-reset token stays valid, in milliseconds.
  * IF CHANGED: update the "1 hour" copy in the email toml component.
  */
-const EXPIRY_MS = 1000 * 60 * 60; // 1 Hour
+const EXPIRY_MS = timeutil.toMillis(1, 'hours');
 
 // Create ----------------------------------------------------------------------
 

@@ -9,6 +9,8 @@ import type { ScriptTranslations } from '../../shared/types/script-translations.
 
 import rateLimit from 'express-rate-limit';
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import env from '../config/env.js';
 
 // Options ---------------------------------------------------------------------
@@ -38,7 +40,7 @@ const DEFAULT_OPTIONS = {
  * Guards against spamming new accounts, and emails.
  */
 const createAccount = rateLimit({
-	windowMs: 1000 * 60 * 60 * 24, // 1 day
+	windowMs: timeutil.toMillis(1, 'days'),
 	max: 6,
 	skipFailedRequests: true, // Only counts if a pending registration was created (email sent)
 	...DEFAULT_OPTIONS,
@@ -50,7 +52,7 @@ const createAccount = rateLimit({
  * Guards against email enumeration, spamming DNS/MX lookups, DB queries against.
  */
 const createAccountAttempt = rateLimit({
-	windowMs: 1000 * 60 * 5, // 5 minutes
+	windowMs: timeutil.toMillis(5, 'minutes'),
 	max: 20,
 	skipSuccessfulRequests: true, // Only counts if no pending registration was made (no email)
 	...DEFAULT_OPTIONS,
@@ -61,14 +63,14 @@ const createAccountAttempt = rateLimit({
  * Generous. Cap only helps prevent rapid username enumeration.
  */
 const usernameAvailability = rateLimit({
-	windowMs: 1000 * 60, // 1 minute
+	windowMs: timeutil.toMillis(1, 'minutes'),
 	max: 30,
 	...DEFAULT_OPTIONS,
 });
 
 /** Verification Email Limiter (pending registration email change) */
 const verificationEmail = rateLimit({
-	windowMs: 1000 * 60 * 60, // 1 hour
+	windowMs: timeutil.toMillis(1, 'hours'),
 	max: 8,
 	...DEFAULT_OPTIONS,
 	handler: makeHandler('email_requests'),
@@ -80,14 +82,14 @@ const verificationEmail = rateLimit({
  * that one bounds brute-forcing a single account, this one bounds cross-account credential stuffing.
  */
 const authAttempt = rateLimit({
-	windowMs: 1000 * 60, // 1 minute
+	windowMs: timeutil.toMillis(1, 'minutes'),
 	max: 20,
 	...DEFAULT_OPTIONS,
 });
 
 /** Forgot Password Email Limiter */
 const forgotPassword = rateLimit({
-	windowMs: 1000 * 60 * 60, // 1 hour
+	windowMs: timeutil.toMillis(1, 'hours'),
 	max: 8,
 	...DEFAULT_OPTIONS,
 	handler: makeHandler('email_requests'),
@@ -95,35 +97,35 @@ const forgotPassword = rateLimit({
 
 /** Editor Save Limiter */
 const editorSave = rateLimit({
-	windowMs: 1000 * 60, // 1 minute
+	windowMs: timeutil.toMillis(1, 'minutes'),
 	max: 10,
 	...DEFAULT_OPTIONS,
 });
 
 /** Editor Load Limiter */
 const editorLoad = rateLimit({
-	windowMs: 1000 * 60, // 1 minute
+	windowMs: timeutil.toMillis(1, 'minutes'),
 	max: 30,
 	...DEFAULT_OPTIONS,
 });
 
 /** Seek Preview Limiter */
 const seekPreview = rateLimit({
-	windowMs: 1000 * 60, // 1 minute
+	windowMs: timeutil.toMillis(1, 'minutes'),
 	max: 20,
 	...DEFAULT_OPTIONS,
 });
 
 /** Dead-game state fetch limiter. Game states can be large. */
 const gameState = rateLimit({
-	windowMs: 1000 * 60, // 1 minute
+	windowMs: timeutil.toMillis(1, 'minutes'),
 	max: 30,
 	...DEFAULT_OPTIONS,
 });
 
 /** Chat Report Limiter. Every report incurs an email to Naviary. */
 const chatReport = rateLimit({
-	windowMs: 1000 * 60 * 60 * 24, // 1 day
+	windowMs: timeutil.toMillis(1, 'days'),
 	max: 8,
 	...DEFAULT_OPTIONS,
 	handler: makeHandler('chat_reports'),

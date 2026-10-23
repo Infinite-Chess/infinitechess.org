@@ -58,11 +58,11 @@ const c = 70;
 const q = 0.00575646273;
 
 /** Duration of a glicko-1 rating period, in milliseconds */
-const RATING_PERIOD_DURATION = 1000 * 60 * 60 * 24 * 15; // 15 days
+const RATING_PERIOD_DURATION = timeutil.toMillis(15, 'days');
 
 /** Frequency of automatic RD update in database, in milliseconds */
-const RD_UPDATE_FREQUENCY = 1000 * 60 * 60 * 24; // 24 hours
-// const RD_UPDATE_FREQUENCY = 1000 * 30; // 30s for dev testing
+const RD_UPDATE_FREQUENCY = timeutil.toMillis(24, 'hours');
+// const RD_UPDATE_FREQUENCY = timeutil.toMillis(30, 'seconds'); // Testing
 
 // Functions -------------------------------------------------------------------
 

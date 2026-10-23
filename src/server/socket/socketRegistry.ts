@@ -11,6 +11,7 @@ import type { ClosureReason } from '../../shared/util/socketutil.js';
 import type { CustomWebSocket } from './socketTypes.js';
 
 import uuid from '../../shared/util/uuid.js';
+import timeutil from '../../shared/util/timeutil.js';
 import socketutil from '../../shared/util/socketutil.js';
 
 import requestContext from '../utility/requestContext.js';
@@ -24,8 +25,8 @@ const MAX_SOCKETS_ALLOWED_PER_SESSION = 5;
  * The maximum age a websocket connection will live before auto terminating, in milliseconds.
  * Users have to provide authentication whenever they open a new socket.
  */
-const MAX_WEBSOCKET_AGE_MS = 1000 * 60 * 15; // 15 minutes.
-// const MAX_WEBSOCKET_AGE_MS = 1000 * 10; // Dev: 10 seconds
+const MAX_WEBSOCKET_AGE_MS = timeutil.toMillis(15, 'minutes');
+// const MAX_WEBSOCKET_AGE_MS = timeutil.toMillis(10, 'seconds'); // Debugging
 
 // State -----------------------------------------------------------------------
 

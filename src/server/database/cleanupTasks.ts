@@ -5,6 +5,8 @@
  * cleaning up each table in the database of stale data.
  */
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import logEvents from '../utility/logEvents.js';
 import refreshTokenManager from './refreshTokenManager.js';
 import pendingRegistrationManager from './pendingRegistrationManager.js';
@@ -12,7 +14,7 @@ import passwordResetTokensManager from './passwordResetTokensManager.js';
 
 // Constants -------------------------------------------------------------------
 
-const CLEANUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
+const CLEANUP_INTERVAL_MS = timeutil.toMillis(24, 'hours');
 
 // Scheduling ------------------------------------------------------------------
 
