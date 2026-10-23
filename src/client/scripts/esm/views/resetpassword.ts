@@ -95,15 +95,12 @@ if (form) {
 		submit();
 	});
 
-	// While typing, "reward early": clear a shown error once valid, and recompute the submit gate.
 	passwordInput!.addEventListener('input', (): void => {
-		if (accountform.passwordError(passwordInput!.value) === undefined) setError();
+		accountform.validateField(passwordInput!, errorElement!, accountform.passwordError, false);
 		refreshSubmit();
 	});
-
-	// On blur, reveal any format error.
 	passwordInput!.addEventListener('blur', (): void => {
-		setError(accountform.passwordError(passwordInput!.value));
+		accountform.validateField(passwordInput!, errorElement!, accountform.passwordError, true);
 		refreshSubmit();
 	});
 

@@ -68,8 +68,6 @@ let pollingActive = false;
  */
 let lastPollAt = 0;
 
-let newEmailValid = false;
-
 // Verification polling --------------------------------------------------------
 
 /** Returns the backoff interval to wait given how long polling has been running. */
@@ -167,23 +165,15 @@ function setEmailError(message?: string): void {
 	accountform.setFieldError(newEmailError, message, newEmailInput);
 }
 
-/**
- * Validates the email format and updates {@link newEmailValid}.
- * @param revealErrors - Shows the error (on blur/submit); false only clears if now valid (while typing).
- */
-function validateNewEmail(revealErrors: boolean): void {
-	const message =
-		newEmailInput.value.length === 0 ? undefined : accountform.emailError(newEmailInput.value);
-	newEmailValid = newEmailInput.value.length > 0 && message === undefined;
-	if (revealErrors) setEmailError(message);
-	else if (newEmailValid) setEmailError();
+/** Re-checks the change-email field's format and returns its validity. */
+function validateNewEmail(reveal: boolean): boolean {
+	return accountform.validateField(newEmailInput, newEmailError, accountform.emailError, reveal);
 }
 
 /** PUTs the new email; on success reloads the page (the reload is the "it worked" feedback). */
 async function submitNewEmail(): Promise<void> {
 	// Authoritative gate: reveal any unseen format error and bail without sending.
-	validateNewEmail(true);
-	if (!newEmailValid) {
+	if (!validateNewEmail(true)) {
 		newEmailInput.focus();
 		return;
 	}
@@ -234,11 +224,8 @@ newEmailInput.addEventListener('keydown', (event: KeyboardEvent): void => {
 	}
 });
 
-// While typing, use "reward early" — clear a shown error once valid, never introduce a new one.
-newEmailInput.addEventListener('input', (): void => validateNewEmail(false));
-
-// On blur, reveal any format error.
-newEmailInput.addEventListener('blur', (): void => validateNewEmail(true));
+newEmailInput.addEventListener('input', () => validateNewEmail(false));
+newEmailInput.addEventListener('blur', () => validateNewEmail(true));
 
 // Resume polling when this is a deliverable pending registration.
 if (awaitingCard.dataset['awaiting'] === 'true') {
