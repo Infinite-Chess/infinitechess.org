@@ -860,9 +860,6 @@ function getSettings(): CevalSettings {
 function updateSettings(partial: Partial<CevalSettings>): void {
 	const previous = settings;
 	settings = { ...settings, ...partial };
-	// The UI panel feeds valid values
-	settings.multiPv = math.clamp(settings.multiPv, 1, MAX_MULTI_PV);
-	settings.threads = math.clamp(settings.threads, 1, maxThreads());
 	persistSettings();
 
 	if (!enabled || !search) return;

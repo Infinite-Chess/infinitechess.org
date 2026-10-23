@@ -50,6 +50,9 @@ let contextMenu: HTMLElement | undefined;
 /** Maps each rendered ply's node id back to its node, for the delegated click/right-click handlers. */
 const idToNode = new Map<number, AnalysisMoveNode>();
 
+/** Whether a coalesced move-tree repaint is already queued for this microtask. */
+let reconcilePending = false;
+
 // Rendering -------------------------------------------------------------------
 
 const patch = init([attributesModule, classModule]);
@@ -501,6 +504,7 @@ function closeContextMenuOnOutsidePointer(e: PointerEvent): void {
 	closeAnalysisContextMenu();
 }
 
+/** Closes the menu on Escape. */
 function closeContextMenuOnEscape(e: KeyboardEvent): void {
 	if (e.key === 'Escape') closeAnalysisContextMenu();
 }
@@ -675,7 +679,6 @@ function applyToIndex(gamefile: GameFile, index: number): void {
  * (a live review) each repaint as they land. Deliberately does NOT scroll — the viewed position
  * never changes, so a grafted variation must not yank a panel the user is scrolling.
  */
-let reconcilePending = false;
 function scheduleReconcile(): void {
 	if (reconcilePending) return;
 	reconcilePending = true;
@@ -685,6 +688,8 @@ function scheduleReconcile(): void {
 		highlightCurrentNode();
 	});
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	formatMoveIndex,

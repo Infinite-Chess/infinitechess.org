@@ -12,7 +12,7 @@ import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../board/GameBus.js';
 import { listener_document } from '../../../game/listeners.js';
 
-// Wire the orientation/view GameBus listeners.
+// Events ----------------------------------------------------------------------
 
 // Reflect the board orientation on the eval gauge, both on initial load and on every flip.
 GameBus.addEventListener('game-loaded', syncEvalGaugeOrientation);
@@ -22,6 +22,8 @@ GameBus.addEventListener('board-flipped', () => {
 	syncClockDisplayToViewedMove(true);
 });
 GameBus.addEventListener('view-move', () => syncClockDisplayToViewedMove());
+
+// Functions -------------------------------------------------------------------
 
 /**
  * Syncs the clock display to the currently viewed move.
@@ -77,5 +79,7 @@ function insertPlayerBarNameNodes(bar: HTMLElement, nodes: Node[]): void {
 	const clock = bar.querySelector('.clock');
 	nodes.forEach((node) => bar.insertBefore(node, clock));
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { syncClockDisplayToViewedMove, updateShortcuts, flipBoard };

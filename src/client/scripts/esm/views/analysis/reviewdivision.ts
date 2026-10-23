@@ -86,7 +86,7 @@ function determine(initial: Map<CoordsKey, number> | undefined, moves: MoveFull[
 	return { middle, end };
 }
 
-/** Calculates the variants home ranks. */
+/** Calculates both players' home ranks. */
 function getHomeRanks(position: Map<CoordsKey, number>): { white?: bigint; black?: bigint } {
 	return {
 		white: homeRank(position, p.WHITE),
@@ -99,9 +99,12 @@ function getHomeRanks(position: Map<CoordsKey, number>): { white?: bigint; black
  * Ties, and armies with no non-pawn pieces, resolve to the highest rank for white
  * and the lowest rank for black.
  */
-function homeRank(position: Map<CoordsKey, number>, color: Player): bigint | undefined {
+function homeRank(
+	position: Map<CoordsKey, number>,
+	color: typeof p.WHITE | typeof p.BLACK,
+): bigint | undefined {
 	// Selects which extreme y wins ties and the pieceless fallback
-	const bias = color === p.WHITE ? 1n : color === p.BLACK ? -1n : (() => { throw new Error(`Invalid color: ${color}`) })(); // prettier-ignore
+	const bias = color === p.WHITE ? 1n : -1n;
 	const counts = new Map<bigint, number>(); // rank -> non-pawn count
 	let fallback: bigint | undefined;
 	let best: bigint | undefined;
@@ -167,7 +170,7 @@ function backrankSparse(
 }
 
 /**
- * Scalaches's 2×2-region mixedness score, generalized from ranks 1–8 to the
+ * Scalachess's 2×2-region mixedness score, generalized from ranks 1–8 to the
  * players' detected home ranks. Empty regions are irrelevant, so only windows
  * touching an occupied square are enumerated.
  */
@@ -203,6 +206,7 @@ function mixedness(
 	return total;
 }
 
+/** Maps a region's y onto scalachess's ranks 1–7, spanning white's home rank to black's. */
 function normalizedRegionRank(y: bigint, whiteHome: bigint, blackHome: bigint): number {
 	const span = blackHome - whiteHome;
 	const rank = Number(((y - whiteHome) * 7n) / span) + 1;
@@ -273,6 +277,7 @@ function buildPhaseProfile(initial: Map<CoordsKey, number>): PhaseProfile | unde
 	};
 }
 
+/** Every piece of `color` in the position. */
 function collectPlayerPieces(position: Map<CoordsKey, number>, color: Player): ProfilePiece[] {
 	const pieces: ProfilePiece[] = [];
 	for (const [key, type] of position) {
@@ -291,6 +296,7 @@ function developmentCandidates(pieces: ProfilePiece[]): ProfilePiece[] {
 	return pieces.filter((piece) => !typeutil.royals.includes(piece.raw));
 }
 
+/** The position's phase metrics, relative to its starting profile. */
 function phaseMetrics(
 	position: Map<CoordsKey, number>,
 	profile: PhaseProfile,
@@ -328,5 +334,7 @@ function phaseMetrics(
 		piecesRemaining: currentPieces / profile.initialPieces,
 	};
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { determine };

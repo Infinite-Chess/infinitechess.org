@@ -77,7 +77,7 @@ let lineWindowStateMoveIndex: number | undefined;
 let crashToastShown = false;
 /**
  * The last status kind received, so a status that repeats doesn't
- * re-toast (a genuine retry re-enters 'failed' through 'loading')
+ * re-toast (a genuine retry re-enters 'failed' through 'loading').
  */
 let lastStatusKind: CevalStatus['kind'] | undefined;
 
@@ -154,8 +154,10 @@ function initSettingsUI(): void {
 	element_DepthValue.textContent = String(settings.depth);
 }
 
-/** Enables the threads slider up to {@link ceval.maxThreads}, or locks it to 1 (disabled)
- * when Lazy SMP is unavailable (non-isolated browser or single-threaded engine build). */
+/**
+ * Enables the threads slider up to {@link ceval.maxThreads}, or locks it to 1 (disabled)
+ * when Lazy SMP is unavailable (non-isolated browser or single-threaded engine build).
+ */
 function applyThreadsCap(): void {
 	const cap = ceval.maxThreads();
 	element_Threads.max = String(cap);

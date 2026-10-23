@@ -117,4 +117,6 @@ function interrupt(entry: AnalysisWorker): boolean {
 	return true;
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default { spawn, terminate, interrupt };
