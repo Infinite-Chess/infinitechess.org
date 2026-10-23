@@ -189,20 +189,6 @@ function deleteCookie(cookieName: string): void {
 // DOM -------------------------------------------------------------------------
 
 /**
- * Finds the index of an element within its parent.
- * @param element - The element to find the index of.
- * @returns - The index of the element within its parent, or -1 if not found.
- */
-function getElementIndexWithinItsParent(element: Element): number {
-	if (!element || !element.parentNode) return -1;
-	// Get the parent node
-	const parent = element.parentNode;
-	// Convert the parent's children to an array and find the index of the element
-	const children = Array.prototype.slice.call(parent.children);
-	return children.indexOf(element);
-}
-
-/**
  * Parse an SVG string into a live SVGElement.
  * @param svgText — a string containing valid `<svg>…</svg>` markup
  * @returns the newly created SVG element
@@ -238,6 +224,5 @@ export default {
 	updateCookie,
 	deleteCookie,
 	// DOM
-	getElementIndexWithinItsParent,
 	createSvgElementFromString,
 };

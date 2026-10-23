@@ -1,62 +1,81 @@
 // src/client/scripts/esm/views/checkmatepractice/gui/guipractice.ts
 
-/**
- * Handles our Practice page, containing our practice selection menu.
- */
+/** Handles our Practice page, containing our practice selection menu. */
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js';
 import validcheckmates from '../../../../../../shared/chess/util/validcheckmates.js';
 import { players as p } from '../../../../../../shared/chess/util/typeutil.js';
 
-import docutil from '../../../util/docutil.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
 import validatorama from '../../../util/validatorama.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import checkmatepractice from '../checkmatepractice.js';
 
-// Variables -------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
+
+/** A practice checkmate difficulty, like `easy`. */
+type Difficulty = keyof typeof validcheckmates.BY_DIFFICULTY;
+
+// Elements --------------------------------------------------------------------
 
 const element_menuExternalLinks: HTMLElement = document.getElementById('menu-external-links')!;
 
 const element_practiceSelection: HTMLElement = document.getElementById('practice-selection')!;
 const element_practiceBack: HTMLElement = document.getElementById('practice-back')!;
 const element_practicePlay: HTMLElement = document.getElementById('practice-play')!;
-const element_progress: HTMLElement = document.querySelector('.checkmate-progress')!;
-const element_progressBar: HTMLElement = document.querySelector('.checkmate-progress-bar')!;
-const element_checkmateList: HTMLElement = document.querySelector('.checkmate-list')!;
+const element_progress = document.querySelector<HTMLElement>('.checkmate-progress')!;
+const element_progressBar = document.querySelector<HTMLElement>('.checkmate-progress-bar')!;
+const element_checkmateList = document.querySelector<HTMLElement>('.checkmate-list')!;
 const element_checkmates: HTMLElement = document.getElementById('checkmates')!;
 
-const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze');
-const element_checkmateBadgeBronzeImage = document.querySelector(
+const element_checkmateBadgeBronze = document.getElementById('checkmate-badge-bronze')!;
+const element_checkmateBadgeBronzeImage = document.querySelector<HTMLElement>(
 	'#checkmate-badge-bronze img',
-) as HTMLElement;
+)!;
 const elements_checkmateBadgeBronzeShine = document.querySelectorAll(
 	'#checkmate-badge-bronze .shine-clockwise, #checkmate-badge-bronze .shine-anticlockwise',
 );
-const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver');
-const element_checkmateBadgeSilverImage = document.querySelector(
+const element_checkmateBadgeSilver = document.getElementById('checkmate-badge-silver')!;
+const element_checkmateBadgeSilverImage = document.querySelector<HTMLElement>(
 	'#checkmate-badge-silver img',
-) as HTMLElement;
+)!;
 const elements_checkmateBadgeSilverShine = document.querySelectorAll(
 	'#checkmate-badge-silver .shine-clockwise, #checkmate-badge-silver .shine-anticlockwise',
 );
-const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold');
-const element_checkmateBadgeGoldImage = document.querySelector(
+const element_checkmateBadgeGold = document.getElementById('checkmate-badge-gold')!;
+const element_checkmateBadgeGoldImage = document.querySelector<HTMLElement>(
 	'#checkmate-badge-gold img',
-) as HTMLElement;
+)!;
 const elements_checkmateBadgeGoldShine = document.querySelectorAll(
 	'#checkmate-badge-gold .shine-clockwise, #checkmate-badge-gold .shine-anticlockwise',
 );
 
-let checkmateSelectedID: string = validcheckmates.BY_DIFFICULTY.easy[0]!; // id of selected checkmate
-let indexSelected: number = 0; // index of selected checkmate among its brothers and sisters
+// Constants -------------------------------------------------------------------
+
+/** The momentum the checkmate list keeps scrolling with after a drag is released. */
+const MOMENTUM = {
+	/** Multiplies the velocity every step. */
+	friction: 0.9,
+	/** The speed, in pixels per step, below which the momentum stops. */
+	minSpeed: 0.5,
+	/** Approx. 60fps */
+	stepMs: 16,
+};
+
+// State -----------------------------------------------------------------------
+
+/** The id of the selected checkmate. */
+let checkmateSelectedID: string = validcheckmates.BY_DIFFICULTY.easy[0]!;
+/** Whether the checkmates list has been appended to the doc */
 let generatedHTML: boolean = false;
 /** Whether the svgs of all the pieces in the checkmates list have been appended to the doc */
 let generatedIcons: boolean = false;
+/** Whether the practice page is open */
+let isOpen: boolean = false;
 
-/** Variables for controlling the scrolling of the checkmate list */
-const SCROLL: {
+/** A drag-scroll of the checkmate list, and the momentum it leaves behind. */
+const listScroll: {
 	mouseIsDown: boolean;
 	mouseMovedAfterClick: boolean;
 	scrollTop: number;
@@ -64,7 +83,6 @@ const SCROLL: {
 	lastY: number;
 	velocity: number;
 	momentumInterval: ReturnType<typeof setInterval> | undefined;
-	friction: number;
 } = {
 	mouseIsDown: false,
 	mouseMovedAfterClick: true,
@@ -73,11 +91,7 @@ const SCROLL: {
 	lastY: 0,
 	velocity: 0,
 	momentumInterval: undefined,
-	friction: 0.9,
 };
-
-/** Whether the practice page is open */
-let isOpen: boolean = false;
 
 // Events ----------------------------------------------------------------------
 
@@ -87,8 +101,9 @@ SettingsBus.addEventListener('theme-change', () => {
 	if (isOpen) addPieceIcons(); // Regenerate the icons so they can update their color, if the new theme has different color arguments
 });
 
-// Functions -------------------------------------------------------------------
+// Opening & Closing -----------------------------------------------------------
 
+/** Opens the practice page, generating its checkmates list the first time. */
 function open(): void {
 	isOpen = true;
 	element_practiceSelection.classList.remove('hidden');
@@ -100,6 +115,7 @@ function open(): void {
 	initListeners();
 }
 
+/** Closes the practice page. */
 function close(): void {
 	isOpen = false;
 	clearScrollMomentumInterval();
@@ -108,133 +124,114 @@ function close(): void {
 	closeListeners();
 }
 
-/**
- * On first practice page load, generate list of checkmate HTML elements to be shown on page
- */
+// Checkmates List -------------------------------------------------------------
+
+/** On first practice page load, generates the list of checkmate elements shown on the page. */
 function createPracticeHTML(): void {
-	for (const [difficulty, checkmates] of Object.entries(validcheckmates.BY_DIFFICULTY)) {
-		checkmates.forEach((checkmateID: string) => {
-			const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
-			if (!piecelist) return;
-
-			const checkmatePuzzle = document.createElement('div');
-			checkmatePuzzle.className = 'checkmate unselectable';
-			checkmatePuzzle.id = checkmateID;
-
-			const completionMark = document.createElement('div');
-			completionMark.className = 'completion-mark';
-
-			const piecelistW = document.createElement('div');
-			piecelistW.className = 'piecelistW';
-
-			const versusText = document.createElement('div');
-			versusText.className = 'checkmate-child versus';
-			versusText.textContent = translations.versus;
-
-			const piecelistB = document.createElement('div');
-			piecelistB.className = 'piecelistB';
-
-			const checkmateDifficulty = document.createElement('div');
-			checkmateDifficulty.className = 'checkmate-difficulty';
-			// @ts-ignore
-			checkmateDifficulty.textContent = translations[difficulty];
-
-			for (const entry of piecelist) {
-				const amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-				const shortPiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-				const longPiece = icnposition.getTypeFromAbbr(shortPiece);
-
-				for (let j = 0; j < amount; j++) {
-					const pieceDiv = document.createElement('div');
-					pieceDiv.className = `checkmatepiece ${longPiece}`;
-
-					const containerDiv = document.createElement('div');
-					// prettier-ignore
-					const collation = (j === 0 ? "" : (shortPiece === "Q" || shortPiece === "AM" ? " collated" : " collated-strong"));
-					containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
-					containerDiv.appendChild(pieceDiv);
-
-					if (typeutil.getColorFromType(longPiece) === p.WHITE)
-						piecelistW.appendChild(containerDiv);
-					else piecelistB.appendChild(containerDiv);
-				}
-			}
-			checkmatePuzzle.appendChild(completionMark);
-			checkmatePuzzle.appendChild(piecelistW);
-			checkmatePuzzle.appendChild(versusText);
-			checkmatePuzzle.appendChild(piecelistB);
-			checkmatePuzzle.appendChild(checkmateDifficulty);
-			element_checkmates.appendChild(checkmatePuzzle);
-		});
+	const entries = Object.entries(validcheckmates.BY_DIFFICULTY) as [Difficulty, string[]][];
+	for (const [difficulty, checkmates] of entries) {
+		checkmates.forEach((checkmateID) =>
+			element_checkmates.appendChild(createCheckmateElement(checkmateID, difficulty)),
+		);
 	}
 	generatedHTML = true;
 }
 
+/** Creates a checkmate's list entry: its white pieces versus its black ones, and its difficulty. */
+function createCheckmateElement(checkmateID: string, difficulty: Difficulty): HTMLElement {
+	const checkmatePuzzle = document.createElement('div');
+	checkmatePuzzle.className = 'checkmate unselectable';
+	checkmatePuzzle.id = checkmateID;
+
+	const completionMark = document.createElement('div');
+	completionMark.className = 'completion-mark';
+
+	const piecelistW = document.createElement('div');
+	piecelistW.className = 'piecelistW';
+
+	const versusText = document.createElement('div');
+	versusText.className = 'checkmate-child versus';
+	versusText.textContent = translations.versus;
+
+	const piecelistB = document.createElement('div');
+	piecelistB.className = 'piecelistB';
+
+	const checkmateDifficulty = document.createElement('div');
+	checkmateDifficulty.className = 'checkmate-difficulty';
+	checkmateDifficulty.textContent = translations[difficulty];
+
+	appendPieceContainers(checkmateID, piecelistW, piecelistB);
+	checkmatePuzzle.appendChild(completionMark);
+	checkmatePuzzle.appendChild(piecelistW);
+	checkmatePuzzle.appendChild(versusText);
+	checkmatePuzzle.appendChild(piecelistB);
+	checkmatePuzzle.appendChild(checkmateDifficulty);
+	return checkmatePuzzle;
+}
+
+/** Appends a container for each piece of a checkmate ID like `2Q-1k` to its player's list. */
+function appendPieceContainers(
+	checkmateID: string,
+	piecelistW: HTMLElement,
+	piecelistB: HTMLElement,
+): void {
+	for (const [, amount, shortPiece] of checkmateID.matchAll(/([0-9]+)([a-zA-Z]+)/g)) {
+		const pieceType = icnposition.getTypeFromAbbr(shortPiece!);
+		const piecelist =
+			typeutil.getColorFromType(pieceType) === p.WHITE ? piecelistW : piecelistB;
+
+		for (let j = 0; j < Number(amount); j++) {
+			const pieceDiv = document.createElement('div');
+			pieceDiv.className = `checkmatepiece ${pieceType}`;
+
+			const containerDiv = document.createElement('div');
+			// prettier-ignore
+			const collation = (j === 0 ? '' : (shortPiece === 'Q' || shortPiece === 'AM' ? ' collated' : ' collated-strong'));
+			containerDiv.className = `checkmate-child checkmatepiececontainer${collation}`;
+			containerDiv.appendChild(pieceDiv);
+			piecelist.appendChild(containerDiv);
+		}
+	}
+}
+
+// Piece Icons -----------------------------------------------------------------
+
+/** Appends the svg of each piece in the checkmates list that shows one. */
 async function addPieceIcons(): Promise<void> {
-	// let sprites = await svgcache.getSVGElements();
-	const spritenames = new Set<number>();
-	const sprites: { [pieceType: string]: SVGElement } = {};
-	for (const checkmate of element_checkmates.children) {
-		for (const piece of checkmate
-			.getElementsByClassName('piecelistW')[0]!
-			.getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			spritenames.add(Number(actualpiece.className.split(' ')[1]!));
-		}
-		const pieceBlack = checkmate
-			.getElementsByClassName('piecelistB')[0]!
-			.getElementsByClassName('checkmatepiececontainer')[0]!;
-		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		spritenames.add(Number(actualpieceBlack.className.split(' ')[1]!));
-	}
-	const spriteSVGs = await svgcache.getSVGElements([...spritenames]);
-	for (const svg of spriteSVGs) {
-		sprites[svg.id] = svg;
-	}
-	for (const checkmate of element_checkmates.children) {
-		for (const piece of checkmate
-			.getElementsByClassName('piecelistW')[0]!
-			.getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			actualpiece.appendChild(sprites[actualpiece.className.split(' ')[1]!]!.cloneNode(true));
-		}
-		const pieceBlack = checkmate
-			.getElementsByClassName('piecelistB')[0]!
-			.getElementsByClassName('checkmatepiececontainer')[0]!;
-		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		const spriteBlack = sprites[actualpieceBlack.className.split(' ')[1]!]!.cloneNode(true);
-		actualpieceBlack.appendChild(spriteBlack);
-	}
+	const holders = getIconHolders();
+	const pieceTypes = new Set(holders.map((holder) => Number(getHolderType(holder))));
+	const svgs = await svgcache.getSVGElements([...pieceTypes]);
+	const svgsByID = new Map(svgs.map((svg) => [svg.id, svg]));
+	holders.forEach((holder) =>
+		holder.appendChild(svgsByID.get(getHolderType(holder))!.cloneNode(true)),
+	);
 	generatedIcons = true;
 }
 
-/**
- * Removes the piece icons from the checkmate lists.
- * Called when the theme changes.
- */
+/** The piece elements that show an icon: every white piece, and each checkmate's first black one. */
+function getIconHolders(): Element[] {
+	return [...element_checkmates.children].flatMap((checkmate) => [
+		...checkmate.querySelectorAll('.piecelistW .checkmatepiece'),
+		checkmate.querySelector('.piecelistB .checkmatepiece')!,
+	]);
+}
+
+/** The piece type an icon holder shows, as its id string. */
+function getHolderType(holder: Element): string {
+	return holder.className.split(' ')[1]!;
+}
+
+/** Removes the piece icons from the checkmates list. Called when the theme changes. */
 function removePieceIcons(): void {
-	for (const checkmate of element_checkmates.children) {
-		for (const piece of checkmate
-			.getElementsByClassName('piecelistW')[0]!
-			.getElementsByClassName('checkmatepiececontainer')) {
-			const actualpiece = piece.getElementsByClassName('checkmatepiece')[0]!;
-			while (actualpiece.firstChild) {
-				actualpiece.removeChild(actualpiece.firstChild);
-			}
-		}
-		const pieceBlack = checkmate
-			.getElementsByClassName('piecelistB')[0]!
-			.getElementsByClassName('checkmatepiececontainer')[0]!;
-		const actualpieceBlack = pieceBlack.getElementsByClassName('checkmatepiece')[0]!;
-		while (actualpieceBlack.firstChild) {
-			actualpieceBlack.removeChild(actualpieceBlack.firstChild);
-		}
-	}
+	getIconHolders().forEach((holder) => holder.replaceChildren());
 	generatedIcons = false; // Reset the icon generation flag
 }
 
+// Listeners -------------------------------------------------------------------
+
+/** Adds the practice page's listeners. */
 function initListeners(): void {
-	element_practiceBack.addEventListener('click', callback_practiceBack);
+	element_practiceBack.addEventListener('click', close);
 	element_practicePlay.addEventListener('click', callback_practicePlay);
 	document.addEventListener('keydown', callback_keyPress);
 
@@ -247,8 +244,9 @@ function initListeners(): void {
 	}
 }
 
+/** Removes the practice page's listeners. */
 function closeListeners(): void {
-	element_practiceBack.removeEventListener('click', callback_practiceBack);
+	element_practiceBack.removeEventListener('click', close);
 	element_practicePlay.removeEventListener('click', callback_practicePlay);
 	document.removeEventListener('keydown', callback_keyPress);
 
@@ -263,68 +261,61 @@ function closeListeners(): void {
 
 // Scrolling list with the left mouse button -----------------------------------
 
+/** Starts a drag-scroll of the checkmates list, halting any momentum. */
 function callback_mouseDown(event: MouseEvent): void {
-	SCROLL.mouseIsDown = true;
-	SCROLL.mouseMovedAfterClick = false;
-	SCROLL.startY = event.pageY - element_checkmateList.offsetTop;
-	SCROLL.scrollTop = element_checkmateList.scrollTop;
+	listScroll.mouseIsDown = true;
+	listScroll.mouseMovedAfterClick = false;
+	listScroll.startY = event.pageY - element_checkmateList.offsetTop;
+	listScroll.scrollTop = element_checkmateList.scrollTop;
 
-	SCROLL.velocity = 0;
+	listScroll.velocity = 0;
 	clearScrollMomentumInterval();
 }
 
+/** Ends a drag-scroll with momentum, or, if released over a checkmate without moving, selects it. */
 function callback_mouseUp(event: MouseEvent): void {
-	SCROLL.mouseIsDown = false;
-	if (!(event.currentTarget as HTMLElement).id) return; // mouse not on checkmate target
-	if (SCROLL.mouseMovedAfterClick) {
+	listScroll.mouseIsDown = false;
+	const target = event.currentTarget;
+	if (!(target instanceof HTMLElement)) return; // The document's listener, not a checkmate's
+	if (listScroll.mouseMovedAfterClick) {
 		applyMomentum();
 		return;
 	}
-	changeCheckmateSelected((event.currentTarget as HTMLElement).id);
-	indexSelected = docutil.getElementIndexWithinItsParent(event.currentTarget as HTMLElement);
+	changeCheckmateSelected(target.id);
 }
 
+/** Scrolls the checkmates list along with a drag, tracking its velocity. */
 function callback_mouseMove(event: MouseEvent): void {
-	SCROLL.mouseMovedAfterClick = true;
-	if (!SCROLL.mouseIsDown) return;
+	listScroll.mouseMovedAfterClick = true;
+	if (!listScroll.mouseIsDown) return;
 	event.preventDefault();
 	const y = event.pageY - element_checkmateList.offsetTop;
-	const walkY = y - SCROLL.startY;
-	element_checkmateList.scrollTop = SCROLL.scrollTop - walkY;
+	const walkY = y - listScroll.startY;
+	element_checkmateList.scrollTop = listScroll.scrollTop - walkY;
 
-	SCROLL.velocity = event.pageY - SCROLL.lastY;
-	SCROLL.lastY = event.pageY;
+	listScroll.velocity = event.pageY - listScroll.lastY;
+	listScroll.lastY = event.pageY;
 }
 
+/** Keeps the checkmates list scrolling after a drag, slowing until it stops. */
 function applyMomentum(): void {
-	SCROLL.momentumInterval = setInterval(() => {
-		if (Math.abs(SCROLL.velocity) < 0.5) {
+	listScroll.momentumInterval = setInterval(() => {
+		if (Math.abs(listScroll.velocity) < MOMENTUM.minSpeed) {
 			clearScrollMomentumInterval();
 			return;
 		}
-		element_checkmateList.scrollTop -= SCROLL.velocity;
-		SCROLL.velocity *= SCROLL.friction;
-	}, 16); // Approx. 60fps
+		element_checkmateList.scrollTop -= listScroll.velocity;
+		listScroll.velocity *= MOMENTUM.friction;
+	}, MOMENTUM.stepMs);
 }
 
+/** Halts the checkmates list's scroll momentum. */
 function clearScrollMomentumInterval(): void {
-	clearInterval(SCROLL.momentumInterval);
-	SCROLL.momentumInterval = undefined;
+	clearInterval(listScroll.momentumInterval);
+	listScroll.momentumInterval = undefined;
 }
 
-// End of scrolling ------------------------------------------------------------
-
-function changeCheckmateSelected(checkmateid: string): void {
-	for (const element of element_checkmates.children) {
-		if (checkmateid === element.id) {
-			element.classList.add('selected');
-			checkmateSelectedID = checkmateid;
-			element.scrollIntoView({ behavior: 'instant', block: 'nearest' });
-		} else {
-			element.classList.remove('selected');
-		}
-	}
-}
+// Progress --------------------------------------------------------------------
 
 /**
  * Updates each checkmate practice element's 'beaten' class, along with the progress bar on top.
@@ -335,9 +326,9 @@ function updateCheckmatesBeaten(completedCheckmates: string[]): void {
 	let numCompleted = 0;
 	for (const element of element_checkmates.children) {
 		// What is the id string of this checkmate?
-		const id_string = element.id; // "2Q-1k"
+		const idString = element.id; // "2Q-1k"
 		// If this id is inside our list of beaten checkmates, add the beaten class
-		if (completedCheckmates.includes(id_string)) {
+		if (completedCheckmates.includes(idString)) {
 			element.classList.add('beaten');
 			numCompleted++;
 		} else element.classList.remove('beaten');
@@ -392,8 +383,6 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 	] as const;
 
 	badgeConfigs.forEach((config) => {
-		if (!config.element || !config.image) return;
-
 		const isEarned = numCompleted >= config.threshold * numTotal && areLoggedIn;
 		const tooltip = isEarned
 			? translations[config.earnedKey]
@@ -403,14 +392,26 @@ function updateBadges(numCompleted: number, numTotal: number): void {
 
 		config.element.setAttribute('data-tooltip', tooltip); // Update tooltip
 		config.image.classList.toggle('unearned', !isEarned); // Update badge appearance
-		config.shines?.forEach((shine) => shine.classList.toggle('hidden', !isEarned)); // Update shine elements
+		config.shines.forEach((shine) => shine.classList.toggle('hidden', !isEarned)); // Update shine elements
 	});
 }
 
-function callback_practiceBack(_event: Event): void {
-	close();
+// Selection -------------------------------------------------------------------
+
+/** Selects the checkmate of the given id, scrolling it into view. */
+function changeCheckmateSelected(checkmateid: string): void {
+	for (const element of element_checkmates.children) {
+		if (checkmateid === element.id) {
+			element.classList.add('selected');
+			checkmateSelectedID = checkmateid;
+			element.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+		} else {
+			element.classList.remove('selected');
+		}
+	}
 }
 
+/** Starts the selected checkmate's practice game. */
 function callback_practicePlay(): void {
 	close();
 	checkmatepractice.startCheckmatePractice(checkmateSelectedID);
@@ -419,26 +420,19 @@ function callback_practicePlay(): void {
 /** If enter is pressed, click Play. Or if arrow keys are pressed, move up and down selection */
 function callback_keyPress(event: KeyboardEvent): void {
 	if (event.key === 'Enter') callback_practicePlay();
-	else if (event.key === 'ArrowDown') moveDownSelection(event);
-	else if (event.key === 'ArrowUp') moveUpSelection(event);
+	else if (event.key === 'ArrowDown') moveSelection(event, 1);
+	else if (event.key === 'ArrowUp') moveSelection(event, -1);
 }
 
-function moveDownSelection(event: Event): void {
+/** Moves the selection one checkmate down (1) or up (-1) the list, stopping at its ends. */
+function moveSelection(event: Event, step: 1 | -1): void {
 	event.preventDefault();
-	if (indexSelected >= element_checkmates.children.length - 1) return;
+	const checkmates = [...element_checkmates.children];
+	const selectedIndex = checkmates.findIndex((element) => element.id === checkmateSelectedID);
+	const newSelection = checkmates[selectedIndex + step];
+	if (!newSelection) return;
 	clearScrollMomentumInterval();
-	indexSelected++;
-	const newSelectionElement = element_checkmates.children[indexSelected]!;
-	changeCheckmateSelected(newSelectionElement.id);
-}
-
-function moveUpSelection(event: Event): void {
-	event.preventDefault();
-	if (indexSelected <= 0) return;
-	clearScrollMomentumInterval();
-	indexSelected--;
-	const newSelectionElement = element_checkmates.children[indexSelected]!;
-	changeCheckmateSelected(newSelectionElement.id);
+	changeCheckmateSelected(newSelection.id);
 }
 
 // Exports ---------------------------------------------------------------------
