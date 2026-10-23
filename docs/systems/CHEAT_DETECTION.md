@@ -197,6 +197,19 @@ cheater's score grows) was 0.35, 0.42 and 0.38 nats per move. Both gains are wit
 measured against an 800k-node cheater engine; re-test if real cheaters prove to use much stronger
 setups.
 
+### Lines searched
+
+One line instead of five raised every score, honest ones too (highest honest 270). At equal
+false-case rates five lines catch more of every style but rescue: full engine by 3 games 72% vs 56%,
+or 41% vs 32% at the shipped rate. Four or six lines are untested.
+
+### The good-move line
+
+`GOOD_LOSS` is compared by refitting the skill ceiling, then holding both false-case measures
+(`false-case-rate.ts`) no higher than the shipped line's. 1.5% thins the honest players' tail, but
+at the worst case's line (1,000) it catches fewer: full engine by 3 games 31% vs 41%. 2.5% needs a
+line of 1,500 for its worst case, and catches 37%.
+
 ### What the honest model uses
 
 Change in held-out log likelihood per move (5 folds by player), dropping each input in turn, or
@@ -295,7 +308,7 @@ constant to raise if dismissed cases show it too low.
 
 There is no guaranteed bound beneath it. A score counted from one fixed game would reach 1,000 with
 chance at most 1/1,000 for an honest player at their ceiling, but the best run adds a starting point
-each game: at the ceiling it reaches 1,000 for 0.3% of players over 40 games and 0.9% over 100, and
+each game: at the ceiling it reaches 1,000 for 0.3% of players over 40 games and 0.7% over 100, and
 grows with games played. Real honest players sit below their ceiling, but the snapshot has none with
 more than ~40 rated games, so heavy players are where the estimate is least certain. Weighting each
 start by 1/(j(j+1)) would restore the bound, but was rejected: a full-engine cheater after an honest
@@ -352,7 +365,7 @@ probability (past the 2% good-move line), and favours moves a shallow search alr
   improving with engine-assisted analysis), refit; ratings rising with skill partly absorb it.
 - **Engine upgrades:** the engine model describes how this engine's picks look to this engine's
   analysis. Re-run the passes and refit after a meaningful strength change; any change to `SEARCH`
-  invalidates the whole calibration.
+  invalidates the whole calibration. It ran on a local build of upstream `b928c46`.
 - **Client-side data** (future interaction signals) may only ever raise suspicion: a cheater
   controls their client, so normal-looking or absent data never clears anyone.
 
@@ -406,7 +419,7 @@ npx tsx scripts/cheatdetection/engine-pass.ts level6 --snapshot=<db> --shards=1 
 npx tsx scripts/cheatdetection/build-corpus.ts --snapshot=<db> --all-lines
 npx tsx scripts/cheatdetection/engine-pass.ts offline --snapshot=<db> --shards=11          # then re-run build-corpus until 0 pending
 npx tsx scripts/cheatdetection/evaluate.ts                                                 # honest peaks and catch rates
-npx tsx scripts/cheatdetection/false-case-rate.ts                                          # from the honest players' tail
+npx tsx scripts/cheatdetection/false-case-rate.ts                                          # honest players' tail, and the worst case
 npx tsx scripts/cheatdetection/honest-margins.ts                                           # skill ceiling and top margin
 npx tsx scripts/cheatdetection/fit-model.ts                                                # prints MODEL for bettingScore.ts
 ```
