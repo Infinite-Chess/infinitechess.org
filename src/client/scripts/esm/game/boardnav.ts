@@ -41,8 +41,8 @@ const PAN_VEL_CAP = {
  * Mobile only decelerates — its scale velocity comes from finger movement.
  */
 const SCALE_ACCEL = {
-	DESKTOP: 6.0,
-	MOBILE: 14.0,
+	desktop: 6.0,
+	mobile: 14.0,
 };
 
 /**
@@ -50,8 +50,8 @@ const SCALE_ACCEL = {
  * scrolling reaches the higher SCROLL one.
  */
 const SCALE_VEL_CAP = {
-	SPACE_SHIFT: 2.0,
-	SCROLL: 2.5,
+	spaceShift: 2.0,
+	scroll: 2.5,
 };
 
 /** Dampener multiplied to the wheel delta before applying it to the scale velocity. */
@@ -178,11 +178,11 @@ function detectZooming(): void {
 		// Space/Shift
 		if (listener_document.isKeyHeld('Space')) {
 			scaling = true;
-			scaleVel -= deltatime.get() * SCALE_ACCEL.DESKTOP;
+			scaleVel -= deltatime.get() * SCALE_ACCEL.desktop;
 		}
 		if (listener_document.isKeyHeld('ShiftLeft')) {
 			scaling = true;
-			scaleVel += deltatime.get() * SCALE_ACCEL.DESKTOP;
+			scaleVel += deltatime.get() * SCALE_ACCEL.desktop;
 		}
 		// Mouse wheel
 		const wheelDelta = mouse.getWheelDelta();
@@ -195,7 +195,7 @@ function detectZooming(): void {
 
 	if (scaling) {
 		// Cap the velocity
-		const capToUse = scrolling ? SCALE_VEL_CAP.SCROLL : SCALE_VEL_CAP.SPACE_SHIFT;
+		const capToUse = scrolling ? SCALE_VEL_CAP.scroll : SCALE_VEL_CAP.spaceShift;
 		if (scaleVel > capToUse) scaleVel = capToUse;
 		else if (scaleVel < -capToUse) scaleVel = -capToUse;
 	} else {
@@ -209,7 +209,7 @@ function detectZooming(): void {
 function decelScaleVel(scaleVel: number): number {
 	if (scaleVel === 0) return scaleVel; // Already stopped
 
-	const decelerationToUse = docutil.isMouseSupported() ? SCALE_ACCEL.DESKTOP : SCALE_ACCEL.MOBILE;
+	const decelerationToUse = docutil.isMouseSupported() ? SCALE_ACCEL.desktop : SCALE_ACCEL.mobile;
 
 	if (scaleVel > 0) {
 		scaleVel -= deltatime.get() * decelerationToUse;

@@ -229,21 +229,21 @@ const MANUAL_SHORTCUTS: string[] = ['KeyZ', 'KeyY', 'KeyA'];
 
 /** Options for simulated clicks */
 const CLICK_THRESHOLDS = {
-	MOUSE: {
+	mouse: {
 		/** The maximum distance the mouse can move before a click is not registered. */
-		MOVE_VPIXELS: 6,
+		moveVPixels: 6,
 		/** The maximum time the mouse can be held down before a click is not registered. */
-		TIME_MS: 400,
+		timeMs: 400,
 		/** The maximum time between first click down and second click up to register a double click drag. */
-		DOUBLE_CLICK_TIME_MS: 450,
+		doubleClickTimeMs: 450,
 	},
-	TOUCH: {
-		/** {@link CLICK_THRESHOLDS.MOUSE.MOVE_VPIXELS}, but for fingers (less strict, the 2nd tap can be further away) */
-		MOVE_VPIXELS: 17,
-		/** {@link CLICK_THRESHOLDS.MOUSE.TIME_MS}, but for fingers (more strict, they must lift quicker) */
-		TIME_MS: 120,
-		/** {@link CLICK_THRESHOLDS.MOUSE.DOUBLE_CLICK_TIME_MS}, but for fingers (more strict, they must lift quicker) */
-		DOUBLE_CLICK_TIME_MS: 250,
+	touch: {
+		/** {@link CLICK_THRESHOLDS.mouse.moveVPixels}, but for fingers (less strict, the 2nd tap can be further away) */
+		moveVPixels: 17,
+		/** {@link CLICK_THRESHOLDS.mouse.timeMs}, but for fingers (more strict, they must lift quicker) */
+		timeMs: 120,
+		/** {@link CLICK_THRESHOLDS.mouse.doubleClickTimeMs}, but for fingers (more strict, they must lift quicker) */
+		doubleClickTimeMs: 250,
 	},
 } as const;
 
@@ -428,8 +428,8 @@ function createListener(
 		const now = Date.now();
 		targetButtonInfo.timeDownMillisHistory.push(now);
 		// Update double click draw ----------
-		const { DOUBLE_CLICK_TIME_MS } = getClickThresholds(e);
-		if (previousTimeDown && now - previousTimeDown < DOUBLE_CLICK_TIME_MS) {
+		const { doubleClickTimeMs } = getClickThresholds(e);
+		if (previousTimeDown && now - previousTimeDown < doubleClickTimeMs) {
 			// Mouse has been down at least once before.
 			if (isWithinClickTolerance(targetButtonInfo, relativeMousePos, e)) {
 				// Only register the double click drag if the mouse hasn't moved too far from its last click down.
@@ -467,8 +467,8 @@ function createListener(
 		// Update click --------------
 		const mouseHistory = targetButtonInfo.timeDownMillisHistory;
 		const timePassed = Date.now() - (mouseHistory[mouseHistory.length - 1] ?? 0); // Since the latest click
-		const { TIME_MS } = getClickThresholds(e);
-		if (timePassed < TIME_MS) {
+		const { timeMs } = getClickThresholds(e);
+		if (timePassed < timeMs) {
 			if (isWithinClickTolerance(targetButtonInfo, relativeMousePos, e)) {
 				targetButtonInfo.clicked = true;
 			}
@@ -868,7 +868,7 @@ function getRelativeMousePosition(
 function getClickThresholds(
 	e: MouseEvent | Touch,
 ): (typeof CLICK_THRESHOLDS)[keyof typeof CLICK_THRESHOLDS] {
-	return e instanceof MouseEvent ? CLICK_THRESHOLDS.MOUSE : CLICK_THRESHOLDS.TOUCH; // CAN'T USE instanceof Touch because it's not defined in Safari!
+	return e instanceof MouseEvent ? CLICK_THRESHOLDS.mouse : CLICK_THRESHOLDS.touch; // CAN'T USE instanceof Touch because it's not defined in Safari!
 }
 
 /**
@@ -880,13 +880,13 @@ function isWithinClickTolerance(
 	position: DoubleCoords,
 	e: MouseEvent | Touch,
 ): boolean {
-	const { MOVE_VPIXELS } = getClickThresholds(e);
+	const { moveVPixels } = getClickThresholds(e);
 	const posDown = info.posDown;
 	const distMoved = posDown
 		? Math.max(Math.abs(posDown[0] - position[0]), Math.abs(posDown[1] - position[1]))
 		: 0; // No click down to compare to. This can happen if you click down offscreen.
 	const delta = Math.max(info.deltaSinceDown[0], info.deltaSinceDown[1]);
-	return distMoved < MOVE_VPIXELS && delta < MOVE_VPIXELS;
+	return distMoved < moveVPixels && delta < moveVPixels;
 }
 
 // Exports ---------------------------------------------------------------------

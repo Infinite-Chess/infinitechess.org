@@ -21,8 +21,8 @@ interface TimeControlsConfig {
 
 /** Mappings from slider index to actual time control values for both time control sliders. */
 const TIME_CONTROL_SLIDER_MAPPINGS = {
-	BASE: clockutil.VALID_BASE_MINUTES,
-	INCREMENT: clockutil.VALID_INCREMENT_SECS,
+	base: clockutil.VALID_BASE_MINUTES,
+	increment: clockutil.VALID_INCREMENT_SECS,
 };
 
 // Elements --------------------------------------------------------------------
@@ -46,10 +46,10 @@ function init(hostConfig: TimeControlsConfig): void {
 	config = hostConfig;
 
 	linkSlider(element_sliderMinutes, element_minutesDisplay, (v) =>
-		String(TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(v)]!),
+		String(TIME_CONTROL_SLIDER_MAPPINGS.base[Number(v)]!),
 	);
 	linkSlider(element_sliderIncrement, element_incrementDisplay, (v) =>
-		String(TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(v)]!),
+		String(TIME_CONTROL_SLIDER_MAPPINGS.increment[Number(v)]!),
 	);
 
 	element_presetButtons.forEach((btn) => {
@@ -91,10 +91,10 @@ function applyPreset(btn: HTMLElement): void {
 
 /** Moves both sliders and their displays to the given base minutes and increment seconds. */
 function setMinutesAndIncrement(minutes: number, increment: number): void {
-	element_sliderMinutes.value = String(TIME_CONTROL_SLIDER_MAPPINGS.BASE.indexOf(minutes));
+	element_sliderMinutes.value = String(TIME_CONTROL_SLIDER_MAPPINGS.base.indexOf(minutes));
 	element_minutesDisplay.textContent = String(minutes);
 	element_sliderIncrement.value = String(
-		TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT.indexOf(increment),
+		TIME_CONTROL_SLIDER_MAPPINGS.increment.indexOf(increment),
 	);
 	element_incrementDisplay.textContent = String(increment);
 	syncPresetHighlight();
@@ -103,8 +103,8 @@ function setMinutesAndIncrement(minutes: number, increment: number): void {
 /** The base minutes and increment seconds both sliders currently sit on. */
 function getMinutesAndIncrement(): { minutes: number; increment: number } {
 	return {
-		minutes: TIME_CONTROL_SLIDER_MAPPINGS.BASE[Number(element_sliderMinutes.value)]!,
-		increment: TIME_CONTROL_SLIDER_MAPPINGS.INCREMENT[Number(element_sliderIncrement.value)]!,
+		minutes: TIME_CONTROL_SLIDER_MAPPINGS.base[Number(element_sliderMinutes.value)]!,
+		increment: TIME_CONTROL_SLIDER_MAPPINGS.increment[Number(element_sliderIncrement.value)]!,
 	};
 }
 

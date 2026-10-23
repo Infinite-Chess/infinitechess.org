@@ -30,9 +30,9 @@ const router = express.Router();
 
 /** The `maxlength` every auth form input renders with. */
 const AUTH_INPUT_MAX_LENGTHS = {
-	USERNAME: validators.MAX_USERNAME_LENGTH,
-	EMAIL: validators.MAX_EMAIL_LENGTH,
-	PASSWORD: validators.MAX_PASSWORD_LENGTH,
+	username: validators.MAX_USERNAME_LENGTH,
+	email: validators.MAX_EMAIL_LENGTH,
+	password: validators.MAX_PASSWORD_LENGTH,
 };
 
 /** The checkmate-practice engine's worker script, as keyed in the asset manifest. */

@@ -31,9 +31,9 @@ import arrowinteraction from '../arrows/arrowinteraction.js';
 /** Settings for the opacity pulsation on legally capturable arrow indicators. */
 const LEGAL_CAPTURE_PULSATE = {
 	/** Period of the oscillation, in milliseconds. */
-	PERIOD_MS: 700,
+	periodMs: 700,
 	/** Lower bound of the opacity oscillation. */
-	MIN_OPACITY: 0.4,
+	minOpacity: 0.4,
 } as const;
 
 // State -----------------------------------------------------------------------
@@ -151,10 +151,10 @@ function updateLegalCaptureArrows(): void {
 
 	if (dragStartTime === undefined) dragStartTime = performance.now();
 	const phase =
-		(2 * Math.PI * (performance.now() - dragStartTime)) / LEGAL_CAPTURE_PULSATE.PERIOD_MS;
+		(2 * Math.PI * (performance.now() - dragStartTime)) / LEGAL_CAPTURE_PULSATE.periodMs;
 	const alpha =
-		LEGAL_CAPTURE_PULSATE.MIN_OPACITY +
-		((1 - LEGAL_CAPTURE_PULSATE.MIN_OPACITY) * (Math.cos(phase) + 1)) / 2;
+		LEGAL_CAPTURE_PULSATE.minOpacity +
+		((1 - LEGAL_CAPTURE_PULSATE.minOpacity) * (Math.cos(phase) + 1)) / 2;
 
 	let hasCapturable = false;
 	for (const arrow of arrows.getAllArrows(gamescene.getGameContext())) {

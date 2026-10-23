@@ -30,8 +30,8 @@ import arrowinteraction from '../../../../game/rendering/arrows/arrowinteraction
 
 /** The distance, in virtual screen pixels, that we may grab the edge of the selection box to drag it. */
 const GRABBABLE_DIST = {
-	DESKTOP: 6,
-	MOBILE: 18,
+	desktop: 6,
+	mobile: 18,
 };
 
 // State -----------------------------------------------------------------------
@@ -52,7 +52,7 @@ let anchorCoords: Coords | undefined = undefined;
 
 /** Returns the grabbable distance in virtual pixels depending on whether a mouse or touch input is being used. */
 function getGrabbableDist(): number {
-	return docutil.isMouseSupported() ? GRABBABLE_DIST.DESKTOP : GRABBABLE_DIST.MOBILE;
+	return docutil.isMouseSupported() ? GRABBABLE_DIST.desktop : GRABBABLE_DIST.mobile;
 }
 
 /**

@@ -100,8 +100,8 @@ const SNAP_LINE_COLOR = [0, 0, 1, 0.3] as const;
 
 /** Properties of the glow dot when rendering the snapped coord. */
 const GLOW_DOT = {
-	RADIUS_PIXELS: 8,
-	RESOLUTION: 16,
+	radiusPixels: 8,
+	resolution: 16,
 };
 
 /**
@@ -596,9 +596,9 @@ function render(): void {
 			const colorTransparent = jsutil.deepCopyObject(color);
 			colorTransparent[3] = 0;
 
-			const radius = space.convertPixelsToWorldSpace_Virtual(camera, GLOW_DOT.RADIUS_PIXELS);
+			const radius = space.convertPixelsToWorldSpace_Virtual(camera, GLOW_DOT.radiusPixels);
 			// prettier-ignore
-			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
+			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.resolution, color, colorTransparent);
 			createRenderable(data, 2, 'TRIANGLE_FAN', 'color', true).render();
 		} else {
 			// Render mini image of piece

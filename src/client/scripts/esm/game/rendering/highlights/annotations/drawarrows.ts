@@ -39,22 +39,22 @@ import { createRenderable } from '../../gamerenderable.js';
 /** Properties for the drawn arrows.*/
 const ARROW = {
 	/** Width of the arrow's rectangular body, where 1.0 spans a full square. */
-	BODY_WIDTH: 0.24,
+	bodyWidth: 0.24,
 	/** Width of the base of the arrowhead (perpendicular to arrow direction), where 1.0 spans a full square. */
-	TIP_WIDTH: 0.55,
+	tipWidth: 0.55,
 	/** Length of the arrowhead (along arrow direction), where 1.0 spans a full square. */
-	TIP_LENGTH: 0.37,
+	tipLength: 0.37,
 	/**
 	 * The minimum desired length of the arrow's body, as a proportion of the total arrow length.
 	 * E.g., 0.5 means the body should try to be at least 50% of the total arrow length.
-	 * If the arrow is too short for both this proportional body and the ARROW.TIP_LENGTH,
+	 * If the arrow is too short for both this proportional body and the ARROW.tipLength,
 	 * both body and tip lengths will be adjusted.
 	 * Valid range: [0.0, 1.0]. 0.0 means no minimum proportional body length is enforced beyond
-	 * what's left after the tip takes ARROW.TIP_LENGTH. 1.0 means the arrow tries to be all body.
+	 * what's left after the tip takes ARROW.tipLength. 1.0 means the arrow tries to be all body.
 	 */
-	MIN_BODY_PROPORTION: 0.4,
+	minBodyProportion: 0.4,
 	/** Offset of the arrow's base from the starting coordinate, in percentage of 1 tile width. */
-	BASE_OFFSET: 0.35,
+	baseOffset: 0.35,
 };
 
 const ZERO = bd.fromBigInt(0n);
@@ -214,10 +214,10 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	const size = boardpos.areZoomedOut() ? entityWidthWorld : boardpos.getBoardScaleAsNumber();
 
 	// How much the arrow base is offset from the start coordinate.
-	const arrowBaseOffsetWorld: number = ARROW.BASE_OFFSET * size;
+	const arrowBaseOffsetWorld: number = ARROW.baseOffset * size;
 	const arrowBaseOffsetSquares: BigDecimal = bd.multiplyFloating(
 		entityWidthSquares,
-		bd.fromNumber(ARROW.BASE_OFFSET),
+		bd.fromNumber(ARROW.baseOffset),
 	);
 
 	// If the arrow length <= base offset, don't draw it (it would have negative length).
@@ -311,9 +311,9 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	const [r, g, b, a] = color;
 	const vertices: number[] = [];
 
-	const bodyWidthArg = ARROW.BODY_WIDTH * size;
-	const tipWidthArg = ARROW.TIP_WIDTH * size;
-	const desiredTipLength = ARROW.TIP_LENGTH * size;
+	const bodyWidthArg = ARROW.bodyWidth * size;
+	const tipWidthArg = ARROW.tipWidth * size;
+	const desiredTipLength = ARROW.tipLength * size;
 
 	const sx = startWorld[0];
 	const sy = startWorld[1];
@@ -347,7 +347,7 @@ function getDataArrow(arrow: Arrow, color: Color): number[] {
 	// --- Calculate actual body and tip lengths based on total length and desired proportions ---
 
 	// Minimum body length based on its desired proportion of the total length.
-	const proportionallyMinBodyLength = length * ARROW.MIN_BODY_PROPORTION;
+	const proportionallyMinBodyLength = length * ARROW.minBodyProportion;
 
 	// Length remaining for the body if the tip takes its full desiredTipLength.
 	const bodyLengthIfFullTip = length - desiredTipLength;

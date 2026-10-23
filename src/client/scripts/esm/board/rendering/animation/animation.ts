@@ -99,15 +99,15 @@ const ONE = bd.fromBigInt(1n);
 /** Config for the splines. */
 const SPLINES: {
 	/** The number of points per segment of the spline. */
-	RESOLUTION: number;
+	resolution: number;
 	/** The thickness of the spline. Used when debug rendering. */
-	WIDTH: number;
+	width: number;
 	/** The color of the spline. Used when debug rendering. */
-	COLOR: [number, number, number, number];
+	color: [number, number, number, number];
 } = {
-	RESOLUTION: 10,
-	WIDTH: 0.15,
-	COLOR: [1, 0, 0, 1],
+	resolution: 10,
+	width: 0.15,
+	color: [1, 0, 0, 1],
 };
 
 /**
@@ -122,20 +122,14 @@ const MAX_DISTANCE_BEFORE_TELEPORT: number = 80;
 /** {@link MAX_DISTANCE_BEFORE_TELEPORT}, as a BigDecimal. */
 const MAX_DISTANCE_BEFORE_TELEPORT_BD: BigDecimal = bd.fromNumber(MAX_DISTANCE_BEFORE_TELEPORT);
 
-/** Used for calculating the duration of move animations. */
+/**
+ * A move animation lasts baseMillis, plus multiplierMillis per square of capped move distance
+ * (multiplierMillisCurved when its path has 3+ waypoints).
+ */
 const MOVE_ANIMATION_DURATION = {
-	/** The base amount of duration, in millis. */
-	baseMillis: 150,
-	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMs: 6,
-	/** The multiplierMs when there's at least 3+ waypoints */
-	multiplierMillis_Curved: 12,
-	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link debug} is true. */
-	baseMillis_Debug: 2000,
-	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMs} when {@link debug} is true. */
-	multiplierMillis_Debug: 15,
-	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link debug} is true. */
-	multiplierMillis_Curved_Debug: 30,
+	normal: { baseMillis: 150, multiplierMillis: 6, multiplierMillisCurved: 12 },
+	/** Replaces normal when {@link debug} is true. */
+	debug: { baseMillis: 2000, multiplierMillis: 15, multiplierMillisCurved: 30 },
 };
 
 // State -----------------------------------------------------------------------
@@ -169,14 +163,14 @@ function animatePiece(
 	if (resetAnimations) clearAnimations(board, true);
 
 	// Generate smooth spline waypoints
-	const path_smooth = splines.generateSplinePath(path, SPLINES.RESOLUTION);
+	const path_smooth = splines.generateSplinePath(path, SPLINES.resolution);
 	const segments = createAnimationSegments(path_smooth);
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance: BigDecimal = segments.reduce((sum, seg) => bd.add(sum, seg.length), ZERO);
 
 	// The hideShowKeyframes need to be stretched to match the resolution of the spline.
-	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.RESOLUTION, path.length);
-	showKeyframes = stretchKeyframesForResolution(showKeyframes, SPLINES.RESOLUTION, path.length);
+	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.resolution, path.length);
+	showKeyframes = stretchKeyframesForResolution(showKeyframes, SPLINES.resolution, path.length);
 
 	// If this animation involves rendering a piece that doesn't have an SVG (void),
 	// we can't animate/render it. Make it an instant animation instead.
@@ -279,24 +273,11 @@ function createAnimationSegments(waypoints: BDCoords[]): AnimationSegment[] {
 
 /** Calculates the duration in milliseconds a particular move would take to animate. */
 function calculateAnimationDuration(totalDistance: BigDecimal, waypointCount: number): number {
-	const baseMillis = debug
-		? MOVE_ANIMATION_DURATION.baseMillis_Debug
-		: MOVE_ANIMATION_DURATION.baseMillis;
+	const durations = debug ? MOVE_ANIMATION_DURATION.debug : MOVE_ANIMATION_DURATION.normal;
+	const multiplier =
+		waypointCount > 2 ? durations.multiplierMillisCurved : durations.multiplierMillis;
 	const cappedDist = Math.min(bd.toNumber(totalDistance), MAX_DISTANCE_BEFORE_TELEPORT);
-	let multiplier: number;
-	if (debug)
-		multiplier =
-			waypointCount > 2
-				? MOVE_ANIMATION_DURATION.multiplierMillis_Curved_Debug
-				: MOVE_ANIMATION_DURATION.multiplierMillis_Debug;
-	else
-		multiplier =
-			waypointCount > 2
-				? MOVE_ANIMATION_DURATION.multiplierMillis_Curved
-				: MOVE_ANIMATION_DURATION.multiplierMs;
-	const additionMs = cappedDist * multiplier;
-
-	return baseMillis + additionMs;
+	return durations.baseMillis + cappedDist * multiplier;
 }
 
 /** Schedules the playback of the sound of the animation. */
@@ -396,7 +377,7 @@ function renderAnimations(board: LiveBoard): void {
 
 	if (debug)
 		board.animations.forEach((animation) =>
-			splines.renderSplineDebug(board, animation.path_smooth, SPLINES.WIDTH, SPLINES.COLOR),
+			splines.renderSplineDebug(board, animation.path_smooth, SPLINES.width, SPLINES.color),
 		);
 
 	const boardPos = board.boardpos.getBoardPos();

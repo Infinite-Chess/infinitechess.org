@@ -24,20 +24,20 @@
 
 		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
-			{{ textInput("username", "username", "text", "username", maxLengths.USERNAME) }}
+			{{ textInput("username", "username", "text", "username", maxLengths.username) }}
 			{# Populated by register.ts on a failed format / availability check. #}
 			<p class="auth-error hidden" id="username-error"></p>
 		</div>
 
 		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
-			{{ passwordInput("password", "password", "new-password", maxLengths.PASSWORD) }}
+			{{ passwordInput("password", "password", "new-password", maxLengths.password) }}
 			<p class="auth-error hidden" id="password-error"></p>
 		</div>
 
 		<div class="auth-field">
 			<label for="email">{{ t.email_label }}</label>
-			{{ textInput("email", "email", "email", "email", maxLengths.EMAIL) }}
+			{{ textInput("email", "email", "email", "email", maxLengths.email) }}
 			<p class="auth-error hidden" id="email-error"></p>
 		</div>
 

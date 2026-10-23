@@ -51,9 +51,9 @@ const FINALIZE_CUSHION_MS = timeutil.toMillis(8, 'seconds');
 /** When a game nobody is connected to auto-concludes, and how often we look for one. */
 const ABANDONMENT = {
 	/** How long a game stays alive with nobody connected to it before it concludes. */
-	TIMEOUT_MS: timeutil.toMillis(5, 'minutes'),
-	/** How often to scan for them. The margin of error on {@link ABANDONMENT.TIMEOUT_MS}. */
-	SWEEP_INTERVAL_MS: timeutil.toMillis(30, 'seconds'),
+	timeoutMs: timeutil.toMillis(5, 'minutes'),
+	/** How often to scan for them. The margin of error on {@link ABANDONMENT.timeoutMs}. */
+	sweepIntervalMs: timeutil.toMillis(30, 'seconds'),
 };
 
 // 1. Conclusion ---------------------------------------------------------------
@@ -276,7 +276,7 @@ function evictIfBothLeft(servergame: ServerGame): void {
 
 /** Begins auto-concluding games that nobody returns to. */
 function startPeriodicAbandonmentSweep(): void {
-	setInterval(() => sweepAbandonedGames(), ABANDONMENT.SWEEP_INTERVAL_MS);
+	setInterval(() => sweepAbandonedGames(), ABANDONMENT.sweepIntervalMs);
 }
 
 /**
@@ -294,7 +294,7 @@ function sweepAbandonedGames(): void {
 		if (match.emptySince === undefined) {
 			match.emptySince = now;
 			liveGameValues.onEmptySinceChanged(servergame); // Persist the state to the db
-		} else if (now - match.emptySince >= ABANDONMENT.TIMEOUT_MS) {
+		} else if (now - match.emptySince >= ABANDONMENT.timeoutMs) {
 			concludeAbandoned(servergame); // Drops the live row; nothing left to persist.
 		}
 	}

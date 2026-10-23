@@ -309,6 +309,8 @@ disagree, study more siblings before trusting either.
   section a `// Section name -------` divider; one with fewer gets none. Never `=====` bars. Pad the
   dashes so the line is exactly 80 characters. `// --- Name ---` may only mark sub-divisions.
 - Constants UPPER_SNAKE_CASE; mutable state camelCase under `// State`.
+- Constant objects' members are camelCase, but enum-like maps' are UPPER_SNAKE_CASE and `enum`
+  members PascalCase; data-keyed tables keep their data's keys.
 - Locals follow whichever casing dominates the surrounding script — camelCase or snake_case
   (database columns leak snake_case server-side); consistency wins.
 - Keep languages in their own files: shader code in `.glsl`, HTML in templates — never inline either

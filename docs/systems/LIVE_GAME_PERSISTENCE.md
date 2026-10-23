@@ -66,8 +66,8 @@ Per-player `last_draw_offer_ply` lives in `live_player_games`.
 | ------------- | ------- | ---------------------------------------------------------------------------- |
 | `empty_since` | INTEGER | Epoch ms a sweep found the game with nobody connected. NULL while anyone is. |
 
-**Abandonment:** once `empty_since` is `ABANDONMENT.TIMEOUT_MS` old, the sweep concludes the game —
-a draw by abandonment, an abort, or an engine win by disconnect.
+**Abandonment:** once `empty_since` is `ABANDONMENT.timeoutMs` old, the sweep concludes the game — a
+draw by abandonment, an abort, or an engine win by disconnect.
 
 "Nobody connected" means every **human** is gone. In an engine game that's the lone human, since
 only humans occupy `live_player_games`.

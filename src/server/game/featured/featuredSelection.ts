@@ -45,10 +45,10 @@ const HOLD_MS = 7000;
 const GUEST_RATING = ratingCalculation.DEFAULT_LEADERBOARD_ELO - 200;
 
 /**
- * The stale limit's curve, `min(COEFFICIENT × E^EXPONENT, CAP_SECS)` seconds over a time control's
+ * The stale limit's curve, `min(coefficient × E^exponent, capSecs)` seconds over a time control's
  * estimated length E: a fit to Lichess's per-channel limits (bullet 35 s … classical 480 s).
  */
-const STALE_CURVE = { COEFFICIENT: 0.65, EXPONENT: 0.9, CAP_SECS: 480 };
+const STALE_CURVE = { coefficient: 0.65, exponent: 0.9, capSecs: 480 };
 
 // Scoring ---------------------------------------------------------------------
 
@@ -65,8 +65,8 @@ function score(seatRatings: (number | undefined)[]): number {
 /** How long a live game may go without a move before it gives up its slot. Untimed games use the default time control's. */
 function staleLimitMs(clock: TimeControl): number {
 	const timed = clockutil.isClockValueInfinite(clock) ? clockutil.DEFAULT_TIME_CONTROL : clock;
-	const curve = STALE_CURVE.COEFFICIENT * clockutil.estimateGameSeconds(timed) ** STALE_CURVE.EXPONENT; // prettier-ignore
-	return 1000 * Math.min(curve, STALE_CURVE.CAP_SECS);
+	const curve = STALE_CURVE.coefficient * clockutil.estimateGameSeconds(timed) ** STALE_CURVE.exponent; // prettier-ignore
+	return 1000 * Math.min(curve, STALE_CURVE.capSecs);
 }
 
 /** When a concluded game gives up its slot. An aborted one has no result to show, so at once. */

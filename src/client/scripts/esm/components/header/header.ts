@@ -31,14 +31,14 @@ const aura = document.querySelector<SVGElement>('.header-logo-aura')!;
 /** Settings for the logo aura pulse animation triggered on hover. */
 const LOGO_PULSE = {
 	/** Duration of one full oscillation cycle, in milliseconds. */
-	PERIOD_MS: 1300,
+	periodMs: 1300,
 	/** Minimum scale of the aura (bottom of oscillation). */
-	MIN_SCALE: 0.7,
+	minScale: 0.7,
 	/** Maximum scale of the aura (top of oscillation). */
-	MAX_SCALE: 1.2,
+	maxScale: 1.2,
 } as const;
 
-const LOGO_PULSE_START_PHASE = Math.acos(1 - 2 * (1 - LOGO_PULSE.MIN_SCALE) / (LOGO_PULSE.MAX_SCALE - LOGO_PULSE.MIN_SCALE)) / (2 * Math.PI); // prettier-ignore
+const LOGO_PULSE_START_PHASE = Math.acos(1 - 2 * (1 - LOGO_PULSE.minScale) / (LOGO_PULSE.maxScale - LOGO_PULSE.minScale)) / (2 * Math.PI); // prettier-ignore
 
 // Functions -------------------------------------------------------------------
 
@@ -93,7 +93,7 @@ function initLogoAnimation(): void {
 
 	function sineScale(t: number): number {
 		const phase = (t + LOGO_PULSE_START_PHASE) % 1;
-		return (LOGO_PULSE.MIN_SCALE + ((LOGO_PULSE.MAX_SCALE - LOGO_PULSE.MIN_SCALE) * (1 - Math.cos(2 * Math.PI * phase))) / 2); // prettier-ignore
+		return (LOGO_PULSE.minScale + ((LOGO_PULSE.maxScale - LOGO_PULSE.minScale) * (1 - Math.cos(2 * Math.PI * phase))) / 2); // prettier-ignore
 	}
 
 	function tick(now: number): void {
@@ -103,7 +103,7 @@ function initLogoAnimation(): void {
 			return;
 		}
 		if (startTime === null) startTime = now;
-		const t = ((now - startTime) / LOGO_PULSE.PERIOD_MS) % 1;
+		const t = ((now - startTime) / LOGO_PULSE.periodMs) % 1;
 		aura.style.transform = `scale(${sineScale(t).toFixed(4)})`;
 		rafId = requestAnimationFrame(tick);
 	}

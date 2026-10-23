@@ -69,27 +69,27 @@ interface CandidateArrow {
 /** Settings for the animated arrows shown beside the candidate arrow indicator. */
 const CANDIDATE_ANIM = {
 	/** Period of the oscillation, in milliseconds. */
-	PERIOD_MS: 800,
+	periodMs: 800,
 	/** Amplitude of the oscillation, as a multiple of the arrow indicator half-width. */
-	AMPLITUDE: 0.3,
+	amplitude: 0.3,
 	/** Initial phase offset as a fraction of the full period (0–1). */
-	PHASE_INITIAL: 0.1,
+	phaseInitial: 0.1,
 	/** Color of the arrows [r, g, b, a]. */
-	COLOR: [0, 0, 0, 0.8] satisfies Color,
+	color: [0, 0, 0, 0.8] satisfies Color,
 } as const;
 
 /** The width of the slide zone, as a percentage of arrow indicator images. */
 const SLIDE_ZONE_WIDTH = 1.7;
 /** Radial gradient rendered inside the slide zone. */
 const SLIDE_ZONE_GRADIENT = {
-	COLORS: [
+	colors: [
 		[1, 1, 1, 0.2],
 		[1, 1, 1, 0.6],
 	] satisfies Color[],
 	/** World units between each individual color ring. */
-	SPACING: 5,
+	spacing: 5,
 	/** World units per second the phase advances. */
-	VELOCITY: 9,
+	velocity: 9,
 } as const;
 
 // State -----------------------------------------------------------------------
@@ -136,8 +136,8 @@ function update(): void {
 		if (isDragActive) {
 			// Update the phase of the slide zone gradient to create a moving effect
 			slideZonePhase =
-				(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * deltatime.get()) %
-				(SLIDE_ZONE_GRADIENT.COLORS.length * SLIDE_ZONE_GRADIENT.SPACING);
+				(slideZonePhase + SLIDE_ZONE_GRADIENT.velocity * deltatime.get()) %
+				(SLIDE_ZONE_GRADIENT.colors.length * SLIDE_ZONE_GRADIENT.spacing);
 		}
 	}
 }
@@ -385,11 +385,11 @@ function renderCandidateArrows(): void {
 
 	// Sine-wave oscillation with a configurable initial phase offset.
 	const elapsed = performance.now() - candidateAnimStartTime;
-	const phase = 2 * Math.PI * (elapsed / CANDIDATE_ANIM.PERIOD_MS + CANDIDATE_ANIM.PHASE_INITIAL);
-	const sineOffset = halfWidth * CANDIDATE_ANIM.AMPLITUDE * 0.5 * (1 - Math.cos(phase));
+	const phase = 2 * Math.PI * (elapsed / CANDIDATE_ANIM.periodMs + CANDIDATE_ANIM.phaseInitial);
+	const sineOffset = halfWidth * CANDIDATE_ANIM.amplitude * 0.5 * (1 - Math.cos(phase));
 
 	const data: number[] = [];
-	const [r, g, b, a] = CANDIDATE_ANIM.COLOR;
+	const [r, g, b, a] = CANDIDATE_ANIM.color;
 
 	// Render an arrowhead triangle in each perpendicular direction (+/-)
 	for (const sign of [1, -1] as const) {
@@ -441,8 +441,8 @@ function renderSlideZone(): void {
 		undefined,
 		() =>
 			renderRadialGradient(
-				SLIDE_ZONE_GRADIENT.COLORS,
-				SLIDE_ZONE_GRADIENT.SPACING,
+				SLIDE_ZONE_GRADIENT.colors,
+				SLIDE_ZONE_GRADIENT.spacing,
 				slideZonePhase,
 			),
 		'and',

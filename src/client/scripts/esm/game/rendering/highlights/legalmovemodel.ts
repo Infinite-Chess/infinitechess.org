@@ -85,12 +85,12 @@ const PERSPECTIVE_VIEW_RANGE = 1000;
 /** How far beyond the visible view the render range bounding box should aim for. */
 const SCREEN_MULTIPLIER = {
 	/** A multiplier to the screen's dimensions. */
-	FLAT: 4,
+	flat: 4,
 	/**
 	 * A multiplier to {@link PERSPECTIVE_VIEW_RANGE}, since in perspective
 	 * mode the screen dimensions don't describe what's visible.
 	 */
-	PERSPECTIVE: 2,
+	perspective: 2,
 } as const;
 
 const ZERO: BigDecimal = bd.fromBigInt(0n);
@@ -184,7 +184,7 @@ function isViewRangeContainedInRenderRange(): boolean {
 			Number(boundingBoxOfRenderRange.right - boundingBoxOfRenderRange.left) + 1;
 
 		// The multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
-		if (width * SCREEN_MULTIPLIER.FLAT * SCREEN_MULTIPLIER.FLAT < renderRangeWidth)
+		if (width * SCREEN_MULTIPLIER.flat * SCREEN_MULTIPLIER.flat < renderRangeWidth)
 			return false;
 	}
 
@@ -209,7 +209,7 @@ function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
 /** [PERSPECTIVE] Returns the target dimensions of the legal move highlights box. */
 function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 	const width = PERSPECTIVE_VIEW_RANGE * 2;
-	const newWidth = width * SCREEN_MULTIPLIER.PERSPECTIVE;
+	const newWidth = width * SCREEN_MULTIPLIER.perspective;
 	return [newWidth, newWidth];
 }
 
@@ -221,8 +221,8 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	const width: number = Number(boundingBoxOfView.right - boundingBoxOfView.left) + 1; // Need to +1 since the board bounding box just includes the integer squares, not floating point edges.
 	const height: number = Number(boundingBoxOfView.top - boundingBoxOfView.bottom) + 1;
 
-	const newWidth = width * SCREEN_MULTIPLIER.FLAT;
-	const newHeight = height * SCREEN_MULTIPLIER.FLAT;
+	const newWidth = width * SCREEN_MULTIPLIER.flat;
+	const newHeight = height * SCREEN_MULTIPLIER.flat;
 
 	if (boardpos.areZoomedOut())
 		throw Error("Don't recalculate legal move highlights box zoomed out!"); // Don't want to generate a stupidly large model
