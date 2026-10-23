@@ -9,7 +9,7 @@
 
 import type { Request, Response } from 'express';
 
-import z from 'zod';
+import * as z from 'zod';
 
 import themes from '../../shared/components/header/themes.js';
 
