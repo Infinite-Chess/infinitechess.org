@@ -10,7 +10,7 @@ import { listener_document } from '../../../../../game/listeners.js';
 // Types -----------------------------------------------------------------------
 
 /** Different modes for the modal confirmation dialog */
-export type ModalMode = 'load' | 'delete' | 'overwrite_save';
+type ModalMode = 'load' | 'delete' | 'overwrite_save';
 
 /** Type for current config of the confirmation dialog modal */
 type ModalConfig = {
@@ -29,7 +29,7 @@ const element_modalMessage = document.getElementById('load-position-modal-messag
 const element_modalNoButton = document.getElementById('load-position-modal-no')!;
 const element_modalYesButton = document.getElementById('load-position-modal-yes')!;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The current config of the Confirmation dialog modal */
 let modal_config: ModalConfig | undefined = undefined;

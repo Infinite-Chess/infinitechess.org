@@ -5,6 +5,8 @@
  * catching any errors that may occur, logging them to the error log.
  */
 
+import jsutil from '../../shared/util/jsutil.js';
+
 import logEvents from './logEvents.js';
 
 /**
@@ -17,14 +19,10 @@ function executeSafely(callback: () => void, errorMessage: string): boolean {
 	try {
 		callback();
 	} catch (e) {
-		const stack = e instanceof Error ? e.stack : 'Exception is not of Error type!';
-		const errText = `${errorMessage}\n${stack}`;
-		logEvents.addAndPrint(errText, 'errLog');
+		logEvents.addAndPrint(`${errorMessage}\n${jsutil.getErrorStack(e)}`, 'errLog');
 		return false;
 	}
 	return true;
 }
-
-// Exports ---------------------------------------------------------------------
 
 export default { executeSafely };

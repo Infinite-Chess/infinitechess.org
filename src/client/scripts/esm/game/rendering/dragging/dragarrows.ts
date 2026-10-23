@@ -33,7 +33,7 @@ import keybinds from '../../keybinds.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import deltatime from '../../../board/deltatime.js';
 import selection from '../../chess/selection.js';
-import { Mouse } from '../../input.js';
+import { MOUSE } from '../../input.js';
 import gamescene from '../gamescene.js';
 import maskeddraw from '../../../webgl/maskeddraw.js';
 import primitives from '../../../board/rendering/primitives.js';
@@ -45,7 +45,7 @@ import legalmovemodel from '../highlights/legalmovemodel.js';
 import arrowsgraphics from '../../../board/rendering/arrows/arrowsgraphics.js';
 import arrowscalculator from '../../../board/rendering/arrows/arrowscalculator.js';
 import arrowinteraction from '../arrows/arrowinteraction.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -69,27 +69,27 @@ interface CandidateArrow {
 /** Settings for the animated arrows shown beside the candidate arrow indicator. */
 const CANDIDATE_ANIM = {
 	/** Period of the oscillation, in milliseconds. */
-	PERIOD_MS: 800,
+	periodMs: 800,
 	/** Amplitude of the oscillation, as a multiple of the arrow indicator half-width. */
-	AMPLITUDE: 0.3,
+	amplitude: 0.3,
 	/** Initial phase offset as a fraction of the full period (0–1). */
-	PHASE_INITIAL: 0.1,
+	phaseInitial: 0.1,
 	/** Color of the arrows [r, g, b, a]. */
-	COLOR: [0, 0, 0, 0.8] satisfies Color,
+	color: [0, 0, 0, 0.8] satisfies Color,
 } as const;
 
 /** The width of the slide zone, as a percentage of arrow indicator images. */
 const SLIDE_ZONE_WIDTH = 1.7;
 /** Radial gradient rendered inside the slide zone. */
 const SLIDE_ZONE_GRADIENT = {
-	COLORS: [
+	colors: [
 		[1, 1, 1, 0.2],
 		[1, 1, 1, 0.6],
 	] satisfies Color[],
 	/** World units between each individual color ring. */
-	SPACING: 5,
+	spacing: 5,
 	/** World units per second the phase advances. */
-	VELOCITY: 9,
+	velocity: 9,
 } as const;
 
 // State -----------------------------------------------------------------------
@@ -130,15 +130,14 @@ function update(): void {
 
 	if (candidate !== undefined) {
 		// Keep rendering while the candidate animation is active,
-		// OR there's an active drag.
+		// OR there's an active drag (its slide zone is animated).
 		frametracker.onVisualChange();
 
 		if (isDragActive) {
 			// Update the phase of the slide zone gradient to create a moving effect
 			slideZonePhase =
-				(slideZonePhase + SLIDE_ZONE_GRADIENT.VELOCITY * deltatime.get()) %
-				(SLIDE_ZONE_GRADIENT.COLORS.length * SLIDE_ZONE_GRADIENT.SPACING);
-			frametracker.onVisualChange(); // Render this frame (slide zone is being animated)
+				(slideZonePhase + SLIDE_ZONE_GRADIENT.velocity * deltatime.get()) %
+				(SLIDE_ZONE_GRADIENT.colors.length * SLIDE_ZONE_GRADIENT.spacing);
 		}
 	}
 }
@@ -189,7 +188,7 @@ function updateCandidate(): void {
 	}
 
 	selection.selectPiece(gamefile, piece, true);
-	mouse.cancelMouseClick(Mouse.LEFT); // Prevent the eventual release from being treated as a click/teleport.
+	mouse.cancelMouseClick(MOUSE.LEFT); // Prevent the eventual release from being treated as a click/teleport.
 	isDragActive = true;
 	draganimation.setForceRankFileOutline(true);
 	frametracker.onVisualChange();
@@ -197,14 +196,14 @@ function updateCandidate(): void {
 
 /** Branch C: no candidate. Check for a new mouse-down on an own-piece arrow. */
 function detectCandidateArrow(): void {
-	if (!mouse.isMouseDown(Mouse.LEFT)) return;
+	if (!mouse.isMouseDown(MOUSE.LEFT)) return;
 
 	const hoveredArrowsList = arrowinteraction.getHoveredArrows();
 	if (hoveredArrowsList.length === 0) return;
 
 	// Claim the mouse down for any arrow hover to prevent board drag.
 	// Mouse down for move hint arrow indicators must be claimed separately.
-	mouse.claimMouseDown(Mouse.LEFT);
+	mouse.claimMouseDown(MOUSE.LEFT);
 
 	// Early exit on dragging disabled now, since the mouse down has been claimed.
 	if (!keybinds.getEffectiveDragEnabled()) return;
@@ -218,7 +217,7 @@ function detectCandidateArrow(): void {
 		if (selection.canSelectPieceType(gamefile, pieceType) !== 2) continue; // Not own draggable piece.
 
 		const pieceCoords = bdcoords.coordsToBigInt(hoveredArrow.piece.coords);
-		const pointerId = mouse.getRelevantListener().getMouseId(Mouse.LEFT)!;
+		const pointerId = mouse.getRelevantListener().getMouseId(MOUSE.LEFT)!;
 
 		candidate = {
 			pieceCoords,
@@ -255,11 +254,7 @@ function findCandidateHoveredArrow(): HoveredArrow | undefined {
  * Determines if the mouse is in the slide zone and updates drag position accordingly.
  */
 function manageActiveDrag(mouseWorld: DoubleCoords): void {
-	// Slide zone depth in world space units
-	const slideZoneDepth =
-		2.0 *
-		arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext()) *
-		SLIDE_ZONE_WIDTH;
+	const slideZoneDepth = getSlideZoneDepth();
 	// Always use the 2D screen box for slide zone boundaries, even in perspective mode.
 	const screenBox = camera.getScreenBoundingBox(false);
 	const dir = candidate!.direction;
@@ -275,6 +270,12 @@ function manageActiveDrag(mouseWorld: DoubleCoords): void {
 	} else {
 		updateOnScreenDrag();
 	}
+}
+
+/** The depth of the slide zone along the screen edge, in world space units. */
+function getSlideZoneDepth(): number {
+	const halfWidth = arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext());
+	return 2.0 * halfWidth * SLIDE_ZONE_WIDTH;
 }
 
 /** Mouse is in the slide zone — compute intersection and keep piece off-screen. */
@@ -384,11 +385,11 @@ function renderCandidateArrows(): void {
 
 	// Sine-wave oscillation with a configurable initial phase offset.
 	const elapsed = performance.now() - candidateAnimStartTime;
-	const phase = 2 * Math.PI * (elapsed / CANDIDATE_ANIM.PERIOD_MS + CANDIDATE_ANIM.PHASE_INITIAL);
-	const sineOffset = halfWidth * CANDIDATE_ANIM.AMPLITUDE * 0.5 * (1 - Math.cos(phase));
+	const phase = 2 * Math.PI * (elapsed / CANDIDATE_ANIM.periodMs + CANDIDATE_ANIM.phaseInitial);
+	const sineOffset = halfWidth * CANDIDATE_ANIM.amplitude * 0.5 * (1 - Math.cos(phase));
 
 	const data: number[] = [];
-	const [r, g, b, a] = CANDIDATE_ANIM.COLOR;
+	const [r, g, b, a] = CANDIDATE_ANIM.color;
 
 	// Render an arrowhead triangle in each perpendicular direction (+/-)
 	for (const sign of [1, -1] as const) {
@@ -420,11 +421,7 @@ function renderSlideZone(): void {
 	if (!isDragActive || !candidate) return;
 
 	const screenBox = camera.getScreenBoundingBox(false);
-	// Slide zone depth in world space units
-	const depth =
-		2.0 *
-		arrowscalculator.getArrowIndicatorHalfWidth(gamescene.getGameContext()) *
-		SLIDE_ZONE_WIDTH;
+	const depth = getSlideZoneDepth();
 	const dir = candidate.direction;
 
 	// Build mask geometry — color values are irrelevant, only the geometry is used for stenciling.
@@ -444,8 +441,8 @@ function renderSlideZone(): void {
 		undefined,
 		() =>
 			renderRadialGradient(
-				SLIDE_ZONE_GRADIENT.COLORS,
-				SLIDE_ZONE_GRADIENT.SPACING,
+				SLIDE_ZONE_GRADIENT.colors,
+				SLIDE_ZONE_GRADIENT.spacing,
 				slideZonePhase,
 			),
 		'and',

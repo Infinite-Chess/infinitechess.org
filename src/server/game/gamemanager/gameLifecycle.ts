@@ -18,6 +18,7 @@ import type { GameConclusion } from '../../../shared/chess/util/typeschemas.js';
 import clock from '../../../shared/chess/logic/clock.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
+import timeutil from '../../../shared/util/timeutil.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 import servervalidation from '../../../shared/chess/variants/servervalidation.js';
 
@@ -47,14 +48,14 @@ import chatEntriesManager from '../../database/chatEntriesManager.js';
  * illegal-move report — which updates the already-logged database record. This only delays the
  * finalized (locked) flag.
  */
-const FINALIZE_CUSHION_MS = 1000 * 8;
+const FINALIZE_CUSHION_MS = timeutil.toMillis(8, 'seconds');
 
 /** When a game nobody is connected to auto-concludes, and how often we look for one. */
 const ABANDONMENT = {
 	/** How long a game stays alive with nobody connected to it before it concludes. */
-	TIMEOUT_MS: 1000 * 60 * 5, // 5 minutes
-	/** How often to scan for them. The margin of error on {@link ABANDONMENT.TIMEOUT_MS}. */
-	SWEEP_INTERVAL_MS: 1000 * 30, // 30 seconds
+	timeoutMs: timeutil.toMillis(5, 'minutes'),
+	/** How often to scan for them. The margin of error on {@link ABANDONMENT.timeoutMs}. */
+	sweepIntervalMs: timeutil.toMillis(30, 'seconds'),
 };
 
 // 1. Conclusion ---------------------------------------------------------------
@@ -279,7 +280,7 @@ function evictIfBothLeft(servergame: ServerGame): void {
 
 /** Begins auto-concluding games that nobody returns to. */
 function startPeriodicAbandonmentSweep(): void {
-	setInterval(() => sweepAbandonedGames(), ABANDONMENT.SWEEP_INTERVAL_MS);
+	setInterval(() => sweepAbandonedGames(), ABANDONMENT.sweepIntervalMs);
 }
 
 /**
@@ -297,7 +298,7 @@ function sweepAbandonedGames(): void {
 		if (match.emptySince === undefined) {
 			match.emptySince = now;
 			liveGameValues.onEmptySinceChanged(servergame); // Persist the state to the db
-		} else if (now - match.emptySince >= ABANDONMENT.TIMEOUT_MS) {
+		} else if (now - match.emptySince >= ABANDONMENT.timeoutMs) {
 			concludeAbandoned(servergame); // Drops the live row; nothing left to persist.
 		}
 	}

@@ -1,8 +1,8 @@
 // src/client/scripts/esm/game/chess/gamesession.ts
 
 /**
- * The current game session's lightweight state: what *kind* of game is loaded (local / online /
- * engine / editor), whether it's still loading, and the shared load-finish / unload lifecycle.
+ * The current game session's lightweight state: what *kind* of game is loaded (online / analysis /
+ * editor), whether it's still loading, and the shared load-finish / unload lifecycle.
  */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
@@ -18,7 +18,7 @@ import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
 import listeners from '../listeners.js';
-import Transition from '../rendering/transitions/Transition.js';
+import transition from '../rendering/transitions/transition.js';
 import perspective from '../rendering/perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 
@@ -62,7 +62,7 @@ function getGameType(): GameSession['type'] {
 	return session.type;
 }
 
-/** Returns our role in the game, if a participant, in either an online/engine game. */
+/** Returns our role in an online game, or undefined if spectating. */
 function getRole(): Player | undefined {
 	if (session.type === 'online') return session.role;
 	throw Error("Can't get our color in this type of game: " + session.type);
@@ -193,7 +193,7 @@ function unloadGame(): void {
 	perspective.disable();
 	gameslot.unloadGame();
 	boardpos.eraseMomentum();
-	Transition.terminate();
+	transition.terminate();
 	// unloadGame() is its only hide, and all board pages ship it hidden.
 	listeners.getCanvas().classList.add('visibility-hidden');
 }

@@ -24,7 +24,7 @@ import meshes from '../../../../board/rendering/meshes.js';
 import snapping from '../snapping.js';
 import gameslot from '../../../chess/gameslot.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
-import { Mouse } from '../../../input.js';
+import { MOUSE } from '../../../input.js';
 import preferences from '../../../../util/preferences.js';
 import annotations from './annotations.js';
 import { GameBus } from '../../../../board/GameBus.js';
@@ -32,18 +32,12 @@ import legalmovemodel from '../legalmovemodel.js';
 import highlightline, { Line } from '../highlightline.js';
 import selectedpiecehighlightline from '../selectedpiecehighlightline.js';
 
-// Events ----------------------------------------------------------------------
-
-// Stop drawing ray if the board steals our pointer to pinch.
-GameBus.addEventListener('steal-pointer', (e) => {
-	if (pointerId !== e.detail.pointerId) return; // Not the pointer drawing the ray, don't stop using it.
-	stopDrawing();
-});
-
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** The color of preset rays for the variant. */
-const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Default: 0.18   Transparent orange (makes preset rays less noticeable/distracting)
+const PRESET_RAY_COLOR: Color = [1, 0.2, 0, 0.24]; // Transparent orange (makes preset rays less noticeable/distracting)
+
+// State -----------------------------------------------------------------------
 
 /**
  * The preset ray overrides if provided from the ICN.
@@ -57,6 +51,14 @@ let drag_start: Coords | undefined;
 let pointerId: string | undefined;
 /** The last known position of the pointer drawing a ray. */
 let pointerWorld: DoubleCoords | undefined;
+
+// Events ----------------------------------------------------------------------
+
+// Stop drawing ray if the board steals our pointer to pinch.
+GameBus.addEventListener('steal-pointer', (e) => {
+	if (pointerId !== e.detail.pointerId) return; // Not the pointer drawing the ray, don't stop using it.
+	stopDrawing();
+});
 
 // Getters ---------------------------------------------------------------------
 
@@ -92,39 +94,21 @@ function update(rays: Ray[]): void {
 
 	if (!drag_start) {
 		// Not currently drawing a ray
-		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
+		if (mouse.isMouseDoubleClickDragged(MOUSE.RIGHT)) {
 			// Double click drag this frame
-			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
-			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
+			mouse.claimMouseDown(MOUSE.RIGHT); // Claim to prevent the same pointer dragging the board
+			pointerId = respectiveListener.getMouseId(MOUSE.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
 			if (!pointerWorld) return stopDrawing(); // Could have double click dragged while looking into sky?
-
-			const closestEntityToWorld = snapping.getClosestEntityToWorld(pointerWorld);
-			const snapCoords = snapping.getWorldSnapCoords(pointerWorld);
-
-			if (boardpos.areZoomedOut() && (closestEntityToWorld || snapCoords)) {
-				if (closestEntityToWorld) {
-					// Snap to nearest hovered entity
-					drag_start = coordutil.copyCoords(closestEntityToWorld.coords);
-				} else {
-					// Snap to the current eminated (blue line) snap
-					drag_start = coordutil.copyCoords(snapCoords!);
-				}
-			} else {
-				// No snap
-				drag_start = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
-			}
-			// console.log("Ray drag start:", drag_start);
+			drag_start = snapping.getSnappedSquare(pointerWorld);
 		}
 	} else {
 		// Currently drawing a ray
 
 		// Test if pointer released (finalize ray)
 		// If not released, delete any Square present on the Ray start
-		if (respectiveListener.pointerExists(pointerId!))
-			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		if (respectiveListener.isPointerHeld(pointerId!)) {
-			// Pointer is still holding
+			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 			if (!pointerWorld) return; // Maybe we're looking into sky?
 			const pointerCoords = space.convertWorldSpaceToCoords_Rounded(boardpos, pointerWorld);
 			// If the mouse coords is different from the drag start, now delete any Squares off of the start coords of the ray.
@@ -134,15 +118,12 @@ function update(rays: Ray[]): void {
 				const index = squares.findIndex((coords) =>
 					coordutil.areCoordsEqual(coords, drag_start!),
 				);
-				if (index !== -1) {
-					squares.splice(index, 1); // Remove the square highlight
-					// console.log("Removed square highlight.");
-				}
+				if (index !== -1) squares.splice(index, 1); // Remove the square highlight
 			}
 		} else {
 			// The pointer is no longer being held
 			// Prevents accidentally ray drawing if we intend to draw square
-			if (!mouse.isMouseClicked(Mouse.RIGHT)) {
+			if (!mouse.isMouseClicked(MOUSE.RIGHT)) {
 				addDrawnRay(rays); // Finalize the ray
 				dispatchRayCountEvent(rays);
 			}
@@ -151,12 +132,14 @@ function update(rays: Ray[]): void {
 	}
 }
 
+/** Returns the id of the pointer drawing the ray. Only call while drawing one. */
 function getPointerId(): string {
 	if (!pointerId)
 		throw Error("Pointer ID is undefined. Don't call drawrays.getPointerId() if not drawing a ray."); // prettier-ignore
 	return pointerId;
 }
 
+/** Stops drawing the ray, discarding it. */
 function stopDrawing(): void {
 	drag_start = undefined;
 	pointerId = undefined;
@@ -214,7 +197,6 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	// Skip if end equals start (no ray drawn)
 	if (coordutil.areCoordsEqual(drag_start!, drag_end)) return { added: false };
 
-	// const vector_unnormalized = coordutil.subtractCoords(drag_end, drag_start!);
 	const mouseTileCoords = space.convertWorldSpaceToCoords(boardpos, pointerWorld);
 	const vector_unnormalized = coordutil.subtractBDCoords(
 		mouseTileCoords,
@@ -237,7 +219,6 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 			// Identical, erase the existing one instead.
 			rays.splice(i, 1); // Remove the existing ray
 			deletedRays.push(ray);
-			// console.log("Erasing ray.");
 			return { added: false, deletedRays };
 		}
 		const line2 = ray.line;
@@ -256,10 +237,8 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 					// Remove this comparing ray in favor of the new one
 					rays.splice(i, 1);
 					deletedRays.push(ray);
-					// console.log("Removed ray in favor of new.");
 				} else {
 					// Skip adding the new one (it already exists contained in this comparing one)
-					// console.log("Ray is already contained in another.");
 					if (deletedRays.length > 0)
 						throw Error('Should not be any rays deleted if ray to be added is contained within another!'); // prettier-ignore
 					return { added: false };
@@ -275,7 +254,6 @@ function addDrawnRay(rays: Ray[]): { added: boolean; deletedRays?: Ray[] } {
 	// Add the ray
 	const ray = { start: drag_start!, vector, line };
 	rays.push(ray);
-	// console.log("Added ray:", ray);
 	return { added: true, deletedRays };
 }
 
@@ -298,7 +276,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 
 	// Then add all the intersection points of the rays (drawn against drawn + preset, SKIP preset against preset)
 	for (let a = 0; a < rays_drawn.length; a++) {
-		const ray1 = rays_drawn[a]!; // Gauranteed drawn ray
+		const ray1 = rays_drawn[a]!; // Guaranteed drawn ray
 		for (let b = a + 1; b < rays_all.length; b++) {
 			const ray2 = rays_all[b]!; // Could be drawn or preset ray
 
@@ -308,8 +286,6 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 
 			// Verify the intersection point is an integer
 			if (trimDecimals && !bdcoords.areCoordsIntegers(intsect)) continue; // Not an integer, don't collapse.
-			// OPTIONAL: Floor() the coords and add it anyway, even if not integer.
-			// intsect = space.roundCoords(intsect);
 
 			// Push it to the collapsed coord intersections if there isn't a duplicate already
 			addSquare_NoDuplicates(intsect);
@@ -355,6 +331,7 @@ function collapseRays(rays_drawn: Ray[], trimDecimals: boolean): BDCoords[] {
 	return intersections;
 }
 
+/** Announces how many rays are drawn. */
 function dispatchRayCountEvent(rays: Ray[]): void {
 	GameBus.dispatch('ray-count-change', rays.length);
 }

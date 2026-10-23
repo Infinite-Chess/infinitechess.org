@@ -28,7 +28,7 @@ import preferences from '../../../util/preferences.js';
 import { GameBus } from '../../../board/GameBus.js';
 import squarerendering from '../../../board/rendering/squarerendering.js';
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The coords of the selected piece that owns the individual moves, or undefined. */
 let selectedPieceCoords: Coords | undefined;
@@ -74,6 +74,7 @@ function updateIndividualMoves(legalMoves: LegalMoves): void {
 	});
 }
 
+/** Erases the move hints. */
 function clearIndividualMoves(): void {
 	individualMoves = [];
 	selectedPieceCoords = undefined;

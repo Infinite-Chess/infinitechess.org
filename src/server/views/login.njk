@@ -22,12 +22,12 @@
 		<div class="auth-field">
 			<label for="username">{{ t.username_label }}</label>
 			{# This field accepts a username OR an email, so it takes the larger email cap. #}
-			{{ textInput("username", "username", "text", "username", maxLengths.EMAIL) }}
+			{{ textInput("username", "username", "text", "username", maxLengths.email) }}
 		</div>
 
 		<div class="auth-field">
 			<label for="password">{{ t.password_label }}</label>
-			{{ passwordInput("password", "password", "current-password", maxLengths.PASSWORD) }}
+			{{ passwordInput("password", "password", "current-password", maxLengths.password) }}
 		</div>
 
 		<div class="login-options">

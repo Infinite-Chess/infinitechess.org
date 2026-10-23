@@ -28,7 +28,7 @@ import gameslot from './gameslot.js';
 import selection from './selection.js';
 import gamescene from '../rendering/gamescene.js';
 import animation from '../../board/rendering/animation/animation.js';
-import { Mouse } from '../input.js';
+import { MOUSE } from '../input.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
@@ -43,7 +43,7 @@ interface Premove extends Edit, MoveTagged {
 	type: number;
 }
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The list of all premoves we currently have, in order. */
 let premoves: Premove[] = [];
@@ -58,8 +58,6 @@ let applied: boolean = true;
 // Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('game-concluded', () => {
-	// console.error("Game ended, clearing premoves");
-
 	// Erase pending premoves, leaving the `applied` state at what it was before
 	// so the rest of the code doesn't experience it changed randomly.
 
@@ -75,9 +73,7 @@ GameBus.addEventListener('game-unloaded', () => {
 });
 
 /** Event listener for when we change the Premoves toggle */
-SettingsBus.addEventListener('premoves-toggle', (_e) => {
-	// const enabled: boolean = _e.detail;
-
+SettingsBus.addEventListener('premoves-toggle', () => {
 	const gamefile = gameslot.getGamefile();
 	const mesh = gameslot.getMesh();
 
@@ -88,15 +84,13 @@ SettingsBus.addEventListener('premoves-toggle', (_e) => {
 
 // Processing Premoves ---------------------------------------------------------
 
-/** Gets all pending premoves. */
+/** Whether any premove is pending. */
 function hasAtleastOnePremove(): boolean {
 	return premoves.length > 0;
 }
 
-/** Similar to {@link movesequence.makeMove} Adds an premove and applies its changes to the board. */
+/** Similar to {@link movesequence.makeMove}: adds a premove and applies its changes to the board. */
 function addPremove(gamefile: GameFile, mesh: Mesh | undefined, moveTagged: MoveTagged): Premove {
-	// console.log("Adding premove");
-
 	if (!applied) throw Error("Don't addPremove when other premoves are not applied!");
 
 	const premove = generatePremove(gamefile, moveTagged);
@@ -104,7 +98,6 @@ function addPremove(gamefile: GameFile, mesh: Mesh | undefined, moveTagged: Move
 	applyPremove(gamefile, mesh, premove, true); // Apply the premove to the game state
 
 	premoves.push(premove);
-	// console.log(premoves);
 
 	GameBus.dispatch('physical-move');
 	GameBus.dispatch('view-move'); // A physical move also changes the viewed position.
@@ -119,7 +112,6 @@ function applyPremove(
 	premove: Premove,
 	forward: boolean,
 ): void {
-	// console.log(`Applying premove ${forward ? 'FORWARD' : 'BACKWARD'}:`, premove);
 	movepiece.applyEdit(gamefile, premove, forward);
 	if (mesh)
 		graphicalchanges.runMeshChanges(gamescene.getGameContext(), gamefile, mesh, premove, forward); // prettier-ignore
@@ -157,16 +149,13 @@ function generatePremove(gamefile: GameFile, moveTagged: MoveTagged): Premove {
 
 /** Clears all pending premoves */
 function clearPremoves(): void {
-	// console.error("Clearing premoves");
 	premoves = [];
 	// Since we now have zero premoves, they are technically applied.
-	// console.error("Setting applied to true.");
 	applied = true;
 }
 
 /** Cancels all premoves */
 function cancelPremoves(gamefile: GameFile, mesh?: Mesh): void {
-	// console.log("Clearing premoves");
 	const hadAtleastOnePremove = hasAtleastOnePremove();
 
 	discardPremoves(gamefile, mesh);
@@ -203,7 +192,6 @@ function rewindPremoves(gamefile: GameFile, mesh?: Mesh): void {
 			applyPremove(gamefile, mesh, premove, false); // Apply the premove to the game state backwards
 		});
 
-	// console.error("Setting applied to false.");
 	applied = false;
 }
 
@@ -253,7 +241,6 @@ function applyPremoves(gamefile: GameFile, mesh?: Mesh): void {
 		}
 	}
 
-	// console.error("Setting applied to true.");
 	applied = true;
 
 	if (premoves.length === 0) return;
@@ -269,8 +256,6 @@ function applyPremoves(gamefile: GameFile, mesh?: Mesh): void {
  * B. Illegal => Clears all premoves.
  */
 function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
-	// console.error("Processing premoves");
-
 	if (applied)
 		throw Error("Don't processPremoves when other premoves are still applied! rewindPremoves() first."); // prettier-ignore
 
@@ -282,8 +267,6 @@ function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 	const results = premoveIsLegal(gamefile, premove, 'physical');
 
 	if (premove && results.legal === true) {
-		// console.log("Premove is legal, applying it");
-
 		// Legal, apply the premove to the real game state
 
 		const moveTagged: MoveTagged = {
@@ -309,18 +292,15 @@ function processPremoves(gamefile: GameFile, mesh?: Mesh): void {
 		// Apply remaining premove changes & visuals, but don't make them physically on the board
 		applyPremoves(gamefile, mesh);
 	} else {
-		// console.log("Premove is illegal, clearing all premoves");
-		// Illegal, clear all premoves (they have already been rewounded before processPremoves() was called)
+		// Illegal, clear all premoves (they have already been rewound before processPremoves() was called)
 		clearPremoves();
 	}
 }
 
 /**
  * Tests whether a given premove is legal to make on the board.
- * @param gamefile
- * @param premove
- * @param mode - Whether we should be testing if the premove is legal to make physically in the game, OR if it's still a valid premove to PREMOVE. A premove may no longer become a valid premove if for example the castling opportunity dissapears due to the opponent capturing the rook.
- * @returns
+ * @param mode - Whether to test if the premove is legal to physically play now, or merely still
+ *   valid to premove (it stops being one if, e.g., the opponent captures the rook it castles with).
  */
 function premoveIsLegal(
 	gamefile: GameFile,
@@ -359,23 +339,8 @@ function premoveIsLegal(
 }
 
 /**
- * Called externally when its our move in the game.
- *
- * Shouldn't care whether the game is over, as all premoves should have been cleared,
- * and not to mention we still need applied to be set to true.
- *
- * Similar to {@link applyPremoves}, but before applying premoves, it attempts to play the first premove in the list if legal.
- */
-function onYourMove(gamefile: GameFile, mesh?: Mesh): void {
-	// Process the next premove, will reapply the premoves
-	processPremoves(gamefile, mesh);
-}
-
-/**
  * Executes a callback function with all premoves rewound, so the game state is correct for any board checks.
  * Then depending on the return value, may attempt to physically play the next premove when re-applying them.
- * @param gamefile
- * @param mesh
  * @param callback - A function that returns true if we should attempt to physically play our next premove when re-applying them.
  */
 function performWithUnapplied(
@@ -390,7 +355,7 @@ function performWithUnapplied(
 
 	if (result) {
 		// Attempt to physically make our next premove, and re-apply the remaining.
-		onYourMove(gamefile, mesh);
+		processPremoves(gamefile, mesh);
 	} else {
 		// Just re-apply
 		applyPremoves(gamefile, mesh);
@@ -416,11 +381,11 @@ function readUnapplied<T>(gamefile: GameFile, read: () => T): T {
 function update(gamefile: GameFile, mesh?: Mesh): void {
 	if (preferences.getLingeringAnnotationsMode()) return; // Right mouse down doesn't clear premoves in Lingering Annotations mode
 
-	if (mouse.isMouseDown(Mouse.RIGHT)) {
+	if (mouse.isMouseDown(MOUSE.RIGHT)) {
 		if (!hasAtleastOnePremove()) return; // No premoves to clear. Don't claim the right mouse button.
 
-		mouse.claimMouseDown(Mouse.RIGHT); // Claim the right mouse button so it doesn't propagate to arrow drawing
-		mouse.cancelMouseClick(Mouse.RIGHT); // Prevents the up-release from registering a click later, drawing a square highlight
+		mouse.claimMouseDown(MOUSE.RIGHT); // Claim the right mouse button so it doesn't propagate to arrow drawing
+		mouse.cancelMouseClick(MOUSE.RIGHT); // Prevents the up-release from registering a click later, drawing a square highlight
 
 		cancelPremoves(gamefile, mesh);
 	}

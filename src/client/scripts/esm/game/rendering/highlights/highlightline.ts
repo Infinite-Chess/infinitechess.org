@@ -7,6 +7,7 @@
 
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { BDCoords } from '../../../../../../shared/util/coordutil.js';
+import type { Renderable } from '../../../webgl/Renderable.js';
 import type { BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type { LineCoefficients } from '../../../../../../shared/util/math/vectors.js';
 
@@ -17,8 +18,9 @@ import camera from '../../../board/rendering/camera.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import boardview from '../boardview.js';
 import perspective from '../perspective.js';
-import { Renderable } from '../../../webgl/Renderable.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
+
+// Types -----------------------------------------------------------------------
 
 /**
  * A single highlight line.
@@ -27,9 +29,9 @@ import { createRenderable } from '../../../board/rendering/renderable.js';
  * we can't render lines out to infinity.
  */
 export interface Line {
-	/** The starting point coords. May have floating point innaccuracy. */
+	/** The starting point coords. May have floating point inaccuracy. */
 	start: BDCoords;
-	/** The ending point coords. May have floating point innaccuracy. */
+	/** The ending point coords. May have floating point inaccuracy. */
 	end: BDCoords;
 	/** The equation of the line in general form. [A,B,C]. PERFECT integers, use this for calculating intersections. */
 	coefficients: LineCoefficients;
@@ -41,6 +43,8 @@ export interface Line {
 	 */
 	piece?: number;
 }
+
+// Render Range ----------------------------------------------------------------
 
 /**
  * Returns the respective bounding box inside which we should render highlight lines out to,
@@ -72,22 +76,20 @@ function getRenderRange(): BoundingBoxBD {
 	}
 }
 
+// Line Models -----------------------------------------------------------------
+
+/** Generates the buffer model of the given highlight lines. */
 function genLinesModel(lines: Line[]): Renderable {
-	const data: number[] = lines.flatMap((line) => getLineData(line));
+	const boardPos = boardpos.getBoardPos();
+	const boardScale = boardpos.getBoardScale();
+	const data: number[] = lines.flatMap((line) => getLineData(line, boardPos, boardScale));
 	return createRenderable(data, 2, 'LINES', 'color', true);
 }
 
-function getLineData(line: Line): number[] {
-	const startWorld = space.convertCoordToWorldSpace(
-		line.start,
-		boardpos.getBoardPos(),
-		boardpos.getBoardScale(),
-	);
-	const endWorld = space.convertCoordToWorldSpace(
-		line.end,
-		boardpos.getBoardPos(),
-		boardpos.getBoardScale(),
-	);
+/** Returns the world-space vertex data of a single highlight line. */
+function getLineData(line: Line, boardPos: BDCoords, boardScale: BigDecimal): number[] {
+	const startWorld = space.convertCoordToWorldSpace(line.start, boardPos, boardScale);
+	const endWorld = space.convertCoordToWorldSpace(line.end, boardPos, boardScale);
 	const [r, g, b, a] = line.color;
 	// prettier-ignore
 	return [
@@ -97,7 +99,11 @@ function getLineData(line: Line): number[] {
 	];
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
+	// Render Range
 	getRenderRange,
+	// Line Models
 	genLinesModel,
 };

@@ -57,8 +57,7 @@ GameBus.addEventListener('game-unloaded', () => terminate());
 // Functions -------------------------------------------------------------------
 
 /**
- * Inits an engine game. In particular, it needs gameOptions in order to know what engine to use for this enginegame.
- * This method launches an engine webworker for the current game.
+ * Inits an engine game, launching its engine's webworker.
  * Deliberately not awaitable: the board never waits on the engine. Once the worker is ready it
  * requests a move itself, catching any played while it loaded.
  */
@@ -140,18 +139,14 @@ function failEngineLoad(error: Error): void {
 	terminate();
 }
 
-/**
- * This method is called externally when the player submits his move in an engine game
- * It submits the gamefile to the webworker
- */
+/** Requests the engine's move from its worker, if it's the engine's turn. */
 function onMovePlayed(): void {
 	// Not an engine game, or the engine is still loading — onEngineReady() requests the move once it's up.
 	if (!engine?.ready) return;
 	const gamefile = gameslot.getGamefile()!;
 	// Make sure it's the engine's turn
 	if (gamefile.whosTurn !== engine.color) return; // Don't do anything if it's our turn (not the engines)
-
-	// Request the engine to perform a best move calculation...
+	if (gamefile.gameConclusion) return;
 
 	// Compress the gamefile to send to the engine in a simpler json format. Engines that don't
 	// read the move history get the current position on its own, rather than the start position
@@ -160,8 +155,6 @@ function onMovePlayed(): void {
 		gamefile,
 		!engineregistry.REGISTRY[engine.name].needsMoveHistory,
 	);
-
-	if (gamefile.gameConclusion) return;
 
 	if (engine.name === 'apeiron') {
 		engineicn.prepareForEngine(longformIn);
@@ -203,8 +196,7 @@ function handleEngineMessage(data: EngineResponse): void {
 }
 
 /**
- * This method takes care of all the logic involved in making an engine move
- * It gets called after the engine finishes its calculation
+ * Validates and plays the engine's move, resigning for it if it has none.
  * @param tokenMove - The engine's move in compact format "x,y>x,y=P", or null if it has none.
  */
 function makeEngineMove(tokenMove: string | null): void {
@@ -229,7 +221,7 @@ function makeEngineMove(tokenMove: string | null): void {
 	}
 
 	// Can rarely happen if the server forced us to resync, undoing our move.
-	if (gamePageData.role === gamefile.whosTurn) {
+	if (gamesession.getRole() === gamefile.whosTurn) {
 		console.error(`Engine returned a move when it was our turn. Ignoring it: ${tokenMove}`);
 		return;
 	}
@@ -300,9 +292,8 @@ function terminate(): void {
 	enginelegalmoves.detach();
 }
 
-// Export ----------------------------------------------------------------------
+// Exports ---------------------------------------------------------------------
 
 export default {
 	initEngineGame,
-	onMovePlayed,
 };

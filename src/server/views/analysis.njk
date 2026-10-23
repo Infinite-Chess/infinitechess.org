@@ -120,22 +120,22 @@
 							<div class="setting-row">
 								<label for="setting-multipv">{{ t.engine.settings_drawer.multipv }}</label>
 								<input type="range" class="slider" id="setting-multipv" min="1" max="5" step="1"/>
-								<span class="setting-value" id="setting-multipv-value">1</span>
+								<span class="setting-value" id="setting-multipv-value"></span>
 							</div>
 							<div class="setting-row">
 								<label for="setting-threads">{{ t.engine.settings_drawer.threads }}</label>
 								<input type="range" class="slider" id="setting-threads" min="1" step="1"/>
-								<span class="setting-value" id="setting-threads-value">1</span>
+								<span class="setting-value" id="setting-threads-value"></span>
 							</div>
 							<div class="setting-row">
 								<label for="setting-hash">{{ t.engine.settings_drawer.hash }}</label>
 								<input type="range" class="slider" id="setting-hash" min="0" step="1"/>
-								<span class="setting-value" id="setting-hash-value">{{ ts.engine.units.megabytes | replace('{n}', 16) }}</span>
+								<span class="setting-value" id="setting-hash-value"></span>
 							</div>
 							<div class="setting-row">
 								<label for="setting-depth">{{ t.engine.settings_drawer.depth }}</label>
 								<input type="range" class="slider" id="setting-depth" min="1" max="64" step="1"/>
-								<span class="setting-value" id="setting-depth-value">13</span>
+								<span class="setting-value" id="setting-depth-value"></span>
 							</div>
 						</div>
 						<div class="engine-lines" id="engine-lines"></div>

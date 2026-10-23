@@ -81,7 +81,7 @@ out vec4 out_color;
 
 // Helper function to get a color from a procedural gradient.
 vec3 getColorFromRamp(float coord, vec3 color1, vec3 color2, vec3 color3, vec3 color4, vec3 color5, vec3 color6) {
-    vec3 color = u5_color1;
+    vec3 color = color1;
 
     // Scale coord by the number of colors to create N segments,
     // allowing the last segment to wrap back to the first.
@@ -143,7 +143,7 @@ vec3 DustyWastes(
 	vec3 baseColor,
 	vec2 screenUV
 ) {
-	const float NOISE_MULTIPLIER = 1.0; // Default: 1.13   Affects average final brightness to more closely match the original texture color
+	const float NOISE_MULTIPLIER = 1.0; // Affects average final brightness to more closely match the original texture color
 
     // Apply the pre-calculated offsets.
 	vec2 uv1 = screenUV * u6_noiseTiling + u6_uvOffset1;
@@ -163,7 +163,6 @@ vec3 Static(
     vec3 baseColor,
     vec2 screenUV
 ) {
-	// vec2 snappedUV = floor((screenUV * u_resolution) / u7_pixelSize) * u7_pixelSize / u_resolution + u7_uvOffset;
     vec2 snappedUV = screenUV * u_resolution[1] / u7_pixelWidth / u7_pixelSize / u_pixelDensity + u7_uvOffset;
     float noise = texture(u_whiteNoiseTexture, snappedUV).r;
     float signedNoise = (noise * 2.0) - 1.0;

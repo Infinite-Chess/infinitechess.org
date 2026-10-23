@@ -11,7 +11,7 @@ import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { GameFile } from '../../../../../../shared/chess/logic/gamefile.js';
 import type { BoundingBoxBD } from '../../../../../../shared/util/math/bounds.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
-import type { Arrow, ArrowPiece, HoveredArrow, ArrowsLine, SlideArrows } from './arrows.js';
+import type { Arrow, ArrowPiece, HoveredArrow, ArrowsLine, Mode, SlideArrows } from './arrows.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -412,7 +412,7 @@ function calcArrowsLineDraft(
 function removeUnnecessaryArrows(
 	boardsim: Board,
 	slideArrowsDraft: SlideArrowsDraft,
-	mode: 0 | 1 | 2 | 3,
+	mode: Mode,
 ): void {
 	if (mode === 3) return; // Don't remove anything
 
@@ -440,7 +440,7 @@ function isAnimatedArrowUnnecessary(
 	type: number,
 	direction: Vec2,
 	dirKey: Vec2Key,
-	mode: 0 | 1 | 2 | 3,
+	mode: Mode,
 ): boolean {
 	if (mode === 3) return false; // Keep it, whether hippogonal orthogonal or diagonal
 	// Mode 2 keeps all orthogonals and diagonals, regardless of whether the piece can slide there.
@@ -464,7 +464,7 @@ function isAnimatedArrowUnnecessary(
  * Modes 0 & 1 return nothing, because retention depends on whether the
  * piece can slide into the direction of the vector, and onto our screen.
  */
-function getSlideExceptions(gamefile: Board, mode: 0 | 1 | 2 | 3): Vec2Key[] {
+function getSlideExceptions(gamefile: Board, mode: Mode): Vec2Key[] {
 	// Mode 3 retains every slide direction, whether orthogonal, diagonal, or hippogonal+.
 	if (mode === 3) return Array.from(gamefile.pieces.lines.keys());
 	// Mode 2 retains all orthogonals and diagonals, EVEN if they can't slide in that direction.
@@ -594,15 +594,13 @@ function processPiece(
 	worldHalfWidth: number,
 	pointerWorlds: DoubleCoords[],
 ): Arrow {
-	const renderCoords = intersection; // Don't think we need to deep copy?
-
 	const worldLocation: DoubleCoords = space.convertCoordToWorldSpace_IgnoreSquareCenter(
-		renderCoords,
+		intersection,
 		board.boardpos.getBoardPos(),
 		board.boardpos.getBoardScale(),
 	);
 
-	// If this picture is a stacked picture, adjust it's positioning
+	// If this picture is a stacked picture, adjust its positioning
 	if (stackIndex > 0) {
 		const scale = board.boardpos.getBoardScaleAsNumber();
 		worldLocation[0] += Number(vector[0]) * stackIndex * STACK_PADDING * scale;

@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { fileURLToPath } from 'url';
 
 import jsutil from '../../shared/util/jsutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 import db from './database.js';
 import env from '../config/env.js';
@@ -26,8 +27,8 @@ const __dirname = path.dirname(__filename);
 // Constants -------------------------------------------------------------------
 
 const BACKUPS_DIR = path.join(__dirname, '../../../backups');
-const MAX_BACKUP_AGE_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
-const BACKUP_INTERVAL_MS = 1000 * 60 * 60 * 24; // 24 hours
+const MAX_BACKUP_AGE_MS = timeutil.toMillis(30, 'days');
+const BACKUP_INTERVAL_MS = timeutil.toMillis(24, 'hours');
 
 // State -----------------------------------------------------------------------
 

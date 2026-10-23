@@ -16,6 +16,7 @@ import type { OrganizedPieces } from '../../../../../../shared/chess/logic/organ
 import type { Ray, Vec2, Vec2Key } from '../../../../../../shared/util/math/vectors.js';
 import type { LegalMoves, SlideLimits } from '../../../../../../shared/chess/logic/legalmoves.js';
 import type { BDCoords, Coords, DoubleCoords } from '../../../../../../shared/util/coordutil.js';
+import type { Renderable, PersistentRenderableInstanced } from '../../../webgl/Renderable.js';
 
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
@@ -37,14 +38,12 @@ import boardview from '../boardview.js';
 import preferences from '../../../util/preferences.js';
 import piecemodels from '../../../board/rendering/piecemodels.js';
 import perspective from '../perspective.js';
-import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
-import { AttributeInfoInstanced, RenderableInstanced } from '../../../webgl/Renderable.js';
 import {
 	createRenderable,
+	createPersistentRenderable_Instanced,
 	createRenderable_Instanced,
-	createRenderable_Instanced_GivenInfo,
-} from '../../../board/rendering/renderable.js';
+} from '../gamerenderable.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -59,15 +58,6 @@ type RayIterationInfo = {
 };
 
 // Constants -------------------------------------------------------------------
-
-/** The attribute info for all legal move highlight instanced rendering models. */
-const ATTRIB_INFO: AttributeInfoInstanced = {
-	vertexDataAttribInfo: [
-		{ name: 'a_position', numComponents: 2 },
-		{ name: 'a_color', numComponents: 4 },
-	],
-	instanceDataAttribInfo: [{ name: 'a_instanceposition', numComponents: 2 }],
-};
 
 /**
  * An offset applied to the legal move highlights mesh, to keep all of the
@@ -95,17 +85,17 @@ const PERSPECTIVE_VIEW_RANGE = 1000;
 /** How far beyond the visible view the render range bounding box should aim for. */
 const SCREEN_MULTIPLIER = {
 	/** A multiplier to the screen's dimensions. */
-	FLAT: 4,
+	flat: 4,
 	/**
 	 * A multiplier to {@link PERSPECTIVE_VIEW_RANGE}, since in perspective
 	 * mode the screen dimensions don't describe what's visible.
 	 */
-	PERSPECTIVE: 2,
+	perspective: 2,
 } as const;
 
 const ZERO: BigDecimal = bd.fromBigInt(0n);
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /**
  * The current view box to generate visible legal moves inside.
@@ -148,8 +138,6 @@ function updateRenderRange(): boolean {
 
 	// Regenerate the legal move highlights render range bounding box
 
-	// console.log("Recalculating bounding box of render range.");
-
 	const [newWidth, newHeight] = perspective.getEnabled()
 		? getDimensionsOfPerspectiveViewRange()
 		: getDimensionsOfOrthographicViewRange();
@@ -168,8 +156,6 @@ function updateRenderRange(): boolean {
 
 	/** Update our offset to the nearest grid-point multiple of {@link REGEN_RANGE} */
 	model_Offset = geometry.roundPointToNearestGridpoint(boardpos.getBoardPos(), REGEN_RANGE);
-
-	// console.log("Shifted offset of highlights.");
 
 	return true; // A change was made
 }
@@ -198,7 +184,7 @@ function isViewRangeContainedInRenderRange(): boolean {
 			Number(boundingBoxOfRenderRange.right - boundingBoxOfRenderRange.left) + 1;
 
 		// The multiplier needs to be squared cause otherwise when we zoom in it regenerates the render box every frame.
-		if (width * SCREEN_MULTIPLIER.FLAT * SCREEN_MULTIPLIER.FLAT < renderRangeWidth)
+		if (width * SCREEN_MULTIPLIER.flat * SCREEN_MULTIPLIER.flat < renderRangeWidth)
 			return false;
 	}
 
@@ -223,7 +209,7 @@ function getBoundingBoxOfPerspectiveView(): BoundingBoxBD {
 /** [PERSPECTIVE] Returns the target dimensions of the legal move highlights box. */
 function getDimensionsOfPerspectiveViewRange(): DoubleCoords {
 	const width = PERSPECTIVE_VIEW_RANGE * 2;
-	const newWidth = width * SCREEN_MULTIPLIER.PERSPECTIVE;
+	const newWidth = width * SCREEN_MULTIPLIER.perspective;
 	return [newWidth, newWidth];
 }
 
@@ -235,8 +221,8 @@ function getDimensionsOfOrthographicViewRange(): DoubleCoords {
 	const width: number = Number(boundingBoxOfView.right - boundingBoxOfView.left) + 1; // Need to +1 since the board bounding box just includes the integer squares, not floating point edges.
 	const height: number = Number(boundingBoxOfView.top - boundingBoxOfView.bottom) + 1;
 
-	const newWidth = width * SCREEN_MULTIPLIER.FLAT;
-	const newHeight = height * SCREEN_MULTIPLIER.FLAT;
+	const newWidth = width * SCREEN_MULTIPLIER.flat;
+	const newHeight = height * SCREEN_MULTIPLIER.flat;
 
 	if (boardpos.areZoomedOut())
 		throw Error("Don't recalculate legal move highlights box zoomed out!"); // Don't want to generate a stupidly large model
@@ -259,19 +245,19 @@ function generateModelsForPiecesLegalMoveHighlights(
 	legalMoves: LegalMoves,
 	friendlyColor: Player,
 	highlightColor: Color,
-): { NonCaptureModel: RenderableInstanced; CaptureModel: RenderableInstanced } {
+): { NonCaptureModel: PersistentRenderableInstanced; CaptureModel: PersistentRenderableInstanced } {
 	const usingDots = preferences.getLegalMovesShape() === 'dots';
 
 	/** The vertex data OF A SINGLE INSTANCE of the NON-CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
 	const vertexData_NonCapture: number[] = usingDots
-		? legalmoveshapes.getDataLegalMoveDot(highlightColor)
-		: legalmoveshapes.getDataLegalMoveSquare(highlightColor);
+		? instancedshapes.getDataLegalMoveDot(highlightColor)
+		: instancedshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the NON-CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
 	const instanceData_NonCapture: bigint[] = [];
 	/** The vertex data OF A SINGLE INSTANCE of the CAPTURING legal move highlight. Stride 6 (2 position, 4 color) */
 	const vertexData_Capture: number[] = usingDots
-		? legalmoveshapes.getDataLegalMoveCornerTris(highlightColor)
-		: legalmoveshapes.getDataLegalMoveSquare(highlightColor);
+		? instancedshapes.getDataLegalMoveCornerTris(highlightColor)
+		: instancedshapes.getDataLegalMoveSquare(highlightColor);
 	/** The instance-specific data of the CAPTURING legal move highlights mesh. Stride 2 (2 instanceposition) */
 	const instanceData_Capture: bigint[] = [];
 
@@ -291,7 +277,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 
 	return {
 		// The NON-CAPTURING legal move highlights model
-		NonCaptureModel: createRenderable_Instanced(
+		NonCaptureModel: createPersistentRenderable_Instanced(
 			vertexData_NonCapture,
 			piecemodels.castBigIntArrayToFloat32(instanceData_NonCapture),
 			'TRIANGLES',
@@ -299,7 +285,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 			true,
 		),
 		// The CAPTURING legal move highlights model
-		CaptureModel: createRenderable_Instanced(
+		CaptureModel: createPersistentRenderable_Instanced(
 			vertexData_Capture,
 			piecemodels.castBigIntArrayToFloat32(instanceData_Capture),
 			'TRIANGLES',
@@ -319,7 +305,7 @@ function generateModelsForPiecesLegalMoveHighlights(
 function generateModelForSlideHighlightOutlines(
 	coords: Coords,
 	legalMoves: LegalMoves,
-): RenderableInstanced {
+): Renderable {
 	const vertexData: number[] = instancedshapes.getDataBoxOutline();
 	/** The instance-specific position data. Stride 2 (2 instanceposition). Captures and non-captures share the same outline shape. */
 	const instanceData: bigint[] = [];
@@ -524,7 +510,7 @@ function pushRay(
 	// The cheapest way to test whether a piece occupies each square of this ray.
 	const isPieceOnCoords = getOptimalPieceOnCoordsChecker(gamefile.pieces, step, startCoords);
 
-	// Recursively adds the coords to the instance data list, shifting by the step size.
+	// Iteratively adds the coords to the instance data list, shifting by the step size.
 	const targetCoords: Coords = startCoords; // The true coords of the square we're checking
 	for (let i = 0; i < iterationCount; i++) {
 		legal: if (ignoreFunc(coords, targetCoords)) {
@@ -682,7 +668,7 @@ function getRayIterationInfo(
  * Rays are square highlights starting from a single coord
  * and going in one direction to infinity, unobstructed.
  */
-function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
+function genModelForRays(rays: Ray[], color: Color): Renderable {
 	const vertexData = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: bigint[] = [];
 
@@ -712,12 +698,12 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
 		}
 	}
 
-	return createRenderable_Instanced_GivenInfo(
+	return createRenderable_Instanced(
 		vertexData,
 		piecemodels.castBigIntArrayToFloat32(instanceData),
-		ATTRIB_INFO,
 		'TRIANGLES',
 		'colorInstanced',
+		true,
 	);
 }
 
@@ -728,9 +714,9 @@ function genModelForRays(rays: Ray[], color: Color): RenderableInstanced {
  * Will only be visible if camera debug mode is on, as this is normally outside of the screen edge.
  */
 function renderOutlineOfRenderBox(): void {
+	const color: Color = [1, 1, 1, 1]; // White
 	// const color: Color = [1,0,1, 1]; // Magenta
 	// const color: Color = [0.65, 0.15, 0, 1]; // Maroon (matches light brown wood theme)
-	const color: Color = [1, 1, 1, 1]; // White
 	const data = meshes.RectWorld(boardpos, boundingBoxOfRenderRange!, color);
 
 	createRenderable(data, 2, 'LINE_LOOP', 'color', true).render();

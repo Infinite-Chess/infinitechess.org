@@ -16,6 +16,8 @@ import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { PlayerAssignments } from '../gamemanager/serverGameTypes.js';
 import type { ChallengeStateMessage } from '../../../shared/transport/clientbound.js';
 
+import timeutil from '../../../shared/util/timeutil.js';
+
 import socketSend from '../../socket/socketSend.js';
 import seekUtility from './seekUtility.js';
 import activeSeeks from './activeSeeks.js';
@@ -30,7 +32,7 @@ import memberInfoUtil from '../../auth/memberInfoUtil.js';
 // Constants -------------------------------------------------------------------
 
 /** How long a private seek outlives its owner having no challenge page open. */
-const EXPIRY_MS = 1000 * 60 * 10; // 10 minutes
+const EXPIRY_MS = timeutil.toMillis(10, 'minutes');
 
 // Subscribing -----------------------------------------------------------------
 

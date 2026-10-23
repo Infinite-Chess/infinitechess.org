@@ -73,7 +73,7 @@ export interface Animation {
 	segments: AnimationSegment[];
 	/** Pieces that need to be shown, up until a set path point is reached. Usually needed for captures. 0 is the start of the path. */
 	showKeyframes: Map<number, Piece[]>;
-	/** Pieces that need to be hidded, up until a set path point is reached. Usually needed for reversing captures and hiding the moved piece. 0 is the start of the path. */
+	/** Pieces that need to be hidden, up until a set path point is reached. Usually needed for reversing captures and hiding the moved piece. 0 is the start of the path. */
 	hideKeyframes: Map<number, Coords[]>;
 	/** The time the animation started. */
 	startTimeMillis: number;
@@ -99,15 +99,15 @@ const ONE = bd.fromBigInt(1n);
 /** Config for the splines. */
 const SPLINES: {
 	/** The number of points per segment of the spline. */
-	RESOLUTION: number;
+	resolution: number;
 	/** The thickness of the spline. Used when debug rendering. */
-	WIDTH: number;
+	width: number;
 	/** The color of the spline. Used when debug rendering. */
-	COLOR: [number, number, number, number];
+	color: [number, number, number, number];
 } = {
-	RESOLUTION: 10, // Default: 10
-	WIDTH: 0.15, // Default: 0.15
-	COLOR: [1, 0, 0, 1], // Default: [1, 0, 0, 1]
+	resolution: 10,
+	width: 0.15,
+	color: [1, 0, 0, 1],
 };
 
 /**
@@ -117,31 +117,25 @@ const SPLINES: {
  * THIS MUST BE GREATER THAN THE Z AT WHICH PIECES ARE RENDERED.
  */
 const TRANSPARENT_SQUARE_Z: number = 0.01;
-/** By adding a negative offset, the sound doesn't appear delayed. */
-const SOUND_OFFSET: number = 0; // TODO: Delete after next update, after some time with zero delay, to make sure we still like it.
 /** The maximum distance an animation can be without teleporting mid-animation. */
-const MAX_DISTANCE_BEFORE_TELEPORT: number = 80; // 80
+const MAX_DISTANCE_BEFORE_TELEPORT: number = 80;
+/** {@link MAX_DISTANCE_BEFORE_TELEPORT}, as a BigDecimal. */
+const MAX_DISTANCE_BEFORE_TELEPORT_BD: BigDecimal = bd.fromNumber(MAX_DISTANCE_BEFORE_TELEPORT);
 
-/** Used for calculating the duration of move animations. */
+/**
+ * A move animation lasts baseMillis, plus multiplierMillis per square of capped move distance
+ * (multiplierMillisCurved when its path has 3+ waypoints).
+ */
 const MOVE_ANIMATION_DURATION = {
-	/** The base amount of duration, in millis. */
-	baseMillis: 150, // Default: 150
-	/** The multiplier amount of duration, in millis, multiplied by the capped move distance. */
-	multiplierMs: 6,
-	/** The multiplierMs when there's at least 3+ waypoints */
-	multiplierMillis_Curved: 12, // Default: 12
-	/** Replaces {@link MOVE_ANIMATION_DURATION.baseMillis} when {@link DEBUG} is true. */
-	baseMillis_Debug: 2000,
-	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMs} when {@link DEBUG} is true. */
-	multiplierMillis_Debug: 15,
-	/** Replaces {@link MOVE_ANIMATION_DURATION.multiplierMillis_Curved} when {@link DEBUG} is true. */
-	multiplierMillis_Curved_Debug: 30,
+	normal: { baseMillis: 150, multiplierMillis: 6, multiplierMillisCurved: 12 },
+	/** Replaces normal when {@link debug} is true. */
+	debug: { baseMillis: 2000, multiplierMillis: 15, multiplierMillisCurved: 30 },
 };
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** If this is enabled, the spline of the animations will be rendered, and the animations' duration increased. */
-let DEBUG = false;
+let debug = false;
 
 // Adding / Clearing Animations ------------------------------------------------
 
@@ -152,8 +146,8 @@ let DEBUG = false;
  * @param path - The waypoints the piece will pass throughout the animation. Minimum: 2
  * @param showKeyframes
  * @param hideKeyframes
- * @param instant - Whether the animation should be instantanious, only playing the SOUND. If this is true, the animation will not be added to the list of animations, and will not be rendered.
- * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling. Default: true
+ * @param instant - Whether the animation should be instantaneous, only playing the SOUND. If this is true, the animation will not be added to the list of animations, and will not be rendered.
+ * @param resetAnimations - If false, allows animation of multiple pieces at once. Useful for castling.
  */
 function animatePiece(
 	board: LiveBoard,
@@ -169,24 +163,20 @@ function animatePiece(
 	if (resetAnimations) clearAnimations(board, true);
 
 	// Generate smooth spline waypoints
-	const path_smooth = splines.generateSplinePath(path, SPLINES.RESOLUTION);
+	const path_smooth = splines.generateSplinePath(path, SPLINES.resolution);
 	const segments = createAnimationSegments(path_smooth);
 	// Calculates the total length of the path traveled by the piece in the animation.
 	const totalDistance: BigDecimal = segments.reduce((sum, seg) => bd.add(sum, seg.length), ZERO);
 
 	// The hideShowKeyframes need to be stretched to match the resolution of the spline.
-	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.RESOLUTION, path.length);
-	showKeyframes = stretchKeyframesForResolution(showKeyframes, SPLINES.RESOLUTION, path.length);
+	hideKeyframes = stretchKeyframesForResolution(hideKeyframes, SPLINES.resolution, path.length);
+	showKeyframes = stretchKeyframesForResolution(showKeyframes, SPLINES.resolution, path.length);
 
 	// If this animation involves rendering a piece that doesn't have an SVG (void),
-	// we can't animate/render it. Make it an instant animationinstead.
+	// we can't animate/render it. Make it an instant animation instead.
 	const typesInvolved: Set<RawType> = new Set([typeutil.getRawType(type)]);
 	showKeyframes.forEach((w) => w.forEach((p) => typesInvolved.add(typeutil.getRawType(p.type))));
-	if (
-		new Set([...typesInvolved, ...piecethemes.SVGLESS_TYPES]).size <
-		typesInvolved.size + piecethemes.SVGLESS_TYPES.size
-	)
-		instant = true; // Instant animations still play the sound
+	if ([...typesInvolved].some((raw) => piecethemes.SVGLESS_TYPES.has(raw))) instant = true; // Instant animations still play the sound
 
 	// Handle instant animation (piece was dropped): Play the SOUND ONLY, but don't animate.
 	if (instant)
@@ -233,9 +223,10 @@ function clearAnimations(board: LiveBoard, playSounds = false): void {
 	board.animations.length = 0; // Empties existing animations
 }
 
+/** Toggles rendering the animation splines, and slowing down animations. */
 function toggleDebug(): void {
-	DEBUG = !DEBUG;
-	console.log(`Toggled animation splines: ${DEBUG}`);
+	debug = !debug;
+	console.log(`Toggled animation splines: ${debug}`);
 }
 
 // Helper Functions ------------------------------------------------------------
@@ -282,30 +273,19 @@ function createAnimationSegments(waypoints: BDCoords[]): AnimationSegment[] {
 
 /** Calculates the duration in milliseconds a particular move would take to animate. */
 function calculateAnimationDuration(totalDistance: BigDecimal, waypointCount: number): number {
-	const baseMillis = DEBUG
-		? MOVE_ANIMATION_DURATION.baseMillis_Debug
-		: MOVE_ANIMATION_DURATION.baseMillis;
+	const durations = debug ? MOVE_ANIMATION_DURATION.debug : MOVE_ANIMATION_DURATION.normal;
+	const multiplier =
+		waypointCount > 2 ? durations.multiplierMillisCurved : durations.multiplierMillis;
 	const cappedDist = Math.min(bd.toNumber(totalDistance), MAX_DISTANCE_BEFORE_TELEPORT);
-	let multiplier: number;
-	if (DEBUG)
-		multiplier =
-			waypointCount > 2
-				? MOVE_ANIMATION_DURATION.multiplierMillis_Curved_Debug
-				: MOVE_ANIMATION_DURATION.multiplierMillis_Debug;
-	else
-		multiplier =
-			waypointCount > 2
-				? MOVE_ANIMATION_DURATION.multiplierMillis_Curved
-				: MOVE_ANIMATION_DURATION.multiplierMs;
-	const additionMs = cappedDist * multiplier;
-
-	return baseMillis + additionMs;
+	return durations.baseMillis + cappedDist * multiplier;
 }
 
 /** Schedules the playback of the sound of the animation. */
 function scheduleSoundPlayback(board: LiveBoard, animation: Animation): void {
-	const playbackTime = Math.max(0, animation.durationMillis + SOUND_OFFSET);
-	animation.soundTimeoutId = setTimeout(() => playAnimationSound(board, animation), playbackTime);
+	animation.soundTimeoutId = setTimeout(
+		() => playAnimationSound(board, animation),
+		animation.durationMillis,
+	);
 }
 
 /** Schedules the removal of an animation after it's over. */
@@ -321,7 +301,6 @@ function scheduleAnimationRemoval(board: LiveBoard, animation: Animation): void 
 /**
  * Plays the sound of the animation.
  * @param animation - The animation to play the sound for.
- * @param dampen - Whether to dampen the sound. This should be true if we're skipping through moves quickly.
  */
 function playAnimationSound(board: LiveBoard, animation: Animation): void {
 	moveeffects.playMove(
@@ -396,17 +375,10 @@ function renderTransparentSquares(board: LiveBoard): void {
 function renderAnimations(board: LiveBoard): void {
 	if (board.animations.length === 0) return;
 
-	if (DEBUG)
+	if (debug)
 		board.animations.forEach((animation) =>
-			splines.renderSplineDebug(board, animation.path_smooth, SPLINES.WIDTH, SPLINES.COLOR),
+			splines.renderSplineDebug(board, animation.path_smooth, SPLINES.width, SPLINES.color),
 		);
-
-	/**
-	 * Move away from the depricated spritesheet!
-	 *
-	 * We need to generate one instanced buffer model
-	 * for each type of piece included in the animations.
-	 */
 
 	const boardPos = board.boardpos.getBoardPos();
 
@@ -486,7 +458,7 @@ function renderAnimations(board: LiveBoard): void {
  * Calculates which segment of the animation the animated piece is currently on,
  * and its distance along that specific segment.
  * @param animation - The animation to calculate the current segment for.
- * @param maxDistB4TeleportNumber - The maximum distance the animation should be allowed to travel
+ * @param maxDistB4Teleport - The maximum distance the animation should be allowed to travel
  * 									before teleporting mid-animation near the end of its destination.
  * 									This should be specified if we're animating a miniimage, since when
  * 									we're zoomed out, the animation moving faster is perceivable.
@@ -495,7 +467,7 @@ function renderAnimations(board: LiveBoard): void {
  */
 function getCurrentSegment(
 	animation: Animation,
-	maxDistB4Teleport: BigDecimal = bd.fromNumber(MAX_DISTANCE_BEFORE_TELEPORT),
+	maxDistB4Teleport: BigDecimal = MAX_DISTANCE_BEFORE_TELEPORT_BD,
 ): SegmentInfo {
 	const elapsed = performance.now() - animation.startTimeMillis;
 	/** The interpolated progress of the animation. */
@@ -564,7 +536,7 @@ function getCurrentSegment(
 /**
  * Calculates the position of the moved piece from the progress of the animation.
  * @param segments - The segments of the animation.
- * @param segmentNum - The segment number, which is the progress of the animation from {@link getCurrentSegment}.
+ * @param segmentInfo - The progress of the animation, from {@link getCurrentSegment}.
  * @returns the coordinate the animation's piece should be rendered this frame.
  */
 function getCurrentAnimationPosition(
@@ -595,7 +567,7 @@ function getCurrentAnimationPosition(
 	];
 }
 
-// -----------------------------------------------------------------------------------------
+// Keyframes -------------------------------------------------------------------
 
 /**
  * Iterates over all keyframes that have not been passed by the animation.
@@ -611,6 +583,8 @@ function forEachActiveKeyframe<T>(
 		callback(v);
 	}
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	animatePiece,

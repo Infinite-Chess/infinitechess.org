@@ -34,19 +34,11 @@ export class WaterPass implements PostProcessPass {
 
 	// --- Internal State ---
 	private activeSources: RippleSource[] = [];
-	private resolution: [number, number] = [1, 1];
 	// Pre-allocated array for performance to avoid creating new arrays every frame
 	private centersArray: Float32Array = new Float32Array(WaterPass.MAX_SOURCES * 2);
 
-	/**
-	 * Creates a new PondPass.
-	 * @param programManager - The ProgramManager instance to retrieve the shader program.
-	 * @param width - The current width of the canvas.
-	 * @param height - The current height of the canvas.
-	 */
-	constructor(programManager: ProgramManager, width: number, height: number) {
+	constructor(programManager: ProgramManager) {
 		this.program = programManager.get('water');
-		this.setResolution(width, height);
 	}
 
 	/**
@@ -58,18 +50,6 @@ export class WaterPass implements PostProcessPass {
 		// Clamp the number of sources to the maximum allowed by the shader
 		const count = Math.min(sources.length, WaterPass.MAX_SOURCES);
 		this.activeSources = sources.slice(0, count);
-	}
-
-	/**
-	 * Informs the pass of the current rendering resolution.
-	 * This is crucial for correcting aspect ratio distortion.
-	 * Call this whenever the canvas is resized.
-	 * @param width The width of the canvas.
-	 * @param height The height of the canvas.
-	 */
-	public setResolution(width: number, height: number): void {
-		this.resolution[0] = width;
-		this.resolution[1] = height;
 	}
 
 	// prettier-ignore
@@ -91,7 +71,7 @@ export class WaterPass implements PostProcessPass {
 		gl.uniform1f(this.program.getUniformLocation('u_masterStrength'), this.masterStrength);
 		gl.uniform1i(this.program.getUniformLocation('u_sourceCount'), sourceCount);
 		gl.uniform1f(this.program.getUniformLocation('u_time'), this.time / 1000); // Convert ms to seconds
-		gl.uniform2fv(this.program.getUniformLocation('u_resolution'), this.resolution);
+		gl.uniform2f(this.program.getUniformLocation('u_resolution'), gl.canvas.width, gl.canvas.height);
 		gl.uniform1f(this.program.getUniformLocation('u_strength'), this.strength);
 		gl.uniform1f(this.program.getUniformLocation('u_frequency'), this.frequency);
 		gl.uniform1f(this.program.getUniformLocation('u_oscillationSpeed'), this.oscillationSpeed);

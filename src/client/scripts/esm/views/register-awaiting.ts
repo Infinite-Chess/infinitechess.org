@@ -9,6 +9,8 @@
  * address is PUT to /api/register/awaiting/email; success reloads the page, errors show inline.
  */
 
+import timeutil from '../../../../shared/util/timeutil.js';
+
 import navigate from '../util/navigate.js';
 import flashtoast from '../components/flashtoast.js';
 import accountform from '../components/accountform.js';
@@ -25,10 +27,10 @@ import { serverfetch } from '../util/serverfetch.js';
  */
 const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly intervalMs: number }[] =
 	[
-		{ untilMs: 1000 * 60 * 1, intervalMs: 3000 }, // 0–1m: every 3s
-		{ untilMs: 1000 * 60 * 3, intervalMs: 5000 }, // 1–3m: every 5s
-		{ untilMs: 1000 * 60 * 4, intervalMs: 10000 }, // 3–5m: every 10s
-		{ untilMs: 1000 * 60 * 10, intervalMs: 20000 }, // 5–10m: every 20s
+		{ untilMs: timeutil.toMillis(1, 'minutes'), intervalMs: 3000 }, // 0–1m: every 3s
+		{ untilMs: timeutil.toMillis(3, 'minutes'), intervalMs: 5000 }, // 1–3m: every 5s
+		{ untilMs: timeutil.toMillis(4, 'minutes'), intervalMs: 10000 }, // 3–5m: every 10s
+		{ untilMs: timeutil.toMillis(10, 'minutes'), intervalMs: 20000 }, // 5–10m: every 20s
 		{ untilMs: Infinity, intervalMs: 30000 }, // 10m+: every 30s
 	];
 
@@ -37,7 +39,7 @@ const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly inter
  * (EXPIRY_MS, server-side) — by then the poll returns 'expired' and the
  * page reloads, so this only catches a truly orphaned tab (e.g. clock skew) that never does.
  */
-const POLL_MAX_DURATION_MS = 1000 * 60 * 60 * 24 + 1000 * 60; // 24h 1m
+const POLL_MAX_DURATION_MS = timeutil.toMillis(24, 'hours') + timeutil.toMillis(1, 'minutes');
 
 // Elements --------------------------------------------------------------------
 

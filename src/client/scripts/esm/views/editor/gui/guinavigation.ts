@@ -11,14 +11,24 @@ import holdrepeat from '../../../components/holdrepeat.js';
 import edithistory from '../edithistory.js';
 import { listener_document } from '../../../game/listeners.js';
 
+// Elements --------------------------------------------------------------------
+
 const element_undoEdit = document.getElementById('undo-edit')!;
 const element_redoEdit = document.getElementById('redo-edit')!;
+
+// Constants -------------------------------------------------------------------
 
 /** Throttles undo/redo: a held button or arrow key can't fire faster than this. */
 const MINIMUM_EDIT_INTERVAL_MS = 20;
 
+// State -----------------------------------------------------------------------
+
+/** When the last undo/redo ran, for the throttle. */
 let lastEdit = 0;
 
+// Functions -------------------------------------------------------------------
+
+/** Wires the undo/redo buttons to repeat while held. */
 function _initListeners_Navigation(): void {
 	holdrepeat.make(element_undoEdit, callback_UndoEdit);
 	holdrepeat.make(element_redoEdit, callback_RedoEdit);
@@ -31,9 +41,10 @@ function _updateEditButtons(): void {
 	testIfRedoEdit();
 }
 
+/** Whether enough time has passed since the last undo/redo for another. */
 function isItOkayToUndoEditOrRedoEdit(): boolean {
 	const timeSinceLastEdit = Date.now() - lastEdit;
-	return timeSinceLastEdit >= MINIMUM_EDIT_INTERVAL_MS; // True if enough time has passed!
+	return timeSinceLastEdit >= MINIMUM_EDIT_INTERVAL_MS;
 }
 
 /**
@@ -54,7 +65,7 @@ function testIfUndoEdit(): void {
 	callback_UndoEdit();
 }
 
-/** Tests if the right arrow key has been pressed, signaling to redo and edit. */
+/** Tests if the right arrow key has been pressed, signaling to redo an edit. */
 function testIfRedoEdit(): void {
 	if (!listener_document.isKeyDown('ArrowRight')) return;
 	callback_RedoEdit();
@@ -73,6 +84,8 @@ function callback_RedoEdit(): void {
 	lastEdit = Date.now();
 	edithistory.redo();
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	update_EditButtons,

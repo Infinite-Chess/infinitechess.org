@@ -1,8 +1,6 @@
 // src/client/scripts/esm/views/checkmatepractice/checkmatepractice.ts
 
-/**
- * This script handles checkmate practice logic
- */
+/** This script handles checkmate practice logic. */
 
 import type { Player } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameConclusion } from '../../../../../shared/chess/util/typeschemas.js';
@@ -11,14 +9,14 @@ import type { EngineAndConfig } from '../../../../../shared/chess/util/enginereg
 import type { Coords, CoordsKey } from '../../../../../shared/util/coordutil.js';
 
 import bimath from '../../../../../shared/util/math/bimath.js';
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import icnposition from '../../../../../shared/chess/logic/icn/icnposition.js';
 import variantrules from '../../../../../shared/chess/logic/variantrules.js';
 import engineregistry from '../../../../../shared/chess/util/engineregistry.js';
 import gamefileutility from '../../../../../shared/chess/logic/gamefileutility.js';
 import validcheckmates from '../../../../../shared/chess/util/validcheckmates.js';
-import {
+import typeutil, {
 	players as p,
 	ext as e,
 	rawTypes as r,
@@ -35,10 +33,10 @@ import movesequence from '../../game/chess/movesequence.js';
 import validatorama from '../../util/validatorama.js';
 import { retryFetch, RetryFetchOptions } from '../../util/fetchretrier.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /** These checkmates we may place the black king nearer to the white pieces. */
-const checkmatesWithBlackRoyalNearer = [
+const BLACK_ROYAL_NEARER_CHECKMATES = [
 	'1K1Q1N-1k',
 	'1Q1R1N-1k',
 	'1Q2N-1k',
@@ -55,17 +53,20 @@ const checkmatesWithBlackRoyalNearer = [
 	'1K3HA-1k',
 ];
 
-const nameOfCompletedCheckmatesInStorage: string = 'checkmatePracticeCompletion';
+/** The LocalStorage key of the checkmates beaten while signed out. */
+const COMPLETED_STORAGE_KEY: string = 'checkmatePracticeCompletion';
+const COMPLETED_EXPIRY_MS: number = timeutil.toMillis(1, 'years');
+
+// State -----------------------------------------------------------------------
+
 /**
  * A list of checkmate strings we have beaten
  * [ "2Q-1k", "3R-1k", "2CH-1k"]
  *
  * This will be initialized on the first {@link getCompletedCheckmates} call.
  * If we initialize it right here, we crash in production, because LocalStorage is not defined yet.
- * @type {string[]}
  */
 let completedCheckmates: string[];
-const COMPLETED_EXPIRY_MS: number = 1000 * 60 * 60 * 24 * 365; // 1 year
 
 /**
  * The checkmate the current game was started with. Owned here rather than read back off
@@ -76,20 +77,21 @@ let checkmatePracticing: string | undefined;
 /** Whether the player is allowed to undo a move in the current position. */
 let undoingIsLegal: boolean = false;
 
+// Events ----------------------------------------------------------------------
+
 GameBus.addEventListener('user-move-played', registerHumanMove);
 GameBus.addEventListener('engine-move-played', registerEngineMove);
 GameBus.addEventListener('game-concluded', onEngineGameConclude);
 
 // Functions -------------------------------------------------------------------
 
+/** Sets whether the player may undo a move in the current position. */
 function setUndoingIsLegal(value: boolean): void {
 	undoingIsLegal = value;
 	// TODO: reflect undo/restart button state in the new game page's side bar.
 }
 
-/**
- * Starts a checkmate practice game
- */
+/** Starts a checkmate practice game. */
 function startCheckmatePractice(checkmateSelectedID: string): void {
 	console.log('Loading practice checkmate game.');
 	checkmatePracticing = checkmateSelectedID;
@@ -135,6 +137,10 @@ function startCheckmatePractice(checkmateSelectedID: string): void {
  * The border distance this engine used to declare, kept for whoever gives it one again:
  *   // worldBorderDist: BigInt(Number.MAX_SAFE_INTEGER) // FREEZES the engine if you move to the border
  *   worldBorderDist: BigInt(1e15) // 1 Quadrillion (~11% the distance of Number.MAX_SAFE_INTEGER)
+ *
+ * TRIPWIRE — the session is declared 'online', though no server game exists. Online games wait for
+ * the server to conclude them, so a practice game never concludes and is never marked beaten, and
+ * an engine failure resigns over the socket. It needs a local session type of its own.
  */
 function startEngineGame(options: {
 	timeControl: '-';
@@ -182,23 +188,16 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 		throw Error('User tried to play invalid checkmate practice.');
 
 	// place the black king not so far away for specific variants
-	const blackroyalnearer: boolean = checkmatesWithBlackRoyalNearer.includes(checkmateID);
+	const blackroyalnearer: boolean = BLACK_ROYAL_NEARER_CHECKMATES.includes(checkmateID);
 
 	const position = new Map<CoordsKey, number>(); // the position to be generated
 	let blackpieceplaced: boolean = false; // monitors if a black piece has already been placed
 	let whitebishopparity: number = Math.floor(Math.random() * 2); // square color of first white bishop batch
 
-	// read the elementID and convert it to a position
-	const piecelist: RegExpMatchArray | null = checkmateID.match(/[0-9]+[a-zA-Z]+/g);
-	if (!piecelist) return position;
-
-	for (const entry of piecelist) {
-		let amount: number = parseInt(entry.match(/[0-9]+/)![0]); // number of pieces to be placed
-		const strpiece: string = entry.match(/[a-zA-Z]+/)![0]; // piecetype to be placed
-		const piece: number = icnposition.getTypeFromAbbr(strpiece);
-
+	for (const { amount, type: piece } of getPieceRuns(checkmateID)) {
 		// place amount many pieces of type piece
-		while (amount !== 0) {
+		let placed = 0;
+		while (placed < amount) {
 			if (typeutil.getColorFromType(piece) === p.WHITE) {
 				if (blackpieceplaced)
 					throw Error('Must place all white pieces before placing black pieces.');
@@ -218,7 +217,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 					!(piece === r.BISHOP + e.W && Number((x + y) % 2n) !== whitebishopparity)
 				) {
 					position.set(key, piece);
-					amount -= 1;
+					placed += 1;
 				}
 			} else {
 				// randomly generate black piece coordinates at a distance
@@ -231,7 +230,7 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 				// check if square is occupied or potentially threatened
 				if (!position.has(key) && squareNotInSight(key, position)) {
 					position.set(key, piece);
-					amount -= 1;
+					placed += 1;
 					blackpieceplaced = true;
 				}
 			}
@@ -242,6 +241,14 @@ function generateCheckmateStartingPosition(checkmateID: string): Map<CoordsKey, 
 	}
 
 	return position;
+}
+
+/** The piece runs of a checkmate ID like `2Q-1k`, white's first. */
+function getPieceRuns(checkmateID: string): { amount: number; type: number }[] {
+	return [...checkmateID.matchAll(/([0-9]+)([a-zA-Z]+)/g)].map(([, amount, abbr]) => ({
+		amount: Number(amount),
+		type: icnposition.getTypeFromAbbr(abbr!),
+	}));
 }
 
 /**
@@ -269,30 +276,16 @@ function squareNotInSight(square: CoordsKey, position: Map<CoordsKey, number>): 
 }
 
 /**
- * Only for dev testing
- * Erases checkmate practice progress in local storage.
- * Call it in developer tools, then reopen the practice menu to see it cleared.
- */
-function eraseCheckmatePracticeProgressFromLocalStorage(): void {
-	LocalStorage.deleteItem(nameOfCompletedCheckmatesInStorage);
-	console.log('DELETED all checkmate practice progress.');
-	if (!completedCheckmates) return; // Haven't open the checkmate practice menu yet, so it's not defined.
-	completedCheckmates.length = 0;
-}
-
-/**
  * The checkmates we have beaten, re-read from the source of truth: the server's
  * cookie when signed in, else LocalStorage.
  */
 function getCompletedCheckmates(): string[] {
 	const cookieCheckmates: string | undefined = docutil.getCookieValue('checkmates_beaten');
 	if (validatorama.areWeLoggedIn() && cookieCheckmates !== undefined) {
-		// console.log("checkmates_beaten cookie was present!");
 		completedCheckmates = decodeURIComponent(cookieCheckmates).match(/[^,]+/g) || []; // match() returns null if no matches
 	} else {
 		// Else, use LocalStorage as a fallback
-		completedCheckmates =
-			(LocalStorage.loadItem(nameOfCompletedCheckmatesInStorage) as string[]) || [];
+		completedCheckmates = (LocalStorage.loadItem(COMPLETED_STORAGE_KEY) as string[]) || [];
 	}
 	return completedCheckmates;
 }
@@ -314,11 +307,7 @@ async function markCheckmateBeaten(checkmatePracticeID: string): Promise<void> {
 
 	// Update LocalStorage and exit, if we are not logged in
 	if (!validatorama.areWeLoggedIn()) {
-		LocalStorage.saveItem(
-			nameOfCompletedCheckmatesInStorage,
-			completedCheckmates,
-			COMPLETED_EXPIRY_MS,
-		);
+		LocalStorage.saveItem(COMPLETED_STORAGE_KEY, completedCheckmates, COMPLETED_EXPIRY_MS);
 		return;
 	}
 
@@ -385,9 +374,7 @@ function onEngineGameConclude(): void {
 	markCheckmateBeaten(checkmatePracticing);
 }
 
-/**
- * This function gets called by enginegame.ts whenever a human player submitted a move
- */
+/** Updates whether undoing is legal after the player moves. */
 function registerHumanMove(): void {
 	if (checkmatePracticing === undefined) return; // The engine game is not a checkmate practice game
 
@@ -401,9 +388,7 @@ function registerHumanMove(): void {
 	}
 }
 
-/**
- * This function gets called by enginegame.ts whenever an engine player submitted a move
- */
+/** Allows undoing once the engine has replied to the player. */
 function registerEngineMove(): void {
 	if (checkmatePracticing === undefined) return; // The engine game is not a checkmate practice game
 
@@ -414,6 +399,7 @@ function registerEngineMove(): void {
 	}
 }
 
+/** Rewinds the player's last move, and the engine's reply to it if there was one. */
 function undoMove(): void {
 	if (checkmatePracticing === undefined)
 		return console.error('Undoing moves is currently not allowed for non-practice mode games');
@@ -430,7 +416,7 @@ function undoMove(): void {
 		// go to latest move before undoing moves
 		movesequence.viewFront(gamefile, mesh, false);
 
-		// If it's their turn, only rewind one move.
+		// On our turn, rewind the engine's reply too.
 		if (gamesession.isItOurTurn() && gamefile.moves.length > 1)
 			movesequence.rewindMove(gamefile, mesh);
 		movesequence.rewindMove(gamefile, mesh);
@@ -438,6 +424,7 @@ function undoMove(): void {
 	}
 }
 
+/** Restarts the current practice checkmate from a fresh random position. */
 function restartGame(): void {
 	if (checkmatePracticing === undefined)
 		return console.error('Restarting games is currently not supported for non-practice mode games'); // prettier-ignore
@@ -451,6 +438,6 @@ function restartGame(): void {
 
 export default {
 	startCheckmatePractice,
+	getPieceRuns,
 	getCompletedCheckmates,
-	eraseCheckmatePracticeProgressFromLocalStorage,
 };

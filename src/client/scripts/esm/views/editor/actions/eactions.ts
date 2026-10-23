@@ -16,11 +16,10 @@
 
 import type { Edit } from '../../../../../../shared/chess/logic/movepiece.js';
 import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
-import type { MetaData } from '../../../../../../shared/chess/util/metadatautil.js';
 import type { MovePacket } from '../../../../../../shared/chess/util/typeschemas.js';
 import type { MoveParsed } from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import type { ActivePosition } from '../boardeditor.js';
-import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state.js';
+import type { GlobalGameState } from '../../../../../../shared/chess/logic/state.js';
 import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
@@ -31,7 +30,7 @@ import variantcache from '../../../../../../shared/chess/variants/variantcache.j
 import variantrules from '../../../../../../shared/chess/logic/variantrules.js';
 import { validatePosition } from '../../../../../../shared/chess/logic/positionlegality.js';
 import boardutil, { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
-import coordutil, { Coords, CoordsKey } from '../../../../../../shared/util/coordutil.js';
+import coordutil, { CoordsKey } from '../../../../../../shared/util/coordutil.js';
 import organizedpieces, {
 	OrganizedPieces,
 } from '../../../../../../shared/chess/logic/organizedpieces.js';
@@ -49,7 +48,7 @@ import gamefile, {
 import toast from '../../../components/toast.js';
 import docutil from '../../../util/docutil.js';
 import gameslot from '../../../game/chess/gameslot.js';
-import gameloader from '../gameloader.js';
+import editorloader from '../editorloader.js';
 import egamerules from '../egamerules.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
 import boardeditor from '../boardeditor.js';
@@ -78,7 +77,7 @@ const CLIPBOARD_DENIED = 'Clipboard permission denied. This might be your browse
 /** Resets the board editor position to the Classical position. */
 async function reset(): Promise<void> {
 	// Load default board editor position
-	await gameloader.startBoardEditor();
+	await editorloader.loadClassical();
 	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
 	boardeditor.clearActivePosition();
 }
@@ -97,12 +96,8 @@ async function clearAll(): Promise<void> {
 		state_global,
 	};
 
-	await gameloader.startBoardEditorFromCustomPosition(
-		{
-			additional: {
-				variantOptions,
-			},
-		},
+	await editorloader.loadVariantOptions(
+		variantOptions,
 		true, // Dirty position (unsaved changes)
 		false,
 	);
@@ -118,12 +113,8 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 			? { name: editorSaveState.position_name, storage_type: 'cloud', owner: validatorama.getOurUsername()! }
 			: { name: editorSaveState.position_name, storage_type: 'local' };
 
-	await gameloader.startBoardEditorFromCustomPosition(
-		{
-			additional: {
-				variantOptions: editorSaveState.variantOptions,
-			},
-		},
+	await editorloader.loadVariantOptions(
+		editorSaveState.variantOptions,
 		false, // Clean position (no unsaved changes) since we're loading one that was already saved
 		editorSaveState.pawnDoublePush,
 		editorSaveState.castling,
@@ -140,8 +131,7 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 async function copy(): Promise<void> {
 	const variantOptions = getCurrentPositionInformation(false);
 	const LongFormatIn: LongFormatIn = {
-		metadata:
-			{} as MetaData /** Empty metadata, in order to make copied codes easier to share */,
+		metadata: {}, // Empty metadata, in order to make copied codes easier to share
 		...variantOptions,
 	};
 	const shortFormatOut = icnconverter.LongToShort_Format(
@@ -156,7 +146,7 @@ async function copy(): Promise<void> {
 }
 
 /** Loads the position from the clipboard. */
-async function paste(): Promise<undefined> {
+async function paste(): Promise<void> {
 	let longformOut: LongFormatOut;
 
 	// Do we have clipboard permission?
@@ -175,16 +165,17 @@ async function paste(): Promise<undefined> {
 		return;
 	}
 
-	loadFromLongformat(longformOut);
+	await loadFromLongformat(longformOut);
 	selectiontool.resetState(); // Clear current selection
 	toast.show(translations.copypaste.loaded_position_from_clipboard);
 }
 
+/** Hands the validated position off to the lobby's computer-game setup and navigates there. */
 async function startEngineGame(): Promise<void> {
 	const variantOptions = getValidatedPosition();
 	if (variantOptions === null) return;
 	const icn = icnconverter.LongToShort_Format(
-		{ metadata: {} as MetaData, ...variantOptions },
+		{ metadata: {}, ...variantOptions },
 		icnconverter.COMPACT_FORMAT_OPTIONS,
 	);
 	await gamesetuphandoff.save({ icn, mode: 'computer' });
@@ -200,7 +191,7 @@ async function startEngineGame(): Promise<void> {
 function getValidatedPosition(): VariantOptions | null {
 	const variantOptions = getCurrentPositionInformation(true);
 	const icnString = icnconverter.LongToShort_Format(
-		{ metadata: {} as MetaData, ...variantOptions },
+		{ metadata: {}, ...variantOptions },
 		icnconverter.COMPACT_FORMAT_OPTIONS,
 	);
 	const illegalReason = validatePosition(variantOptions, icnString);
@@ -226,7 +217,7 @@ function queueRemovalOfAllPieces(gamefile: GameFile, edit: Edit, pieces: Organiz
  */
 function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantOptions {
 	// Get current game rules and state
-	const { gameRules, moveRuleState, enpassantcoords } = egamerules.getCurrentGamerulesAndState();
+	const { gameRules, moveRuleState, enpassant } = egamerules.getCurrentGamerulesAndState();
 
 	// Construct position
 	const gamefile = gameslot.getGamefile()!;
@@ -237,13 +228,6 @@ function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantO
 	const specialRights = new Set(gamefile.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
 	if (revokeRedundantRights) revokeRedundantSpecialRights(gamefile, specialRights);
 
-	let enpassant: EnPassant | undefined;
-	if (enpassantcoords !== undefined) {
-		const playerToMove = egamerules.getPlayerToMove();
-		// prettier-ignore
-		const pawn: Coords = playerToMove === 'white' ? [enpassantcoords[0], enpassantcoords[1] - 1n] : playerToMove === 'black' ? [enpassantcoords[0], enpassantcoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
-		enpassant = { square: enpassantcoords, pawn };
-	}
 	const state_global: GlobalGameState = {
 		specialRights,
 		moveRuleState,
@@ -272,19 +256,14 @@ function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<Coords
 		const candidate = boardutil.getPieceFromCoordsKey(boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
 
 		const rawType = typeutil.getRawType(candidate.type);
-		if (egamerules.pawnDoublePushTypes.includes(rawType)) continue; // Pawns can't castle
+		if (egamerules.PAWN_DOUBLE_PUSH_TYPES.includes(rawType)) continue; // Pawns can't castle
 
 		const hasValidCastlingPartner = movepiece.hasCastlingPartner(boardsim, candidate);
 		if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
 	}
 }
 
-/**
- * pastegame loads in a new position by creating a new gamefile and loading it
- * which doesn't work for the board editor.
- * This function simply applies an edit to the position of the pieces on the board.
- * @param longformat - If this optional parameter is defined, it is used as the position to load instead of getting the position from the clipboard
- */
+/** Loads a parsed ICN's final position onto the board as one undoable edit. */
 async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
 	const resolvedVariantCode = clientmetadatautil.resolveAndNormalizeVariantFromMetadata(
@@ -329,7 +308,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 			variant,
 			additional,
 		);
-		const new_gamestate = gamecompressor.GameToPosition(
+		const new_gamestate = gamecompressor.gameToPosition(
 			variantOptions,
 			loadedGamefile.moves,
 			loadedGamefile.moves.length,
@@ -365,10 +344,10 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 		if (!keepTrackOfGlobalSpecialRights) continue; // One if statement cost is very tiny per iteration
 
 		const rawtype = typeutil.getRawType(pieceType);
-		if (egamerules.pawnDoublePushTypes.includes(rawtype)) {
+		if (egamerules.PAWN_DOUBLE_PUSH_TYPES.includes(rawtype)) {
 			if (hasSpecialRights) at_least_one_pawn_has_double_push = true;
 			else all_pawns_have_double_push = false;
-		} else if (egamerules.castlingTypes.includes(rawtype)) {
+		} else if (egamerules.CASTLING_TYPES.includes(rawtype)) {
 			if (hasSpecialRights) at_least_one_piece_obeys_normal_castling = true;
 			else all_pieces_obey_normal_castling = false;
 		} else if (hasSpecialRights) {

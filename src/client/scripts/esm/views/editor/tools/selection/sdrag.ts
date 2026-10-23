@@ -20,7 +20,7 @@ import camera from '../../../../board/rendering/camera.js';
 import docutil from '../../../../util/docutil.js';
 import scursor from './scursor.js';
 import gameslot from '../../../../game/chess/gameslot.js';
-import { Mouse } from '../../../../game/input.js';
+import { MOUSE } from '../../../../game/input.js';
 import selectiontool from './selectiontool.js';
 import stoolgraphics from './stoolgraphics.js';
 import stransformations from './stransformations.js';
@@ -30,8 +30,8 @@ import arrowinteraction from '../../../../game/rendering/arrows/arrowinteraction
 
 /** The distance, in virtual screen pixels, that we may grab the edge of the selection box to drag it. */
 const GRABBABLE_DIST = {
-	DESKTOP: 6,
-	MOBILE: 18,
+	desktop: 6,
+	mobile: 18,
 };
 
 // State -----------------------------------------------------------------------
@@ -52,7 +52,7 @@ let anchorCoords: Coords | undefined = undefined;
 
 /** Returns the grabbable distance in virtual pixels depending on whether a mouse or touch input is being used. */
 function getGrabbableDist(): number {
-	return docutil.isMouseSupported() ? GRABBABLE_DIST.DESKTOP : GRABBABLE_DIST.MOBILE;
+	return docutil.isMouseSupported() ? GRABBABLE_DIST.desktop : GRABBABLE_DIST.mobile;
 }
 
 /**
@@ -64,11 +64,10 @@ function update(): void {
 		// Determine if the selection has been dropped
 
 		const respectiveListener = mouse.getRelevantListener();
-		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!))
+		// Update its last known position while held, else execute the selection translation
+		if (respectiveListener.isPointerHeld(pointerId!))
 			lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
-		// Test if pointer released (execute selection translation)
-		if (!respectiveListener.isPointerHeld(pointerId!)) dropSelection();
+		else dropSelection();
 	} else {
 		// Determine if the board needs to be picked up,
 		// or if the canvas cursor style should change.
@@ -80,11 +79,11 @@ function update(): void {
 			}
 
 			// Determine if we picked up the selection
-			if (mouse.isMouseDown(Mouse.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
+			if (mouse.isMouseDown(MOUSE.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
 				// Start dragging
-				mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
-				mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-				pointerId = mouse.getMouseId(Mouse.LEFT)!;
+				mouse.claimMouseDown(MOUSE.LEFT); // Remove the pointer down so other scripts don't use it
+				mouse.cancelMouseClick(MOUSE.LEFT); // Cancel any potential future click so other scripts don't use it
+				pointerId = mouse.getMouseId(MOUSE.LEFT)!;
 				pickUpSelection();
 			}
 		} else {
@@ -102,7 +101,7 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 	const selectionWorldBox = selectiontool.getSelectionWorldBox()!;
 
 	// Determine the mouse world coords
-	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
+	const mouseWorld = mouse.getMouseWorld(MOUSE.LEFT);
 	if (!mouseWorld) return false;
 
 	// Convert grab distance to world space
@@ -125,6 +124,7 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 	return mouseIsInOuterBox && !mouseIsInInnerBox;
 }
 
+/** Drops any drag in progress and its cursor styles. */
 function resetState(): void {
 	withinGrabDist = false;
 	scursor.removeCursor('grabbing');
@@ -154,6 +154,7 @@ function pickUpSelection(): void {
 	lastPointerCoords = anchorCoords;
 }
 
+/** Drops the dragged selection, translating its pieces by how far it was dragged. */
 function dropSelection(): void {
 	// Determine the final distance to translate the selection.
 
@@ -172,24 +173,9 @@ function dropSelection(): void {
 	stransformations.Translate(gamefile, mesh, selectionBox, translation);
 }
 
-// /**
-//  * Whether we are currently dragging the selection, AND
-//  * we have dragged it at least 1 square away from the anchor.
-//  */
-// function isDragTranslationPositive(): boolean {
-// 	if (!areDragging || !anchorCoords) return false;
-
-// 	// Determine the current int coord of the pointer
-// 	const pointerCoordRounded: Coords = getIntCoordOfPointer();
-// 	// Determine by how many tiles the pointer has dragged from the anchor
-// 	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords!);
-
-// 	// Return whether that's absolutely positive
-// 	return translation[0] !== 0n || translation[1] !== 0n;
-// }
-
 // Rendering -------------------------------------------------------------------
 
+/** Outlines where the dragged selection would land if dropped now. */
 function render(): void {
 	if (!areDragging || !anchorCoords) return;
 
@@ -211,7 +197,6 @@ function render(): void {
 		selectiontool.convertIntBoxToWorldBox(translatedIntBox);
 
 	stoolgraphics.renderSelectionBoxWireframe(translatedWorldBox);
-	// stoolgraphics.renderSelectionBoxFill(translatedWorldBox);
 }
 
 // Exports ---------------------------------------------------------------------

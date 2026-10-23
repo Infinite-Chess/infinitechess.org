@@ -16,6 +16,7 @@ import type { EngineGamePageInfo, StaticGameState } from '../../../shared/transp
 import type { GameSetup, PlayerAssignments, ServerGame } from './serverGameTypes.js';
 
 import clock from '../../../shared/chess/logic/clock.js';
+import jsutil from '../../../shared/util/jsutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
@@ -169,8 +170,7 @@ function leaveLobby(assignments: PlayerAssignments): void {
  */
 function onGameCreationError(error: unknown, sockets: (CustomWebSocket | undefined)[]): void {
 	// The stack, not just the message — these are unexpected internal failures.
-	const details = error instanceof Error ? (error.stack ?? error.message) : String(error);
-	logEvents.addAndPrint(`Error creating game: ${details}`, 'errLog');
+	logEvents.addAndPrint(`Error creating game: ${jsutil.getErrorStack(error)}`, 'errLog');
 	for (const ws of sockets) {
 		if (ws) socketSend.send(ws, 'general', 'toast-error', ws.t.responses.errors.server_error);
 	}

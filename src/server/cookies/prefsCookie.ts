@@ -9,9 +9,10 @@
 
 import type { Request, Response } from 'express';
 
-import z from 'zod';
+import * as z from 'zod';
 
 import themes from '../../shared/components/header/themes.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 import memberManager from '../database/memberManager.js';
 import memberInfoCookie from './memberInfoCookie.js';
@@ -23,7 +24,7 @@ type Preferences = z.infer<typeof PreferencesSchema>;
 // Constants -------------------------------------------------------------------
 
 /** The client has this long to read the cookie and update preferences in memory. */
-const LIFETIME_MS = 1000 * 10; // 10 seconds
+const LIFETIME_MS = timeutil.toMillis(10, 'seconds');
 
 /** The options the `preferences` cookie is created with. */
 const COOKIE_OPTIONS = { httpOnly: false, sameSite: 'lax' as const, secure: true };

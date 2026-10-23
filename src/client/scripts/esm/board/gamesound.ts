@@ -1,8 +1,8 @@
 // src/client/scripts/esm/board/gamesound.ts
 
 /**
- * Manages individual game sound files: lazy-fetches and caches each AudioBuffer
- * on first play, then plays it via AudioManager.
+ * Manages individual game sound files: fetches and caches each AudioBuffer when
+ * preloaded, then plays it via AudioManager. A sound not yet preloaded won't play.
  */
 
 import type { SoundObject } from '../audio/AudioManager.js';
@@ -20,10 +20,15 @@ type SoundName =
 	| 'notify' | 'low_time'
 	| 'glass_crack_1' | 'glass_crack_2' | 'glass_crack_3' | 'glass_crack_4' | 'glass_crack_5'; // prettier-ignore
 
+// Constants -------------------------------------------------------------------
+
+const GLASS_CRACKS: SoundName[] = ['glass_crack_1', 'glass_crack_2', 'glass_crack_3', 'glass_crack_4', 'glass_crack_5']; // prettier-ignore
+
 // Cache -----------------------------------------------------------------------
 
 const audioCache = new Map<SoundName, AudioBuffer>();
 
+/** Returns a sound's decoded buffer, fetching and caching it on first use. */
 async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined> {
 	const cached = audioCache.get(soundName);
 	if (cached) return cached;
@@ -46,7 +51,11 @@ async function getBuffer(soundName: SoundName): Promise<AudioBuffer | undefined>
 /** Pre-fetches and caches a sound without playing it. */
 async function preload(soundName: SoundName): Promise<void> {
 	await getBuffer(soundName);
-	// console.log(`Preloaded sound: ${soundName}`);
+}
+
+/** Preloads the glass cracks, which only the far-off Echo Rift zone plays. */
+function preloadGlassCracks(): void {
+	for (const soundName of GLASS_CRACKS) preload(soundName);
 }
 
 // Playing Sounds --------------------------------------------------------------
@@ -70,7 +79,7 @@ async function playSoundEffect(
 	} = {},
 ): Promise<SoundObject | undefined> {
 	if (!audioCache.has(soundName)) {
-		console.warn(`Sound "${soundName}" needs to be preloaded.`); // Don't play sound if it would inquire a delay to fetch
+		console.warn(`Sound "${soundName}" needs to be preloaded.`); // Don't play sound if it would incur a delay to fetch
 		return;
 	}
 	const buffer = await getBuffer(soundName);
@@ -94,19 +103,23 @@ async function playSoundEffect(
 
 // Named Play Functions --------------------------------------------------------
 
+/** Plays the viola staccato. */
 function playViola_c3({ volume }: { volume?: number } = {}): void {
 	playSoundEffect('viola_staccato_c3', { volume });
 }
 
+/** Plays the marimba, usually its softer variant. */
 function playMarimba(): void {
 	const audioName = Math.random() > 0.15 ? 'marimba_c2_soft' : 'marimba_c2';
 	playSoundEffect(audioName, { volume: 0.4 });
 }
 
+/** Plays the bass staccato. */
 function playBase({ playbackRate }: { playbackRate?: number } = {}): void {
 	playSoundEffect('base_staccato_c2', { volume: 0.8, playbackRate });
 }
 
+/** Plays the notify sound, optionally with reverb. */
 function playNotify(includeReverb: boolean): Promise<SoundObject | undefined> {
 	const options = includeReverb ? { reverbDuration: 1.5, reverbWetLevel: 0.7 } : {};
 	return playSoundEffect('notify', options);
@@ -121,17 +134,14 @@ async function playNotifyToCompletion(): Promise<void> {
 	if (sound) await sound.whenEnded;
 }
 
+/** Plays the low-time warning. */
 function playLowtime(): void {
 	playSoundEffect('low_time');
 }
 
+/** Plays a random glass crack, at a slightly varied pitch. */
 function playGlassCrack(): void {
-	const rand = Math.random();
-	const soundName: SoundName = rand < 0.2 ? 'glass_crack_1'
-							   : rand < 0.4 ? 'glass_crack_2'
-							   : rand < 0.6 ? 'glass_crack_3'
-							   : rand < 0.8 ? 'glass_crack_4'
-							   				: 'glass_crack_5'; // prettier-ignore
+	const soundName = GLASS_CRACKS[Math.floor(Math.random() * GLASS_CRACKS.length)]!;
 	const PLAYRATE_BASE_OFFSET = -0.2;
 	const PLAYRATE_VARIATION = 0.07;
 	const playrate = 1 + (Math.random() * 2 - 1) * PLAYRATE_VARIATION + PLAYRATE_BASE_OFFSET;
@@ -149,6 +159,7 @@ function playGlassCrack(): void {
 export default {
 	// Cache
 	preload,
+	preloadGlassCracks,
 	// Playing Sounds
 	playSoundEffect,
 	// Named Play Functions

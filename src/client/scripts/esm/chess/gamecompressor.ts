@@ -8,17 +8,22 @@
 import type { MoveFull } from '../../../../shared/chess/logic/movepiece.js';
 import type { MovePreprint } from '../../../../shared/chess/logic/icn/icnmoves.js';
 import type { GameFile, VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
+import type {
+	LongFormatIn,
+	PresetAnnotes,
+} from '../../../../shared/chess/logic/icn/icnconverter.js';
 
 import state from '../../../../shared/chess/logic/state.js';
 import jsutil from '../../../../shared/util/jsutil.js';
 import boardchanges from '../../../../shared/chess/logic/boardchanges.js';
-import { LongFormatIn, PresetAnnotes } from '../../../../shared/chess/logic/icn/icnconverter.js';
 
 import clientmetadatautil from './clientmetadatautil.js';
 
+// Compressing a Game ----------------------------------------------------------
+
 /**
  * Snapshots a gamefile's starting state, copied, ready for
- * {@link GameToPosition} to apply moves to.
+ * {@link gameToPosition} to apply moves to.
  */
 function buildStartState(gamefile: GameFile): VariantOptions {
 	const { position, state_global, fullMove } = gamefile.startSnapshot;
@@ -32,11 +37,9 @@ function buildStartState(gamefile: GameFile): VariantOptions {
 }
 
 /**
- * Primes the provided gamefile to for the icnconverter to turn it into an ICN
- * @param gamefile - The gamefile
+ * Snapshots the provided gamefile into the shape the icnconverter turns into an ICN.
  * @param copySinglePosition - If true, only copy the current position, not the entire game. It won't have the moves list.
  * @param presetAnnotes - Should be specified if we have overrides for the variant's preset annotations.
- * @returns The primed gamefile for converting into ICN format
  */
 function compressGamefile(
 	gamefile: GameFile,
@@ -51,11 +54,11 @@ function compressGamefile(
 
 	// Modify the state if we're applying moves to match a single position
 	const gamestate: VariantOptions = copySinglePosition
-		? GameToPosition(startState, gamefile.moves, gamefile.state.local.moveIndex + 1) // Convert -1 based to 0 based
+		? gameToPosition(startState, gamefile.moves, gamefile.state.local.moveIndex + 1) // Convert -1 based to 0 based
 		: startState;
 
 	// Start constructing the abridged gamefile
-	const long_format_in: LongFormatIn = {
+	const longformIn: LongFormatIn = {
 		metadata: clientmetadatautil.buildMetaDataFromGamefile(gamefile),
 		position: gamestate.position,
 		gameRules: gamestate.gameRules,
@@ -65,13 +68,12 @@ function compressGamefile(
 	};
 
 	// Add the preset annotation overrides from the previously pasted game, if present.
-	if (presetAnnotes) long_format_in.presetAnnotes = presetAnnotes;
+	if (presetAnnotes) longformIn.presetAnnotes = presetAnnotes;
 
-	// console.log("Constructed LongFormatIn:", jsutil.deepCopyObject(long_format_in));
-
-	return long_format_in;
+	return longformIn;
 }
 
+/** Copies a gamefile's moves into the shape the icnconverter writes. */
 function convertMovesToICNConverterInMove(moves: MoveFull[]): MovePreprint[] {
 	const mappedMoves = moves.map((move: MoveFull) => {
 		const movePreprint: MovePreprint = {
@@ -95,12 +97,11 @@ function convertMovesToICNConverterInMove(moves: MoveFull[]): MovePreprint[] {
 
 /**
  * Takes a game state and applies the desired moves to it, modifying it.
- * The rotating turnOrder keeps track of whos turn it is in the resulting position.
- * @param gamestate
+ * The rotating turnOrder keeps track of whose turn it is in the resulting position.
  * @param moves - The moves of the original gamefile to apply to the state
  * @param [halfmoves] - Number of halfmoves from starting position to apply to the state (Infinity: final position of game)
  */
-function GameToPosition(
+function gameToPosition(
 	gamestate: VariantOptions,
 	moves: MoveFull[],
 	halfmoves: number = 0,
@@ -109,8 +110,6 @@ function GameToPosition(
 	if (moves.length < halfmoves)
 		throw Error(`Cannot convert game to position. Moves length (${moves.length}) is less than desired halfmoves (${halfmoves}).`); // prettier-ignore
 	if (halfmoves === 0) return gamestate; // No changes needed
-
-	// console.log('Before converting gamestate to single position:', jsutil.deepCopyObject(gamestate));
 
 	const turnOrder = gamestate.gameRules.turnOrder;
 
@@ -131,8 +130,6 @@ function GameToPosition(
 		turnOrder.push(turnOrder.shift()!);
 	}
 
-	// console.log('After converting gamestate to single position:', jsutil.deepCopyObject(gamestate));
-
 	return gamestate;
 }
 
@@ -143,13 +140,13 @@ function GameToPosition(
  */
 function gamefileToPositionOptions(gamefile: GameFile): VariantOptions {
 	const startState = buildStartState(gamefile);
-	return GameToPosition(startState, gamefile.moves, Infinity);
+	return gameToPosition(startState, gamefile.moves, Infinity);
 }
 
 // Exports ---------------------------------------------------------------------
 
 export default {
 	compressGamefile,
-	GameToPosition,
+	gameToPosition,
 	gamefileToPositionOptions,
 };

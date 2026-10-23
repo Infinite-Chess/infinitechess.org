@@ -22,7 +22,7 @@ import conclusionglyphs from '../../../board/rendering/glyphs/conclusionglyphs.j
 /** Draws decided by how a position was reached, which analysis can manufacture. */
 const HISTORY_CONDITIONS: Condition[] = ['repetition', 'moverule'];
 
-// Init ------------------------------------------------------------------------
+// Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('render-above-pieces', renderAbovePieces);
 

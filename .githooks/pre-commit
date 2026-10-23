@@ -1,3 +1,4 @@
+#!/bin/sh
 # Without `--concurrent false`, the three lint-staged commands run in parallel,
 # racing to rewrite the same files, which can occasionally truncate them to empty.
 npx lint-staged --concurrent false

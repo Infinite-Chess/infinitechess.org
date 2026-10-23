@@ -19,7 +19,7 @@ import camera from '../../../../board/rendering/camera.js';
 import meshes from '../../../../board/rendering/meshes.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
 import primitives from '../../../../board/rendering/primitives.js';
-import { createRenderable } from '../../../../board/rendering/renderable.js';
+import { createRenderable } from '../../../../game/rendering/gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 

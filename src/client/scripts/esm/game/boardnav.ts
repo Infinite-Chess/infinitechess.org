@@ -16,15 +16,15 @@ import boardpos from '../board/rendering/boardpos.js';
 import deltatime from '../board/deltatime.js';
 import boarddrag from './rendering/boarddrag.js';
 import selection from './chess/selection.js';
-import { Mouse } from './input.js';
-import Transition from './rendering/transitions/Transition.js';
+import { MOUSE } from './input.js';
+import transition from './rendering/transitions/transition.js';
 import perspective from './rendering/perspective.js';
 import guipromotion from './gui/guipromotion.js';
 import { listener_document, listener_canvas } from './listeners.js';
 
 // Constants -------------------------------------------------------------------
 
-/** The accelleration/deceleration rate of the board velocity. */
+/** The acceleration/deceleration rate of the board velocity. */
 const PAN_ACCEL = {
 	'2D': 145,
 	'3D': 75,
@@ -41,8 +41,8 @@ const PAN_VEL_CAP = {
  * Mobile only decelerates — its scale velocity comes from finger movement.
  */
 const SCALE_ACCEL = {
-	DESKTOP: 6.0,
-	MOBILE: 14.0,
+	desktop: 6.0,
+	mobile: 14.0,
 };
 
 /**
@@ -50,12 +50,12 @@ const SCALE_ACCEL = {
  * scrolling reaches the higher SCROLL one.
  */
 const SCALE_VEL_CAP = {
-	SPACE_SHIFT: 2.0,
-	SCROLL: 2.5,
+	spaceShift: 2.0,
+	scroll: 2.5,
 };
 
 /** Dampener multiplied to the wheel delta before applying it to the scale velocity. */
-const WHEEL_MULTIPLIER = 0.015; // Default: 0.015
+const WHEEL_MULTIPLIER = 0.015;
 
 // Panning & Zooming Controls WASD/Space/Shift/Wheel ---------------------------
 
@@ -65,7 +65,7 @@ function update(): void {
 
 	boarddrag.checkIfBoardDropped(); // Needs to be before exiting from teleporting
 
-	if (Transition.areTransitioning()) return; // Exit if teleporting
+	if (transition.areTransitioning()) return; // Exit if teleporting
 
 	// Keyboard
 	detectPanning(); // Movement (WASD)
@@ -82,12 +82,12 @@ function updatePerspectiveRotation(): void {
 		// Check if needs to relock
 		if (
 			selection.getSquarePawnIsCurrentlyPromotingOn() === undefined &&
-			listener_canvas.isMouseClicked(Mouse.LEFT)
+			listener_canvas.isMouseClicked(MOUSE.LEFT)
 		) {
-			listener_canvas.claimMouseClick(Mouse.LEFT);
+			listener_canvas.claimMouseClick(MOUSE.LEFT);
 			perspective.relockMouse();
-		} else if (listener_canvas.isMouseDown(Mouse.LEFT)) {
-			listener_canvas.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
+		} else if (listener_canvas.isMouseDown(MOUSE.LEFT)) {
+			listener_canvas.claimMouseDown(MOUSE.LEFT); // Prevents piece drag start from claiming this mouse down.
 		}
 	} else {
 		const mouseChange = listener_document.getPhysicalPointerDelta('mouse');
@@ -133,14 +133,14 @@ function detectPanning(): void {
 			panVel[1] /= ratio;
 		}
 	} else {
-		panVel = deccelPanVel(panVel);
+		panVel = decelPanVel(panVel);
 	}
 
 	boardpos.setPanVel(panVel); // Set the pan velocity
 }
 
-/** Accelerates the given pan velocity in the provided vector direction. */
-function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
+/** Accelerates the given pan velocity, in place, in the provided direction. */
+function accelPanVel(panVel: DoubleCoords, angleDegs: number): void {
 	const baseAngle = -camera.getRotZ();
 	const dirOfTravel = baseAngle + angleDegs;
 	const angleRad = vectors.degreesToRadians(dirOfTravel);
@@ -148,11 +148,10 @@ function accelPanVel(panVel: DoubleCoords, angleDegs: number): DoubleCoords {
 	const accelToUse = perspective.getEnabled() ? PAN_ACCEL['3D'] : PAN_ACCEL['2D'];
 	panVel[0] += deltatime.get() * accelToUse * XYComponents[0];
 	panVel[1] += deltatime.get() * accelToUse * XYComponents[1];
-	return panVel;
 }
 
-/** Deccelerates the given pan velocity towards zero, without skipping past it. */
-function deccelPanVel(panVel: DoubleCoords): DoubleCoords {
+/** Decelerates the given pan velocity towards zero, without skipping past it. */
+function decelPanVel(panVel: DoubleCoords): DoubleCoords {
 	if (panVel[0] === 0 && panVel[1] === 0) return panVel; // Already stopped
 
 	const rateToUse = perspective.getEnabled() ? PAN_ACCEL['3D'] : PAN_ACCEL['2D'];
@@ -179,11 +178,11 @@ function detectZooming(): void {
 		// Space/Shift
 		if (listener_document.isKeyHeld('Space')) {
 			scaling = true;
-			scaleVel -= deltatime.get() * SCALE_ACCEL.DESKTOP;
+			scaleVel -= deltatime.get() * SCALE_ACCEL.desktop;
 		}
 		if (listener_document.isKeyHeld('ShiftLeft')) {
 			scaling = true;
-			scaleVel += deltatime.get() * SCALE_ACCEL.DESKTOP;
+			scaleVel += deltatime.get() * SCALE_ACCEL.desktop;
 		}
 		// Mouse wheel
 		const wheelDelta = mouse.getWheelDelta();
@@ -196,30 +195,28 @@ function detectZooming(): void {
 
 	if (scaling) {
 		// Cap the velocity
-		const capToUse = scrolling ? SCALE_VEL_CAP.SCROLL : SCALE_VEL_CAP.SPACE_SHIFT;
+		const capToUse = scrolling ? SCALE_VEL_CAP.scroll : SCALE_VEL_CAP.spaceShift;
 		if (scaleVel > capToUse) scaleVel = capToUse;
 		else if (scaleVel < -capToUse) scaleVel = -capToUse;
 	} else {
-		scaleVel = deccelerateScaleVel(scaleVel);
+		scaleVel = decelScaleVel(scaleVel);
 	}
 
 	boardpos.setScaleVel(scaleVel);
 }
 
-/** Deccelerates the given scale velocity towards zero, without skipping past it. */
-function deccelerateScaleVel(scaleVel: number): number {
+/** Decelerates the given scale velocity towards zero, without skipping past it. */
+function decelScaleVel(scaleVel: number): number {
 	if (scaleVel === 0) return scaleVel; // Already stopped
 
-	const deccelerationToUse = docutil.isMouseSupported()
-		? SCALE_ACCEL.DESKTOP
-		: SCALE_ACCEL.MOBILE;
+	const decelerationToUse = docutil.isMouseSupported() ? SCALE_ACCEL.desktop : SCALE_ACCEL.mobile;
 
 	if (scaleVel > 0) {
-		scaleVel -= deltatime.get() * deccelerationToUse;
+		scaleVel -= deltatime.get() * decelerationToUse;
 		if (scaleVel < 0) scaleVel = 0;
 	} else {
 		// scaleVel < 0
-		scaleVel += deltatime.get() * deccelerationToUse;
+		scaleVel += deltatime.get() * decelerationToUse;
 		if (scaleVel > 0) scaleVel = 0;
 	}
 

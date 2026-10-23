@@ -7,11 +7,6 @@
  * Not a request handler — the endpoint itself is three lines in `routes/api.ts`. It lives here
  * because that endpoint is its only reason to exist, and it reads `utility/`, which puts every
  * ladder rung below `api/` out of reach.
- *
- * INSTRUCTIONS:
- * In ANY github account (does not need to be a maintainer of the project),
- * create a classic access token with ZERO permissions (that is enough),
- * and paste it in the GITHUB_API_KEY field in the .env file.
  */
 
 import fs from 'fs';
@@ -22,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { request, RequestOptions } from 'node:https';
 
 import jsutil from '../../shared/util/jsutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 import env from '../config/env.js';
 import zodLogger from '../utility/zodLogger.js';
@@ -44,7 +40,7 @@ interface Contributor {
 const PATH_TO_CONTRIBUTORS_FILE = path.join(__dirname, '../../../database/contributors.json');
 
 /** The interval to use GitHub's API to refresh the contributor list. */
-const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = 1000 * 60 * 60 * 3; // 3 hours
+const INTERVAL_TO_REFRESH_CONTRIBUTORS_MS = timeutil.toMillis(3, 'hours');
 
 // Schemas ---------------------------------------------------------------------
 
@@ -60,19 +56,7 @@ const GitHubContributorSchema = z.array(
 
 // State -----------------------------------------------------------------------
 
-/** A list of contributors on the infinitechess.org [repository](https://github.com/Infinite-Chess/infinitechess.org).
- * This should be periodically refreshed.
- *
- * example contributor:
- * ```js
- * {
-	name: 'Naviary2',
-    iconUrl: 'https://avatars.githubusercontent.com/u/163621561?v=4',
-    linkUrl: 'https://github.com/Naviary2',
-    contributionCount: 1502
-  }
-  ```
- */
+/** The repository's contributors, refreshed every {@link INTERVAL_TO_REFRESH_CONTRIBUTORS_MS}. */
 let contributors: Contributor[] = [];
 
 // Functions -------------------------------------------------------------------
@@ -103,19 +87,15 @@ function loadContributorsSnapshot(): Contributor[] {
  * and updates our list!
  */
 function refresh(): void {
-	// Only production requires a GitHub key. Without one, the snapshot is never refreshed.
-	if (env.GITHUB_API_KEY === undefined) return;
-
 	// Create an AbortController for the request
 	const controller = new AbortController();
 
 	const options: RequestOptions = {
 		method: 'GET',
 		hostname: 'api.github.com',
-		path: `/repos/${env.GITHUB_REPO}/contributors`,
+		path: `/repos/${env.GITHUB_REPO}/contributors?per_page=100`, // GitHub's max page size; the default is 30
 		headers: {
 			Accept: 'application/vnd.github+json',
-			Authorization: `Bearer ${env.GITHUB_API_KEY}`,
 			'X-GitHub-Api-Version': '2022-11-28',
 			'User-Agent': env.APP_BASE_URL,
 		},

@@ -6,10 +6,10 @@
  */
 
 import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
 import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
 
 import { BaseZone } from '../BaseZone.js';
-import { ProgramManager } from '../../../../webgl/ProgramManager.js';
 import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
 import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
 
@@ -28,7 +28,6 @@ export class StaticZone extends BaseZone {
 	private readonly PIXEL_SIZE = 6;
 	/** How often the static pattern should change, in milliseconds. */
 	private readonly UPDATE_INTERVAL = 60;
-	// private readonly UPDATE_INTERVAL = 1000; // For testing
 
 	// --- STATE ---
 
@@ -40,8 +39,8 @@ export class StaticZone extends BaseZone {
 	constructor(programManager: ProgramManager) {
 		super();
 		this.colorGradePass = new ColorGradePass(programManager);
-		this.colorGradePass.saturation = 0.35; // Default: 0.5
-		this.colorGradePass.brightness = -0.2; // Default: -0.15
+		this.colorGradePass.saturation = 0.35;
+		this.colorGradePass.brightness = -0.2;
 
 		// Load the ambience...
 

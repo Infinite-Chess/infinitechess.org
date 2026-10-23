@@ -22,8 +22,8 @@ import space from '../../board/rendering/space.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
-import { Mouse } from '../input.js';
-import Transition from '../rendering/transitions/Transition.js';
+import { MOUSE } from '../input.js';
+import transition from '../rendering/transitions/transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -91,7 +91,7 @@ function callback_Perspective(): void {
 	// Prevent the sidebar click that toggled perspective
 	// from being instantly absorbed by game interactions.
 	// Without this, any mini image underneath the crosshair instantly gets clicked.
-	listener_document.claimMouseClick(Mouse.LEFT);
+	listener_document.claimMouseClick(MOUSE.LEFT);
 	perspective.toggle();
 }
 
@@ -129,7 +129,7 @@ function isAnnotationsButtonEnabled(): boolean {
 
 /** Erases every annotation, or collapses the drawn rays. */
 function callback_Collapse(): void {
-	annotations.Collapse();
+	annotations.collapse();
 }
 
 /** Replaces the erase button with the collapse button. */
@@ -148,7 +148,7 @@ function hideCollapse(): void {
 
 /** Undoes the last view transition. */
 function callback_Back(): void {
-	Transition.undoTransition();
+	transition.undoTransition();
 	GameBus.dispatch('board-nav');
 }
 
@@ -184,7 +184,7 @@ function callback_Expand(): void {
 			? { left: 1n, right: 8n, bottom: 1n, top: 8n }
 			: (box as BoundingBox);
 
-	Transition.zoomToCoordsBox(definedBox);
+	transition.zoomToCoordsBox(definedBox);
 	GameBus.dispatch('board-nav');
 }
 
@@ -192,7 +192,7 @@ function callback_Expand(): void {
 function callback_Recenter(): void {
 	const gamefile = gameslot.getGamefile();
 	if (!gamefile) return; // Game not loaded yet
-	Transition.zoomToCoordsBox(gamefile.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
+	transition.zoomToCoordsBox(gamefile.startSnapshot.box); // If you know the bounding box, you don't need a coordinate list
 	GameBus.dispatch('board-nav');
 }
 
@@ -320,7 +320,7 @@ function callback_CoordsChange(index: 0 | 1): void {
 	let proposed: bigint;
 	try {
 		proposed = parseStringToBigInt(target.value);
-	} catch (_e) {
+	} catch {
 		console.log(`Entered: ${target.value}`);
 		toast.show(t.gamegui.invalid_coords, { error: true });
 		return;
@@ -365,9 +365,13 @@ initListeners();
 // Exports ---------------------------------------------------------------------
 
 export default {
-	updateCoords,
+	// View Toggles
 	callback_Arrows,
+	// Annotation Tools
 	isAnnotationsButtonEnabled,
+	// Board-View Navigation
 	callback_Expand,
 	callback_Recenter,
+	// Coordinate Fields
+	updateCoords,
 };

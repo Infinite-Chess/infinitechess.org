@@ -220,7 +220,7 @@ function applyMove(gamestate: GameState, moveState: MoveState, forward: boolean)
 
 /**
  * Applies ONLY the global state changes of a move to a bare {@link GlobalGameState},
- * ignoring any local (check/checks) changes. Used by {@link gamecompressor.GameToPosition},
+ * ignoring any local (check/checks) changes. Used by {@link gamecompressor.gameToPosition},
  * which builds a single position and has no local state to track.
  */
 function applyGlobalStateChanges(

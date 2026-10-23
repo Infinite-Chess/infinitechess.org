@@ -121,7 +121,7 @@ export interface Arrow extends BaseArrow {
 }
 
 /**
- * Reflection of the {@link Piece} type, but with extra decimal precision
+ * Reflection of the `Piece` type, but with extra decimal precision
  * for the coordinates (needed for animated arrows).
  */
 export interface ArrowPiece {

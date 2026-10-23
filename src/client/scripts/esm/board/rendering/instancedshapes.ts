@@ -6,9 +6,6 @@
  *
  * Many are used for rendering legal moves, like the square, dot, or corner triangles.
  * The plus sign is used for special rights highlighting.
- *
- * The vertex data returned from any shape in this script
- * ALWAYS has a stride length of 6 (x,y, r,g,b,a)
  */
 
 import type { Color } from '../../../../../shared/types/color.js';
@@ -19,22 +16,22 @@ import primitives from './primitives.js';
 import preferences from '../../util/preferences.js';
 import boardgeometry from './boardgeometry.js';
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
 /**
  * Properties for the dots that are rendered on legal squares without an occupying piece.
  */
 const DOTS = {
 	/** The radius of the dots, where 1 equals the width of one square. */
-	RADIUS: 0.16,
+	radius: 0.16,
 	/** How many points the edge of the dots have. */
-	RESOLUTION: 32,
+	resolution: 32,
 	/**
 	 * This will be added to the theme's legal move color's opacity,
 	 * as dots are a little less noticeable than big squares,
 	 * so increasing their opacity helps.
 	 */
-	OPACITY_OFFSET: 0.2,
+	opacityOffset: 0.2,
 };
 
 /**
@@ -43,34 +40,34 @@ const DOTS = {
  */
 const CORNER_TRIS = {
 	/** The radius of the corner triangles, where 1 equals the width of one square. */
-	TRI_WIDTH: 0.5,
+	triWidth: 0.5,
 	/**
 	 * This will be added to the theme's legal move color's opacity,
 	 * as the triangles are a little less noticeable than big squares,
 	 * so increasing their opacity helps.
 	 */
-	OPACITY_OFFSET: 0.2,
+	opacityOffset: 0.2,
 };
 
 /** Properties for the box outline that is rendered over the hovered square during dragging. */
 const BOX_OUTLINE = {
 	/** The width of the outline border, where 1 equals the width of one square. */
-	EDGE_WIDTH: 0.07,
+	edgeWidth: 0.07,
 };
 
 /**
- * Properties for the plus sign that is rendered when the special rights highlighing
+ * Properties for the plus sign that is rendered when the special rights highlighting
  * debug mode is enabled, next to each piece that has its special rights.
  */
 const PLUS_SIGN = {
 	/** Default position of the plus sign center within a square ([0,0] is square center, [0.5,0.5] is top-right corner) */
-	POSITION: [0.3, 0.3] as DoubleCoords, // Default: [0.3, 0.3]
+	position: [0.3, 0.3] as DoubleCoords,
 	/** Length of both arms (horizontal and vertical) where 1.0 spans full square */
-	ARM_LENGTH: 0.4, // Default: 0.4
+	armLength: 0.4,
 	/** Width of the plus sign arms */
-	EDGE_WIDTH: 0.12, // Default: 0.12
+	edgeWidth: 0.12,
 	/** Added to color alpha for better visibility */
-	OPACITY_OFFSET: 0.2, // Default: 0.2
+	opacityOffset: 0.2,
 };
 
 // Functions -------------------------------------------------------------------
@@ -94,7 +91,7 @@ function getDataLegalMoveSquare(color: Color): number[] {
  */
 function getDataLegalMoveDot(color: Color): number[] {
 	const colorCopy: Color = [...color]; // Don't mutate the original
-	colorCopy[3] += DOTS.OPACITY_OFFSET; // Add the offset
+	colorCopy[3] += DOTS.opacityOffset; // Add the offset
 	colorCopy[3] = Math.min(colorCopy[3], 1); // Cap it
 
 	const coords: DoubleCoords = [0, 0]; // The instance is going to be at [0,0]
@@ -103,7 +100,7 @@ function getDataLegalMoveDot(color: Color): number[] {
 	const y = coords[1] + (1 - boardgeometry.getSquareCenterAsNumber()) - 0.5;
 
 	// Generate and return the vertex data for the legal move dot (circle)
-	return primitives.Circle(x, y, DOTS.RADIUS, DOTS.RESOLUTION, colorCopy);
+	return primitives.Circle(x, y, DOTS.radius, DOTS.resolution, colorCopy);
 }
 
 /**
@@ -116,7 +113,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 	// Adjust opacity
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
-	a = Math.min(a + CORNER_TRIS.OPACITY_OFFSET, 1);
+	a = Math.min(a + CORNER_TRIS.opacityOffset, 1);
 
 	// Calculate visual center position (original [0,0] instance adjusted for board centering)
 	const boardCenterAdjust = 1 - boardgeometry.getSquareCenterAsNumber() - 0.5;
@@ -125,7 +122,7 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 
 	const vertices: number[] = [];
 	const squareHalfSize = 0.5;
-	const triHalfWidth = CORNER_TRIS.TRI_WIDTH / 2;
+	const triHalfWidth = CORNER_TRIS.triWidth / 2;
 
 	// Helper to add a single corner triangle
 	const addTriangle = (cornerX: number, cornerY: number, dx: number, dy: number): void => {
@@ -152,11 +149,11 @@ function getDataLegalMoveCornerTris(color: [number, number, number, number]): nu
 function getDataPlusSign(color: Color): number[] {
 	// eslint-disable-next-line prefer-const
 	let [r, g, b, a] = color;
-	a = Math.min(a + PLUS_SIGN.OPACITY_OFFSET, 1);
+	a = Math.min(a + PLUS_SIGN.opacityOffset, 1);
 
-	const halfEdge = PLUS_SIGN.EDGE_WIDTH / 2;
-	const armLength = PLUS_SIGN.ARM_LENGTH;
-	const [posX, posY] = PLUS_SIGN.POSITION;
+	const halfEdge = PLUS_SIGN.edgeWidth / 2;
+	const armLength = PLUS_SIGN.armLength;
+	const [posX, posY] = PLUS_SIGN.position;
 
 	const vertices: number[] = [];
 
@@ -228,7 +225,7 @@ function getDataBoxOutline(): number[] {
 	const outerTop = centerY + halfBox;
 	const outerBottom = centerY - halfBox;
 
-	const edgeWidth = BOX_OUTLINE.EDGE_WIDTH;
+	const edgeWidth = BOX_OUTLINE.edgeWidth;
 	const innerLeft = outerLeft + edgeWidth;
 	const innerRight = outerRight - edgeWidth;
 	const innerTop = outerTop - edgeWidth;
@@ -328,6 +325,8 @@ function getDataColoredTexture(color: Color, inverted: boolean): number[] {
 	}
 	return primitives.Quad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	getDataLegalMoveSquare,

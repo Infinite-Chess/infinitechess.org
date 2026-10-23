@@ -50,19 +50,18 @@ function storeCevalUpdate(update: CevalUpdate | undefined): void {
 }
 
 /** Stores a label only when it is at least as deep as the node's current best. */
-function store(nodeId: number, label: MoveEvalLabel): boolean {
+function store(nodeId: number, label: MoveEvalLabel): void {
 	const previous = labels.get(nodeId);
-	if (previous && previous.depth > label.depth) return false;
+	if (previous && previous.depth > label.depth) return;
 	if (
 		previous &&
 		previous.depth === label.depth &&
 		previous.cp === label.cp &&
 		previous.mate === label.mate
 	)
-		return false;
+		return;
 	labels.set(nodeId, label);
 	for (const listener of listeners) listener(nodeId);
-	return true;
 }
 
 /** The node's deepest known label. */

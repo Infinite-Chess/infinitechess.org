@@ -14,7 +14,7 @@
  * The move list's per-ply glyphs are guimovetree's job (it owns that DOM).
  */
 
-import type { Player } from '../../../../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup } from '../../../../../../shared/chess/util/typeutil.js';
 import type { AnalysisMoveNode } from '../movetree.js';
 import type { LapseKey, MoveReview, ReviewOutcome } from '../gamereview.js';
 
@@ -76,7 +76,7 @@ const CURRENT_POSITION_COLOR = '#d85000';
 // State -----------------------------------------------------------------------
 
 /** The stat value cells per player, rebuilt when the stats columns are created. */
-const statCells: { [player: number]: Partial<Record<StatKey, HTMLElement>> } = {};
+const statCells: PlayerGroup<Record<StatKey, HTMLElement>> = {};
 
 // --- Eval graph ---
 
@@ -331,11 +331,11 @@ function updateStats(): void {
 		const cells = statCells[color];
 		const summary = summaries[color];
 		if (!cells || !summary) continue;
-		cells.accuracy!.textContent = `${summary.accuracy.toFixed(1)}%`;
-		cells.inaccuracy!.textContent = String(summary.counts.inaccuracy);
-		cells.mistake!.textContent = String(summary.counts.mistake);
-		cells.blunder!.textContent = String(summary.counts.blunder);
-		cells.acpl!.textContent = String(Math.round(summary.acpl));
+		cells.accuracy.textContent = `${summary.accuracy.toFixed(1)}%`;
+		cells.inaccuracy.textContent = String(summary.counts.inaccuracy);
+		cells.mistake.textContent = String(summary.counts.mistake);
+		cells.blunder.textContent = String(summary.counts.blunder);
+		cells.acpl.textContent = String(Math.round(summary.acpl));
 	}
 }
 
@@ -472,27 +472,25 @@ function drawGraph(): void {
 	// between two points of opposite sign, not at either point's own x — otherwise one side's
 	// fill overshoots all the way to the next point's x instead of stopping where the eval
 	// line actually crosses zero (how lila's Chart.js area fill splits it).
-	if (points.length > 0) {
-		for (const runs of segmentRuns) {
-			for (const run of runs) {
-				if (run.points.length < 2) continue; // Can't fill a lone point.
-				ctx.fillStyle = run.side === 'pos' ? WHITE_FILL : BLACK_FILL;
-				ctx.beginPath();
-				ctx.moveTo(graphX(run.points[0]!.index, width, total), graphY(0, height));
-				for (const point of run.points)
-					ctx.lineTo(graphX(point.index, width, total), graphY(point.cp, height));
-				ctx.lineTo(
-					graphX(run.points[run.points.length - 1]!.index, width, total),
-					graphY(0, height),
-				);
-				ctx.closePath();
-				ctx.fill();
-			}
+	for (const runs of segmentRuns) {
+		for (const run of runs) {
+			if (run.points.length < 2) continue; // Can't fill a lone point.
+			ctx.fillStyle = run.side === 'pos' ? WHITE_FILL : BLACK_FILL;
+			ctx.beginPath();
+			ctx.moveTo(graphX(run.points[0]!.index, width, total), graphY(0, height));
+			for (const point of run.points)
+				ctx.lineTo(graphX(point.index, width, total), graphY(point.cp, height));
+			ctx.lineTo(
+				graphX(run.points[run.points.length - 1]!.index, width, total),
+				graphY(0, height),
+			);
+			ctx.closePath();
+			ctx.fill();
 		}
 	}
 
 	// Zero line.
-	ctx.strokeStyle = styles.getPropertyValue('--c-border-muted') || 'rgba(128,128,128,0.4)';
+	ctx.strokeStyle = styles.getPropertyValue('--c-border-muted');
 	ctx.lineWidth = 1;
 	ctx.beginPath();
 	ctx.moveTo(0, graphY(0, height));
@@ -538,7 +536,7 @@ function drawGraph(): void {
 		if (cp === undefined) continue;
 		ctx.beginPath();
 		ctx.arc(graphX(review.ply + 1, width, total), graphY(cp, height), 3, 0, Math.PI * 2);
-		ctx.fillStyle = styles.getPropertyValue(`--review-${review.classification}`) || '#ca3431';
+		ctx.fillStyle = styles.getPropertyValue(`--review-${review.classification}`);
 		ctx.fill();
 	}
 
@@ -547,7 +545,7 @@ function drawGraph(): void {
 	// — only show the marker while actually viewing the mainline.
 	const selected = isViewingMainline() ? gameslot.getGamefile()!.state.local.moveIndex + 1 : -1;
 	updateCurrentPhaseMarker(selected);
-	drawPositionMarker(ctx, selected, width, height, total, CURRENT_POSITION_COLOR, 1);
+	drawCurrentPositionMarker(ctx, selected, width, height, total);
 	if (hover !== undefined) {
 		const cp = gamereview.getWhiteCpAt(hover.index);
 		if (cp !== undefined) {
@@ -563,11 +561,9 @@ function drawGraph(): void {
 
 /** Hides a coincident phase line so it cannot double up with the current-position marker. */
 function updateCurrentPhaseMarker(selected: number): void {
-	element_PhaseMarkers
-		?.querySelectorAll<HTMLElement>('.review-phase-marker')
-		.forEach((marker) => {
-			marker.classList.toggle('current-position', Number(marker.dataset['ply']) === selected);
-		});
+	element_PhaseMarkers.querySelectorAll<HTMLElement>('.review-phase-marker').forEach((marker) => {
+		marker.classList.toggle('current-position', Number(marker.dataset['ply']) === selected);
+	});
 }
 
 /** Lila-style opening/middlegame/endgame boundaries and vertical labels. */
@@ -591,20 +587,18 @@ function renderPhaseMarkers(total: number): void {
 	}
 }
 
-/** Draws a full-height vertical line at position `index`, if it's on the graph. */
-function drawPositionMarker(
+/** Draws the full-height current-position line at position `index`, if it's on the graph. */
+function drawCurrentPositionMarker(
 	ctx: CanvasRenderingContext2D,
 	index: number,
 	width: number,
 	height: number,
 	total: number,
-	color: string,
-	lineWidth: number,
 ): void {
 	if (index < 0 || index >= total) return;
 	const x = graphX(index, width, total);
-	ctx.strokeStyle = color;
-	ctx.lineWidth = lineWidth;
+	ctx.strokeStyle = CURRENT_POSITION_COLOR;
+	ctx.lineWidth = 1;
 	ctx.beginPath();
 	ctx.moveTo(x, 0);
 	ctx.lineTo(x, height);

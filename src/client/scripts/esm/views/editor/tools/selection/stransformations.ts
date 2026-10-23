@@ -398,7 +398,7 @@ function Rotate(gamefile: GameFile, mesh: Mesh, box: BoundingBox, clockwise: boo
  * @param clockwise Whether to rotate clockwise (true) or counter-clockwise (false).
  * @returns The rotated point.
  */
-function rotatePoint(point: Coords, pivot: BDCoords, clockwise: Boolean): Coords {
+function rotatePoint(point: Coords, pivot: BDCoords, clockwise: boolean): Coords {
 	// Represent coord as BDCoords for high precision
 	const pointBD = bdcoords.fromCoords(point, 1);
 

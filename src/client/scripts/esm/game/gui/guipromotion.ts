@@ -7,16 +7,15 @@
 
 import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 
-import typeutil from '../../../../../shared/chess/util/typeutil.js';
-import { players as p } from '../../../../../shared/chess/util/typeutil.js';
+import typeutil, { players as p } from '../../../../../shared/chess/util/typeutil.js';
 
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
-import { Mouse } from '../input.js';
+import { MOUSE } from '../input.js';
 import { GameBus } from '../../board/GameBus.js';
 import { listener_canvas } from '../listeners.js';
 
-// Variables -------------------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const PromotionGUI: {
 	base: HTMLElement;
@@ -29,6 +28,8 @@ const PromotionGUI: {
 	},
 };
 
+// State -----------------------------------------------------------------------
+
 let selectionOpen = false; // True when promotion GUI visible. Do not listen to navigational controls in the mean time
 
 // Events ----------------------------------------------------------------------
@@ -40,15 +41,17 @@ GameBus.addEventListener('game-unloaded', () => {
 	resetUI();
 });
 
-// Functions -------------------------------------------------------------------
-
 // Prevent right-clicking on the promotion UI
 PromotionGUI.base.addEventListener('contextmenu', (event) => event.preventDefault());
 
+// Functions -------------------------------------------------------------------
+
+/** Whether the promotion UI is open. */
 function isUIOpen(): boolean {
 	return selectionOpen;
 }
 
+/** Opens the promotion UI for the given player. */
 function open(color: Player): void {
 	selectionOpen = true;
 	PromotionGUI.base.classList.remove('hidden');
@@ -59,7 +62,6 @@ function open(color: Player): void {
 
 /** Closes the promotion UI */
 function close(): void {
-	// console.error('Closing promotion UI');
 	selectionOpen = false;
 	for (const element of Object.values(PromotionGUI.players)) {
 		element.classList.add('hidden');
@@ -109,6 +111,7 @@ function resetUI(): void {
 	}
 }
 
+/** Promotes to the clicked piece, closing the UI. */
 function callback_promote(event: Event): void {
 	const type = Number((event.currentTarget as HTMLElement).id);
 	// TODO: Dispatch a custom 'promote-selected' event!
@@ -121,14 +124,16 @@ function callback_promote(event: Event): void {
 function update(): void {
 	if (!selectionOpen) return;
 	if (
-		!listener_canvas.isMouseDown(Mouse.LEFT) &&
-		!listener_canvas.isMouseDown(Mouse.RIGHT) &&
-		!listener_canvas.isMouseDown(Mouse.MIDDLE)
+		!listener_canvas.isMouseDown(MOUSE.LEFT) &&
+		!listener_canvas.isMouseDown(MOUSE.RIGHT) &&
+		!listener_canvas.isMouseDown(MOUSE.MIDDLE)
 	)
 		return;
 	// Atleast one mouse button was clicked-down OUTSIDE of the promotion UI
 	selection.unselectPiece(); // Already closes
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	isUIOpen,

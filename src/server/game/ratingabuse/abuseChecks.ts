@@ -42,7 +42,7 @@ const CHECK_MAX_WEIGHTS = {
 const SUSPICIOUS_UNUSED_CLOCK_FRACTION = 0.8;
 
 /** Opponents with a younger account age than this count as suspicious. */
-const SUSPICIOUS_ACCOUNT_AGE_MS = 1000 * 60 * 60 * 24 * 5; // 5 days
+const SUSPICIOUS_ACCOUNT_AGE_MS = timeutil.toMillis(5, 'days');
 
 // Verdict ---------------------------------------------------------------------
 

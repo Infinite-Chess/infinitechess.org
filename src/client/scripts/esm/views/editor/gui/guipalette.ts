@@ -32,7 +32,7 @@ const element_neutralTypes: Array<Element> = [];
 // Constants -------------------------------------------------------------------
 
 /** Player pieces in the order they will appear */
-const coloredTypes = [
+const COLORED_TYPES = [
 	r.KING,
 	r.QUEEN,
 	r.ROOK,
@@ -56,7 +56,7 @@ const coloredTypes = [
 ];
 
 /** Neutral pieces in the order they will appear (except void, which is included manually in initUI by default) */
-const neutralTypes = [r.OBSTACLE];
+const NEUTRAL_TYPES = [r.OBSTACLE];
 
 // State -----------------------------------------------------------------------
 
@@ -79,7 +79,7 @@ async function initUI(): Promise<void> {
 	// Colored pieces
 	for (const player of uniquePlayers) {
 		const svgs = await svgcache.getSVGElements(
-			coloredTypes.map((rawType) => {
+			COLORED_TYPES.map((rawType) => {
 				return typeutil.buildType(rawType, player);
 			}),
 		);
@@ -99,8 +99,8 @@ async function initUI(): Promise<void> {
 			else pieceContainer.classList.add('tooltip-u');
 			const localized_piece_name =
 				// @ts-ignore
-				translations.piecenames[typeutil.getRawTypeStr(coloredTypes[i]!)!];
-			const piece_abbreviation = icnposition.PIECE_CODES_RAW[coloredTypes[i]!];
+				translations.piecenames[typeutil.getRawTypeStr(COLORED_TYPES[i]!)!];
+			const piece_abbreviation = icnposition.PIECE_CODES_RAW[COLORED_TYPES[i]!];
 			const modified_piece_abbreviation =
 				player === p.WHITE
 					? piece_abbreviation.toUpperCase()
@@ -118,7 +118,7 @@ async function initUI(): Promise<void> {
 
 	// Neutral pieces
 	const neutral_svgs = await svgcache.getSVGElements(
-		neutralTypes.map((rawType) => {
+		NEUTRAL_TYPES.map((rawType) => {
 			return typeutil.buildType(rawType, p.NEUTRAL);
 		}),
 	);
@@ -151,8 +151,8 @@ async function initUI(): Promise<void> {
 		else pieceContainer.classList.add('tooltip-u');
 		const localized_piece_name =
 			// @ts-ignore
-			translations.piecenames[typeutil.getRawTypeStr(neutralTypes[i]!)!];
-		const piece_abbreviation = icnposition.PIECE_CODES_RAW[neutralTypes[i]!];
+			translations.piecenames[typeutil.getRawTypeStr(NEUTRAL_TYPES[i]!)!];
+		const piece_abbreviation = icnposition.PIECE_CODES_RAW[NEUTRAL_TYPES[i]!];
 		const modified_piece_abbreviation = piece_abbreviation.toLowerCase();
 		pieceContainer.setAttribute(
 			'data-tooltip',
@@ -223,12 +223,14 @@ function nextColor(): void {
 	updatePieceColors(next);
 }
 
+/** Wires the clickable palette pieces' listeners. */
 function initListeners(): void {
 	_getActivePieceElements().forEach((element) => {
 		element.addEventListener('click', callback_ChangePieceType);
 	});
 }
 
+/** Removes the clickable palette pieces' listeners. */
 function closeListeners(): void {
 	_getActivePieceElements().forEach((element) => {
 		element.removeEventListener('click', callback_ChangePieceType);
@@ -251,6 +253,7 @@ function _getActivePieceElements(): Element[] {
 
 // Callbacks -------------------------------------------------------------------
 
+/** Picks the clicked palette piece, switching to the placer tool. */
 function callback_ChangePieceType(e: Event): void {
 	const target = e.currentTarget as HTMLElement;
 	const currentPieceType = Number.parseInt(target.id);

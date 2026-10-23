@@ -7,6 +7,7 @@
 
 import type { Request, Response } from 'express';
 
+import timeutil from '../../shared/util/timeutil.js';
 import interpolate from '../../shared/util/interpolate.js';
 
 import ip from '../utility/ip.js';
@@ -34,7 +35,7 @@ const loginAttemptData: Record<string, LoginAttemptData> = {};
  * The time, in milliseconds, to delete a browser agent from the
  * login attempt data, if they have stopped trying to login.
  */
-const TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MS = 1000 * 60 * 5; // 5 minutes
+const TIME_TO_DELETE_BROWSER_AGENT_AFTER_NO_ATTEMPTS_MS = timeutil.toMillis(5, 'minutes');
 
 // Functions -------------------------------------------------------------------
 

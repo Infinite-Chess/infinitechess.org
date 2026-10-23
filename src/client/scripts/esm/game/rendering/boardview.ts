@@ -78,7 +78,6 @@ function gboundingBoxFloat(): BoundingBoxBD {
  * @returns The perspective mode render range bounding box
  */
 function generatePerspectiveBoundingBox(rangeOfView: number): BoundingBoxBD {
-	// ~18
 	const position = boardpos.getBoardPos();
 	const scale = boardpos.getBoardScale();
 	const rangeOfViewBD = bd.fromNumber(rangeOfView);

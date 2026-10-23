@@ -7,6 +7,8 @@
  * a real `members` row is created and the pending row is marked verified.
  */
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import db from './database.js';
 
 // Types -----------------------------------------------------------------------
@@ -39,7 +41,7 @@ export interface PendingRegistrationRecord {
  * If changed, update register-awaiting.POLL_MAX_DURATION_MS to stay just past this,
  * AND update the "24 hours" copy in the email toml component.
  */
-const EXPIRY_MS = 1000 * 60 * 60 * 24; // 1 day
+const EXPIRY_MS = timeutil.toMillis(1, 'days');
 
 // Create ----------------------------------------------------------------------
 

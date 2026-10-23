@@ -4,7 +4,7 @@
  * This script:
  * * Enables mouse-ray snapping to pieces, square annotes, and other rays when zoomed out,
  * making it easy to line up long distance shots without having to do big number math.
- * * Manages all renderd entities when zoomed out.
+ * * Manages all rendered entities when zoomed out.
  * * Initiates transitions to all mini images and square annotes clicked.
  */
 
@@ -30,16 +30,16 @@ import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import miniimage from '../miniimage.js';
-import { Mouse } from '../../input.js';
+import { MOUSE } from '../../input.js';
 import movehints from './movehints.js';
-import Transition from '../transitions/Transition.js';
+import transition from '../transitions/transition.js';
 import primitives from '../../../board/rendering/primitives.js';
 import perspective from '../perspective.js';
 import drawsquares from './annotations/drawsquares.js';
 import annotations from './annotations/annotations.js';
 import preferences from '../../../util/preferences.js';
 import texturecache from '../../../chess/rendering/texturecache.js';
-import { createRenderable } from '../../../board/rendering/renderable.js';
+import { createRenderable } from '../gamerenderable.js';
 import selectedpiecehighlightline from './selectedpiecehighlightline.js';
 
 // Types -----------------------------------------------------------------------
@@ -52,7 +52,7 @@ type Snap = {
 	color: Color;
 	/** The type of piece to render at the snap point, if applicable */
 	type?: number;
-	/** The source that eminated the line we are snapping to, if we are snapping. */
+	/** The source that emanated the line we are snapping to, if we are snapping. */
 	source?: BDCoords;
 };
 
@@ -84,9 +84,6 @@ type ClosestEntity = {
 	coords: Coords;
 	/** The euclidean distance in coordinates from the mouse to the entity. */
 	dist: number;
-	type: 'miniimage' | 'square';
-	/** The index of the entity within its home list. */
-	index: number;
 };
 
 // Constants -------------------------------------------------------------------
@@ -103,8 +100,8 @@ const SNAP_LINE_COLOR = [0, 0, 1, 0.3] as const;
 
 /** Properties of the glow dot when rendering the snapped coord. */
 const GLOW_DOT = {
-	RADIUS_PIXELS: 8,
-	RESOLUTION: 16,
+	radiusPixels: 8,
+	resolution: 16,
 };
 
 /**
@@ -150,7 +147,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 		const coords = imagesHovered.images[i]!;
 		const dist = imagesHovered.dists![i]!;
 		if (closestEntity === undefined || dist <= closestEntity.dist)
-			closestEntity = { coords, dist, type: 'miniimage', index: i };
+			closestEntity = { coords, dist };
 	}
 
 	// Square Highlights and Individual legal move hints
@@ -158,7 +155,7 @@ function getClosestEntityToWorld(world: DoubleCoords): ClosestEntity | undefined
 		const coords = highlightsHovered.squares[i]!;
 		const dist = highlightsHovered.dists![i]!;
 		if (closestEntity === undefined || dist <= closestEntity.dist)
-			closestEntity = { coords, dist, type: 'square', index: i };
+			closestEntity = { coords, dist };
 	}
 
 	return closestEntity;
@@ -172,6 +169,16 @@ function isSnappingEnabledThisFrame(): boolean {
 	if (perspective.getEnabled() && !perspective.isMouseLocked()) return false;
 
 	return true;
+}
+
+/**
+ * The square a pointer at the given world coords lands on: the closest hovered
+ * entity, else the emanated (blue line) snap, else the square beneath it.
+ */
+function getSnappedSquare(world: DoubleCoords): Coords {
+	const closestEntity = getClosestEntityToWorld(world);
+	if (closestEntity) return coordutil.copyCoords(closestEntity.coords);
+	return getWorldSnapCoords(world) ?? space.convertWorldSpaceToCoords_Rounded(boardpos, world);
 }
 
 /** Snaps the provided world coords to the nearest snappable coords. */
@@ -316,7 +323,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 	/**
 	 * At this point, there is no intersections of lines to snap to.
 	 *
-	 * Next, eminate lines in all directions from each entity, seeing where they cross
+	 * Next, emanate lines in all directions from each entity, seeing where they cross
 	 * existing lines, calculating what we should snap to.
 	 */
 
@@ -377,7 +384,7 @@ function snapPointerWorld(world: DoubleCoords): Snap | undefined {
 
 /**
  * Returns a snap for every ray / line intersection point currently below the pointer.
- * Does not include eminated blue line snap points.
+ * Does not include emanated blue line snap points.
  */
 function getHoveredRaySnaps(world: DoubleCoords): Snap[] {
 	if (!isSnappingEnabledThisFrame()) return [];
@@ -394,9 +401,9 @@ function getHoveredRaySnaps(world: DoubleCoords): Snap[] {
  */
 function transitionToHoveredIfClicked(): void {
 	if (!isSnappingEnabledThisFrame()) return;
-	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only transition if clicked
+	if (!mouse.isMouseClicked(MOUSE.LEFT) && !mouse.isMouseDown(MOUSE.LEFT)) return; // Only transition if clicked
 
-	const world = mouse.getMouseWorld(Mouse.LEFT);
+	const world = mouse.getMouseWorld(MOUSE.LEFT);
 	if (!world) return; // Maybe looking into sky?
 
 	// The hovered group: all entities AND all ray intersections below the pointer.
@@ -406,25 +413,27 @@ function transitionToHoveredIfClicked(): void {
 	];
 
 	// Transition to the whole group if non-empty, otherwise to the single snapped point.
-	let transition: (() => void) | undefined;
-	if (groupHovered.length > 0) transition = () => Transition.singleZoomToCoordsList(groupHovered);
+	let startTransition: (() => void) | undefined;
+	if (groupHovered.length > 0)
+		startTransition = () => transition.singleZoomToCoordsList(groupHovered);
 	else {
 		const snap = snapPointerWorld(world);
-		if (snap !== undefined) transition = () => Transition.singleZoomToBDCoords(snap.coords);
+		if (snap !== undefined)
+			startTransition = () => transition.singleZoomToBDCoords(snap.coords);
 	}
-	if (transition === undefined) return; // Nothing to transition to
+	if (startTransition === undefined) return; // Nothing to transition to
 
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		mouse.claimMouseClick(Mouse.LEFT);
-		transition();
-	} else if (mouse.isMouseDown(Mouse.LEFT)) {
-		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+	if (mouse.isMouseClicked(MOUSE.LEFT)) {
+		mouse.claimMouseClick(MOUSE.LEFT);
+		startTransition();
+	} else if (mouse.isMouseDown(MOUSE.LEFT)) {
+		mouse.claimMouseDown(MOUSE.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
 }
 
 /**
  * Finds the entity which snapping point to a line near the mouse is closest to the mouse.
- * Eminates lines from each entity in all directions, and checks if they intersect any of the lines close to the mouse.
+ * Emanates lines from each entity in all directions, and checks if they intersect any of the lines close to the mouse.
  */
 function findClosestEntityOfGroup(
 	entities: BDCoords[],
@@ -435,17 +444,17 @@ function findClosestEntityOfGroup(
 	let closestEntitySnap: { snap: Snap; dist: BigDecimal } | undefined;
 
 	for (const entityCoords of entities) {
-		// Eminate lines in all directions from the entity coords
-		const eminatingLines = searchVectors.map((l) =>
+		// Emanate lines in all directions from the entity coords
+		const emanatingLines = searchVectors.map((l) =>
 			vectors.getLineGeneralFormFromCoordsAndVecBD(entityCoords, l),
 		);
 
 		// Calculate their intersections with each individual line close to the mouse
-		for (const eminatedLine of eminatingLines) {
+		for (const emanatedLine of emanatingLines) {
 			for (const highlightLine of closeLines) {
 				// Do they intersect?
 				const intersection = geometry.intersectLineAndSegment(
-					eminatedLine,
+					emanatedLine,
 					highlightLine.line.coefficients,
 					highlightLine.line.start,
 					highlightLine.line.end,
@@ -538,7 +547,7 @@ function render(): void {
 
 		// If the pointer is over any entity or ray intersection, render a glow dot / mini image
 		// at EVERY hovered ray intersection (entities are rendered fully opaque elsewhere).
-		// No eminated snapping (requiring blue snap lines) happens in this case.
+		// No emanated snapping (requiring blue snap lines) happens in this case.
 		const raySnaps = getHoveredRaySnaps(pointerWorld);
 		if (raySnaps.length > 0 || getAllEntitiesWorldHovers(pointerWorld).length > 0) {
 			allSnaps.push(...raySnaps);
@@ -587,9 +596,9 @@ function render(): void {
 			const colorTransparent = jsutil.deepCopyObject(color);
 			colorTransparent[3] = 0;
 
-			const radius = space.convertPixelsToWorldSpace_Virtual(camera, GLOW_DOT.RADIUS_PIXELS);
+			const radius = space.convertPixelsToWorldSpace_Virtual(camera, GLOW_DOT.radiusPixels);
 			// prettier-ignore
-			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.RESOLUTION, color, colorTransparent);
+			const data: number[] = primitives.GlowDot(...coordsWorld, radius, GLOW_DOT.resolution, color, colorTransparent);
 			createRenderable(data, 2, 'TRIANGLE_FAN', 'color', true).render();
 		} else {
 			// Render mini image of piece
@@ -601,8 +610,6 @@ function render(): void {
 
 /** Builds the translucent mini image of a piece, centered on the given world coords. */
 function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable {
-	const dataGhost: number[] = [];
-
 	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords(camera);
 
 	const entityWorldWidth = getEntityWidthWorld();
@@ -616,10 +623,8 @@ function generateGhostImageModel(type: number, coords: DoubleCoords): Renderable
 	// prettier-ignore
 	const data = primitives.Quad_ColorTexture(startX, startY, endX, endY, texleft, texbottom, texright, textop, 1, 1, 1, GHOST_IMAGE_OPACITY);
 
-	dataGhost.push(...data);
-
 	return createRenderable(
-		dataGhost,
+		data,
 		2,
 		'TRIANGLES',
 		'colorTexture',
@@ -635,9 +640,8 @@ export default {
 	ENTITY_WIDTH_VPIXELS,
 	// Entity Hovering
 	getEntityWidthWorld,
-	getClosestEntityToWorld,
 	// Snapping
-	getWorldSnapCoords,
+	getSnappedSquare,
 	transitionToHoveredIfClicked,
 	getAnnoteSnapPoints,
 	// Rendering

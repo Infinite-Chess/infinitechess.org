@@ -19,6 +19,7 @@ import { fileURLToPath } from 'url';
 
 import jsutil from '../../shared/util/jsutil.js';
 import jsonutil from '../../shared/util/jsonutil.js';
+import timeutil from '../../shared/util/timeutil.js';
 
 import env from '../config/env.js';
 import logEvents from '../utility/logEvents.js';
@@ -37,7 +38,7 @@ type SupportedColumnTypes = string | number | boolean | null;
 const STORAGE_FAILURE_CODES = ['SQLITE_CORRUPT', 'SQLITE_NOTADB', 'SQLITE_FULL', 'SQLITE_IOERR', 'SQLITE_READONLY', 'SQLITE_CANTOPEN']; // prettier-ignore
 
 /** Minimum gap between storage-failure alerts, so a failure repeating on every query sends one email. */
-const STORAGE_ALERT_COOLDOWN_MS = 1000 * 60 * 60; // 1 hour
+const STORAGE_ALERT_COOLDOWN_MS = timeutil.toMillis(1, 'hours');
 
 // Connection ------------------------------------------------------------------
 

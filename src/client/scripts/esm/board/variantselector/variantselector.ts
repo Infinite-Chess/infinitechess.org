@@ -20,6 +20,7 @@ import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic
 import { attributesModule, classModule, eventListenersModule, h, init } from 'snabbdom';
 
 import bounds from '../../../../../shared/util/math/bounds.js';
+import jsutil from '../../../../../shared/util/jsutil.js';
 import coordutil from '../../../../../shared/util/coordutil.js';
 import interpolate from '../../../../../shared/util/interpolate.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
@@ -950,7 +951,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 		if (revealErrors) {
 			showError(element_icnInputWrap, null); // Outline the field without a message
 			// Only log on reveal so we don't spam the console on every keystroke of an in-progress ICN.
-			console.error('Illegal position:', e instanceof Error ? e.message : e);
+			console.error('Illegal position:', jsutil.getErrorMessage(e));
 		}
 		return;
 	}
@@ -977,7 +978,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 		// Construction crashed — the position can't be previewed or played.
 		if (revealErrors) {
 			showError(element_icnInputWrap, t.shared.position_errors.moves_invalid);
-			console.error("Pasted ICN's moves are invalid:", e instanceof Error ? e.message : e);
+			console.error("Pasted ICN's moves are invalid:", jsutil.getErrorMessage(e));
 		}
 		return;
 	}

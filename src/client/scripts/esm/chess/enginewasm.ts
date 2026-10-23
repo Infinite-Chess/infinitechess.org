@@ -95,6 +95,8 @@ function getPromotionAbbr(engineCode: string, mover: Player): string {
 	return icnposition.getAbbrFromType(typeutil.buildType(rawType, mover));
 }
 
+// Exports ---------------------------------------------------------------------
+
 export default {
 	// Wasm Loading
 	load,

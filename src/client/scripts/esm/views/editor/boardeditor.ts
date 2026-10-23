@@ -3,7 +3,7 @@
 /**
  * Core manager for the Board Editor.
  *
- * Handles the lifecycle (open/close), dirty/clean state,
+ * Handles initialization over a loaded position, dirty/clean state,
  * active position tracking, and the main update/render loop.
  */
 
@@ -23,6 +23,7 @@ import drawingtool from './tools/drawingtool.js';
 import edithistory from './edithistory.js';
 import etoolmanager from './tools/etoolmanager.js';
 import selectiontool from './tools/selection/selectiontool.js';
+import guipalette from './gui/guipalette.js';
 import EDITOR_PROFILE from './ekeybinds.js';
 import guipositionheader from './gui/guipositionheader.js';
 
@@ -46,19 +47,18 @@ let positionDirty = false;
 // Initialization --------------------------------------------------------------
 
 /**
- * Initializes the board editor.
+ * Initializes the board editor, its palette included.
  * Should be called AFTER loading the game logically.
  * May optionally be supplied with custom game rules.
  */
-async function initBoardEditor(
+async function init(
 	/** Whether the position has unsaved changes. */
 	dirty: boolean,
 	variantOptions?: VariantOptions,
 	pawnDoublePush?: boolean,
 	castling?: boolean,
 ): Promise<void> {
-	if (dirty) markPositionDirty();
-	else markPositionClean();
+	await guipalette.initUI(); // First: the tools below mark their piece in it.
 
 	etoolmanager.setTool('normal');
 	drawingtool.init();
@@ -107,6 +107,10 @@ async function initBoardEditor(
 	// would have otherwise been checkmate/stalemate will prevent us from selecting pieces.
 	gamefile.gameConclusion = undefined;
 
+	// Once the position's rules are in place: marking it clean flushes them into the autosave.
+	if (dirty) markPositionDirty();
+	else markPositionClean();
+
 	eclipboard.addEventListeners();
 	eautosave.startPositionAutosave();
 }
@@ -117,7 +121,7 @@ async function initBoardEditor(
  * Called every frame while the board editor is open.
  *
  * NEEDS TO BE CALLED BEFORE selection.update() and boarddrag.checkIfBoardSingleGrabbed()
- * because the drawing tools of the boad editor might take precedence and claim the left mouse click.
+ * because the drawing tools of the board editor might take precedence and claim the left mouse click.
  * We had it after boarddrag.checkIfBoardPinched() and before selection.update().
  * Recommended to dispatch a specific update event that we can listen to to know when to update.
  */
@@ -133,14 +137,14 @@ function _update(): void {
 
 /**
  * Renders any graphics of the active tool, if we are in the board editor.
- * Recommended to listen for the 'render-above-pieces' even to know when to render.
+ * Recommended to listen for the 'render-above-pieces' event to know when to render.
  */
 function _render(): void {
 	// Render selection-tool graphics, if that is active
 	if (etoolmanager.getTool() === 'selection-tool') selectiontool.render();
 }
 
-// Utility ---------------------------------------------------------------------
+// Dirty State -----------------------------------------------------------------
 
 /** Returns true if the current board position has unsaved changes. */
 function isPositionDirty(): boolean {
@@ -152,18 +156,19 @@ function isPositionDirty(): boolean {
  * and notifies eautosave to schedule a background autosave.
  */
 function markPositionDirty(): void {
-	// console.error('Position marked dirty');
 	positionDirty = true;
 	guipositionheader.updateDirtyIndicator(true);
 	eautosave.markPositionDirty();
 }
 
-/** Marks the current board position as clean (saved). */
+/** Marks the current board position as clean (saved), and flushes the autosave to record it. */
 function markPositionClean(): void {
-	// console.error('Position marked clean');
 	positionDirty = false;
 	guipositionheader.updateDirtyIndicator(false);
+	flushAutosave();
 }
+
+// Active Position -------------------------------------------------------------
 
 /** Returns the active position, if any. */
 function getActivePosition(): ActivePosition | undefined {
@@ -183,7 +188,7 @@ function isActivePosition(name: string, storage_type: StorageType): boolean {
 function setActivePosition(new_position: ActivePosition): void {
 	active_position = new_position;
 	guipositionheader.updateActivePositionElement(new_position.name);
-	flushActivePositionToAutosave();
+	flushAutosave();
 }
 
 /** Clears the active position and marks the position as dirty. */
@@ -191,14 +196,14 @@ function clearActivePosition(): void {
 	active_position = undefined;
 	markPositionDirty();
 	guipositionheader.updateActivePositionElement(undefined);
-	flushActivePositionToAutosave();
+	flushAutosave();
 }
 
 /**
- * Immediately flushes the autosave so a page refresh immediately
- * after a save/delete operation reflects the current active position.
+ * Immediately flushes the autosave so a page refresh right after a save, delete or
+ * active-position change reflects the current active position and dirty state.
  */
-function flushActivePositionToAutosave(): void {
+function flushAutosave(): void {
 	if (gameslot.getGamefile() === undefined) return; // Some callers run before the gamefile exists
 	eautosave.markPositionDirty();
 	void eautosave.autosaveCurrentPositionOnce();
@@ -207,9 +212,8 @@ function flushActivePositionToAutosave(): void {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// State
 	// Initialization
-	initBoardEditor,
+	init,
 	// Dirty State
 	isPositionDirty,
 	markPositionDirty,

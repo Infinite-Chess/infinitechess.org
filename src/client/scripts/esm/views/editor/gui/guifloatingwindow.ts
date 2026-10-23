@@ -12,21 +12,6 @@ import math from '../../../../../../shared/util/math/math.js';
 
 import guiboardeditor from './guiboardeditor.js';
 
-// Elements --------------------------------------------------------------------
-
-const element_boardUI = document.getElementById('boardUI')!;
-const element_menu = document.getElementById('editor-menu')!;
-const element_menuToggle = document.getElementById('editor-menu-toggle')!;
-
-// Constants -------------------------------------------------------------------
-
-/**
- * The viewport width (px) below which the sidebar switches to overlay/collapsible mode.
- * MUST MATCH the CSS @media max-width value in play.css — CSS variables cannot
- * be used in media queries, so this value must be kept in sync manually.
- */
-const NARROW_THRESHOLD = 727;
-
 // Types -----------------------------------------------------------------------
 
 /** Functions that handle all floating window behavior */
@@ -58,6 +43,21 @@ interface FloatingWindowOptions {
 	/** Called after the floating window closes (use for window-specific listener cleanup) */
 	onClose: (resetPositioning: boolean) => void;
 }
+
+// Elements --------------------------------------------------------------------
+
+const element_boardUI = document.getElementById('boardUI')!;
+const element_menu = document.getElementById('editor-menu')!;
+const element_menuToggle = document.getElementById('editor-menu-toggle')!;
+
+// Constants -------------------------------------------------------------------
+
+/**
+ * The viewport width (px) below which the sidebar switches to overlay/collapsible mode.
+ * MUST MATCH the CSS @media max-width value in play.css — CSS variables cannot
+ * be used in media queries, so this value must be kept in sync manually.
+ */
+const NARROW_THRESHOLD = 727;
 
 // Utilities -------------------------------------------------------------------
 
@@ -169,7 +169,7 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 
 		window.addEventListener('resize', clampToParentBounds);
 
-		if (closeButtonEl) closeButtonEl.addEventListener('click', callbackClose);
+		closeButtonEl.addEventListener('click', callbackClose);
 
 		if (inputElList) {
 			inputElList.forEach((el) => {
@@ -192,7 +192,7 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 
 		window.removeEventListener('resize', clampToParentBounds);
 
-		if (closeButtonEl) closeButtonEl.removeEventListener('click', callbackClose);
+		closeButtonEl.removeEventListener('click', callbackClose);
 
 		if (inputElList) {
 			inputElList.forEach((el) => {
@@ -239,9 +239,9 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 	}
 
 	/**
-	 * On narrow screens, computes the initial position for the floating window, placing it
-	 * to the right of the sidebar tab. Collapses the sidebar first if the window would not fit
-	 * alongside it. Returns undefined on wide screens (no special positioning needed).
+	 * On narrow screens, computes the initial position for the floating window: beside the
+	 * expanded sidebar if it fits there, else right of the sidebar tab. Returns undefined on
+	 * wide screens (no special positioning needed).
 	 */
 	function computeNarrowInitialPos(): { left: number; top: number } | undefined {
 		if (window.innerWidth > NARROW_THRESHOLD) return undefined;
@@ -302,7 +302,7 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 		clampToParentBounds();
 
 		initBaseListeners();
-		onOpen?.();
+		onOpen();
 	}
 
 	return {
@@ -313,6 +313,8 @@ function create(opts: FloatingWindowOptions): FloatingWindowHandle {
 		isOpen,
 	};
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	create,

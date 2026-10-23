@@ -8,7 +8,7 @@
  * hold a reference from module scope and still see the real listener once the page boots.
  */
 
-import { CreateInputListener, InputListener } from './input.js';
+import input, { InputListener } from './input.js';
 
 // State -----------------------------------------------------------------------
 
@@ -23,12 +23,12 @@ let listener_document: InputListener;
 /** Attaches both input listeners. Call once, before anything reads them. */
 function init(canvas: HTMLCanvasElement): void {
 	element_canvas = canvas;
-	listener_canvas = CreateInputListener(element_canvas, { keyboard: false });
-	listener_document = CreateInputListener(document);
+	listener_canvas = input.createListener(element_canvas, { keyboard: false });
+	listener_document = input.createListener(document);
 }
 
-/** Returns the overlay element covering the entire canvas. */
-function getCanvas(): HTMLElement {
+/** Returns the board canvas. */
+function getCanvas(): HTMLCanvasElement {
 	return element_canvas;
 }
 

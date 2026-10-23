@@ -191,13 +191,11 @@ function viewIndex(
 
 /** Makes the game view the start of the game, before the first move. */
 function viewStart(gamefile: GameFile, mesh: Mesh | undefined): void {
-	/** Call {@link viewIndex} with the index before the first move */
 	viewIndex(gamefile, mesh, -1, false);
 }
 
 /** Makes the game view the last move. */
 function viewFront(gamefile: GameFile, mesh: Mesh | undefined, animateLast: boolean): void {
-	/** Call {@link viewIndex} with the index of the last move in the game */
 	viewIndex(gamefile, mesh, gamefile.moves.length - 1, animateLast);
 	// Announce the jump-to-front so the moves panel scrolls to follow it.
 	GameBus.dispatch('view-front');
@@ -216,11 +214,9 @@ function navigateMove(gamefile: GameFile, mesh: Mesh | undefined, forward: boole
 	// Determine the index of the move to apply
 	const idx = forward ? gamefile.state.local.moveIndex + 1 : gamefile.state.local.moveIndex;
 
-	// Make sure the move exists. Normally we'd never call this method
-	// if it does, but just in case we forget to check.
 	const move = gamefile.moves[idx];
 	if (move === undefined)
-		throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`);
+		throw Error(`Move is undefined. Should not be navigating move. forward: ${forward}`); // Safety check
 
 	viewMove(gamefile, mesh, move, forward); // Apply the logical + graphical changes
 	GameBus.dispatch('view-move');

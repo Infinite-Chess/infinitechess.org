@@ -1,8 +1,8 @@
 // src/client/scripts/esm/webgl/postprocessing/PostProcessingPipeline.ts
 
+import type { ProgramManager } from '../ProgramManager.js';
 import type { PostProcessPass } from './PostProcessPass.js';
 
-import { ProgramManager } from '../ProgramManager.js';
 import { PassThroughPass } from './passes/PassThroughPass.js';
 
 /**
@@ -27,13 +27,12 @@ export class PostProcessingPipeline {
 	private readTexture: WebGLTexture;
 	private writeTexture: WebGLTexture;
 
-	// This will hold the default shader for the "zero effects" case.
+	/** The pass drawn when no effects are active. */
 	private passThroughPass: PassThroughPass;
 
 	constructor(gl: WebGL2RenderingContext, programManager: ProgramManager) {
 		this.gl = gl;
 
-		// Get the pass-through shader from your manager.
 		this.passThroughPass = new PassThroughPass(programManager);
 
 		// Get the max MSAA samples supported by the hardware.
@@ -106,33 +105,26 @@ export class PostProcessingPipeline {
 	}
 
 	/**
-	 * Call this BEFORE rendering your main 3D scene.
+	 * Call this BEFORE rendering the scene.
 	 * It binds the FBO, redirecting all subsequent draw calls to an off-screen texture.
 	 */
 	public begin(): void {
 		const gl = this.gl;
 
-		// Bind the MULTISAMPLED FBO we will write the 3D scene into.
+		// Bind the MULTISAMPLED FBO we will write the scene into.
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.sceneFBO);
-
-		// Check if the framebuffer is complete.
-		const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-		if (status !== gl.FRAMEBUFFER_COMPLETE) {
-			console.error(`Scene FBO is not complete: ${status}`);
-		}
 
 		// Set the viewport to the FBO size and clear it.
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
-		// Enable blending if your main scene needs it.
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		gl.enable(gl.DEPTH_TEST);
 	}
 
 	/**
-	 * Call this AFTER your main 3D scene has been rendered.
+	 * Call this AFTER the scene has been rendered.
 	 * It executes the post-processing passes and draws the final result to the canvas.
 	 */
 	public end(): void {
@@ -157,7 +149,7 @@ export class PostProcessingPipeline {
 		gl.disable(gl.DEPTH_TEST);
 		gl.disable(gl.BLEND);
 
-		// If we have no added no passes, we'll use our pass-through shader.
+		// If no passes were added, we'll use our pass-through shader.
 		// This creates a unified code path for all scenarios.
 		const activePasses: PostProcessPass[] =
 			this.passes.length > 0 ? this.passes : [this.passThroughPass];
@@ -234,6 +226,10 @@ export class PostProcessingPipeline {
 		gl.bindFramebuffer(gl.FRAMEBUFFER, this.sceneFBO);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, this.sceneColorBuffer);
 		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.sceneDepthStencilBuffer);
+
+		// Strict mobile drivers reject incomplete framebuffers, silently blanking every effect.
+		const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+		if (status !== gl.FRAMEBUFFER_COMPLETE) console.error(`Scene FBO is not complete: ${status}`);
 
 		// Unbind to be clean
 		gl.bindTexture(gl.TEXTURE_2D, null);

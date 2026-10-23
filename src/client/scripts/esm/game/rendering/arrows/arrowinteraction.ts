@@ -23,7 +23,7 @@ import gameslot from '../../chess/gameslot.js';
 import gamescene from '../gamescene.js';
 import movehints from '../highlights/movehints.js';
 import boardview from '../boardview.js';
-import Transition from '../transitions/Transition.js';
+import transition from '../transitions/transition.js';
 import perspective from '../perspective.js';
 import { GameBus } from '../../../board/GameBus.js';
 import arrowshifts from '../../../board/rendering/arrows/arrowshifts.js';
@@ -31,7 +31,7 @@ import frametracker from '../../../board/rendering/frametracker.js';
 import arrowscalculator from '../../../board/rendering/arrows/arrowscalculator.js';
 import { listener_canvas } from '../../listeners.js';
 import arrowlegalmovehighlights from './arrowlegalmovehighlights.js';
-import { InputListener, Mouse, MouseButton } from '../../input.js';
+import { InputListener, MOUSE, MouseButton } from '../../input.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -207,7 +207,7 @@ function calcHintArrows(pointerWorlds: DoubleCoords[]): HintArrow[] {
 			(p) => vectors.chebyshevDistanceDoubles(worldLocation, p) < worldHalfWidth,
 		);
 		// Prevent dragging the board when clicking on the move hint arrow.
-		if (hovered && mouse.isMouseDown(Mouse.LEFT)) mouse.claimMouseDown(Mouse.LEFT);
+		if (hovered && mouse.isMouseDown(MOUSE.LEFT)) mouse.claimMouseDown(MOUSE.LEFT);
 
 		newHintArrows.push({ worldLocation, direction, targetSquare: hintSquare, hovered });
 	}
@@ -233,16 +233,16 @@ function transitionTowardClickedArrow(): void {
 	let listener: typeof mouse | InputListener;
 
 	// Left mouse button
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		button = Mouse.LEFT;
+	if (mouse.isMouseClicked(MOUSE.LEFT)) {
+		button = MOUSE.LEFT;
 		listener = mouse;
 	}
 	// Finger simulating right mouse down (annotations mode ON)
 	else if (
-		listener_canvas.isMouseClicked(Mouse.RIGHT) &&
-		listener_canvas.isMouseTouch(Mouse.RIGHT)
+		listener_canvas.isMouseClicked(MOUSE.RIGHT) &&
+		listener_canvas.isMouseTouch(MOUSE.RIGHT)
 	) {
-		button = Mouse.RIGHT;
+		button = MOUSE.RIGHT;
 		listener = listener_canvas;
 	} else return; // No recognized click
 
@@ -293,7 +293,7 @@ function panAlongLineToward(targetCoords: BDCoords, direction: Vec2): void {
 		...line2GeneralForm,
 	)!; // We know it will be defined because they are PERPENDICULAR
 
-	Transition.startPanTransition(telCoords, false);
+	transition.startPanTransition(telCoords, false);
 }
 
 // Exports ---------------------------------------------------------------------

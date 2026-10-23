@@ -1,4 +1,4 @@
-// src/client/scripts/esm/game/rendering/transitions/Transition.ts
+// src/client/scripts/esm/game/rendering/transitions/transition.ts
 
 /**
  * This handles the smooth transitioning from one area of the board to another.
@@ -52,7 +52,7 @@ type Transition =
 type ZoomTransition = {
 	/** The destination board location. */
 	destinationCoords: BDCoords;
-	/** The destination board location. */
+	/** The destination board scale. */
 	destinationScale: BigDecimal;
 };
 
@@ -69,7 +69,7 @@ const HISTORY_CAP = 20;
 /** Stores config for Panning Transitions. */
 const PAN_TRANSITION_CONFIG = {
 	/** Duration of ALL Panning Transitions. */
-	get DURATION_MS() {
+	get durationMs() {
 		return preferences.getFastTransitionsMode() ? 500 : 800;
 	},
 	/**
@@ -77,7 +77,7 @@ const PAN_TRANSITION_CONFIG = {
 	 * teleporting mid-transition to reach its destination in constant time,
 	 * in world space units (not affected by board scale).
 	 */
-	get MAX_PAN_DISTANCE() {
+	get maxPanDistance() {
 		return preferences.getFastTransitionsMode() ? 45 : 90;
 	},
 } as const;
@@ -85,24 +85,24 @@ const PAN_TRANSITION_CONFIG = {
 /** Stores config for Zooming Transitions. */
 const ZOOM_TRANSITION_CONFIG = {
 	/** The minimum duration any zooming transition must take. */
-	get MIN_DURATION() {
+	get minDuration() {
 		return preferences.getFastTransitionsMode() ? 400 : 600;
 	},
 	/** The maximum duration any zooming transition can take. */
-	get MAX_DURATION() {
+	get maxDuration() {
 		return preferences.getFastTransitionsMode() ? 1200 : 3500;
 	},
 	/** In perspective mode we apply a multiplier so the transition goes a tad slower. */
-	DURATION_PERSPECTIVE_MULTIPLIER: 1.3,
+	durationPerspectiveMultiplier: 1.3,
 	/** The "comfortable" acceleration used for the start and end of the 2 & 3 stage models. */
-	get EDGE_ACCELERATION() {
+	get edgeAcceleration() {
 		return preferences.getFastTransitionsMode() ? 80.0 : 40.0;
 	},
 	/** How the total duration of the 3-Stage Model is split between them. MUST sum to 1.0. */
-	STAGE_SPLIT: {
-		ACCELERATE: 0.25, // 25% of time accelerating scale
-		CRUISE: 0.5, // 50% arbitrarily fast scale change
-		DECELERATE: 0.25, // 25% decelerating scale
+	stageSplit: {
+		accelerate: 0.25, // 25% of time accelerating scale
+		cruise: 0.5, // 50% arbitrarily fast scale change
+		decelerate: 0.25, // 25% decelerating scale
 	},
 } as const;
 
@@ -129,7 +129,7 @@ let nextTransition: ZoomTransition | undefined;
 
 /** Precalculated total duration of the current transition. */
 let durationMillis: number;
-
+/** When the current transition started, from `Date.now()`. */
 let startTime: number;
 /** Whether the current transition is a Zooming Transition, vs a Panning Transition. */
 let isZoom: boolean;
@@ -264,17 +264,17 @@ function startZoomTransition(
 
 	// Perspective duration multiplier
 	const perspectiveMultiplier = perspective.getEnabled()
-		? ZOOM_TRANSITION_CONFIG.DURATION_PERSPECTIVE_MULTIPLIER
+		? ZOOM_TRANSITION_CONFIG.durationPerspectiveMultiplier
 		: 1;
-	const maxDuration = ZOOM_TRANSITION_CONFIG.MAX_DURATION * perspectiveMultiplier;
-	const edgeAccel = ZOOM_TRANSITION_CONFIG.EDGE_ACCELERATION / perspectiveMultiplier;
+	const maxDuration = ZOOM_TRANSITION_CONFIG.maxDuration * perspectiveMultiplier;
+	const edgeAccel = ZOOM_TRANSITION_CONFIG.edgeAcceleration / perspectiveMultiplier;
 
 	// Determine which model to use by checking each profile's
 	// natural duration (excludes base duration or capping) in order.
 
-	// C-infinity model natural duration if capped at our comfortable EDGE_ACCELERATION.
+	// C-infinity model natural duration if capped at our comfortable edgeAcceleration.
 	const natural_duration_c_inf_ms = Math.sqrt(Math.abs((6 * differenceE) / edgeAccel)) * 1000;
-	// C¹ 2-stage model natural duration, if capped at our comfortable EDGE_ACCELERATION.
+	// C¹ 2-stage model natural duration, if capped at our comfortable edgeAcceleration.
 	const natural_duration_c_one_ms = Math.sqrt(Math.abs(differenceE / edgeAccel)) * 2 * 1000;
 
 	if (natural_duration_c_inf_ms <= maxDuration)
@@ -297,7 +297,7 @@ function setupCInfinityModel(natural_duration_c_inf_ms: number, maxDuration: num
 	zoomModel = 'C_INF';
 
 	// Add the base duration to the natural duration, and cap at the long zoom duration.
-	durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.MIN_DURATION, natural_duration_c_inf_ms);
+	durationMillis = Math.max(ZOOM_TRANSITION_CONFIG.minDuration, natural_duration_c_inf_ms);
 	durationMillis = Math.min(durationMillis, maxDuration);
 	const T = durationMillis / 1000; // Final duration in seconds
 
@@ -340,8 +340,8 @@ function setupCOne3StageModel(edgeAccel: number, maxDuration: number): void {
 
 	durationMillis = maxDuration;
 
-	const t1 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.ACCELERATE) / 1000;
-	const t2 = (durationMillis * ZOOM_TRANSITION_CONFIG.STAGE_SPLIT.CRUISE) / 1000;
+	const t1 = (durationMillis * ZOOM_TRANSITION_CONFIG.stageSplit.accelerate) / 1000;
+	const t2 = (durationMillis * ZOOM_TRANSITION_CONFIG.stageSplit.cruise) / 1000;
 	const t_s2_half = t2 / 2;
 
 	stageEndTimes = {
@@ -396,7 +396,7 @@ function startPanTransition(endCoord: BDCoords, ignoreHistory: boolean): void {
 
 	isZoom = false;
 
-	durationMillis = PAN_TRANSITION_CONFIG.DURATION_MS;
+	durationMillis = PAN_TRANSITION_CONFIG.durationMs;
 
 	if (!ignoreHistory) pushToTelHistory({ isZoom, destinationCoords: boardpos.getBoardPos() });
 }
@@ -536,7 +536,7 @@ function recordView(): void {
 	});
 }
 
-/** Undos the last transition by transitioning to that transition's  */
+/** Undoes the last transition by transitioning back to where it started. */
 function undoTransition(): void {
 	const previousTrans = teleportHistory.pop();
 	if (!previousTrans) return; // Nothing in history
@@ -698,7 +698,7 @@ function updatePanningTransition(
 	// What is the scale?
 	// What is the maximum distance we should pan b4 teleporting to the other half?
 	const boardScale = boardpos.getBoardScale();
-	const maxPanDist = bd.fromNumber(PAN_TRANSITION_CONFIG.MAX_PAN_DISTANCE);
+	const maxPanDist = bd.fromNumber(PAN_TRANSITION_CONFIG.maxPanDistance);
 	const maxDistSquares = bd.divideFloating(maxPanDist, boardScale);
 	const transGreaterThanMaxDist =
 		bd.compare(bd.abs(differenceCoords[0]), maxDistSquares) > 0 ||
@@ -785,7 +785,6 @@ function terminate(): void {
 
 export default {
 	// Initiating Transitions
-	areTransitioning,
 	startPanTransition,
 	zoomToCoordsBox,
 	singleZoomToCoordsList,
@@ -796,5 +795,6 @@ export default {
 	// Updating
 	update,
 	// Utility
+	areTransitioning,
 	terminate,
 };

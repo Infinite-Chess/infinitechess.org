@@ -23,7 +23,7 @@ import typeutil, {
 import mouse from '../../../game/mouse.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import selection from '../../../game/chess/selection.js';
-import { Mouse } from '../../../game/input.js';
+import { MOUSE } from '../../../game/input.js';
 import egamerules from '../egamerules.js';
 import guipalette from '../gui/guipalette.js';
 import edithistory from '../edithistory.js';
@@ -31,18 +31,10 @@ import { GameBus } from '../../../board/GameBus.js';
 import arrowinteraction from '../../../game/rendering/arrows/arrowinteraction.js';
 import specialrighthighlights from '../../../game/rendering/highlights/specialrighthighlights.js';
 
-// Events ----------------------------------------------------------------------
-
-// Cancel the in-progress edit if the board steals its pointer to pinch.
-GameBus.addEventListener('steal-pointer', (e) => {
-	if (drawingToolPointerId !== e.detail.pointerId) return; // Not the pointer drawing the edit, don't stop using it.
-	cancelEdit();
-});
-
 // Constants -------------------------------------------------------------------
 
 /** All tools that support drawing. */
-const drawingTools: Tool[] = ['placer', 'eraser', 'specialrights'];
+const DRAWING_TOOLS: Tool[] = ['placer', 'eraser', 'specialrights'];
 
 // State -----------------------------------------------------------------------
 
@@ -65,13 +57,23 @@ let previousSquare: Coords | undefined;
 /** Whether special rights are currently being added or removed with the current drawing stroke. Undefined if neither. */
 let addingSpecialRights: boolean | undefined;
 
+// Events ----------------------------------------------------------------------
+
+// Cancel the in-progress edit if the board steals its pointer to pinch.
+GameBus.addEventListener('steal-pointer', (e) => {
+	if (drawingToolPointerId !== e.detail.pointerId) return; // Not the pointer drawing the edit, don't stop using it.
+	cancelEdit();
+});
+
 // Initialization --------------------------------------------------------------
 
+/** Syncs the palette to the current drawing color and piece. */
 function init(): void {
 	guipalette.updatePieceColors(currentColor);
 	guipalette.markPiece(currentPieceType);
 }
 
+/** Drops any stroke in progress, without adding it to the history. */
 function resetState(): void {
 	thisEdit = undefined;
 	drawingToolPointerId = undefined;
@@ -82,6 +84,7 @@ function resetState(): void {
 
 // Managing the Edit -----------------------------------------------------------
 
+/** Starts a new stroke, collecting its changes into one edit. */
 function beginEdit(): void {
 	drawing = true;
 	thisEdit = { changes: [], state: [] };
@@ -89,6 +92,7 @@ function beginEdit(): void {
 	selection.unselectPiece();
 }
 
+/** Ends the stroke, adding its edit to the history. */
 function endEdit(): void {
 	if (!drawing || !thisEdit) return;
 	edithistory.addEditToHistory(thisEdit);
@@ -108,18 +112,18 @@ function cancelEdit(): void {
 
 /** Handle starting and ending the drawing state */
 function update(currentTool: Tool): void {
-	if (!drawingTools.includes(currentTool)) return; // Not using a drawing tool
+	if (!DRAWING_TOOLS.includes(currentTool)) return; // Not using a drawing tool
 
 	if (
-		mouse.isMouseDown(Mouse.LEFT) &&
+		mouse.isMouseDown(MOUSE.LEFT) &&
 		!drawing &&
 		!arrowinteraction.areHoveringAtleastOneArrow()
 	) {
-		mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
-		mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-		drawingToolPointerId = mouse.getMouseId(Mouse.LEFT)!;
+		mouse.claimMouseDown(MOUSE.LEFT); // Remove the pointer down so other scripts don't use it
+		mouse.cancelMouseClick(MOUSE.LEFT); // Cancel any potential future click so other scripts don't use it
+		drawingToolPointerId = mouse.getMouseId(MOUSE.LEFT)!;
 		beginEdit();
-	} else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
+	} else if (!mouse.isMouseHeld(MOUSE.LEFT) && drawing) return endEdit();
 
 	if (!drawing || !thisEdit) return; // If not currently drawing, nothing more to do
 
@@ -150,8 +154,8 @@ function update(currentTool: Tool): void {
 			const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
 			// prettier-ignore
 			const specialright: boolean = (
-				(!!pawnDoublePush && egamerules.pawnDoublePushTypes.includes(typeutil.getRawType(currentPieceType))) ||
-				(!!castling && egamerules.castlingTypes.includes(typeutil.getRawType(currentPieceType)))
+				(!!pawnDoublePush && egamerules.PAWN_DOUBLE_PUSH_TYPES.includes(typeutil.getRawType(currentPieceType))) ||
+				(!!castling && egamerules.CASTLING_TYPES.includes(typeutil.getRawType(currentPieceType)))
 			);
 			edithistory.queueAddPiece(gamefile, edit, mouseCoords, currentPieceType, specialright);
 			break;
@@ -193,6 +197,7 @@ function queueToggleSpecialRight(
 
 // API -------------------------------------------------------------------------
 
+/** Ends any stroke and syncs the special-rights highlights and palette to the new tool. */
 function onToolChange(tool: Tool): void {
 	endEdit();
 
@@ -203,12 +208,14 @@ function onToolChange(tool: Tool): void {
 	else guipalette.markPiece(currentPieceType);
 }
 
+/** Whether a stroke is in progress. */
 function isEditInProgress(): boolean {
 	return drawing;
 }
 
+/** Whether `tool` is one of the drawing tools. */
 function isToolADrawingTool(tool: Tool): boolean {
-	return drawingTools.includes(tool);
+	return DRAWING_TOOLS.includes(tool);
 }
 
 /** Set the piece type to be added to the board */
@@ -216,14 +223,17 @@ function setPiece(pieceType: number): void {
 	currentPieceType = pieceType;
 }
 
+/** The piece type being added to the board. */
 function getPiece(): number {
 	return currentPieceType;
 }
 
+/** Sets the color of pieces being drawn. */
 function setColor(color: Player): void {
 	currentColor = color;
 }
 
+/** The color of pieces being drawn. */
 function getColor(): Player {
 	return currentColor;
 }

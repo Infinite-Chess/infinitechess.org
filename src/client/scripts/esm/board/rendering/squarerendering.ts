@@ -12,7 +12,7 @@
 import type { Color } from '../../../../../shared/types/color.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type RenderContext from './RenderContext.js';
-import type { RenderableInstanced } from '../../webgl/Renderable.js';
+import type { Renderable } from '../../webgl/Renderable.js';
 
 import bdcoords from '../../../../../shared/util/bdcoords.js';
 
@@ -34,7 +34,7 @@ const HOVER_OPACITY = 0.5;
  * This type of model requires regeneration every single frame, so don't use it
  * if you have an arbitrary number of squares to render.
  */
-function genModel(ctx: RenderContext, highlights: Coords[], color: Color): RenderableInstanced {
+function genModel(ctx: RenderContext, highlights: Coords[], color: Color): Renderable {
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
 	const instanceData: number[] = [];
 

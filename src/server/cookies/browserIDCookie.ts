@@ -13,13 +13,15 @@ import type { CookieOptions, Request, Response } from 'express';
 
 import crypto from 'crypto';
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import banned from '../database/banned.js';
 import logEvents from '../utility/logEvents.js';
 
 // Constants -------------------------------------------------------------------
 
 /** How long a browser-id lives before it must be renewed by another visit. */
-const LIFETIME_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
+const LIFETIME_MS = timeutil.toMillis(7, 'days');
 
 /** The options the `browser-id` cookie is created with. */
 const COOKIE_OPTIONS: CookieOptions = {

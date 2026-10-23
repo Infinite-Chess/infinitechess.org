@@ -12,7 +12,7 @@ import type { Coords } from '../../../../../../shared/util/coordutil.js';
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import gamesound from '../../gamesound.js';
-import WaterRipples from '../WaterRipples.js';
+import waterripples from '../waterripples.js';
 
 // Move Configs ----------------------------------------------------------------
 
@@ -64,8 +64,8 @@ const RIPPLE_CONFIG = {
 	 * 0.002 yields .18 playback rate travel in e90
 	 * At current settings, it stops decreasing at about e210, 30e after Iridescence zone begins.
 	 */
-	playbackRateReductionPerE: 0.002, // Default: 0.002
-	/** The volume of the ripple sound effecet, as a multiplier to the move sound's volume. */
+	playbackRateReductionPerE: 0.002,
+	/** The volume of the ripple sound effect, as a multiplier to the move sound's volume. */
 	volume: 0.8,
 } as const;
 
@@ -111,7 +111,7 @@ function playMove(
 	destination: Coords,
 ): void {
 	if (bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
-		WaterRipples.addRipple(board, destination);
+		waterripples.addRipple(board, destination);
 		board.camera.shake.trigger(0.25);
 	} else if (bd.compare(distanceMoved, BELL_CONFIG.minDist) >= 0) {
 		const eAboveBell = bd.log10(distanceMoved) - bd.log10(BELL_CONFIG.minDist);
@@ -154,7 +154,7 @@ function playSound(distanceMoved: BigDecimal, capture: boolean, premove: boolean
 	});
 
 	if (bd.compare(distanceMoved, RIPPLE_CONFIG.minDist) >= 0) {
-		// Trigger water dropplet ripple effect
+		// Trigger water droplet ripple effect
 		const rippleVolume = volume * RIPPLE_CONFIG.volume;
 		// Calculate playback rate based on distance moved
 		const eDifference = bd.log10(distanceMoved) - bd.log10(RIPPLE_CONFIG.minDist);
@@ -165,7 +165,6 @@ function playSound(distanceMoved: BigDecimal, capture: boolean, premove: boolean
 					eDifference * RIPPLE_CONFIG.playbackRateReductionPerE,
 				RIPPLE_CONFIG.minPlaybackRate,
 			);
-		// console.log("Ripple playrate:", ripplePlayrate);
 
 		gamesound.playSoundEffect('ripple_a3', {
 			volume: rippleVolume,

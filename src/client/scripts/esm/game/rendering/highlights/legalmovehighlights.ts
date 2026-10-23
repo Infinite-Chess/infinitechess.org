@@ -10,6 +10,7 @@
 import type { Color } from '../../../../../../shared/types/color.js';
 import type { Piece } from '../../../../../../shared/chess/logic/boardutil.js';
 import type { LegalMoves } from '../../../../../../shared/chess/logic/legalmoves.js';
+import type { PersistentRenderableInstanced } from '../../../webgl/Renderable.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
 import coordutil from '../../../../../../shared/util/coordutil.js';
@@ -23,14 +24,13 @@ import piecemodels from '../../../board/rendering/piecemodels.js';
 import { GameBus } from '../../../board/GameBus.js';
 import frametracker from '../../../board/rendering/frametracker.js';
 import legalmovemodel from './legalmovemodel.js';
-import legalmoveshapes from '../../../board/rendering/instancedshapes.js';
+import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import specialrighthighlights from './specialrighthighlights.js';
-import { RenderableInstanced } from '../../../webgl/Renderable.js';
 import arrowlegalmovehighlights from '../arrows/arrowlegalmovehighlights.js';
-import { createRenderable_Instanced } from '../../../board/rendering/renderable.js';
+import { createPersistentRenderable_Instanced } from '../gamerenderable.js';
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The current piece selected, if there is one. */
 let pieceSelected: Piece | undefined;
@@ -41,18 +41,18 @@ let selectedPieceLegalMoves: LegalMoves | undefined;
  * A buffer model that contains the single square
  * highlight immediately underneath the selected piece.
  */
-let model_SelectedPiece: RenderableInstanced | undefined;
+let model_SelectedPiece: PersistentRenderableInstanced | undefined;
 
 /**
- * An model using instanced-rendering for rendering the
+ * A model using instanced-rendering for rendering the
  * non-capturing selected piece's legal move highlights
  */
-let model_NonCapture: RenderableInstanced | undefined;
+let model_NonCapture: PersistentRenderableInstanced | undefined;
 /**
- * An model using instanced-rendering for rendering the
+ * A model using instanced-rendering for rendering the
  * capturing selected piece's legal move highlights
  */
-let model_Capture: RenderableInstanced | undefined;
+let model_Capture: PersistentRenderableInstanced | undefined;
 
 // Init Listeners --------------------------------------------------------------
 
@@ -76,11 +76,7 @@ GameBus.addEventListener('piece-selected', (event) => {
 GameBus.addEventListener('piece-unselected', () => {
 	pieceSelected = undefined;
 	selectedPieceLegalMoves = undefined;
-
-	// Erase models
-	model_SelectedPiece = undefined;
-	model_NonCapture = undefined;
-	model_Capture = undefined;
+	disposeSelectedPieceModels();
 });
 
 // Rendering -------------------------------------------------------------------
@@ -106,7 +102,7 @@ function render(): void {
  * and the models of pieces legal moves of which we're currently hovering over their arrow,
  * and the model of the special rights highlights.
  *
- * Basically everything that relies on {@link model_Offset}
+ * Basically everything that relies on the legal move model's offset.
  */
 function regenerateAll(): void {
 	regenSelectedPieceLegalMovesHighlightsModel();
@@ -114,13 +110,13 @@ function regenerateAll(): void {
 	specialrighthighlights.regenModel();
 }
 
-// Regenerates the model for all highlighted legal moves.
+/** Regenerates the models of the selected piece's legal move highlights. */
 function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	if (!pieceSelected) return;
-	// console.log("Regenerating legal moves model..");
+	disposeSelectedPieceModels();
 
 	// The model of the selected piece's legal moves
-	const selectedPieceColor = typeutil.getColorFromType(pieceSelected!.type);
+	const selectedPieceColor = typeutil.getColorFromType(pieceSelected.type);
 	const color_options = {
 		isOpponentPiece: selection.isOpponentPieceSelected(),
 		isPremove: selection.arePremoving(),
@@ -128,7 +124,7 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	const color: Color = preferences.getLegalMoveHighlightColor(color_options);
 	const { NonCaptureModel, CaptureModel } =
 		legalmovemodel.generateModelsForPiecesLegalMoveHighlights(
-			pieceSelected!.coords,
+			pieceSelected.coords,
 			selectedPieceLegalMoves!,
 			selectedPieceColor,
 			color,
@@ -137,11 +133,11 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	model_Capture = CaptureModel;
 
 	// The selected piece highlight model
-	const vertexData: number[] = legalmoveshapes.getDataLegalMoveSquare(color);
-	const coords = pieceSelected!.coords;
+	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(color);
+	const coords = pieceSelected.coords;
 	const offsetCoord = coordutil.subtractCoords(coords, legalmovemodel.getOffset());
 	const instanceData: bigint[] = [...offsetCoord];
-	model_SelectedPiece = createRenderable_Instanced(
+	model_SelectedPiece = createPersistentRenderable_Instanced(
 		vertexData,
 		piecemodels.castBigIntArrayToFloat32(instanceData),
 		'TRIANGLES',
@@ -150,6 +146,16 @@ function regenSelectedPieceLegalMovesHighlightsModel(): void {
 	);
 
 	frametracker.onVisualChange();
+}
+
+/** Frees and erases the models of the selected piece's legal move highlights. */
+function disposeSelectedPieceModels(): void {
+	model_SelectedPiece?.dispose();
+	model_NonCapture?.dispose();
+	model_Capture?.dispose();
+	model_SelectedPiece = undefined;
+	model_NonCapture = undefined;
+	model_Capture = undefined;
 }
 
 /**

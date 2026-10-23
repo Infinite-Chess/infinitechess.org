@@ -22,8 +22,6 @@ import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
-import animation from '../../../board/rendering/animation/animation.js';
-import gamescene from '../../../game/rendering/gamescene.js';
 import guimovetree from './guimovetree.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../board/GameBus.js';
@@ -55,10 +53,6 @@ const element_HashValue = document.getElementById('setting-hash-value')!;
 const element_Depth = document.getElementById('setting-depth') as HTMLInputElement;
 const element_DepthValue = document.getElementById('setting-depth-value')!;
 
-// Constants -------------------------------------------------------------------
-
-const ENABLED_STORAGE_KEY = 'ceval.enabled';
-
 // State -----------------------------------------------------------------------
 
 /**
@@ -77,7 +71,7 @@ let lineWindowStateMoveIndex: number | undefined;
 let crashToastShown = false;
 /**
  * The last status kind received, so a status that repeats doesn't
- * re-toast (a genuine retry re-enters 'failed' through 'loading')
+ * re-toast (a genuine retry re-enters 'failed' through 'loading').
  */
 let lastStatusKind: CevalStatus['kind'] | undefined;
 
@@ -104,15 +98,13 @@ function init(): void {
 
 	// Restore the persisted on/off state once the first game finishes loading.
 	GameBus.addEventListener('game-loaded', () => {
-		const wanted = localStorage.getItem(ENABLED_STORAGE_KEY) !== 'false';
-		if (wanted && !ceval.isEnabled()) setEngineEnabled(true);
+		if (ceval.getSettings().enabled) setEngineEnabled(true);
 	});
 }
 
-/** Turns local evaluation on or off, persisting the choice. */
+/** Turns local evaluation on or off. */
 function setEngineEnabled(value: boolean): void {
 	element_Toggle.checked = value;
-	localStorage.setItem(ENABLED_STORAGE_KEY, String(value));
 	ceval.setEnabled(value);
 	// Only hide here; showing happens in onEngineUpdate, synchronized with the value it displays —
 	// showing it eagerly on enable would flash an uninitialized (0%, all-white) bar for a frame.
@@ -154,8 +146,10 @@ function initSettingsUI(): void {
 	element_DepthValue.textContent = String(settings.depth);
 }
 
-/** Enables the threads slider up to {@link ceval.maxThreads}, or locks it to 1 (disabled)
- * when Lazy SMP is unavailable (non-isolated browser or single-threaded engine build). */
+/**
+ * Enables the threads slider up to {@link ceval.maxThreads}, or locks it to 1 (disabled)
+ * when Lazy SMP is unavailable (non-isolated browser or single-threaded engine build).
+ */
 function applyThreadsCap(): void {
 	const cap = ceval.maxThreads();
 	element_Threads.max = String(cap);
@@ -609,7 +603,8 @@ function playLine(tokens: string[], untilIndex: number): void {
 	const start = enterExistingBranch(gamefile, tokens, untilIndex);
 
 	if (start <= untilIndex) {
-		if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile);
+		if (!moveutil.areWeViewingLatestMove(gamefile))
+			guimovetree.branchFromViewedPosition(gamefile);
 		// Board moveIndex where the line's first uncommitted token applies. Used for debugging.
 		const startMoveIndex = gamefile.state.local.moveIndex;
 		for (let i = start; i <= untilIndex; i++) {
@@ -648,29 +643,6 @@ function enterExistingBranch(gamefile: GameFile, tokens: string[], untilIndex: n
 	if (deepest) guimovetree.navigateToNode(deepest);
 	return i;
 }
-
-/**
- * Truncates the analysis game to the currently-viewed ply so a new move can branch from it:
- * trims the move tree's active line and slices the flat move list to the viewed index, leaving
- * the gamefile genuinely at that position (board, turn, and global state all consistent).
- *
- * Deliberately does NOT dispatch 'moves-changed'. This is only ever a prelude to a move commit,
- * whose own dispatch reconciles the final state. Don't trigger the move list to re-render twice over.
- */
-function branchFromViewedPosition(gamefile: GameFile): void {
-	movetree.beginBranchFromViewedPosition(gamefile);
-	// Slice all moves off the gamefile after the current ply.
-	gamefile.moves.length = gamefile.state.local.moveIndex + 1;
-	// The viewed node is now the front, so its stored conclusion is the game's.
-	gamefile.gameConclusion = movetree.getActiveLineConclusion();
-	animation.clearAnimations(gamescene.getGameContext());
-}
-
-// Registration ----------------------------------------------------------------
-
-// Tell selection.ts to branch from the viewed ply (instead of forwarding to the front)
-// when a piece is selected mid-game, so a new continuation can be played from there.
-selection.setViewedPositionBrancher(branchFromViewedPosition);
 
 // Exports ---------------------------------------------------------------------
 

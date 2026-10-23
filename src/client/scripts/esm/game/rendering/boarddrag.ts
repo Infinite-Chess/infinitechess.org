@@ -16,7 +16,7 @@ import coordutil from '../../../../../shared/util/coordutil.js';
 import mouse from '../mouse.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import keybinds from '../keybinds.js';
-import Transition from './transitions/Transition.js';
+import transition from './transitions/transition.js';
 import perspective from './perspective.js';
 import { GameBus } from '../../board/GameBus.js';
 import guipromotion from '../gui/guipromotion.js';
@@ -114,7 +114,7 @@ function getBoardDraggablePointers(): string[] {
  * Will NOT initiate a single-pointer grab!
  */
 function checkIfBoardPinched(): void {
-	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen())
+	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen())
 		return;
 
 	if (pointer2Id !== undefined) return; // Already pinched
@@ -159,7 +159,7 @@ function checkIfBoardPinched(): void {
 
 /** Checks if the board needs to SINGLE-GRABBED by any new pointers pressed down this frame. */
 function checkIfBoardSingleGrabbed(): void {
-	if (perspective.getEnabled() || Transition.areTransitioning() || guipromotion.isUIOpen())
+	if (perspective.getEnabled() || transition.areTransitioning() || guipromotion.isUIOpen())
 		return;
 
 	if (boardIsGrabbed) return; // Already grabbed

@@ -16,7 +16,7 @@ import guiloadpositionsavelist from './guiloadpositionsavelist.js';
 
 // Elements --------------------------------------------------------------------
 
-/** The button the toggles visibility of the Load Position game popup window. */
+/** The button that toggles visibility of the Load Position popup window. */
 const element_loadbutton = document.getElementById('load-position')!;
 
 /** The actual window of the Load Positions popup. */
@@ -24,7 +24,7 @@ const element_window = document.getElementById('load-position-UI')!;
 const element_header = document.getElementById('load-position-UI-header')!;
 const element_headerText = document.getElementById('load-position-UI-header-text')!;
 const element_closeButton = document.getElementById('close-load-position-UI')!;
-/** The button the toggles visibility of the Save Position As popup window. */
+/** The button that toggles visibility of the Save Position As popup window. */
 const element_saveasbutton = document.getElementById('save-position-as')!;
 
 /** The container for entering a new position name. */
@@ -36,7 +36,7 @@ const element_saveAsPositionName = document.getElementById(
 /** "Save" button in UI */
 const element_saveCurrentPositionButton = document.getElementById('save-position-button')!;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The current open/close mode of the Load Position UI */
 let mode: 'load' | 'save-as' | undefined = undefined;

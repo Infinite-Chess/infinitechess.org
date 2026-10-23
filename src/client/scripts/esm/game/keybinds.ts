@@ -11,7 +11,9 @@
 import perspective from './rendering/perspective.js';
 import preferences from '../util/preferences.js';
 import { listener_document } from './listeners.js';
-import { Mouse, MouseButton } from './input.js';
+import { MOUSE, MouseButton } from './input.js';
+
+// Types -----------------------------------------------------------------------
 
 /**
  * A set of mouse-button bindings for the core board actions.
@@ -28,16 +30,22 @@ export interface InputProfile {
 	getPieceSelectionMouseButton(): MouseButton | undefined;
 }
 
+// Constants -------------------------------------------------------------------
+
 /** The default bindings, used by most pages. */
 const DEFAULT_PROFILE: InputProfile = {
-	getBoardDragMouseButton: () => (perspective.getEnabled() ? undefined : Mouse.LEFT),
-	getAnnotationMouseButton: () => Mouse.RIGHT,
-	getCollapseMouseButton: () => Mouse.LEFT,
-	getPieceSelectionMouseButton: () => Mouse.LEFT,
+	getBoardDragMouseButton: () => (perspective.getEnabled() ? undefined : MOUSE.LEFT),
+	getAnnotationMouseButton: () => MOUSE.RIGHT,
+	getCollapseMouseButton: () => MOUSE.LEFT,
+	getPieceSelectionMouseButton: () => MOUSE.LEFT,
 };
+
+// State -----------------------------------------------------------------------
 
 /** The bindings currently in effect. */
 let activeProfile: InputProfile = DEFAULT_PROFILE;
+
+// Functions -------------------------------------------------------------------
 
 /** Overrides the active input profile. Used by pages that remap bindings, e.g. the board editor. */
 function setProfile(profile: InputProfile): void {
@@ -54,6 +62,8 @@ function getEffectiveDragEnabled(): boolean {
 		listener_document.isKeyHeld('ControlLeft') || listener_document.isKeyHeld('ControlRight');
 	return ctrlOverride ? !dragEnabled : dragEnabled;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	setProfile,

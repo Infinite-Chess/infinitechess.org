@@ -16,6 +16,13 @@ import analysisloader from './analysisloader.js';
 import variantselector from '../../board/variantselector/variantselector.js';
 import modifierselector from '../../board/variantselector/modifierselector.js';
 
+// State -----------------------------------------------------------------------
+
+/** Whether a load was refused mid-load, owed once the in-flight one finishes. */
+let loadOwed = false;
+
+// Functions -------------------------------------------------------------------
+
 /** Wires the widget's commit callbacks to load the selection onto the board. */
 function init(): void {
 	// Allow analyzing positions of any size.
@@ -48,9 +55,6 @@ function onPaste(e: ClipboardEvent): void {
 	if (!icn) return; // Nothing textual was pasted (e.g. an image)
 	void variantselector.applyIcn(icn);
 }
-
-/** Whether a load was refused mid-load, owed once the in-flight one finishes. */
-let loadOwed = false;
 
 /** Loads the variant selector's current selection onto the board (fresh preset, saved position, or ICN). */
 function loadSelection(): void {
@@ -85,5 +89,7 @@ function drainOwedLoad(): void {
 	loadOwed = false;
 	loadSelection();
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { init };

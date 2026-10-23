@@ -82,7 +82,7 @@ const ATLAS_WIDTH = 512;
 
 /**
  * The Unicode replacement character (U+FFFD '?'). Rendered whenever
- * {@link render} encounters a character that is not in the atlas.
+ * `textrenderer` encounters a character that is not in the atlas.
  */
 const REPLACEMENT_CHAR = '\uFFFD';
 
@@ -97,7 +97,7 @@ const SUPPORTED_CHARS: string[] = [
 	REPLACEMENT_CHAR,
 ];
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** WebGL texture for the glyph atlas. Lazily initialised on first use. Takes ~1 ms. */
 let atlasTexture: WebGLTexture | undefined;
@@ -146,7 +146,7 @@ function initGlyphAtlas(): void {
 	interface GlyphPlacement {
 		char: string;
 		/** Pixel X of left edge of cell (including left padding) */
-		cellX: number; //
+		cellX: number;
 		/** Pixel Y of top edge of cell (row top, canvas-space, y-down) */
 		cellY: number;
 		cellWidth: number;

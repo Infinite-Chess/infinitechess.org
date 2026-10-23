@@ -22,7 +22,7 @@ import sdrag from './sdrag.js';
 import camera from '../../../../board/rendering/camera.js';
 import scursor from './scursor.js';
 import gameslot from '../../../../game/chess/gameslot.js';
-import { Mouse } from '../../../../game/input.js';
+import { MOUSE } from '../../../../game/input.js';
 import selectiontool from './selectiontool.js';
 import stoolgraphics from './stoolgraphics.js';
 import stransformations from './stransformations.js';
@@ -33,9 +33,9 @@ import arrowinteraction from '../../../../game/rendering/arrows/arrowinteraction
 /** Whether the mouse is currently within the minimum distance to grab the fill handle. */
 let withinGrabDist = false;
 
-/** Whether we are currently dragging the selection. */
+/** Whether we are currently dragging the fill handle. */
 let areFilling = false;
-/** The ID of the pointer currently being used drag the selection. */
+/** The ID of the pointer currently dragging the fill handle. */
 let pointerId: string | undefined = undefined;
 /** The last known square the pointer was hovering over. */
 let lastPointerCoords: Coords | undefined;
@@ -43,7 +43,7 @@ let lastPointerCoords: Coords | undefined;
 // Methods ---------------------------------------------------------------------
 
 /**
- * Updates the logic that handles dragging the selection box from the edges.
+ * Updates the logic that handles dragging the fill handle.
  * ONLY CALL if there's an existing selection area, and we are not currently making a new selection!
  */
 function update(): void {
@@ -51,11 +51,10 @@ function update(): void {
 		// Determine if the selection has been dropped
 
 		const respectiveListener = mouse.getRelevantListener();
-		// Update its last known position if available
-		if (respectiveListener.pointerExists(pointerId!))
+		// Update its last known position while held, else execute the fill
+		if (respectiveListener.isPointerHeld(pointerId!))
 			lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
-		// Test if pointer released (execute selection translation)
-		if (!respectiveListener.isPointerHeld(pointerId!)) executeFill();
+		else executeFill();
 	} else {
 		// Determine if the fill handle needs to be grabbed,
 		// or if the canvas cursor style should change.
@@ -67,11 +66,11 @@ function update(): void {
 			}
 
 			// Determine if we started dragging the fill handle
-			if (mouse.isMouseDown(Mouse.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
+			if (mouse.isMouseDown(MOUSE.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
 				// Start dragging
-				mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
-				mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-				pointerId = mouse.getMouseId(Mouse.LEFT)!;
+				mouse.claimMouseDown(MOUSE.LEFT); // Remove the pointer down so other scripts don't use it
+				mouse.cancelMouseClick(MOUSE.LEFT); // Cancel any potential future click so other scripts don't use it
+				pointerId = mouse.getMouseId(MOUSE.LEFT)!;
 				startFill();
 			}
 		} else {
@@ -94,7 +93,7 @@ function isMouseHoveringOverFillHandle(): boolean {
 	];
 
 	// Determine the mouse world coords
-	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
+	const mouseWorld = mouse.getMouseWorld(MOUSE.LEFT);
 	if (!mouseWorld) return false;
 
 	// Convert grab distance to world space
@@ -107,6 +106,7 @@ function isMouseHoveringOverFillHandle(): boolean {
 	return distToFillHandle <= grabbableDist;
 }
 
+/** Drops any fill in progress and its cursor style. */
 function resetState(): void {
 	withinGrabDist = false;
 	scursor.removeCursor('crosshair');
@@ -115,13 +115,14 @@ function resetState(): void {
 	lastPointerCoords = undefined;
 }
 
-/** Grabs the selection box. */
+/** Grabs the fill handle. */
 function startFill(): void {
 	areFilling = true;
 
 	lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 }
 
+/** Releases the fill handle, repeating the selection into the dragged-out box. */
 function executeFill(): void {
 	const fillBox = calculateFillBox();
 
@@ -136,9 +137,7 @@ function executeFill(): void {
 	stransformations.Fill(gamefile, mesh, selectionBox, fillBox);
 }
 
-/**
- * Determines the fill axis and distance based on the current pointer position.
- */
+/** Determines the fill axis and distance based on the current pointer position. */
 function calculateFillBox(): BoundingBox | undefined {
 	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
 
@@ -199,6 +198,7 @@ function calculateFillBox(): BoundingBox | undefined {
 
 // Rendering -------------------------------------------------------------------
 
+/** Outlines the box the fill would cover if released now. */
 function render(): void {
 	if (!areFilling) return;
 

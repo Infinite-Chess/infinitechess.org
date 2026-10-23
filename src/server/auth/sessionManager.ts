@@ -9,6 +9,8 @@ import type { Request, Response } from 'express';
 import type { Role } from '../types.js';
 import type { RefreshTokenRecord } from '../database/refreshTokenManager.js';
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import prefsCookie from '../cookies/prefsCookie.js';
 import tokenSigner from '../utility/tokenSigner.js';
 import memberInfoCookie from '../cookies/memberInfoCookie.js';
@@ -19,8 +21,8 @@ import practiceProgressCookie from '../cookies/practiceProgressCookie.js';
 // Constants -------------------------------------------------------------------
 
 /** How old a session must be before its refresh token is renewed. */
-const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = 1000 * 60 * 60 * 24; // 1 day
-// const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = 1000 * 10; // Debug: 10s
+const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = timeutil.toMillis(1, 'days');
+// const MIN_TIME_TO_WAIT_TO_RENEW_REFRESH_TOKENS_MS = timeutil.toMillis(10, 'seconds'); // Debugging
 
 // Renewing & Revoking Sessions ------------------------------------------------
 

@@ -10,6 +10,7 @@
 
 import type { GameFile } from '../../../../../shared/chess/logic/gamefile.js';
 import type { EngineAssets } from '../../../../../shared/chess/util/engineregistry.js';
+import type { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 import type { MoveEvalLabel } from './moveevals.js';
 import type { ReviewDivision } from './reviewdivision.js';
 import type { AnalysisMoveNode } from './movetree.js';
@@ -26,12 +27,12 @@ import type {
 import * as z from 'zod';
 
 import math from '../../../../../shared/util/math/math.js';
+import timeutil from '../../../../../shared/util/timeutil.js';
 import winchance from '../../../../../shared/chess/util/winchance.js';
 import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
 import winconutil from '../../../../../shared/chess/util/winconutil.js';
 import apeironcard from '../../../../../shared/chess/engines/apeironcard.js';
 import { players as p } from '../../../../../shared/chess/util/typeutil.js';
-import { LongFormatIn } from '../../../../../shared/chess/logic/icn/icnconverter.js';
 
 import ceval from './ceval.js';
 import movetree from './movetree.js';
@@ -224,7 +225,7 @@ const REVIEW_HASH_MB = 16;
 const REVIEW_CACHE_SCHEMA_VERSION = 3;
 const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
 /** How long a persisted review survives LocalStorage. */
-const REVIEW_CACHE_EXPIRY_MS = 1000 * 60 * 60 * 24 * 365; // 1 year
+const REVIEW_CACHE_EXPIRY_MS = timeutil.toMillis(1, 'years');
 
 // Schemas ---------------------------------------------------------------------
 
@@ -391,6 +392,7 @@ function canStart(): boolean {
 	return apeironcard.isGameReviewSupported(gamefile).supported;
 }
 
+/** Where the review stands. */
 function getStatus(): ReviewStatus {
 	return status;
 }
@@ -452,15 +454,13 @@ function start(): void {
 	spawnWorkers(workerCount);
 }
 
+/** The loaded game's review cache key, if the game has an id. */
 function reviewCacheKey(): string | undefined {
 	const gameId = window.analysisPageData.gameId;
 	return gameId === null ? undefined : `${REVIEW_CACHE_KEY_PREFIX}${gameId}`;
 }
 
-/**
- * Restores a complete compatible review, returning
- * false when there's no review- the engine must run.
- */
+/** Restores a complete compatible review, returning false when there's none and the engine must run. */
 function restoreCachedReview(): boolean {
 	const key = reviewCacheKey();
 	if (!key) return false;
@@ -515,6 +515,7 @@ function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
 	return cached;
 }
 
+/** Persists the finished review's raw engine results. */
 function persistCompletedReview(): void {
 	const key = reviewCacheKey();
 	if (!key || results.some((result) => result === undefined)) return;
@@ -533,10 +534,12 @@ function persistCompletedReview(): void {
 
 // Worker pool -----------------------------------------------------------------
 
+/** Spawns `count` pool workers. */
 function spawnWorkers(count: number): void {
 	for (let i = 0; i < count; i++) spawnWorker();
 }
 
+/** Spawns one pool worker. */
 function spawnWorker(): void {
 	// Pool invariant: once the review leaves 'running', no worker is spawned or dispatched to.
 	// A caller's own receiveEvaluation() can finish the review synchronously before reaching here.
@@ -554,6 +557,7 @@ function spawnWorker(): void {
 	workers.push(entry);
 }
 
+/** Terminates and drops every pool worker. */
 function terminateWorkers(): void {
 	for (const entry of workers) {
 		clearStallWatchdog(entry);
@@ -562,6 +566,7 @@ function terminateWorkers(): void {
 	workers = [];
 }
 
+/** Routes a message from a pool worker. */
 function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
 	if (status !== 'running') return;
 	switch (msg.type) {
@@ -722,6 +727,7 @@ function armStallWatchdog(entry: ReviewWorker): void {
 	entry.watchdog = setTimeout(() => abortStalledSearch(entry), SEARCH_STALL_TIMEOUT_MS);
 }
 
+/** Disarms a worker's stall watchdog, along with any abort it had begun. */
 function clearStallWatchdog(entry: ReviewWorker): void {
 	if (entry.watchdog !== undefined) clearTimeout(entry.watchdog);
 	delete entry.watchdog;
@@ -763,6 +769,7 @@ function scoreFromInfo(info: AnalysisInfo | undefined): Partial<SearchedResult> 
 	};
 }
 
+/** Records a position's evaluation, classifies whatever it unblocks, and finishes the review on the last. */
 function receiveEvaluation(result: EvaluateResult): void {
 	const index = result.requestId;
 	if (results[index] !== undefined) return; // Duplicate (e.g. a retry raced its original).
@@ -894,8 +901,9 @@ function cacheForcedPositionEvaluation(index: number): void {
 	if (!result || 'refused' in result || result.legalMoveCount !== 1 || !icn) return;
 	const sourceIndex = carrySourceIndex(index);
 	const source = sourceIndex === -1 ? undefined : results[sourceIndex];
+	const cp = effectiveWhiteCp[index]!;
 	const label: MoveEvalLabel = {
-		cp: effectiveWhiteCp[index]!,
+		cp,
 		depth: source && !('refused' in source) ? source.depth : 0,
 	};
 	if (index > 0) {
@@ -907,10 +915,11 @@ function cacheForcedPositionEvaluation(index: number): void {
 		depth: label.depth,
 		moveIndex: index - 1,
 		moves: result.pv ?? [],
-		cp: label.cp!,
+		cp,
 	});
 }
 
+/** Classifies mainline move `i` from the effective evals either side of it. */
 function classifyMove(i: number, before: SearchedResult): MoveReview {
 	const node = mainlineNodes[i]!;
 	const mover = moverAtPly(i);
@@ -947,6 +956,7 @@ function classifyMove(i: number, before: SearchedResult): MoveReview {
 	return review;
 }
 
+/** Ends a completed review: disposes the pool and persists the results. */
 function finishReview(): void {
 	terminateWorkers();
 	status = 'done';
@@ -1012,6 +1022,7 @@ function getMainlineNodes(): AnalysisMoveNode[] {
 	return mainlineNodes;
 }
 
+/** The game's phase boundaries, for the eval graph's markers. */
 function getDivision(): ReviewDivision {
 	return division;
 }
@@ -1044,19 +1055,25 @@ function getRefusalAt(index: number): EngineRefusal | undefined {
 
 // Subscriptions ---------------------------------------------------------------
 
+/** Fires every progress listener. */
 function notifyProgress(): void {
 	for (const listener of listeners.progress) listener();
 }
 
+/** Subscribes to progress and status changes. */
 function onProgress(listener: ReviewListeners['progress']): void {
 	listeners.progress.add(listener);
 }
+/** Subscribes to each move's classification. */
 function onClassified(listener: ReviewListeners['classified']): void {
 	listeners.classified.add(listener);
 }
+/** Subscribes to the review ending. */
 function onFinished(listener: ReviewListeners['finished']): void {
 	listeners.finished.add(listener);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	// Constants

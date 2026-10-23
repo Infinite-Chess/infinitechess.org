@@ -1,9 +1,15 @@
 // src/client/scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts
 
 /**
- * Runs the checkmate-practice engine in a worker.
- * It is called as a WebWorker from enginegame.js so that it can run asynchronously from the rest of the website.
- * You may specify a different engine to be used by specifying a different engine name in the gameOptions when initializing an engine game.
+ * Runs the checkmate-practice engine in a worker, which enginegame.ts spawns per practice game.
+ *
+ * Known bugs, left unfixed as Apeiron supersedes this engine:
+ * - initEvalWeightsAndSearchProperties() runs before runEngine() sets royal_type, so king
+ *   checkmates get the royal centaur's legalMoveEvalDictionary unless their ID overrides it.
+ * - `piece_index in white_killer_list` tests the index against the list's length, not membership.
+ * - `if (evaluation.white_killer_piece_index)` skips index 0. Both use boxed `Number`.
+ * - runEngine() posts nothing if no black royal exists or the search throws, so the page never
+ *   resigns for it.
  *
  * @author Andreas Tsevas
  */
@@ -154,7 +160,7 @@ function invertPieceNameDictionary(json: { [key: string]: number }): { [key: num
 	return inv;
 }
 
-const invertedPieceNameDictionaty = invertPieceNameDictionary(pieceNameDictionary);
+const invertedPieceNameDictionary = invertPieceNameDictionary(pieceNameDictionary);
 
 // legal move storage for pieces in piecelist
 // prettier-ignore
@@ -819,21 +825,6 @@ function get_black_legal_move_amount(
 function is_check(piecelist: number[], coordlist: DoubleCoords[]): boolean {
 	return square_is_threatened([0, 0], piecelist, coordlist);
 }
-
-// Unused functions
-/*
-// checks if the black royal is mated
-function is_mate(inTrapFleeMode, piecelist, coordlist) {
-	if (get_black_legal_move_amount(inTrapFleeMode, piecelist, coordlist) == 0 && square_is_threatened([0, 0], piecelist, coordlist)) return true;
-	else return false;
-}
-
-// checks if the black royal is stalemated
-function is_stalemate(inTrapFleeMode, piecelist, coordlist) {
-	if (get_black_legal_move_amount(inTrapFleeMode, piecelist, coordlist) == 0 && !square_is_threatened([0, 0], piecelist, coordlist)) return true;
-	else return false;
-}
-*/
 
 // determine if black is surrounded by at least numOfPiecesForTrap nonroyal white pieces
 function isBlackInTrap(piecelist: number[], coordlist: DoubleCoords[]): boolean {
@@ -1642,14 +1633,10 @@ function runIterativeDeepening(
 				0,
 				Infinity,
 			);
-			if (evaluation.terminate_now) {
-				// console.log("Search interrupted at depth " + depth);
-				break;
-			}
+			if (evaluation.terminate_now) break;
 			globallyBestVariation = evaluation.bestVariation;
 			globallyBestScore = evaluation.score;
 			globalSurvivalPlies = evaluation.survivalPlies;
-			// console.log(`Depth ${depth}, Plies To Mate: ${globalSurvivalPlies}, Best score: ${globallyBestScore}, Best move by Black: ${globallyBestVariation[0]![1]!}.`);
 
 			// early exit conditions
 			if (depth === 1) {
@@ -1674,7 +1661,7 @@ function runIterativeDeepening(
 						if (new_piecelist[i] !== 0) {
 							piecesOrganizedByKey.set(
 								new_coordlist[i]!.toString() as CoordsKey,
-								invertedPieceNameDictionaty[new_piecelist[i]!]!,
+								invertedPieceNameDictionary[new_piecelist[i]!]!,
 							);
 						}
 					}
@@ -1815,9 +1802,7 @@ function convertBigIntCoordsToFloating(coords: Coords): DoubleCoords {
 	return [Number(coords[0]!), Number(coords[1]!)];
 }
 
-/**
- * This function is called from outside and initializes the engine calculation given the provided position
- */
+/** Searches the received position, then posts the black royal's move once the time limit has passed. */
 async function runEngine(): Promise<void> {
 	try {
 		const board = input_board;
@@ -1896,12 +1881,6 @@ async function runEngine(): Promise<void> {
 		// run iteratively deepened move search
 		if (!positionInBestMoveList)
 			runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
-
-		// console.log(isBlackInTrap(start_piecelist, start_coordlist));
-		// console.log(get_white_candidate_moves(false, start_piecelist, start_coordlist));
-		// console.log(globalSurvivalPlies);
-		// console.log(globallyBestVariation);
-		// console.log(enginePositionCounter);
 
 		// submit engine move after enough time has passed
 		const time_now = Date.now();

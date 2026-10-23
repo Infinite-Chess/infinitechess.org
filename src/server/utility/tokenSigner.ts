@@ -15,6 +15,8 @@ import type { Role } from '../types.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
+import timeutil from '../../shared/util/timeutil.js';
+
 import env from '../config/env.js';
 
 // Types -----------------------------------------------------------------------
@@ -29,14 +31,14 @@ export interface TokenPayload {
 // Constants -------------------------------------------------------------------
 
 /** The lifetime of a standard session refresh token, if never renewed. */
-const DEFAULT_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 2; // 48 hours
-// const DEFAULT_SESSION_EXPIRY_MS = 1000 * 20; // 20 seconds, for testing purposes.
+const DEFAULT_SESSION_EXPIRY_MS = timeutil.toMillis(48, 'hours');
+// const DEFAULT_SESSION_EXPIRY_MS = timeutil.toMillis(20, 'seconds'); // For testing purposes.
 
 /**
  * The lifetime of an extended session refresh token,
  * when "keep me logged in" is checked, if never renewed.
  */
-const EXTENDED_SESSION_EXPIRY_MS = 1000 * 60 * 60 * 24 * 180; // 180 days (~6 months)
+const EXTENDED_SESSION_EXPIRY_MS = timeutil.toMillis(180, 'days'); // ~6 months
 
 // Signing Tokens --------------------------------------------------------------
 

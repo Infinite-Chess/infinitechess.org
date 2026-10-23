@@ -8,6 +8,8 @@
  * to the home page (lobby), which consumes it on load to auto-open the modal.
  */
 
+import timeutil from '../../../../shared/util/timeutil.js';
+
 import { createHandoff } from './createhandoff.js';
 
 // Types -----------------------------------------------------------------------
@@ -26,7 +28,7 @@ interface GameSetupHandoff {
 // Constants -------------------------------------------------------------------
 
 /** How long a stashed handoff stays valid before being auto-discarded. */
-const EXPIRY_MS = 1000 * 60 * 5; // 5 minutes
+const EXPIRY_MS = timeutil.toMillis(5, 'minutes');
 
 // Exports ---------------------------------------------------------------------
 

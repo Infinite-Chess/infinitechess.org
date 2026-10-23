@@ -2,8 +2,7 @@
 
 /**
  * This script hides the original piece and renders a copy at the pointer location.
- * It also highlights the square that the piece would be dropped on (to do)
- * and plays the sound when the piece is dropped.
+ * It also outlines the square that the piece would be dropped on.
  */
 
 import type { Color } from '../../../../../../shared/types/color.js';
@@ -25,7 +24,7 @@ import boardpos from '../../../board/rendering/boardpos.js';
 import keybinds from '../../keybinds.js';
 import selection from '../../chess/selection.js';
 import animation from '../../../board/rendering/animation/animation.js';
-import { Mouse } from '../../input.js';
+import { MOUSE } from '../../input.js';
 import gamescene from '../gamescene.js';
 import droparrows from './droparrows.js';
 import primitives from '../../../board/rendering/primitives.js';
@@ -38,10 +37,7 @@ import boardgeometry from '../../../board/rendering/boardgeometry.js';
 import legalmovemodel from '../highlights/legalmovemodel.js';
 import instancedshapes from '../../../board/rendering/instancedshapes.js';
 import { listener_canvas } from '../../listeners.js';
-import {
-	createRenderable,
-	createRenderable_Instanced,
-} from '../../../board/rendering/renderable.js';
+import { createRenderable, createRenderable_Instanced } from '../gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -52,7 +48,7 @@ const FLAT_Z: number = 0.01;
  * The minimum size of the rendered dragged piece on screen, in virtual pixels.
  * When zoomed out, this prevents it becoming tiny relative to the other pieces.
  */
-const dragMinSizeVirtualPixels = {
+const DRAG_MIN_SIZE_VPIXELS = {
 	/** 2D desktop mode */
 	mouse: 50, // Only applicable in 2D mode, not perspective
 	/** Mobile/touchscreen mode */
@@ -62,7 +58,7 @@ const dragMinSizeVirtualPixels = {
 /**
  * The width of the box/rank/file outline used to emphasize the hovered square.
  */
-const outlineWidth = {
+const OUTLINE_WIDTH = {
 	/** 2D desktop mode */
 	mouse: 0.08,
 	// Since on touchscreen the rank/column outlines are ALWAYS enabled,
@@ -72,19 +68,19 @@ const outlineWidth = {
 } as const;
 
 /** When using a touchscreen, the piece is shifted upward by this amount to prevent it being covered by fingers. */
-const TOUCHSCREEN_OFFSET: number = 1.6; // Default: 2
+const TOUCHSCREEN_OFFSET: number = 1.6;
 /** When each square becomes smaller than this in virtual pixels, we render rank/column outlines instead of the outline box. */
 const MIN_SIZE_TO_DRAW_OUTLINE: number = 40;
 
 /** Adjustments for the dragged piece while in perspective mode. */
-const perspectiveConfigs = {
+const PERSPECTIVE_CONFIG = {
 	/** The height the piece is rendered above the board when in perspective mode. */
 	z: 0.6,
 	/** The color of the shadow of the dragged piece. */
 	shadowColor: [0.1, 0.1, 0.1, 0.5],
 } as const;
 
-// State -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** If true, `pieceSelected` is currently being held. */
 let areDragging = false;
@@ -112,8 +108,15 @@ let hoveredCoords: Coords | undefined;
 /** The type of piece being dragged. */
 let pieceType: number | undefined;
 
+// Events ----------------------------------------------------------------------
+
+GameBus.addEventListener('piece-unselected', () => {
+	cancelDragging();
+});
+
 // Functions -------------------------------------------------------------------
 
+/** Whether a piece is being dragged. */
 function areDraggingPiece(): boolean {
 	return areDragging;
 }
@@ -130,8 +133,8 @@ function getDragParity(): boolean {
 
 /**
  * Start dragging a piece.
- * @param type - The type of piece being dragged
- * @param pieceCoords - the square the piece was on
+ * @param piece - The piece being dragged
+ * @param resetParity - Whether the pick-up newly selected the piece, so its next drop on its own square keeps it selected.
  */
 function pickUpPiece(piece: Piece, resetParity: boolean): void {
 	if (!keybinds.getEffectiveDragEnabled()) return; // Dragging is disabled
@@ -139,7 +142,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean): void {
 	if (resetParity) parity = true;
 
 	const respectiveListener = mouse.getRelevantListener();
-	pointerId = respectiveListener.getMouseId(Mouse.LEFT);
+	pointerId = respectiveListener.getMouseId(MOUSE.LEFT);
 
 	startCoords = piece.coords;
 	pieceType = piece.type;
@@ -153,9 +156,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean): void {
 		animation.clearAnimations(board, true);
 }
 
-/**
- * Call AFTER selection.update()
- */
+/** Updates the dragged piece's location and hovered square. */
 function updateDragLocation(): void {
 	if (!areDragging) return;
 
@@ -172,7 +173,6 @@ function updateDragLocation(): void {
 		);
 		worldLocation = worldCoords;
 		hoveredCoords = squarePawnPromotingOn;
-		return;
 	} else {
 		// Normal drag location
 		worldLocation = mouse.getPointerWorld(pointerId!);
@@ -210,17 +210,8 @@ function hasPointerReleased(): boolean {
 	return !respectiveListener.isPointerHeld(pointerId!);
 }
 
-// /** Returns the pointer id that is dragging the piece. */
-// function getPointerId(): string {
-// 	if (!areDragging) throw Error("Don't call getPointerId() when not dragging a piece");
-// 	return pointerId!;
-// }
-
-/**
- * Stop dragging the piece.
- */
+/** Stop dragging the piece. */
 function dropPiece(): void {
-	// console.error("Dropped piece");
 	if (!areDragging) return;
 	areDragging = false;
 	pieceType = undefined;
@@ -232,12 +223,8 @@ function dropPiece(): void {
 	frametracker.onVisualChange();
 	// Rapidly picking up and dropping a piece triggers a simulated click.
 	// If we don't claim it here, annotations will read it to Collapse annotations.
-	if (mouse.isMouseClicked(Mouse.LEFT)) mouse.claimMouseClick(Mouse.LEFT);
+	if (mouse.isMouseClicked(MOUSE.LEFT)) mouse.claimMouseClick(MOUSE.LEFT);
 }
-
-GameBus.addEventListener('piece-unselected', () => {
-	cancelDragging();
-});
 
 /** Puts the dragged piece back. Doesn't make a move. */
 function cancelDragging(): void {
@@ -247,16 +234,16 @@ function cancelDragging(): void {
 
 // Rendering -------------------------------------------------------------------
 
-// Hides the original piece by rendering a transparent square model above it in the depth field.
+/** Hides the original piece by rendering a transparent square model above it in the depth field. */
 function renderTransparentSquare(): void {
 	if (!startCoords) return;
 
 	const color: Color = [0, 0, 0, 0];
-	const data = meshes.QuadWorld_Color(boardpos, startCoords, color); // Hide orginal piece
-	return createRenderable(data, 2, 'TRIANGLES', 'color', true).render([0, 0, FLAT_Z]);
+	const data = meshes.QuadWorld_Color(boardpos, startCoords, color); // Hide original piece
+	createRenderable(data, 2, 'TRIANGLES', 'color', true).render([0, 0, FLAT_Z]);
 }
 
-// Renders the box outline, the dragged piece and its shadow
+/** Renders the box outline, the dragged piece and its shadow. */
 function renderPiece(): void {
 	if (!areDragging || camera.isLookingUp() || !worldLocation) return;
 
@@ -275,7 +262,7 @@ function renderPieceModel(): void {
 	const { texleft, texbottom, texright, textop } = meshes.getPieceTexCoords(camera);
 
 	// In perspective the piece is rendered above the surface of the board.
-	const height = perspectiveEnabled ? perspectiveConfigs.z * boardScale : FLAT_Z;
+	const height = perspectiveEnabled ? PERSPECTIVE_CONFIG.z * boardScale : FLAT_Z;
 
 	// If touchscreen is being used the piece is rendered larger and offset upward to prevent
 	// it being covered by the finger.
@@ -284,8 +271,8 @@ function renderPieceModel(): void {
 		// Apply a minimum size only if we're not currently promoting a pawn (promote UI open) and not in perspective mode.
 		// The minimum world space the dragged piece should be rendered
 		const minSizeWorldSpace = touchscreenUsed
-			? space.convertPixelsToWorldSpace_Virtual(camera, dragMinSizeVirtualPixels.touch) // Mobile/touchscreen mode
-			: space.convertPixelsToWorldSpace_Virtual(camera, dragMinSizeVirtualPixels.mouse); // 2D desktop mode
+			? space.convertPixelsToWorldSpace_Virtual(camera, DRAG_MIN_SIZE_VPIXELS.touch) // Mobile/touchscreen mode
+			: space.convertPixelsToWorldSpace_Virtual(camera, DRAG_MIN_SIZE_VPIXELS.mouse); // 2D desktop mode
 		size = Math.max(size, minSizeWorldSpace); // Apply the minimum size
 	}
 
@@ -299,7 +286,7 @@ function renderPieceModel(): void {
 
 	const data: number[] = [];
 	// prettier-ignore
-	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, FLAT_Z, texleft, texbottom, texright, textop, ...perspectiveConfigs.shadowColor)); // Shadow
+	if (perspectiveEnabled) data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, FLAT_Z, texleft, texbottom, texright, textop, ...PERSPECTIVE_CONFIG.shadowColor)); // Shadow
 	// prettier-ignore
 	data.push(...primitives.Quad_ColorTexture3D(left, bottom, right, top, height, texleft, texbottom, texright, textop, 1, 1, 1, 1)); // Piece
 	createRenderable(
@@ -323,7 +310,7 @@ function renderOutline(): void {
 	// The coordinates of the edges of the square
 	const { left, right, bottom, top } = meshes.getCoordBoxWorld(boardpos, hoveredCoords!);
 	const boardScale = boardpos.getBoardScaleAsNumber();
-	const width = (pointerIsTouch ? outlineWidth.touch : outlineWidth.mouse) * boardScale;
+	const width = (pointerIsTouch ? OUTLINE_WIDTH.touch : OUTLINE_WIDTH.mouse) * boardScale;
 	const color = preferences.getBoxOutlineColor();
 
 	// Outline the entire rank & file when:
@@ -352,6 +339,8 @@ function renderOutline(): void {
 			.render(position, scale);
 	}
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	areDraggingPiece,

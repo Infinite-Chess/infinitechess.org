@@ -34,7 +34,7 @@ import preferences from '../../util/preferences.js';
 import textrenderer from './text/textrenderer.js';
 import arrowscalculator from '../../board/rendering/arrows/arrowscalculator.js';
 import arrowinteraction from './arrows/arrowinteraction.js';
-import { createRenderable } from '../../board/rendering/renderable.js';
+import { createRenderable } from './gamerenderable.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ const MAX_FULL_DISPLAY_LENGTH = 7;
 /** Gap between adjacent labels as a multiple of the label height. */
 const LABEL_GAP_SIZE = 0.4;
 /**
- * Extra padding, in virual-pixels, added to each side
+ * Extra padding, in virtual-pixels, added to each side
  * of a label's hitbox when testing against arrow indicator hitboxes.
  */
 const LABEL_ARROW_PADDING_PX = 6;
