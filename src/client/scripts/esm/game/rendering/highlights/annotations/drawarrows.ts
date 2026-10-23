@@ -29,7 +29,7 @@ import mouse from '../../../mouse.js';
 import camera from '../../../../board/rendering/camera.js';
 import snapping from '../snapping.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
-import { Mouse } from '../../../input.js';
+import { MOUSE } from '../../../input.js';
 import preferences from '../../../../util/preferences.js';
 import { GameBus } from '../../../../board/GameBus.js';
 import { createRenderable } from '../../gamerenderable.js';
@@ -90,9 +90,9 @@ function update(arrows: Arrow[]): void {
 
 	if (!drag_start) {
 		// Test if right mouse down (start drawing)
-		if (mouse.isMouseDown(Mouse.RIGHT) && !mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
-			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
-			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
+		if (mouse.isMouseDown(MOUSE.RIGHT) && !mouse.isMouseDoubleClickDragged(MOUSE.RIGHT)) {
+			mouse.claimMouseDown(MOUSE.RIGHT); // Claim to prevent the same pointer dragging the board
+			pointerId = respectiveListener.getMouseId(MOUSE.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
 			if (!pointerWorld) return stopDrawing(); // Maybe we're looking into sky?
 			drag_start = snapping.getSnappedSquare(pointerWorld);
@@ -105,7 +105,7 @@ function update(arrows: Arrow[]): void {
 			pointerWorld = mouse.getPointerWorld(pointerId!); // Update its last known position
 		else {
 			// Prevents accidentally drawing tiny arrows while zoomed out if we intend to draw square
-			if (!mouse.isMouseClicked(Mouse.RIGHT)) addDrawnArrow(arrows);
+			if (!mouse.isMouseClicked(MOUSE.RIGHT)) addDrawnArrow(arrows);
 			// else we drew a square highlight instead of an arrow
 			stopDrawing();
 		}

@@ -11,7 +11,7 @@ import typeutil, { players as p } from '../../../../../shared/chess/util/typeuti
 
 import svgcache from '../../chess/rendering/svgcache.js';
 import selection from '../chess/selection.js';
-import { Mouse } from '../input.js';
+import { MOUSE } from '../input.js';
 import { GameBus } from '../../board/GameBus.js';
 import { listener_canvas } from '../listeners.js';
 
@@ -124,9 +124,9 @@ function callback_promote(event: Event): void {
 function update(): void {
 	if (!selectionOpen) return;
 	if (
-		!listener_canvas.isMouseDown(Mouse.LEFT) &&
-		!listener_canvas.isMouseDown(Mouse.RIGHT) &&
-		!listener_canvas.isMouseDown(Mouse.MIDDLE)
+		!listener_canvas.isMouseDown(MOUSE.LEFT) &&
+		!listener_canvas.isMouseDown(MOUSE.RIGHT) &&
+		!listener_canvas.isMouseDown(MOUSE.MIDDLE)
 	)
 		return;
 	// Atleast one mouse button was clicked-down OUTSIDE of the promotion UI

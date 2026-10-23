@@ -20,7 +20,7 @@ import snapping from '../snapping.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
 import gameslot from '../../../chess/gameslot.js';
 import gamescene from '../../gamescene.js';
-import { Mouse } from '../../../input.js';
+import { MOUSE } from '../../../input.js';
 import preferences from '../../../../util/preferences.js';
 import squarerendering from '../../../../board/rendering/squarerendering.js';
 
@@ -100,9 +100,9 @@ function getSquaresBelowWorld(
  */
 function update(highlights: Coords[]): void {
 	// If the pointer simulated a right click, add a highlight!
-	if (mouse.isMouseClicked(Mouse.RIGHT)) {
-		mouse.claimMouseClick(Mouse.RIGHT); // Claim the click so other scripts don't also use it
-		const pointerWorld = mouse.getMouseWorld(Mouse.RIGHT);
+	if (mouse.isMouseClicked(MOUSE.RIGHT)) {
+		mouse.claimMouseClick(MOUSE.RIGHT); // Claim the click so other scripts don't also use it
+		const pointerWorld = mouse.getMouseWorld(MOUSE.RIGHT);
 		if (!pointerWorld) return; // Maybe we're looking into sky?
 
 		// Toggle the highlight on the square

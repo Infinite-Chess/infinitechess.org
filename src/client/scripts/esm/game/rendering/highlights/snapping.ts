@@ -30,7 +30,7 @@ import gameslot from '../../chess/gameslot.js';
 import drawrays from './annotations/drawrays.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import miniimage from '../miniimage.js';
-import { Mouse } from '../../input.js';
+import { MOUSE } from '../../input.js';
 import movehints from './movehints.js';
 import transition from '../transitions/transition.js';
 import primitives from '../../../board/rendering/primitives.js';
@@ -401,9 +401,9 @@ function getHoveredRaySnaps(world: DoubleCoords): Snap[] {
  */
 function transitionToHoveredIfClicked(): void {
 	if (!isSnappingEnabledThisFrame()) return;
-	if (!mouse.isMouseClicked(Mouse.LEFT) && !mouse.isMouseDown(Mouse.LEFT)) return; // Only transition if clicked
+	if (!mouse.isMouseClicked(MOUSE.LEFT) && !mouse.isMouseDown(MOUSE.LEFT)) return; // Only transition if clicked
 
-	const world = mouse.getMouseWorld(Mouse.LEFT);
+	const world = mouse.getMouseWorld(MOUSE.LEFT);
 	if (!world) return; // Maybe looking into sky?
 
 	// The hovered group: all entities AND all ray intersections below the pointer.
@@ -423,11 +423,11 @@ function transitionToHoveredIfClicked(): void {
 	}
 	if (startTransition === undefined) return; // Nothing to transition to
 
-	if (mouse.isMouseClicked(Mouse.LEFT)) {
-		mouse.claimMouseClick(Mouse.LEFT);
+	if (mouse.isMouseClicked(MOUSE.LEFT)) {
+		mouse.claimMouseClick(MOUSE.LEFT);
 		startTransition();
-	} else if (mouse.isMouseDown(Mouse.LEFT)) {
-		mouse.claimMouseDown(Mouse.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
+	} else if (mouse.isMouseDown(MOUSE.LEFT)) {
+		mouse.claimMouseDown(MOUSE.LEFT); // Remove the mouseDown so that other navigation controls don't use it (like board-grabbing)
 	}
 }
 

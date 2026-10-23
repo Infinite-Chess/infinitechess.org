@@ -12,34 +12,34 @@ import type { InputProfile } from '../../game/keybinds.js';
 import perspective from '../../game/rendering/perspective.js';
 import etoolmanager from './tools/etoolmanager.js';
 import guiboardcontrols from '../../game/gui/guiboardcontrols.js';
-import { Mouse, MouseButton } from '../../game/input.js';
+import { MOUSE, MouseButton } from '../../game/input.js';
 
 /** The board editor's keybind overrides. */
 const EDITOR_PROFILE: InputProfile = {
 	getBoardDragMouseButton(): MouseButton | undefined {
 		if (perspective.getEnabled()) return undefined;
 		// Allows a second pointer to pinch zoom the board even when drawing annote with first pointer.
-		if (guiboardcontrols.isAnnotationsButtonEnabled()) return Mouse.LEFT;
-		if (etoolmanager.isLeftMouseReserved()) return Mouse.RIGHT;
+		if (guiboardcontrols.isAnnotationsButtonEnabled()) return MOUSE.LEFT;
+		if (etoolmanager.isLeftMouseReserved()) return MOUSE.RIGHT;
 		// Default: Left mouse drags board
-		return Mouse.LEFT;
+		return MOUSE.LEFT;
 	},
 	getAnnotationMouseButton(): MouseButton | undefined {
 		if (guiboardcontrols.isAnnotationsButtonEnabled() || perspective.getEnabled())
-			return Mouse.RIGHT;
+			return MOUSE.RIGHT;
 		if (etoolmanager.isLeftMouseReserved()) return undefined; // NO BUTTON draws annotations (right click reserved for dragging)
 		// Default: Right mouse draws annotations
-		return Mouse.RIGHT;
+		return MOUSE.RIGHT;
 	},
 	getCollapseMouseButton(): MouseButton | undefined {
 		if (etoolmanager.isLeftMouseReserved()) return undefined; // Left click reserved for drawing tool
 		// Default: Left mouse
-		return Mouse.LEFT;
+		return MOUSE.LEFT;
 	},
 	getPieceSelectionMouseButton(): MouseButton | undefined {
 		if (etoolmanager.isLeftMouseReserved()) return undefined; // Left click reserved for drawing tool
 		// Default: Left mouse
-		return Mouse.LEFT;
+		return MOUSE.LEFT;
 	},
 };
 

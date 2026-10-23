@@ -16,7 +16,7 @@ import boardpos from '../board/rendering/boardpos.js';
 import deltatime from '../board/deltatime.js';
 import boarddrag from './rendering/boarddrag.js';
 import selection from './chess/selection.js';
-import { Mouse } from './input.js';
+import { MOUSE } from './input.js';
 import transition from './rendering/transitions/transition.js';
 import perspective from './rendering/perspective.js';
 import guipromotion from './gui/guipromotion.js';
@@ -82,12 +82,12 @@ function updatePerspectiveRotation(): void {
 		// Check if needs to relock
 		if (
 			selection.getSquarePawnIsCurrentlyPromotingOn() === undefined &&
-			listener_canvas.isMouseClicked(Mouse.LEFT)
+			listener_canvas.isMouseClicked(MOUSE.LEFT)
 		) {
-			listener_canvas.claimMouseClick(Mouse.LEFT);
+			listener_canvas.claimMouseClick(MOUSE.LEFT);
 			perspective.relockMouse();
-		} else if (listener_canvas.isMouseDown(Mouse.LEFT)) {
-			listener_canvas.claimMouseDown(Mouse.LEFT); // Prevents piece drag start from claiming this mouse down.
+		} else if (listener_canvas.isMouseDown(MOUSE.LEFT)) {
+			listener_canvas.claimMouseDown(MOUSE.LEFT); // Prevents piece drag start from claiming this mouse down.
 		}
 	} else {
 		const mouseChange = listener_document.getPhysicalPointerDelta('mouse');

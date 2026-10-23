@@ -16,7 +16,7 @@ import { GameBus } from '../board/GameBus.js';
 
 // Types -----------------------------------------------------------------------
 
-export type MouseButton = (typeof Mouse)[keyof typeof Mouse];
+export type MouseButton = (typeof MOUSE)[keyof typeof MOUSE];
 
 /** Information about a key that was pressed down this frame. */
 interface KeyDownInfo {
@@ -207,7 +207,7 @@ interface ClickInfo {
 
 // Constants -------------------------------------------------------------------
 
-export const Mouse = {
+export const MOUSE = {
 	LEFT: 0,
 	MIDDLE: 1,
 	RIGHT: 2,
@@ -215,9 +215,9 @@ export const Mouse = {
 
 /** Each mouse button's name, for its logical pointer id. */
 const MOUSE_NAMES = {
-	[Mouse.LEFT]: 'Left',
-	[Mouse.MIDDLE]: 'Middle',
-	[Mouse.RIGHT]: 'Right',
+	[MOUSE.LEFT]: 'Left',
+	[MOUSE.MIDDLE]: 'Middle',
+	[MOUSE.RIGHT]: 'Right',
 } as const;
 
 /**
@@ -299,7 +299,7 @@ function createListener(
 	let atleastOneInputThisFrame = false;
 
 	const clickInfo: Record<MouseButton, ClickInfo> = {
-		[Mouse.LEFT]: {
+		[MOUSE.LEFT]: {
 			isTouch: false,
 			isDown: false,
 			isHeld: false,
@@ -308,7 +308,7 @@ function createListener(
 			timeDownMillisHistory: [],
 			deltaSinceDown: [0, 0],
 		},
-		[Mouse.MIDDLE]: {
+		[MOUSE.MIDDLE]: {
 			isTouch: false,
 			isDown: false,
 			isHeld: false,
@@ -317,7 +317,7 @@ function createListener(
 			timeDownMillisHistory: [],
 			deltaSinceDown: [0, 0],
 		},
-		[Mouse.RIGHT]: {
+		[MOUSE.RIGHT]: {
 			isTouch: false,
 			isDown: false,
 			isHeld: false,
@@ -484,7 +484,7 @@ function createListener(
 	 */
 	function updateDeltaSinceDownForPointer(physicalPointerId: string, delta: DoubleCoords): void {
 		// Update the delta (deltaSinceDown) for simulated mouse clicks
-		Object.values(Mouse).forEach((targetButton) => {
+		Object.values(MOUSE).forEach((targetButton) => {
 			const targetButtonInfo = clickInfo[targetButton];
 
 			// Only update the click info's delta since down if the physical pointer that most recently performed that click action matches
@@ -512,8 +512,8 @@ function createListener(
 			const eventButton = e.button as MouseButton;
 			// If alt is held,  right click instead
 			const button =
-				(e.altKey || treatLeftAsRight) && eventButton === Mouse.LEFT
-					? Mouse.RIGHT
+				(e.altKey || treatLeftAsRight) && eventButton === MOUSE.LEFT
+					? MOUSE.RIGHT
 					: eventButton;
 			updateClickInfoDown(button, e);
 		}) as EventListener);
@@ -524,8 +524,8 @@ function createListener(
 			const eventButton = e.button as MouseButton;
 			// If alt is held, right click instead
 			const button =
-				(e.altKey || treatLeftAsRight) && eventButton === Mouse.LEFT
-					? Mouse.RIGHT
+				(e.altKey || treatLeftAsRight) && eventButton === MOUSE.LEFT
+					? MOUSE.RIGHT
 					: eventButton;
 			updateClickInfoUp(button, e);
 		}) as EventListener);
@@ -611,7 +611,7 @@ function createListener(
 				};
 
 				// Treat fingers as the left mouse button by default
-				const button = treatLeftAsRight ? Mouse.RIGHT : Mouse.LEFT;
+				const button = treatLeftAsRight ? MOUSE.RIGHT : MOUSE.LEFT;
 				updateClickInfoDown(button, touch);
 			}
 		}) as EventListener);
@@ -661,7 +661,7 @@ function createListener(
 				delete physicalPointers[physicalId];
 
 				// Treat fingers as the left mouse button by default
-				const button = treatLeftAsRight ? Mouse.RIGHT : Mouse.LEFT;
+				const button = treatLeftAsRight ? MOUSE.RIGHT : MOUSE.LEFT;
 				updateClickInfoUp(button, touch);
 			}
 		}

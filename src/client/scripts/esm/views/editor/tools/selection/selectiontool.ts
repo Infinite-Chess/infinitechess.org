@@ -22,7 +22,7 @@ import sdrag from './sdrag.js';
 import meshes from '../../../../board/rendering/meshes.js';
 import gameslot from '../../../../game/chess/gameslot.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
-import { Mouse } from '../../../../game/input.js';
+import { MOUSE } from '../../../../game/input.js';
 import { GameBus } from '../../../../board/GameBus.js';
 import etoolmanager from '../etoolmanager.js';
 import stoolgraphics from './stoolgraphics.js';
@@ -69,11 +69,11 @@ function update(): void {
 			sdrag.update(); // Update selection box drag handler
 		}
 		// Test if a new selection is beginning
-		if (mouse.isMouseDown(Mouse.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
+		if (mouse.isMouseDown(MOUSE.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
 			// Start new selection
-			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
-			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-			pointerId = mouse.getMouseId(Mouse.LEFT)!;
+			mouse.claimMouseDown(MOUSE.LEFT); // Remove the pointer down so other scripts don't use it
+			mouse.cancelMouseClick(MOUSE.LEFT); // Cancel any potential future click so other scripts don't use it
+			pointerId = mouse.getMouseId(MOUSE.LEFT)!;
 			beginSelection();
 		}
 	} else {

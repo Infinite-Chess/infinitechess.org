@@ -23,7 +23,7 @@ import typeutil, {
 import mouse from '../../../game/mouse.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import selection from '../../../game/chess/selection.js';
-import { Mouse } from '../../../game/input.js';
+import { MOUSE } from '../../../game/input.js';
 import egamerules from '../egamerules.js';
 import guipalette from '../gui/guipalette.js';
 import edithistory from '../edithistory.js';
@@ -115,15 +115,15 @@ function update(currentTool: Tool): void {
 	if (!DRAWING_TOOLS.includes(currentTool)) return; // Not using a drawing tool
 
 	if (
-		mouse.isMouseDown(Mouse.LEFT) &&
+		mouse.isMouseDown(MOUSE.LEFT) &&
 		!drawing &&
 		!arrowinteraction.areHoveringAtleastOneArrow()
 	) {
-		mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
-		mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-		drawingToolPointerId = mouse.getMouseId(Mouse.LEFT)!;
+		mouse.claimMouseDown(MOUSE.LEFT); // Remove the pointer down so other scripts don't use it
+		mouse.cancelMouseClick(MOUSE.LEFT); // Cancel any potential future click so other scripts don't use it
+		drawingToolPointerId = mouse.getMouseId(MOUSE.LEFT)!;
 		beginEdit();
-	} else if (!mouse.isMouseHeld(Mouse.LEFT) && drawing) return endEdit();
+	} else if (!mouse.isMouseHeld(MOUSE.LEFT) && drawing) return endEdit();
 
 	if (!drawing || !thisEdit) return; // If not currently drawing, nothing more to do
 

@@ -28,7 +28,7 @@ import gameslot from './gameslot.js';
 import selection from './selection.js';
 import gamescene from '../rendering/gamescene.js';
 import animation from '../../board/rendering/animation/animation.js';
-import { Mouse } from '../input.js';
+import { MOUSE } from '../input.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../../board/GameBus.js';
 import movesequence from './movesequence.js';
@@ -381,11 +381,11 @@ function readUnapplied<T>(gamefile: GameFile, read: () => T): T {
 function update(gamefile: GameFile, mesh?: Mesh): void {
 	if (preferences.getLingeringAnnotationsMode()) return; // Right mouse down doesn't clear premoves in Lingering Annotations mode
 
-	if (mouse.isMouseDown(Mouse.RIGHT)) {
+	if (mouse.isMouseDown(MOUSE.RIGHT)) {
 		if (!hasAtleastOnePremove()) return; // No premoves to clear. Don't claim the right mouse button.
 
-		mouse.claimMouseDown(Mouse.RIGHT); // Claim the right mouse button so it doesn't propagate to arrow drawing
-		mouse.cancelMouseClick(Mouse.RIGHT); // Prevents the up-release from registering a click later, drawing a square highlight
+		mouse.claimMouseDown(MOUSE.RIGHT); // Claim the right mouse button so it doesn't propagate to arrow drawing
+		mouse.cancelMouseClick(MOUSE.RIGHT); // Prevents the up-release from registering a click later, drawing a square highlight
 
 		cancelPremoves(gamefile, mesh);
 	}

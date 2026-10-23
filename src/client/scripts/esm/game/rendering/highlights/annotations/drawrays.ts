@@ -24,7 +24,7 @@ import meshes from '../../../../board/rendering/meshes.js';
 import snapping from '../snapping.js';
 import gameslot from '../../../chess/gameslot.js';
 import boardpos from '../../../../board/rendering/boardpos.js';
-import { Mouse } from '../../../input.js';
+import { MOUSE } from '../../../input.js';
 import preferences from '../../../../util/preferences.js';
 import annotations from './annotations.js';
 import { GameBus } from '../../../../board/GameBus.js';
@@ -94,10 +94,10 @@ function update(rays: Ray[]): void {
 
 	if (!drag_start) {
 		// Not currently drawing a ray
-		if (mouse.isMouseDoubleClickDragged(Mouse.RIGHT)) {
+		if (mouse.isMouseDoubleClickDragged(MOUSE.RIGHT)) {
 			// Double click drag this frame
-			mouse.claimMouseDown(Mouse.RIGHT); // Claim to prevent the same pointer dragging the board
-			pointerId = respectiveListener.getMouseId(Mouse.RIGHT)!;
+			mouse.claimMouseDown(MOUSE.RIGHT); // Claim to prevent the same pointer dragging the board
+			pointerId = respectiveListener.getMouseId(MOUSE.RIGHT)!;
 			pointerWorld = mouse.getPointerWorld(pointerId!);
 			if (!pointerWorld) return stopDrawing(); // Could have double click dragged while looking into sky?
 			drag_start = snapping.getSnappedSquare(pointerWorld);
@@ -123,7 +123,7 @@ function update(rays: Ray[]): void {
 		} else {
 			// The pointer is no longer being held
 			// Prevents accidentally ray drawing if we intend to draw square
-			if (!mouse.isMouseClicked(Mouse.RIGHT)) {
+			if (!mouse.isMouseClicked(MOUSE.RIGHT)) {
 				addDrawnRay(rays); // Finalize the ray
 				dispatchRayCountEvent(rays);
 			}

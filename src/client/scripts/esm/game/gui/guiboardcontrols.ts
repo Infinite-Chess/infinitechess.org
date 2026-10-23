@@ -22,7 +22,7 @@ import space from '../../board/rendering/space.js';
 import gameslot from '../chess/gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import snapping from '../rendering/highlights/snapping.js';
-import { Mouse } from '../input.js';
+import { MOUSE } from '../input.js';
 import transition from '../rendering/transitions/transition.js';
 import perspective from '../rendering/perspective.js';
 import annotations from '../rendering/highlights/annotations/annotations.js';
@@ -91,7 +91,7 @@ function callback_Perspective(): void {
 	// Prevent the sidebar click that toggled perspective
 	// from being instantly absorbed by game interactions.
 	// Without this, any mini image underneath the crosshair instantly gets clicked.
-	listener_document.claimMouseClick(Mouse.LEFT);
+	listener_document.claimMouseClick(MOUSE.LEFT);
 	perspective.toggle();
 }
 

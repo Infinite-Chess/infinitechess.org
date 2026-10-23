@@ -33,7 +33,7 @@ import keybinds from '../../keybinds.js';
 import boardpos from '../../../board/rendering/boardpos.js';
 import deltatime from '../../../board/deltatime.js';
 import selection from '../../chess/selection.js';
-import { Mouse } from '../../input.js';
+import { MOUSE } from '../../input.js';
 import gamescene from '../gamescene.js';
 import maskeddraw from '../../../webgl/maskeddraw.js';
 import primitives from '../../../board/rendering/primitives.js';
@@ -188,7 +188,7 @@ function updateCandidate(): void {
 	}
 
 	selection.selectPiece(gamefile, piece, true);
-	mouse.cancelMouseClick(Mouse.LEFT); // Prevent the eventual release from being treated as a click/teleport.
+	mouse.cancelMouseClick(MOUSE.LEFT); // Prevent the eventual release from being treated as a click/teleport.
 	isDragActive = true;
 	draganimation.setForceRankFileOutline(true);
 	frametracker.onVisualChange();
@@ -196,14 +196,14 @@ function updateCandidate(): void {
 
 /** Branch C: no candidate. Check for a new mouse-down on an own-piece arrow. */
 function detectCandidateArrow(): void {
-	if (!mouse.isMouseDown(Mouse.LEFT)) return;
+	if (!mouse.isMouseDown(MOUSE.LEFT)) return;
 
 	const hoveredArrowsList = arrowinteraction.getHoveredArrows();
 	if (hoveredArrowsList.length === 0) return;
 
 	// Claim the mouse down for any arrow hover to prevent board drag.
 	// Mouse down for move hint arrow indicators must be claimed separately.
-	mouse.claimMouseDown(Mouse.LEFT);
+	mouse.claimMouseDown(MOUSE.LEFT);
 
 	// Early exit on dragging disabled now, since the mouse down has been claimed.
 	if (!keybinds.getEffectiveDragEnabled()) return;
@@ -217,7 +217,7 @@ function detectCandidateArrow(): void {
 		if (selection.canSelectPieceType(gamefile, pieceType) !== 2) continue; // Not own draggable piece.
 
 		const pieceCoords = bdcoords.coordsToBigInt(hoveredArrow.piece.coords);
-		const pointerId = mouse.getRelevantListener().getMouseId(Mouse.LEFT)!;
+		const pointerId = mouse.getRelevantListener().getMouseId(MOUSE.LEFT)!;
 
 		candidate = {
 			pieceCoords,

@@ -24,7 +24,7 @@ import boardpos from '../../../board/rendering/boardpos.js';
 import keybinds from '../../keybinds.js';
 import selection from '../../chess/selection.js';
 import animation from '../../../board/rendering/animation/animation.js';
-import { Mouse } from '../../input.js';
+import { MOUSE } from '../../input.js';
 import gamescene from '../gamescene.js';
 import droparrows from './droparrows.js';
 import primitives from '../../../board/rendering/primitives.js';
@@ -142,7 +142,7 @@ function pickUpPiece(piece: Piece, resetParity: boolean): void {
 	if (resetParity) parity = true;
 
 	const respectiveListener = mouse.getRelevantListener();
-	pointerId = respectiveListener.getMouseId(Mouse.LEFT);
+	pointerId = respectiveListener.getMouseId(MOUSE.LEFT);
 
 	startCoords = piece.coords;
 	pieceType = piece.type;
@@ -223,7 +223,7 @@ function dropPiece(): void {
 	frametracker.onVisualChange();
 	// Rapidly picking up and dropping a piece triggers a simulated click.
 	// If we don't claim it here, annotations will read it to Collapse annotations.
-	if (mouse.isMouseClicked(Mouse.LEFT)) mouse.claimMouseClick(Mouse.LEFT);
+	if (mouse.isMouseClicked(MOUSE.LEFT)) mouse.claimMouseClick(MOUSE.LEFT);
 }
 
 /** Puts the dragged piece back. Doesn't make a move. */

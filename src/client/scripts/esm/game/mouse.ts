@@ -13,7 +13,7 @@ import camera from '../board/rendering/camera.js';
 import boardpos from '../board/rendering/boardpos.js';
 import perspective from './rendering/perspective.js';
 import { listener_document, listener_canvas } from './listeners.js';
-import input, { InputListener, Mouse, MouseButton } from './input.js';
+import input, { InputListener, MOUSE, MouseButton } from './input.js';
 
 // World Space -----------------------------------------------------------------
 
@@ -21,7 +21,7 @@ import input, { InputListener, Mouse, MouseButton } from './input.js';
  * Returns the world space coordinates of the mouse pointer,
  * or the crosshair if the mouse is locked (in perspective mode).
  */
-function getMouseWorld(button: MouseButton = Mouse.LEFT): DoubleCoords | undefined {
+function getMouseWorld(button: MouseButton = MOUSE.LEFT): DoubleCoords | undefined {
 	if (!perspective.getEnabled()) {
 		// Before the first click there may be no button-associated pointer yet,
 		// but the physical 'mouse' pointer still tracks hover movement.
@@ -149,7 +149,7 @@ function getAllPointerWorlds(): DoubleCoords[] {
 // Tiles -----------------------------------------------------------------------
 
 /** Returns the integer square the mouse is over. */
-function getTileMouseOver_Integer(button: MouseButton = Mouse.LEFT): Coords | undefined {
+function getTileMouseOver_Integer(button: MouseButton = MOUSE.LEFT): Coords | undefined {
 	const mouseWorld = getMouseWorld(button);
 	if (!mouseWorld) return undefined;
 	return space.convertWorldSpaceToCoords_Rounded(boardpos, mouseWorld);

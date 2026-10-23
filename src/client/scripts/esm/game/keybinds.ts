@@ -11,7 +11,7 @@
 import perspective from './rendering/perspective.js';
 import preferences from '../util/preferences.js';
 import { listener_document } from './listeners.js';
-import { Mouse, MouseButton } from './input.js';
+import { MOUSE, MouseButton } from './input.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -34,10 +34,10 @@ export interface InputProfile {
 
 /** The default bindings, used by most pages. */
 const DEFAULT_PROFILE: InputProfile = {
-	getBoardDragMouseButton: () => (perspective.getEnabled() ? undefined : Mouse.LEFT),
-	getAnnotationMouseButton: () => Mouse.RIGHT,
-	getCollapseMouseButton: () => Mouse.LEFT,
-	getPieceSelectionMouseButton: () => Mouse.LEFT,
+	getBoardDragMouseButton: () => (perspective.getEnabled() ? undefined : MOUSE.LEFT),
+	getAnnotationMouseButton: () => MOUSE.RIGHT,
+	getCollapseMouseButton: () => MOUSE.LEFT,
+	getPieceSelectionMouseButton: () => MOUSE.LEFT,
 };
 
 // State -----------------------------------------------------------------------

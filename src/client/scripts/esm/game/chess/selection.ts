@@ -33,7 +33,7 @@ import gameslot from './gameslot.js';
 import boardpos from '../../board/rendering/boardpos.js';
 import premoves from './premoves.js';
 import keybinds from '../keybinds.js';
-import { Mouse } from '../input.js';
+import { MOUSE } from '../input.js';
 import gamescene from '../rendering/gamescene.js';
 import droparrows from '../rendering/dragging/droparrows.js';
 import transition from '../rendering/transitions/transition.js';
@@ -166,7 +166,7 @@ function setViewedPositionBrancher(handler: ViewedPositionBrancher): void {
 /** Tests if we have selected a piece, or moved the currently selected piece. */
 function update(): void {
 	guipromotion.update();
-	if (mouse.isMouseDown(Mouse.MIDDLE)) return unselectPiece(); // Middle-click deselects everything
+	if (mouse.isMouseDown(MOUSE.MIDDLE)) return unselectPiece(); // Middle-click deselects everything
 
 	// Guard clauses...
 	const gamefile = gameslot.getGamefile()!;

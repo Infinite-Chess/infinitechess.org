@@ -20,7 +20,7 @@ import camera from '../../../../board/rendering/camera.js';
 import docutil from '../../../../util/docutil.js';
 import scursor from './scursor.js';
 import gameslot from '../../../../game/chess/gameslot.js';
-import { Mouse } from '../../../../game/input.js';
+import { MOUSE } from '../../../../game/input.js';
 import selectiontool from './selectiontool.js';
 import stoolgraphics from './stoolgraphics.js';
 import stransformations from './stransformations.js';
@@ -79,11 +79,11 @@ function update(): void {
 			}
 
 			// Determine if we picked up the selection
-			if (mouse.isMouseDown(Mouse.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
+			if (mouse.isMouseDown(MOUSE.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
 				// Start dragging
-				mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
-				mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
-				pointerId = mouse.getMouseId(Mouse.LEFT)!;
+				mouse.claimMouseDown(MOUSE.LEFT); // Remove the pointer down so other scripts don't use it
+				mouse.cancelMouseClick(MOUSE.LEFT); // Cancel any potential future click so other scripts don't use it
+				pointerId = mouse.getMouseId(MOUSE.LEFT)!;
 				pickUpSelection();
 			}
 		} else {
@@ -101,7 +101,7 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 	const selectionWorldBox = selectiontool.getSelectionWorldBox()!;
 
 	// Determine the mouse world coords
-	const mouseWorld = mouse.getMouseWorld(Mouse.LEFT);
+	const mouseWorld = mouse.getMouseWorld(MOUSE.LEFT);
 	if (!mouseWorld) return false;
 
 	// Convert grab distance to world space

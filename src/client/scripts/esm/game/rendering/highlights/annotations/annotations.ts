@@ -18,7 +18,7 @@ import coordutil from '../../../../../../../shared/util/coordutil.js';
 import gameslot from '../../../chess/gameslot.js';
 import drawrays from './drawrays.js';
 import keybinds from '../../../keybinds.js';
-import { Mouse } from '../../../input.js';
+import { MOUSE } from '../../../input.js';
 import drawarrows from './drawarrows.js';
 import drawsquares from './drawsquares.js';
 import preferences from '../../../../util/preferences.js';
@@ -146,7 +146,7 @@ function update(): void {
 	if (mouseKeybind === undefined) return; // No button is assigned to drawing annotations currently
 	// When this throws, we need to go into drawarrows, drawsquares, and drawrays update methods
 	// and make it so the mouse button is accepted as an argument.
-	if (mouseKeybind !== Mouse.RIGHT)
+	if (mouseKeybind !== MOUSE.RIGHT)
 		throw Error('Annote drawing only supports right mouse button.');
 
 	const annotes = getRelevantAnnotes();
