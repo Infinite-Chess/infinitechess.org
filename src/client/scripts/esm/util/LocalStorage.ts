@@ -11,7 +11,6 @@
  */
 
 import jsonutil from '../../../../shared/util/jsonutil.js';
-import timeutil from '../../../../shared/util/timeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -28,10 +27,6 @@ interface Entry {
 /** For debugging. This prints to the console all save and delete operations. */
 const PRINT_CHANGES = false;
 
-/** How long an entry lives when its saver names no expiry. */
-const DEFAULT_EXPIRY_MS = timeutil.toMillis(24, 'hours');
-// const DEFAULT_EXPIRY_MS = timeutil.toMillis(20, 'seconds');
-
 // Initialization --------------------------------------------------------------
 
 // Do this on load every time
@@ -43,10 +38,10 @@ eraseExpiredItems();
  * Saves an item in browser local storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
- * @param [expiryMillis] How long until this entry should be auto-deleted for being stale
+ * @param expiryMillis - How long until this entry should be auto-deleted for being stale
  * @throws A `QuotaExceededError` if the write exceeds the origin's ~5MB localStorage quota.
  */
-function saveItem(key: string, value: unknown, expiryMillis: number = DEFAULT_EXPIRY_MS): void {
+function saveItem(key: string, value: unknown, expiryMillis: number): void {
 	if (PRINT_CHANGES) console.log(`Saving key to local storage: ${key}`);
 	const timeExpires = Date.now() + expiryMillis;
 	const save: Entry = { value, expires: timeExpires };
