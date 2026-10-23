@@ -140,122 +140,45 @@ function readGameRules(): void {
 	const playerToMove = element_white.checked ? 'white' : 'black';
 
 	// enPassant
-	let validEnPassantCoords = 0;
 	const enPassantX = element_enPassantX.value;
-	if (INTEGER_REGEX.test(enPassantX)) {
-		element_enPassantX.classList.remove('invalid-input');
-		validEnPassantCoords++;
-	} else if (enPassantX === '') {
-		element_enPassantX.classList.remove('invalid-input');
-	} else {
-		element_enPassantX.classList.add('invalid-input');
-	}
-
 	const enPassantY = element_enPassantY.value;
-	if (INTEGER_REGEX.test(enPassantY)) {
-		element_enPassantY.classList.remove('invalid-input');
-		validEnPassantCoords++;
-	} else if (enPassantY === '') {
-		element_enPassantY.classList.remove('invalid-input');
-	} else {
-		element_enPassantY.classList.add('invalid-input');
-	}
-
-	const enPassant =
-		validEnPassantCoords === 2 ? { x: BigInt(enPassantX), y: BigInt(enPassantY) } : undefined;
+	const enPassantXValid = markInputValidity(element_enPassantX, INTEGER_REGEX.test(enPassantX));
+	const enPassantYValid = markInputValidity(element_enPassantY, INTEGER_REGEX.test(enPassantY));
+	const enPassant: Coords | undefined =
+		enPassantXValid && enPassantYValid ? [BigInt(enPassantX), BigInt(enPassantY)] : undefined;
 
 	// moveRule
-	let validMoveRuleInputs = 0;
 	const moveRuleCurrent = element_moveruleCurrent.value;
-	if (INTEGER_REGEX.test(moveRuleCurrent) && Number(moveRuleCurrent) >= 0) {
-		element_moveruleCurrent.classList.remove('invalid-input');
-		validMoveRuleInputs++;
-	} else if (moveRuleCurrent === '') {
-		element_moveruleCurrent.classList.remove('invalid-input');
-	} else {
-		element_moveruleCurrent.classList.add('invalid-input');
-	}
-
 	const moveRuleMax = element_moveruleMax.value;
-	if (INTEGER_REGEX.test(moveRuleMax) && Number(moveRuleMax) > 0) {
-		if (validMoveRuleInputs === 1 && Number(moveRuleCurrent) > Number(moveRuleMax)) {
-			element_moveruleMax.classList.add('invalid-input');
-		} else {
-			element_moveruleMax.classList.remove('invalid-input');
-			validMoveRuleInputs++;
-		}
-	} else if (moveRuleMax === '') {
-		element_moveruleMax.classList.remove('invalid-input');
-	} else {
-		element_moveruleMax.classList.add('invalid-input');
-	}
-
-	// prettier-ignore
-	const moveRule = (validMoveRuleInputs === 2 ? { current: Number(moveRuleCurrent), max: Number(moveRuleMax) } : undefined);
+	const moveRuleCurrentValid = markInputValidity(
+		element_moveruleCurrent,
+		INTEGER_REGEX.test(moveRuleCurrent) && Number(moveRuleCurrent) >= 0,
+	);
+	const moveRuleMaxValid = markInputValidity(
+		element_moveruleMax,
+		INTEGER_REGEX.test(moveRuleMax) &&
+			Number(moveRuleMax) > 0 &&
+			!(moveRuleCurrentValid && Number(moveRuleCurrent) > Number(moveRuleMax)),
+	);
+	const moveRule =
+		moveRuleCurrentValid && moveRuleMaxValid
+			? { current: Number(moveRuleCurrent), max: Number(moveRuleMax) }
+			: undefined;
 
 	// promotionRanks
-	let promotionRanksWhite: bigint[] = [];
-	const promotionRanksWhiteInput = element_promotionranksWhite.value;
-	if (PROMOTION_RANKS_REGEX.test(promotionRanksWhiteInput)) {
-		element_promotionranksWhite.classList.remove('invalid-input');
-		promotionRanksWhite = [...new Set(promotionRanksWhiteInput.split(',').map(BigInt))];
-	} else if (promotionRanksWhiteInput === '') {
-		element_promotionranksWhite.classList.remove('invalid-input');
-	} else {
-		element_promotionranksWhite.classList.add('invalid-input');
-	}
+	const promotionRanksWhite = parsePromotionRanks(element_promotionranksWhite.value);
+	const promotionRanksBlack = parsePromotionRanks(element_promotionranksBlack.value);
+	markInputValidity(element_promotionranksWhite, promotionRanksWhite !== undefined);
+	markInputValidity(element_promotionranksBlack, promotionRanksBlack !== undefined);
 
-	let promotionRanksBlack: bigint[] = [];
-	const promotionRanksBlackInput = element_promotionranksBlack.value;
-	if (PROMOTION_RANKS_REGEX.test(promotionRanksBlackInput)) {
-		element_promotionranksBlack.classList.remove('invalid-input');
-		promotionRanksBlack = [...new Set(promotionRanksBlackInput.split(',').map(BigInt))];
-	} else if (promotionRanksBlackInput === '') {
-		element_promotionranksBlack.classList.remove('invalid-input');
-	} else {
-		element_promotionranksBlack.classList.add('invalid-input');
-	}
-
-	// prettier-ignore
-	const promotionRanks = (promotionRanksWhite.length === 0 && promotionRanksBlack.length === 0) ? undefined : {
-		white: promotionRanksWhite.length === 0 ? undefined : promotionRanksWhite,
-		black: promotionRanksBlack.length === 0 ? undefined : promotionRanksBlack
-	};
+	const promotionRanks =
+		promotionRanksWhite === undefined && promotionRanksBlack === undefined
+			? undefined
+			: { white: promotionRanksWhite, black: promotionRanksBlack };
 
 	// promotion pieces
-	let promotionPieces: RawType[] | undefined = undefined;
-	const promotionPiecesRaw = element_promotionpieces.value;
-	pa: if (PROMOTION_PIECES_REGEX.test(promotionPiecesRaw)) {
-		const runningpromotionPieces: RawType[] = [];
-
-		for (const code of promotionPiecesRaw.split(',')) {
-			const typeStr: string | undefined = icnposition.PIECE_CODES_INVERTED[code];
-			if (typeStr === undefined) {
-				element_promotionpieces.classList.add('invalid-input');
-				break pa;
-			}
-			const type = Number(typeStr);
-			const rawType = typeutil.getRawType(type);
-
-			if (
-				!gamerules.isValidPromotionPiece(rawType) ||
-				runningpromotionPieces.includes(rawType) // No duplicates
-			) {
-				element_promotionpieces.classList.add('invalid-input');
-				break pa;
-			}
-
-			runningpromotionPieces.push(rawType);
-		}
-
-		// All promotion pieces are valid
-		element_promotionpieces.classList.remove('invalid-input');
-		promotionPieces = runningpromotionPieces;
-	} else if (promotionPiecesRaw === '') {
-		element_promotionpieces.classList.remove('invalid-input');
-	} else {
-		element_promotionpieces.classList.add('invalid-input');
-	}
+	const promotionPieces = parsePromotionPieces(element_promotionpieces.value);
+	markInputValidity(element_promotionpieces, promotionPieces !== undefined);
 
 	// win conditions
 	const winConditions: GameruleWinCondition[] = [];
@@ -364,15 +287,7 @@ function readGameRules(): void {
 	};
 
 	// Update gamefile properties for rendering purposes and correct legal move calculation
-	// prettier-ignore
-	const enpassantSquare: Coords | undefined = gameRules.enPassant !== undefined ? [gameRules.enPassant.x, gameRules.enPassant.y] : undefined;
-	egamerules.updateGamefileProperties(
-		enpassantSquare,
-		gameRules.promotionRanks,
-		gameRules.promotionPieces,
-		gameRules.playerToMove,
-		gameRules.worldBorder,
-	);
+	egamerules.updateGamefileProperties(gameRules);
 
 	const mesh = gameslot.getMesh()!;
 	const edit: Edit = { changes: [], state: [] };
@@ -404,6 +319,32 @@ function readGameRules(): void {
 	boardeditor.markPositionDirty();
 }
 
+/** Outlines `input` as invalid if it holds text that isn't `valid`, and returns `valid`. */
+function markInputValidity(input: HTMLInputElement, valid: boolean): boolean {
+	input.classList.toggle('invalid-input', !valid && input.value !== '');
+	return valid;
+}
+
+/** The promotion ranks `raw` lists, de-duplicated, or undefined unless it's a valid list. */
+function parsePromotionRanks(raw: string): bigint[] | undefined {
+	if (!PROMOTION_RANKS_REGEX.test(raw)) return undefined;
+	return [...new Set(raw.split(',').map(BigInt))];
+}
+
+/** The promotion pieces `raw` lists, or undefined unless it's a valid list without duplicates. */
+function parsePromotionPieces(raw: string): RawType[] | undefined {
+	if (!PROMOTION_PIECES_REGEX.test(raw)) return undefined;
+	const pieces: RawType[] = [];
+	for (const code of raw.split(',')) {
+		const typeStr: string | undefined = icnposition.PIECE_CODES_INVERTED[code];
+		if (typeStr === undefined) return undefined;
+		const rawType = typeutil.getRawType(Number(typeStr));
+		if (!gamerules.isValidPromotionPiece(rawType) || pieces.includes(rawType)) return undefined;
+		pieces.push(rawType);
+	}
+	return pieces;
+}
+
 /** Sets the game rules in the game rules GUI according to the supplied GameRulesGUIinfo object*/
 function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 	if (gamerulesGUIinfo.playerToMove === 'white') {
@@ -415,8 +356,8 @@ function setGameRules(gamerulesGUIinfo: GameRulesGUIinfo): void {
 	}
 
 	if (gamerulesGUIinfo.enPassant !== undefined) {
-		element_enPassantX.value = String(gamerulesGUIinfo.enPassant.x);
-		element_enPassantY.value = String(gamerulesGUIinfo.enPassant.y);
+		element_enPassantX.value = String(gamerulesGUIinfo.enPassant[0]);
+		element_enPassantY.value = String(gamerulesGUIinfo.enPassant[1]);
 	} else {
 		element_enPassantX.value = '';
 		element_enPassantY.value = '';

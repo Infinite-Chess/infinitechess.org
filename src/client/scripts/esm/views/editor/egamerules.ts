@@ -34,10 +34,8 @@ type PlayerToMove = 'white' | 'black';
 /** Type encoding information for the game rules object of the editor position */
 export interface GameRulesGUIinfo {
 	playerToMove: PlayerToMove;
-	enPassant?: {
-		x: bigint;
-		y: bigint;
-	};
+	/** The square a pawn may capture en passant onto. */
+	enPassant?: Coords;
 	moveRule?: {
 		current: number;
 		max: number;
@@ -83,11 +81,11 @@ function getPlayerToMove(): PlayerToMove {
 	return gamerulesGUIinfo.playerToMove;
 }
 
-/** Builds the position's GameRules, move-rule state and en passant square from the GUI's rules. */
+/** Builds the position's GameRules, move-rule state and en passant state from the GUI's rules. */
 function getCurrentGamerulesAndState(): {
 	gameRules: GameRules;
 	moveRuleState: number | undefined;
-	enpassantcoords: Coords | undefined;
+	enpassant: EnPassant | undefined;
 } {
 	// Construct gameRules
 	const turnOrder = [...TURN_ORDERS[gamerulesGUIinfo.playerToMove]];
@@ -133,14 +131,20 @@ function getCurrentGamerulesAndState(): {
 
 	const moveRuleState =
 		gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.current : undefined;
-	// prettier-ignore
-	const enpassantcoords: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
 
 	return {
 		gameRules,
 		moveRuleState,
-		enpassantcoords,
+		enpassant: getEnPassant(gamerulesGUIinfo),
 	};
+}
+
+/** The en passant state `info` describes, if it has an en passant square. */
+function getEnPassant(info: GameRulesGUIinfo): EnPassant | undefined {
+	const square = info.enPassant;
+	if (square === undefined) return undefined;
+	const pawnY = square[1] + EN_PASSANT_PAWN_RANK_OFFSETS[info.playerToMove];
+	return { square, pawn: [square[0], pawnY] };
 }
 
 /**
@@ -158,14 +162,9 @@ function setGamerulesGUIinfo(
 	// prettier-ignore
 	gamerulesGUIinfo.playerToMove = firstPlayer === p.WHITE ? 'white' : firstPlayer === p.BLACK ? 'black' : (() => { throw new Error('Invalid first player'); })(); // Future protection
 
-	if (state_global.enpassant !== undefined) {
-		gamerulesGUIinfo.enPassant = {
-			x: state_global.enpassant.square[0],
-			y: state_global.enpassant.square[1],
-		};
-	} else {
-		delete gamerulesGUIinfo.enPassant;
-	}
+	if (state_global.enpassant !== undefined)
+		gamerulesGUIinfo.enPassant = state_global.enpassant.square;
+	else delete gamerulesGUIinfo.enPassant;
 
 	if (gameRules.moveRule !== undefined) {
 		gamerulesGUIinfo.moveRule = {
@@ -203,15 +202,7 @@ function setGamerulesGUIinfo(
 	gamerulesGUIinfo.worldBorder = gameRules.worldBorder;
 
 	// Update gamefile properties for rendering purposes and correct legal move calculation
-	// prettier-ignore
-	const enpassantSquare: Coords | undefined = gamerulesGUIinfo.enPassant !== undefined ? [gamerulesGUIinfo.enPassant.x, gamerulesGUIinfo.enPassant.y] : undefined;
-	updateGamefileProperties(
-		enpassantSquare,
-		gamerulesGUIinfo.promotionRanks,
-		gamerulesGUIinfo.promotionPieces,
-		gamerulesGUIinfo.playerToMove,
-		gamerulesGUIinfo.worldBorder,
-	);
+	updateGamefileProperties(gamerulesGUIinfo);
 
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
@@ -304,26 +295,15 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 // Updating Gamefile State -----------------------------------------------------
 
 /**
- * Updates the en passant square, promotion lines, and turn order in the current gamefile.
- * Needed for display purposes and correct legal move calculation.
+ * Updates the en passant square, promotion lines, turn order and world border in the current
+ * gamefile to `info`'s. Needed for display purposes and correct legal move calculation.
  */
-function updateGamefileProperties(
-	enpassantCoords: Coords | undefined,
-	promotionRanks: { white?: bigint[]; black?: bigint[] } | undefined,
-	promotionPieces: RawType[] | undefined,
-	playerToMove: PlayerToMove,
-	worldBorder: UnboundedRectangle | undefined,
-): void {
+function updateGamefileProperties(info: GameRulesGUIinfo): void {
 	const gamefile = gameslot.getGamefile()!;
+	const { promotionRanks, promotionPieces } = info;
 
 	// Update en passant state for rendering purposes, and correct enpassant legality calculation
-	if (enpassantCoords === undefined) {
-		gamefile.state.global.enpassant = undefined;
-	} else {
-		const pawn = getEnPassantPawn(enpassantCoords, playerToMove);
-		const enpassant: EnPassant = { square: enpassantCoords, pawn };
-		gamefile.state.global.enpassant = enpassant;
-	}
+	gamefile.state.global.enpassant = getEnPassant(info);
 
 	// Update the promotionlines in the gamefile for rendering purposes
 	if (promotionRanks === undefined || promotionPieces === undefined) {
@@ -339,17 +319,12 @@ function updateGamefileProperties(
 	}
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
-	gamefile.gameRules.turnOrder = [...TURN_ORDERS[playerToMove]];
+	gamefile.gameRules.turnOrder = [...TURN_ORDERS[info.playerToMove]];
 	// Update whosTurn as well
 	gamefile.whosTurn = gamefile.gameRules.turnOrder[0]!;
 
 	// Update World Border
-	gamefile.gameRules.worldBorder = worldBorder;
-}
-
-/** The pawn capturable en passant on `square`, with `playerToMove` to move. */
-function getEnPassantPawn(square: Coords, playerToMove: PlayerToMove): Coords {
-	return [square[0], square[1] + EN_PASSANT_PAWN_RANK_OFFSETS[playerToMove]];
+	gamefile.gameRules.worldBorder = info.worldBorder;
 }
 
 // Exports ---------------------------------------------------------------------
@@ -371,5 +346,4 @@ export default {
 	queueToggleGlobalCastlingWithRooks,
 	// Updating Gamefile State
 	updateGamefileProperties,
-	getEnPassantPawn,
 };

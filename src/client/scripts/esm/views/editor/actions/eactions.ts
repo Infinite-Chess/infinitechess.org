@@ -19,7 +19,7 @@ import type { Board } from '../../../../../../shared/chess/logic/boardinit.js';
 import type { MovePacket } from '../../../../../../shared/chess/util/typeschemas.js';
 import type { MoveParsed } from '../../../../../../shared/chess/logic/icn/icnmoves.js';
 import type { ActivePosition } from '../boardeditor.js';
-import type { EnPassant, GlobalGameState } from '../../../../../../shared/chess/logic/state.js';
+import type { GlobalGameState } from '../../../../../../shared/chess/logic/state.js';
 import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes.js';
 
 import typeutil from '../../../../../../shared/chess/util/typeutil.js';
@@ -217,7 +217,7 @@ function queueRemovalOfAllPieces(gamefile: GameFile, edit: Edit, pieces: Organiz
  */
 function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantOptions {
 	// Get current game rules and state
-	const { gameRules, moveRuleState, enpassantcoords } = egamerules.getCurrentGamerulesAndState();
+	const { gameRules, moveRuleState, enpassant } = egamerules.getCurrentGamerulesAndState();
 
 	// Construct position
 	const gamefile = gameslot.getGamefile()!;
@@ -228,11 +228,6 @@ function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantO
 	const specialRights = new Set(gamefile.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
 	if (revokeRedundantRights) revokeRedundantSpecialRights(gamefile, specialRights);
 
-	let enpassant: EnPassant | undefined;
-	if (enpassantcoords !== undefined) {
-		const pawn = egamerules.getEnPassantPawn(enpassantcoords, egamerules.getPlayerToMove());
-		enpassant = { square: enpassantcoords, pawn };
-	}
 	const state_global: GlobalGameState = {
 		specialRights,
 		moveRuleState,
