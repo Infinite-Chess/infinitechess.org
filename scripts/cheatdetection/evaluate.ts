@@ -5,7 +5,9 @@
  * game scored by a model held out from it (lib/models.ts):
  *   - honest players: the highest score each reaches, checked after every game as production does;
  *   - simulated cheaters, one per style on each real player's games: the share reaching the case
- *     line within N games, overall and by the average rating the player played at.
+ *     line within N games, overall and by the average rating the player played at;
+ *   - players switching to full engine use halfway through their history: the share caught within
+ *     N cheated games.
  *
  * Usage: npx tsx scripts/cheatdetection/evaluate.ts [honest] [--ceiling=…] [--fractions=…] [--case-line=…]
  * (`honest` stops after the honest players.)
@@ -21,6 +23,9 @@ import simulate from './lib/simulate.js';
 
 const GAME_COUNTS = [1, 3, 5, 10, 20];
 const BANDS = ['<1400', '1400-1699', '1700-1999', '2000+'];
+const SWITCH_COUNTS = [3, 5, 10];
+/** The fewest games a player needs for a switch halfway through to follow an honest history. */
+const SWITCH_MIN_GAMES = 15;
 
 // Evaluation ------------------------------------------------------------------
 
@@ -65,7 +70,21 @@ if (!settings.positional().includes('honest')) {
 		}
 		console.log(`${style.padEnd(10)} ${row.join(' | ')}`);
 	}
-	console.log(
-		`caught within N games [by average rating: ${BANDS.join(' / ')}] (players simulated)`,
-	);
+	const switched = SWITCH_COUNTS.map((n) => {
+		const peaks: number[] = [];
+		for (const games of byPlayer.values()) {
+			const history = games.filter((pg) => pg.game.cheat);
+			const switchAt = Math.floor(history.length / 2);
+			if (history.length < SWITCH_MIN_GAMES || history.length - switchAt < n) continue;
+			const scored = history.slice(0, switchAt + n).map((pg, i) => {
+				if (i < switchAt) return { pg, evidence: pg.evidence };
+				const cheated = simulate.cheat(pg.game, pg.parity, 'full', i, after, pg.evidence);
+				return { pg, evidence: cheated.evidence };
+			});
+			peaks.push(peakScore(scored, switchAt));
+		}
+		return `${n}g ${caught(peaks)} (n${peaks.length})`;
+	});
+	console.log(`${'switched'.padEnd(10)} ${switched.join(' | ')}`);
+	console.log(`caught within N games [by average rating: ${BANDS.join(' / ')}] (players simulated); switched: N cheated games after an honest first half`); // prettier-ignore
 }

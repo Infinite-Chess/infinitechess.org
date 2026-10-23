@@ -40,7 +40,7 @@ const TARGET_RATE = 0.0004;
 const BOOTSTRAP_RUNS = 2000;
 /** The worst-case honest player's rating deviation: an established player at the default rating. */
 const WORST_CASE_RD = 100;
-const WORST_CASE_PLAYERS = 6000;
+const WORST_CASE_PLAYERS = 20000;
 /** The game counts the worst case reports its false-case rate by. */
 const WORST_CASE_GAMES = [40, 100];
 

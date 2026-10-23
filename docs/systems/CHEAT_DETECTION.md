@@ -308,7 +308,7 @@ constant to raise if dismissed cases show it too low.
 
 There is no guaranteed bound beneath it. A score counted from one fixed game would reach 1,000 with
 chance at most 1/1,000 for an honest player at their ceiling, but the best run adds a starting point
-each game: at the ceiling it reaches 1,000 for 0.3% of players over 40 games and 0.7% over 100, and
+each game: at the ceiling it reaches 1,000 for 0.2% of players over 40 games and 0.7% over 100, and
 grows with games played. Real honest players sit below their ceiling, but the snapshot has none with
 more than ~40 rated games, so heavy players are where the estimate is least certain. Weighting each
 start by 1/(j(j+1)) would restore the bound, but was rejected: a full-engine cheater after an honest
