@@ -25,6 +25,7 @@ import databaseInit from './database/databaseInit.js';
 import featuredGames from './game/featured/featuredGames.js';
 import gameLifecycle from './game/gamemanager/gameLifecycle.js';
 import startupLogger from './utility/startupLogger.js';
+import cheatDetection from './game/cheatdetection/cheatDetection.js';
 
 // Global Error Handlers -------------------------------------------------------
 
@@ -92,6 +93,8 @@ httpsServer.keepAliveTimeout = 95000;
 
 await variantcache.loadAllVariants();
 
+// Before restoring live games: one concluding as it's restored queues itself, and must not queue twice.
+cheatDetection.start();
 // Restore live games from the database into memory before accepting new connections.
 gameRestart.restoreLiveGames();
 gameLifecycle.startPeriodicAbandonmentSweep();

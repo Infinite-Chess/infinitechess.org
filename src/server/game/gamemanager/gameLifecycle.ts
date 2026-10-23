@@ -34,6 +34,7 @@ import inGameStatus from '../seeksmanager/inGameStatus.js';
 import gamesManager from '../../database/gamesManager.js';
 import featuredGames from '../featured/featuredGames.js';
 import activePlayers from './activePlayers.js';
+import cheatDetection from '../cheatdetection/cheatDetection.js';
 import liveGameValues from './liveGameValues.js';
 import gameStateBuilder from './gameStateBuilder.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
@@ -210,8 +211,9 @@ function logConcludedGame(servergame: ServerGame): void {
 /**
  * Finalizes a concluded game: locks in its result permanently. Afterward, cheat reports are
  * no longer accepted. Game is ALREADY logged into the db at conclusion. This only flips the
- * flag, measures rating abuse, and tells clients the result can no
- * longer change. Idempotent. Finalized !== evicted: the game may linger for the rematch handshake.
+ * flag, measures rating abuse, queues the game for engine-assistance detection, and tells
+ * clients the result can no longer change. Idempotent. Finalized !== evicted: the game may linger
+ * for the rematch handshake.
  */
 function finalize(servergame: ServerGame): void {
 	if (servergame.match.finalized) return; // Already finalized
@@ -221,6 +223,7 @@ function finalize(servergame: ServerGame): void {
 
 	// Monitor suspicion levels for all players who participated in the game.
 	ratingAbuse.measureAfterGame(servergame);
+	cheatDetection.onFinalized(servergame);
 
 	// Tell any connected participants/spectators the result is now locked in, so their client knows it can
 	// never change — future reconnects fetch only rematch state (`subscriberematch`), not a full resync.
