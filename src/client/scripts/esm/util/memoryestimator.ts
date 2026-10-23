@@ -54,13 +54,7 @@ export function estimateMemorySizeOf(obj: unknown): string {
 			}
 			// TypedArray views (Int8Array, Float32Array, etc.)
 			else if (ArrayBuffer.isView(value)) {
-				bytes = value.byteLength + 64; // Data size + view object overhead
-				// Ensure the underlying buffer is also marked as visited if not already
-				if (value.buffer && !visited.has(value.buffer)) {
-					visited.add(value.buffer);
-					// Optionally add buffer overhead ONCE if buffer itself wasn't visited
-					// bytes += 64; // Depends on desired accuracy for shared buffer overhead.
-				}
+				bytes = 64 + roughSizeOfObject(value.buffer); // The view, plus its buffer counted once
 			}
 			// Date objects
 			else if (value instanceof Date)
