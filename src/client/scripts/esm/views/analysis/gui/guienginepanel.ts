@@ -22,8 +22,6 @@ import gameslot from '../../../game/chess/gameslot.js';
 import movetree from '../movetree.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
-import animation from '../../../board/rendering/animation/animation.js';
-import gamescene from '../../../game/rendering/gamescene.js';
 import guimovetree from './guimovetree.js';
 import gamesession from '../../../game/chess/gamesession.js';
 import { GameBus } from '../../../board/GameBus.js';
@@ -605,7 +603,8 @@ function playLine(tokens: string[], untilIndex: number): void {
 	const start = enterExistingBranch(gamefile, tokens, untilIndex);
 
 	if (start <= untilIndex) {
-		if (!moveutil.areWeViewingLatestMove(gamefile)) branchFromViewedPosition(gamefile);
+		if (!moveutil.areWeViewingLatestMove(gamefile))
+			guimovetree.branchFromViewedPosition(gamefile);
 		// Board moveIndex where the line's first uncommitted token applies. Used for debugging.
 		const startMoveIndex = gamefile.state.local.moveIndex;
 		for (let i = start; i <= untilIndex; i++) {
@@ -644,29 +643,6 @@ function enterExistingBranch(gamefile: GameFile, tokens: string[], untilIndex: n
 	if (deepest) guimovetree.navigateToNode(deepest);
 	return i;
 }
-
-/**
- * Truncates the analysis game to the currently-viewed ply so a new move can branch from it:
- * trims the move tree's active line and slices the flat move list to the viewed index, leaving
- * the gamefile genuinely at that position (board, turn, and global state all consistent).
- *
- * Deliberately does NOT dispatch 'moves-changed'. This is only ever a prelude to a move commit,
- * whose own dispatch reconciles the final state. Don't trigger the move list to re-render twice over.
- */
-function branchFromViewedPosition(gamefile: GameFile): void {
-	movetree.beginBranchFromViewedPosition(gamefile);
-	// Slice all moves off the gamefile after the current ply.
-	gamefile.moves.length = gamefile.state.local.moveIndex + 1;
-	// The viewed node is now the front, so its stored conclusion is the game's.
-	gamefile.gameConclusion = movetree.getActiveLineConclusion();
-	animation.clearAnimations(gamescene.getGameContext());
-}
-
-// Registration ----------------------------------------------------------------
-
-// Tell selection.ts to branch from the viewed ply (instead of forwarding to the front)
-// when a piece is selected mid-game, so a new continuation can be played from there.
-selection.setViewedPositionBrancher(branchFromViewedPosition);
 
 // Exports ---------------------------------------------------------------------
 

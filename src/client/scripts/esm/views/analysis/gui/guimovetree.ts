@@ -1,12 +1,13 @@
 // src/client/scripts/esm/views/analysis/gui/guimovetree.ts
 
 /**
- * Analysis-page extension of the moves panel: renders the move TREE (mainline plus
- * nested variations) into the shared `.moves-table`, with click-to-navigate, a
- * current-node highlight, and a right-click (or long-press) context menu for promoting /
- * demoting / deleting branches. Registers itself with `guimoveslist` on import, which then
- * delegates all rendering here in place of its flat move list. Imported only by the
- * analysis page, so no move-tree code reaches the game page.
+ * Analysis-page extension of the moves panel: renders the move TREE (mainline plus nested
+ * variations) into the shared `.moves-table`, with click-to-navigate, a current-node highlight,
+ * and a right-click (or long-press) context menu for promoting / demoting / deleting branches.
+ * Registers itself with `guimoveslist` on import, which then delegates all rendering here in
+ * place of its flat move list, and with `selection`, so a move played from an earlier ply
+ * branches the game there. Imported only by the analysis page, so no move-tree code reaches the
+ * game page.
  */
 
 import type { VNode } from 'snabbdom';
@@ -29,6 +30,7 @@ import gameslot from '../../../game/chess/gameslot.js';
 import guiclock from '../../../game/gui/guiclock.js';
 import premoves from '../../../game/chess/premoves.js';
 import svgcache from '../../../chess/rendering/svgcache.js';
+import animation from '../../../board/rendering/animation/animation.js';
 import gamescene from '../../../game/rendering/gamescene.js';
 import moveevals from '../moveevals.js';
 import selection from '../../../game/chess/selection.js';
@@ -571,6 +573,10 @@ guimoveslist.registerRenderer({
 	onGameUnloaded: clearMoveTree,
 });
 
+// Lets selection.ts select pieces at an earlier ply instead of forwarding to the front, and
+// branch the game there once a move is played.
+selection.setViewedPositionBrancher(branchFromViewedPosition);
+
 // Public API ------------------------------------------------------------------
 
 /**
@@ -589,6 +595,23 @@ function navigateToNode(node: AnalysisMoveNode, scrollIntoView = false): void {
 		else guiboardcontrols.callback_Recenter();
 	}
 	if (scrollIntoView) scrollToCurrentNode();
+}
+
+/**
+ * Truncates the analysis game to the currently-viewed ply so a new move can branch from it:
+ * trims the move tree's active line and slices the flat move list to the viewed index, leaving
+ * the gamefile genuinely at that position (board, turn, and global state all consistent).
+ *
+ * Deliberately does NOT dispatch 'moves-changed'. This is only ever a prelude to a move commit,
+ * whose own dispatch reconciles the final state. Don't trigger the move list to re-render twice over.
+ */
+function branchFromViewedPosition(gamefile: GameFile): void {
+	movetree.beginBranchFromViewedPosition(gamefile);
+	// Slice all moves off the gamefile after the current ply.
+	gamefile.moves.length = gamefile.state.local.moveIndex + 1;
+	// The viewed node is now the front, so its stored conclusion is the game's.
+	gamefile.gameConclusion = movetree.getActiveLineConclusion();
+	animation.clearAnimations(gamescene.getGameContext());
 }
 
 /**
@@ -694,5 +717,6 @@ function scheduleReconcile(): void {
 export default {
 	formatMoveIndex,
 	navigateToNode,
+	branchFromViewedPosition,
 	addVariation,
 };
