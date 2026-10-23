@@ -10,10 +10,10 @@ import { listener_document } from '../../../../game/listeners.js';
 
 // Elements --------------------------------------------------------------------
 
-/** The button the toggles visibility of the Start local game popup window. */
+/** The button that toggles visibility of the Clear position popup window. */
 const element_clearbutton = document.getElementById('clearall')!;
 
-/** The actual window of the Game Rules popup. */
+/** The actual window of the Clear position popup. */
 const element_window = document.getElementById('clear-position-UI')!;
 const element_header = document.getElementById('clear-position-UI-header')!;
 const element_closeButton = document.getElementById('close-clear-position-UI')!;
@@ -44,7 +44,7 @@ function onClose(resetPositioning: boolean): void {
 	closeClearPositionUIListeners();
 }
 
-// Gamerules-specific listeners ------------------------------------------------
+// Confirmation listeners ------------------------------------------------------
 
 function initClearPositionUIListeners(): void {
 	yesButton.addEventListener('click', onYesButtonPress);

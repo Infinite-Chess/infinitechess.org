@@ -17,12 +17,12 @@ import { listener_document } from '../../../game/listeners.js';
 
 // Types -----------------------------------------------------------------------
 
-export type Tool = (typeof validTools)[number];
+export type Tool = (typeof VALID_TOOLS)[number];
 
 // Constants -------------------------------------------------------------------
 
 /** All tools that can be used in the board editor. */
-const validTools = ['normal', 'placer', 'eraser', 'specialrights', 'selection-tool'] as const;
+const VALID_TOOLS = ['normal', 'placer', 'eraser', 'specialrights', 'selection-tool'] as const;
 
 // State -----------------------------------------------------------------------
 
@@ -46,7 +46,7 @@ function getTool(): Tool {
 
 /** Changes the active tool. */
 function setTool(tool: string): void {
-	if (!validTools.includes(tool as Tool)) return console.error('Invalid tool: ' + tool);
+	if (!VALID_TOOLS.includes(tool as Tool)) return console.error('Invalid tool: ' + tool);
 	currentTool = tool as Tool;
 	drawingtool.onToolChange(currentTool);
 

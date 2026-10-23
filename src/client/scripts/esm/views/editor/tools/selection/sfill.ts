@@ -33,9 +33,9 @@ import arrowinteraction from '../../../../game/rendering/arrows/arrowinteraction
 /** Whether the mouse is currently within the minimum distance to grab the fill handle. */
 let withinGrabDist = false;
 
-/** Whether we are currently dragging the selection. */
+/** Whether we are currently dragging the fill handle. */
 let areFilling = false;
-/** The ID of the pointer currently being used drag the selection. */
+/** The ID of the pointer currently dragging the fill handle. */
 let pointerId: string | undefined = undefined;
 /** The last known square the pointer was hovering over. */
 let lastPointerCoords: Coords | undefined;
@@ -43,7 +43,7 @@ let lastPointerCoords: Coords | undefined;
 // Methods ---------------------------------------------------------------------
 
 /**
- * Updates the logic that handles dragging the selection box from the edges.
+ * Updates the logic that handles dragging the fill handle.
  * ONLY CALL if there's an existing selection area, and we are not currently making a new selection!
  */
 function update(): void {
@@ -106,6 +106,7 @@ function isMouseHoveringOverFillHandle(): boolean {
 	return distToFillHandle <= grabbableDist;
 }
 
+/** Drops any fill in progress and its cursor style. */
 function resetState(): void {
 	withinGrabDist = false;
 	scursor.removeCursor('crosshair');
@@ -114,13 +115,14 @@ function resetState(): void {
 	lastPointerCoords = undefined;
 }
 
-/** Grabs the selection box. */
+/** Grabs the fill handle. */
 function startFill(): void {
 	areFilling = true;
 
 	lastPointerCoords = mouse.getTilePointerOver_Integer(pointerId!)!;
 }
 
+/** Releases the fill handle, repeating the selection into the dragged-out box. */
 function executeFill(): void {
 	const fillBox = calculateFillBox();
 
@@ -135,9 +137,7 @@ function executeFill(): void {
 	stransformations.Fill(gamefile, mesh, selectionBox, fillBox);
 }
 
-/**
- * Determines the fill axis and distance based on the current pointer position.
- */
+/** Determines the fill axis and distance based on the current pointer position. */
 function calculateFillBox(): BoundingBox | undefined {
 	const selectionBox: BoundingBox = selectiontool.getSelectionIntBox()!;
 
@@ -198,6 +198,7 @@ function calculateFillBox(): BoundingBox | undefined {
 
 // Rendering -------------------------------------------------------------------
 
+/** Outlines the box the fill would cover if released now. */
 function render(): void {
 	if (!areFilling) return;
 

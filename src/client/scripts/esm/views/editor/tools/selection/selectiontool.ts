@@ -33,7 +33,7 @@ import { listener_document, listener_canvas } from '../../../../game/listeners.j
 
 // State -----------------------------------------------------------------------
 
-/** Whether or now we are currently making a selection. */
+/** Whether or not we are currently making a selection. */
 let selecting: boolean = false;
 /** The ID of the pointer currently being used creating a selection. */
 let pointerId: string | undefined = undefined;
@@ -57,6 +57,7 @@ GameBus.addEventListener('game-unloaded', () => resetState());
 
 // Methods ---------------------------------------------------------------------
 
+/** Updates the Selection Tool each frame: its shortcuts, handles, and the selection in progress. */
 function update(): void {
 	if (isExistingSelection()) testShortcuts(); // Is a current selection, or one is in progress
 
@@ -68,11 +69,7 @@ function update(): void {
 			sdrag.update(); // Update selection box drag handler
 		}
 		// Test if a new selection is beginning
-		if (
-			mouse.isMouseDown(Mouse.LEFT) &&
-			!selecting &&
-			!arrowinteraction.areHoveringAtleastOneArrow()
-		) {
+		if (mouse.isMouseDown(Mouse.LEFT) && !arrowinteraction.areHoveringAtleastOneArrow()) {
 			// Start new selection
 			mouse.claimMouseDown(Mouse.LEFT); // Remove the pointer down so other scripts don't use it
 			mouse.cancelMouseClick(Mouse.LEFT); // Cancel any potential future click so other scripts don't use it
@@ -100,9 +97,8 @@ function testShortcuts(): void {
 	}
 }
 
+/** Begins a new selection at the pointer's square. */
 function beginSelection(): void {
-	// console.log("Beginning selection");
-
 	startPoint = undefined;
 	endPoint = undefined;
 	selecting = true;
@@ -114,9 +110,8 @@ function beginSelection(): void {
 	lastPointerCoords = startPoint;
 }
 
+/** Finalizes the selection in progress at the pointer's last square. */
 function endSelection(): void {
-	// console.error("Ending selection");
-
 	// Set the end point
 	endPoint = lastPointerCoords;
 	guipositionheader.onNewSelection();
@@ -125,10 +120,7 @@ function endSelection(): void {
 	pointerId = undefined;
 }
 
-// function cancelSelection(): void {
-// 	resetState();
-// }
-
+/** Clears any selection, made or in progress, along with its handles. */
 function resetState(): void {
 	selecting = false;
 	pointerId = undefined;
@@ -150,9 +142,10 @@ function isACurrentSelection(): boolean {
  * Also considered whether a selection area is renderable or not.
  */
 function isExistingSelection(): boolean {
-	return !!selecting || !!endPoint;
+	return selecting || !!endPoint;
 }
 
+/** Renders the selection and its handles, or the hovered rank and file when there's none. */
 function render(): void {
 	if (isExistingSelection()) {
 		// There either is a selection, or we are currently making one
@@ -230,7 +223,7 @@ function selectAll(): void {
 	if (box === undefined) {
 		// No pieces, cancel selection
 		resetState();
-		// Disabled for now as I'm not sure I like Selecting all immediately transitioning
+		// Optional: Also transition to the selection
 		// guinavigation.recenter();
 		return;
 	}
@@ -239,7 +232,7 @@ function selectAll(): void {
 	endPoint = [box.right, box.bottom];
 
 	guipositionheader.onNewSelection();
-	// Disabled for now as I'm not sure I like Selecting all immediately transitioning
+	// Optional: Also transition to the selection
 	// Transition.zoomToCoordsBox(box);
 }
 

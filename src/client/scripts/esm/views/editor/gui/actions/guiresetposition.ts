@@ -10,10 +10,10 @@ import { listener_document } from '../../../../game/listeners.js';
 
 // Elements --------------------------------------------------------------------
 
-/** The button the toggles visibility of the Start local game popup window. */
+/** The button that toggles visibility of the Reset position popup window. */
 const element_resetbutton = document.getElementById('reset')!;
 
-/** The actual window of the Game Rules popup. */
+/** The actual window of the Reset position popup. */
 const element_window = document.getElementById('reset-position-UI')!;
 const element_header = document.getElementById('reset-position-UI-header')!;
 const element_closeButton = document.getElementById('close-reset-position-UI')!;
@@ -44,7 +44,7 @@ function onClose(resetPositioning: boolean): void {
 	closeResetPositionUIListeners();
 }
 
-// Gamerules-specific listeners ------------------------------------------------
+// Confirmation listeners ------------------------------------------------------
 
 function initResetPositionUIListeners(): void {
 	yesButton.addEventListener('click', onYesButtonPress);

@@ -104,7 +104,6 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 
 	// Prune the oldest edits in the history if we exceed the cap, to help prevent memory crashes.
 	const totalChanges: number = edits!.reduce((sum, edit) => sum + edit.changes.length, 0);
-	// console.log("Total changes in edit history: " + totalChanges);
 	if (totalChanges > EDIT_HISTORY_MAX_CHANGES) {
 		let changesToRemove = totalChanges - EDIT_HISTORY_MAX_CHANGES;
 		while (changesToRemove > 0 && edits!.length > 0) {
@@ -112,7 +111,6 @@ function runEdit(gamefile: GameFile, mesh: Mesh, edit: Edit, forward: boolean = 
 			changesToRemove -= oldestEdit.changes.length;
 			indexOfThisEdit!--;
 		}
-		// console.log("Pruned oldest edits.");
 	}
 }
 
@@ -184,6 +182,8 @@ function redo(): void {
 	boardeditor.markPositionDirty();
 }
 
+// Querying --------------------------------------------------------------------
+
 /** Returns true if there is an edit to undo. */
 function canUndo(): boolean {
 	// comparing undefined always returns false
@@ -204,10 +204,7 @@ function queueRemovePiece(gamefile: GameFile, edit: Edit, piece: Piece): void {
 	queueSpecialRights(gamefile, edit, piece.coords, false);
 }
 
-/**
- * Queues the addition of a piece, including its special rights, if specified, to the edit changes.
- * If specialrights is left undefined, it is set according to the game rules
- */
+/** Queues the addition of a piece, including its special rights, if specified, to the edit changes. */
 function queueAddPiece(
 	gamefile: GameFile,
 	edit: Edit,

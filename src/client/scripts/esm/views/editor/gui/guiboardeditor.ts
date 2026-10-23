@@ -10,7 +10,8 @@ import ecloud from '../actions/ecloud.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import eactions from '../actions/eactions.js';
 import eautosave from '../actions/eautosave.js';
-import gameloader from '../gameloader.js';
+import gamesession from '../../../game/chess/gamesession.js';
+import editorloader from '../editorloader.js';
 import guitoolbar from './guitoolbar.js';
 import guipalette from './guipalette.js';
 import boardeditor from '../boardeditor.js';
@@ -59,13 +60,13 @@ let boardEditorOpen = false;
 
 // Functions -------------------------------------------------------------------
 
-/**
- * Open the board editor GUI
- */
+/** Opens the board editor GUI, loading the position it should start on. */
 async function open(): Promise<void> {
 	boardEditorOpen = true;
 	element_menu.classList.remove('hidden');
 	window.dispatchEvent(new CustomEvent('resize')); // the screen and canvas get effectively resized when the vertical board editor bar is toggled
+
+	gamesession.setSessionGame({ type: 'editor' });
 
 	// A position handed off from another page takes precedence over the autosave.
 	// Failing that, read in the autosave; failing that, load the Classical position.
@@ -74,24 +75,20 @@ async function open(): Promise<void> {
 
 	if (pendingHandoff !== undefined) {
 		boardeditor.clearActivePosition();
-		await gameloader.startBoardEditorFromCustomPosition(
-			{ additional: { variantOptions: pendingHandoff.variantOptions } },
+		await editorloader.loadVariantOptions(
+			pendingHandoff.variantOptions,
 			true, // Dirty position: the handed-off position isn't one of the editor's saves
 		);
 	} else if (autoSaveState === undefined) {
 		boardeditor.clearActivePosition();
-		await gameloader.startBoardEditor();
+		await editorloader.loadClassical();
 	} else {
 		if (autoSaveState.active_position !== undefined)
 			boardeditor.setActivePosition(autoSaveState.active_position);
 		else boardeditor.clearActivePosition();
 
-		await gameloader.startBoardEditorFromCustomPosition(
-			{
-				additional: {
-					variantOptions: autoSaveState.variantOptions,
-				},
-			},
+		await editorloader.loadVariantOptions(
+			autoSaveState.variantOptions,
 			autoSaveState.dirty,
 			autoSaveState.pawnDoublePush,
 			autoSaveState.castling,

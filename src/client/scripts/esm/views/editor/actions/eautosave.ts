@@ -7,7 +7,7 @@
 
 import type { ActivePosition } from '../boardeditor.js';
 
-import z from 'zod';
+import * as z from 'zod';
 
 import eactions from './eactions.js';
 import IndexedDB from '../../../util/IndexedDB.js';
@@ -175,6 +175,8 @@ async function loadAutosave(): Promise<EditorAutosaveState | undefined> {
 	}
 	return parsed.data;
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	markPositionDirty,

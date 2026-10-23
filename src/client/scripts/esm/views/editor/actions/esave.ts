@@ -17,8 +17,8 @@ import boardeditor from '../boardeditor.js';
 
 /** Prevent overlapping IndexedDB saves (single-flight): is save ongoing */
 let positionSaveInFlight = false;
-/** Prevent overlapping IndexedDB writes (single-flight): is save pending */
-let positionSavePending = false;
+/** Prevent overlapping IndexedDB writes (single-flight): the save requested meanwhile, by name */
+let positionSavePending: string | undefined;
 
 // Actions ---------------------------------------------------------------------
 
@@ -26,12 +26,12 @@ let positionSavePending = false;
 async function saveLocal(position_name: string): Promise<void> {
 	// Coalesce: if a save is already running, request another and return.
 	if (positionSaveInFlight) {
-		positionSavePending = true;
+		positionSavePending = position_name;
 		return;
 	}
 
 	positionSaveInFlight = true;
-	positionSavePending = false;
+	positionSavePending = undefined;
 
 	try {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
@@ -48,7 +48,7 @@ async function saveLocal(position_name: string): Promise<void> {
 			castling,
 		});
 		// A pending re-save supersedes this one, and reports once it lands.
-		if (!positionSavePending) {
+		if (positionSavePending === undefined) {
 			boardeditor.markPositionClean();
 			eautosave.markPositionDirty();
 			void eautosave.autosaveCurrentPositionOnce();
@@ -62,9 +62,10 @@ async function saveLocal(position_name: string): Promise<void> {
 		positionSaveInFlight = false;
 
 		// If something changed while saving, immediately save again (latest wins).
-		if (positionSavePending) {
-			positionSavePending = false;
-			await saveLocal(position_name);
+		const pending = positionSavePending;
+		if (pending !== undefined) {
+			positionSavePending = undefined;
+			await saveLocal(pending);
 		}
 	}
 }

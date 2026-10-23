@@ -46,7 +46,7 @@ function makeMoveEdit(gamefile: GameFile, mesh: Mesh | undefined, moveCoords: Mo
 
 /**
  * Similar to `movepiece.generateMove`, but specifically for editor moves,
- * which don't execute special moves, nor are appeneded to the game's moves list,
+ * which don't execute special moves, nor are appended to the game's moves list,
  * nor the gamefile's moveIndex property updated.
  */
 function generateMoveEdit(boardsim: Board, moveCoords: MoveCoords): Edit {
@@ -77,9 +77,3 @@ function generateMoveEdit(boardsim: Board, moveCoords: MoveCoords): Edit {
 
 // Override selection's default move logic with the editor's on load.
 selection.setEditorMoveHandler(makeMoveEdit);
-
-// Exports ---------------------------------------------------------------------
-
-export default {
-	makeMoveEdit,
-};

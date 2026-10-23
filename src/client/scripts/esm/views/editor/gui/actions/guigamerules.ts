@@ -24,7 +24,7 @@ import egamerules, { GameRulesGUIinfo } from '../../egamerules.js';
 
 // Elements --------------------------------------------------------------------
 
-/** The button the toggles visibility of the Game Rules popup window. */
+/** The button that toggles visibility of the Game Rules popup window. */
 const element_gamerules = document.getElementById('gamerules')!;
 
 /** The actual window of the Game Rules popup. */
@@ -90,9 +90,9 @@ const elements_selectionList: HTMLInputElement[] = [
 // Constants -------------------------------------------------------------------
 
 /** Regexes for validating game rules input fields */
-const integerRegex = new RegExp(String.raw`^${icnposition.INTEGER_SOURCE}$`);
-const promotionRanksRegex = new RegExp(String.raw`^${icnconverter.PROMOTION_RANKS_SOURCE}$`);
-const promotionPiecesRegex = new RegExp(String.raw`^${icnconverter.PROMOTIONS_PIECES_SOURCE}$`);
+const INTEGER_REGEX = new RegExp(String.raw`^${icnposition.INTEGER_SOURCE}$`);
+const PROMOTION_RANKS_REGEX = new RegExp(String.raw`^${icnconverter.PROMOTION_RANKS_SOURCE}$`);
+const PROMOTION_PIECES_REGEX = new RegExp(String.raw`^${icnconverter.PROMOTIONS_PIECES_SOURCE}$`);
 
 // Create floating window ------------------------------------------------------
 
@@ -142,7 +142,7 @@ function readGameRules(): void {
 	// enPassant
 	let validEnPassantCoords = 0;
 	const enPassantX = element_enPassantX.value;
-	if (integerRegex.test(enPassantX)) {
+	if (INTEGER_REGEX.test(enPassantX)) {
 		element_enPassantX.classList.remove('invalid-input');
 		validEnPassantCoords++;
 	} else if (enPassantX === '') {
@@ -152,7 +152,7 @@ function readGameRules(): void {
 	}
 
 	const enPassantY = element_enPassantY.value;
-	if (integerRegex.test(enPassantY)) {
+	if (INTEGER_REGEX.test(enPassantY)) {
 		element_enPassantY.classList.remove('invalid-input');
 		validEnPassantCoords++;
 	} else if (enPassantY === '') {
@@ -167,7 +167,7 @@ function readGameRules(): void {
 	// moveRule
 	let validMoveRuleInputs = 0;
 	const moveRuleCurrent = element_moveruleCurrent.value;
-	if (integerRegex.test(moveRuleCurrent) && Number(moveRuleCurrent) >= 0) {
+	if (INTEGER_REGEX.test(moveRuleCurrent) && Number(moveRuleCurrent) >= 0) {
 		element_moveruleCurrent.classList.remove('invalid-input');
 		validMoveRuleInputs++;
 	} else if (moveRuleCurrent === '') {
@@ -177,7 +177,7 @@ function readGameRules(): void {
 	}
 
 	const moveRuleMax = element_moveruleMax.value;
-	if (integerRegex.test(moveRuleMax) && Number(moveRuleMax) > 0) {
+	if (INTEGER_REGEX.test(moveRuleMax) && Number(moveRuleMax) > 0) {
 		if (validMoveRuleInputs === 1 && Number(moveRuleCurrent) > Number(moveRuleMax)) {
 			element_moveruleMax.classList.add('invalid-input');
 		} else {
@@ -196,7 +196,7 @@ function readGameRules(): void {
 	// promotionRanks
 	let promotionRanksWhite: bigint[] = [];
 	const promotionRanksWhiteInput = element_promotionranksWhite.value;
-	if (promotionRanksRegex.test(promotionRanksWhiteInput)) {
+	if (PROMOTION_RANKS_REGEX.test(promotionRanksWhiteInput)) {
 		element_promotionranksWhite.classList.remove('invalid-input');
 		promotionRanksWhite = [...new Set(promotionRanksWhiteInput.split(',').map(BigInt))];
 	} else if (promotionRanksWhiteInput === '') {
@@ -207,7 +207,7 @@ function readGameRules(): void {
 
 	let promotionRanksBlack: bigint[] = [];
 	const promotionRanksBlackInput = element_promotionranksBlack.value;
-	if (promotionRanksRegex.test(promotionRanksBlackInput)) {
+	if (PROMOTION_RANKS_REGEX.test(promotionRanksBlackInput)) {
 		element_promotionranksBlack.classList.remove('invalid-input');
 		promotionRanksBlack = [...new Set(promotionRanksBlackInput.split(',').map(BigInt))];
 	} else if (promotionRanksBlackInput === '') {
@@ -225,7 +225,7 @@ function readGameRules(): void {
 	// promotion pieces
 	let promotionPieces: RawType[] | undefined = undefined;
 	const promotionPiecesRaw = element_promotionpieces.value;
-	pa: if (promotionPiecesRegex.test(promotionPiecesRaw)) {
+	pa: if (PROMOTION_PIECES_REGEX.test(promotionPiecesRaw)) {
 		const runningpromotionPieces: RawType[] = [];
 
 		for (const code of promotionPiecesRaw.split(',')) {
@@ -292,18 +292,18 @@ function readGameRules(): void {
 	} else {
 		// Must be valid integers or empty, and must be ascending
 		// Empty represents Infinity or -Infinity
-		let leftValid = !element_borderLeft.value || integerRegex.test(element_borderLeft.value);
+		let leftValid = !element_borderLeft.value || INTEGER_REGEX.test(element_borderLeft.value);
 		let rightValid =
 			!element_borderRight.value ||
-			(integerRegex.test(element_borderRight.value) &&
+			(INTEGER_REGEX.test(element_borderRight.value) &&
 				(!leftValid ||
 					!element_borderLeft.value ||
 					BigInt(element_borderRight.value) >= BigInt(element_borderLeft.value)));
 		let bottomValid =
-			!element_borderBottom.value || integerRegex.test(element_borderBottom.value);
+			!element_borderBottom.value || INTEGER_REGEX.test(element_borderBottom.value);
 		let topValid =
 			!element_borderTop.value ||
-			(integerRegex.test(element_borderTop.value) &&
+			(INTEGER_REGEX.test(element_borderTop.value) &&
 				(!bottomValid ||
 					!element_borderBottom.value ||
 					BigInt(element_borderTop.value) >= BigInt(element_borderBottom.value)));
@@ -394,7 +394,7 @@ function readGameRules(): void {
 	)
 		egamerules.queueToggleGlobalCastlingWithRooks(gameRules.castling, edit);
 
-	// Upate boardeditor.gamerulesGUIinfo
+	// Update egamerules.gamerulesGUIinfo
 	egamerules.updateGamerulesGUIinfo(gameRules);
 
 	edithistory.runEdit(gamefile, mesh, edit, true);

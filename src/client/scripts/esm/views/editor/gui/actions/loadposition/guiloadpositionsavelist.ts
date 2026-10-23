@@ -51,7 +51,7 @@ const element_noSavesMessage = document.getElementById('saved-position-list-empt
 /** Spinny pawn loading animation shown during in-flight API requests */
 const element_loadingPawn = document.getElementById('load-position-loading-pawn')!;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Object to keep track of all position button listeners */
 const registeredButtonListeners = new Map<HTMLButtonElement, ButtonHandlerPair>();
@@ -69,7 +69,6 @@ let activeRequestCount = 0;
 
 GameBus.addEventListener('game-loaded', () => {
 	load_counter++;
-	// console.log('Incremented positionLoadEpoch');
 });
 
 // Loading animation -----------------------------------------------------------
@@ -84,18 +83,20 @@ async function withRequest<T>(fn: () => Promise<T>): Promise<T> {
 	try {
 		return await fn();
 	} finally {
-		activeRequestCount = Math.max(0, activeRequestCount - 1);
+		activeRequestCount--;
 		if (activeRequestCount === 0) element_loadingPawn.classList.add('hidden');
 	}
 }
 
 // Utilities -------------------------------------------------------------------
 
+/** Adds a row button's click listener, tracked so the next rebuild can remove it. */
 function registerButtonClick(button: HTMLButtonElement, handler: (e: MouseEvent) => void): void {
 	button.addEventListener('click', handler);
 	registeredButtonListeners.set(button, { type: 'click', handler });
 }
 
+/** Removes every tracked row button listener. */
 function unregisterAllPositionButtonListeners(): void {
 	for (const [button, { type, handler }] of registeredButtonListeners) {
 		button.removeEventListener(type, handler);
@@ -350,7 +351,6 @@ function createButtonElement(svgHref: string): HTMLButtonElement {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	registerButtonClick,
 	unregisterAllPositionButtonListeners,
 	clearSavedPositionList,
 	updateSavedPositionListUI,

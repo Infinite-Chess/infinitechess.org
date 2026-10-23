@@ -124,6 +124,7 @@ function isMouseHoveringOverSelectionEdge(): boolean {
 	return mouseIsInOuterBox && !mouseIsInInnerBox;
 }
 
+/** Drops any drag in progress and its cursor styles. */
 function resetState(): void {
 	withinGrabDist = false;
 	scursor.removeCursor('grabbing');
@@ -153,6 +154,7 @@ function pickUpSelection(): void {
 	lastPointerCoords = anchorCoords;
 }
 
+/** Drops the dragged selection, translating its pieces by how far it was dragged. */
 function dropSelection(): void {
 	// Determine the final distance to translate the selection.
 
@@ -171,24 +173,9 @@ function dropSelection(): void {
 	stransformations.Translate(gamefile, mesh, selectionBox, translation);
 }
 
-// /**
-//  * Whether we are currently dragging the selection, AND
-//  * we have dragged it at least 1 square away from the anchor.
-//  */
-// function isDragTranslationPositive(): boolean {
-// 	if (!areDragging || !anchorCoords) return false;
-
-// 	// Determine the current int coord of the pointer
-// 	const pointerCoordRounded: Coords = getIntCoordOfPointer();
-// 	// Determine by how many tiles the pointer has dragged from the anchor
-// 	const translation: Coords = coordutil.subtractCoords(pointerCoordRounded, anchorCoords!);
-
-// 	// Return whether that's absolutely positive
-// 	return translation[0] !== 0n || translation[1] !== 0n;
-// }
-
 // Rendering -------------------------------------------------------------------
 
+/** Outlines where the dragged selection would land if dropped now. */
 function render(): void {
 	if (!areDragging || !anchorCoords) return;
 
@@ -210,7 +197,6 @@ function render(): void {
 		selectiontool.convertIntBoxToWorldBox(translatedIntBox);
 
 	stoolgraphics.renderSelectionBoxWireframe(translatedWorldBox);
-	// stoolgraphics.renderSelectionBoxFill(translatedWorldBox);
 }
 
 // Exports ---------------------------------------------------------------------

@@ -33,7 +33,7 @@ const EDITOR_PROFILE: InputProfile = {
 	},
 	getCollapseMouseButton(): MouseButton | undefined {
 		if (etoolmanager.isLeftMouseReserved()) return undefined; // Left click reserved for drawing tool
-		// Default: Right mouse
+		// Default: Left mouse
 		return Mouse.LEFT;
 	},
 	getPieceSelectionMouseButton(): MouseButton | undefined {

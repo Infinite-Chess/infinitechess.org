@@ -11,12 +11,12 @@ import type { Piece } from '../../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../../shared/util/coordutil.js';
 import type { UnboundedRectangle } from '../../../../../shared/util/math/bounds.js';
 import type { GameRules, Promotion } from '../../../../../shared/chess/util/gamerules.js';
-import type { PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
+import type { Player, PlayerGroup, RawType } from '../../../../../shared/chess/util/typeutil.js';
 import type { GameruleWinCondition } from '../../../../../shared/chess/util/winconutil.js';
+import type { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state.js';
 
 import boardutil from '../../../../../shared/chess/logic/boardutil.js';
 import gamerules from '../../../../../shared/chess/util/gamerules.js';
-import { EnPassant, GlobalGameState } from '../../../../../shared/chess/logic/state.js';
 import typeutil, {
 	players as p,
 	rawTypes as r,
@@ -28,9 +28,12 @@ import guigamerules from './gui/actions/guigamerules.js';
 
 // Types -----------------------------------------------------------------------
 
+/** The sides the editor supports to move. Widening it fails to compile wherever it's keyed on. */
+type PlayerToMove = 'white' | 'black';
+
 /** Type encoding information for the game rules object of the editor position */
 export interface GameRulesGUIinfo {
-	playerToMove: 'white' | 'black';
+	playerToMove: PlayerToMove;
 	enPassant?: {
 		x: bigint;
 		y: bigint;
@@ -52,12 +55,18 @@ export interface GameRulesGUIinfo {
 
 // Constants -------------------------------------------------------------------
 
-// Game rule relevant piece types
-
 /** All piece types affected by the pawnDoublePush rule */
-const pawnDoublePushTypes: RawType[] = [r.PAWN];
+const PAWN_DOUBLE_PUSH_TYPES: RawType[] = [r.PAWN];
 /** All piece types affected by the castling rule. These pieces are the only pieces allowed to castle under the castling rule. */
-const castlingTypes: RawType[] = [r.ROOK, r.KING, r.ROYALCENTAUR];
+const CASTLING_TYPES: RawType[] = [r.ROOK, r.KING, r.ROYALCENTAUR];
+
+/** The turn order beginning with each side to move. */
+const TURN_ORDERS: Record<PlayerToMove, Player[]> = {
+	white: [p.WHITE, p.BLACK],
+	black: [p.BLACK, p.WHITE],
+};
+/** Per side to move, the rank offset from an en passant square to the pawn capturable there. */
+const EN_PASSANT_PAWN_RANK_OFFSETS: Record<PlayerToMove, bigint> = { white: -1n, black: 1n };
 
 // State -----------------------------------------------------------------------
 
@@ -69,18 +78,19 @@ let gamerulesGUIinfo: GameRulesGUIinfo = {
 
 // Getting & Setting -----------------------------------------------------------
 
-function getPlayerToMove(): 'white' | 'black' {
+/** The player to move in the editor position. */
+function getPlayerToMove(): PlayerToMove {
 	return gamerulesGUIinfo.playerToMove;
 }
 
+/** Builds the position's GameRules, move-rule state and en passant square from the GUI's rules. */
 function getCurrentGamerulesAndState(): {
 	gameRules: GameRules;
 	moveRuleState: number | undefined;
 	enpassantcoords: Coords | undefined;
 } {
 	// Construct gameRules
-	// prettier-ignore
-	const turnOrder = gamerulesGUIinfo.playerToMove === "white" ? [p.WHITE, p.BLACK] : gamerulesGUIinfo.playerToMove === "black" ? [p.BLACK, p.WHITE] : (() => { throw Error("Invalid player to move"); })(); // Future protection
+	const turnOrder = [...TURN_ORDERS[gamerulesGUIinfo.playerToMove]];
 	const moveRule =
 		gamerulesGUIinfo.moveRule !== undefined ? gamerulesGUIinfo.moveRule.max : undefined;
 	const winConditions = {
@@ -210,7 +220,7 @@ function setGamerulesGUIinfo(
  * This gets called when undoing or redoing moves, to forget the pawnDoublePush and castling entries of the gamerules
  * since we do not keep track of the checkbox state between edits.
  * This also gets called when resetting the position.
- * @param value - The value to set pawnDoublePush and castling to, or undefined to set them to indeterminate.
+ * @param options - The values to set pawnDoublePush and castling to, each undefined for indeterminate.
  */
 function setPositionDependentGameRules(
 	options: { pawnDoublePush?: boolean | undefined; castling?: boolean | undefined } = {},
@@ -221,6 +231,7 @@ function setPositionDependentGameRules(
 	guigamerules.setGameRules(gamerulesGUIinfo); // Update the game rules GUI
 }
 
+/** The pawnDoublePush and castling checkbox states, each undefined while indeterminate. */
 function getPositionDependentGameRules(): {
 	pawnDoublePush: boolean | undefined;
 	castling: boolean | undefined;
@@ -245,15 +256,15 @@ function updateGamerulesGUIinfo(new_gamerulesGUIinfo: GameRulesGUIinfo): void {
 function updateGamerulesUponQueueToggleSpecialRight(type: number, future: boolean): void {
 	if (gamerulesGUIinfo.pawnDoublePush !== undefined) {
 		const rawtype = typeutil.getRawType(type);
-		if (pawnDoublePushTypes.includes(rawtype) && gamerulesGUIinfo.pawnDoublePush !== future)
+		if (PAWN_DOUBLE_PUSH_TYPES.includes(rawtype) && gamerulesGUIinfo.pawnDoublePush !== future)
 			gamerulesGUIinfo.pawnDoublePush = undefined;
 	}
 
 	if (gamerulesGUIinfo.castling !== undefined) {
 		const rawtype = typeutil.getRawType(type);
-		if (castlingTypes.includes(rawtype)) {
+		if (CASTLING_TYPES.includes(rawtype)) {
 			if (gamerulesGUIinfo.castling !== future) gamerulesGUIinfo.castling = undefined;
-		} else if (!pawnDoublePushTypes.includes(rawtype)) {
+		} else if (!PAWN_DOUBLE_PUSH_TYPES.includes(rawtype)) {
 			if (future) gamerulesGUIinfo.castling = undefined;
 		}
 	}
@@ -270,7 +281,7 @@ function queueToggleGlobalPawnDoublePush(pawnDoublePush: boolean, edit: Edit): v
 
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
-		if (pawnDoublePushTypes.includes(typeutil.getRawType(piece.type)))
+		if (PAWN_DOUBLE_PUSH_TYPES.includes(typeutil.getRawType(piece.type)))
 			edithistory.queueSpecialRights(gamefile, edit, piece.coords, pawnDoublePush);
 	}
 }
@@ -283,9 +294,9 @@ function queueToggleGlobalCastlingWithRooks(castling: boolean, edit: Edit): void
 	for (const idx of pieces.coords.values()) {
 		const piece: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
 		const rawType = typeutil.getRawType(piece.type);
-		if (castlingTypes.includes(rawType))
+		if (CASTLING_TYPES.includes(rawType))
 			edithistory.queueSpecialRights(gamefile, edit, piece.coords, castling);
-		else if (!pawnDoublePushTypes.includes(rawType))
+		else if (!PAWN_DOUBLE_PUSH_TYPES.includes(rawType))
 			edithistory.queueSpecialRights(gamefile, edit, piece.coords, false);
 	}
 }
@@ -300,7 +311,7 @@ function updateGamefileProperties(
 	enpassantCoords: Coords | undefined,
 	promotionRanks: { white?: bigint[]; black?: bigint[] } | undefined,
 	promotionPieces: RawType[] | undefined,
-	playerToMove: 'white' | 'black',
+	playerToMove: PlayerToMove,
 	worldBorder: UnboundedRectangle | undefined,
 ): void {
 	const gamefile = gameslot.getGamefile()!;
@@ -309,8 +320,7 @@ function updateGamefileProperties(
 	if (enpassantCoords === undefined) {
 		gamefile.state.global.enpassant = undefined;
 	} else {
-		// prettier-ignore
-		const pawn: Coords = playerToMove === 'white' ? [enpassantCoords[0], enpassantCoords[1] - 1n] : playerToMove === 'black' ? [enpassantCoords[0], enpassantCoords[1] + 1n] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+		const pawn = getEnPassantPawn(enpassantCoords, playerToMove);
 		const enpassant: EnPassant = { square: enpassantCoords, pawn };
 		gamefile.state.global.enpassant = enpassant;
 	}
@@ -329,21 +339,25 @@ function updateGamefileProperties(
 	}
 
 	// Update turn order so in the Normal tool, pawns correctly show enpassant as legal.
-	// prettier-ignore
-	gamefile.gameRules.turnOrder = playerToMove === 'white' ? [p.WHITE, p.BLACK] : playerToMove === 'black' ? [p.BLACK, p.WHITE] : (() => { throw new Error("Invalid player to move"); })(); // Future protection
+	gamefile.gameRules.turnOrder = [...TURN_ORDERS[playerToMove]];
 	// Update whosTurn as well
-	gamefile.whosTurn = gamefile.gameRules.turnOrder[0]!;
 	gamefile.whosTurn = gamefile.gameRules.turnOrder[0]!;
 
 	// Update World Border
 	gamefile.gameRules.worldBorder = worldBorder;
 }
 
+/** The pawn capturable en passant on `square`, with `playerToMove` to move. */
+function getEnPassantPawn(square: Coords, playerToMove: PlayerToMove): Coords {
+	return [square[0], square[1] + EN_PASSANT_PAWN_RANK_OFFSETS[playerToMove]];
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
-	pawnDoublePushTypes,
-	castlingTypes,
+	// Constants
+	PAWN_DOUBLE_PUSH_TYPES,
+	CASTLING_TYPES,
 	// Getting & Setting
 	getPlayerToMove,
 	getCurrentGamerulesAndState,
@@ -357,4 +371,5 @@ export default {
 	queueToggleGlobalCastlingWithRooks,
 	// Updating Gamefile State
 	updateGamefileProperties,
+	getEnPassantPawn,
 };
