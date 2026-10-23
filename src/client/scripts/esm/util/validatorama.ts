@@ -63,9 +63,6 @@ function resyncMemberInfo(): void {
 function readMemberInfoCookie(): void {
 	resetMemberInfo();
 
-	// Read the member info from the cookie
-	// Get the URL-encoded cookie value
-	// JSON objects can't be stringified into cookies because cookies can't hold special characters
 	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
 	if (!encodedMemberInfo) return; // No cookie, not signed in.
 	// Decode the URL-encoded string (cookies can't hold the special characters of raw JSON).
@@ -99,7 +96,7 @@ function scheduleSessionLogout(): void {
 function checkSessionExpiry(): void {
 	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
 
-	// If cookie is gone, or we can't parse it, we are definitely logged out.
+	// If the cookie is gone, we are definitely logged out.
 	if (!encodedMemberInfo) {
 		// Only reload if we thought we were signed in
 		if (memberInfo.signedIn) {
@@ -109,7 +106,7 @@ function checkSessionExpiry(): void {
 		return;
 	}
 
-	const info = JSON.parse(decodeURIComponent(encodedMemberInfo));
+	const info: MemberInfoCookie = JSON.parse(decodeURIComponent(encodedMemberInfo));
 
 	// Final check: Is it actually in the future? (has since been renewed)
 	if (info.expires && info.expires > Date.now()) {
@@ -165,5 +162,4 @@ export default {
 	// Getters
 	areWeLoggedIn,
 	getOurUsername,
-	getOurUserId,
 };

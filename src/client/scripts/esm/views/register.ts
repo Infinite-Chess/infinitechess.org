@@ -63,7 +63,6 @@ function setFormError(message?: string): void {
  * until fixed; form errors don't gate it.
  */
 function refreshSubmit(): void {
-	// console.error('refreshSubmit');
 	const allFilled =
 		usernameInput.value.length > 0 &&
 		passwordInput.value.length > 0 &&
@@ -82,7 +81,7 @@ function resetTurnstile(): void {
 	if (turnstileWidgetId !== undefined) window.turnstile.reset(turnstileWidgetId);
 }
 
-/** Renders the widget and wires its success/error/expired callbacks to. */
+/** Renders the widget and wires its success/error/expired callbacks to the submit gate. */
 function renderTurnstileWidget(): void {
 	turnstileWidgetId = window.turnstile.render(turnstileContainer, {
 		sitekey: turnstileContainer.dataset['sitekey']!,

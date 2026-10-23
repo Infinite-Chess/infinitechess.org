@@ -240,9 +240,7 @@ async function eraseExpiredItems(): Promise<void> {
 		request.onsuccess = () => {
 			const cursor = request.result;
 			if (cursor) {
-				const entry = cursor.value as Entry | any;
-				// Check if entry has expired or is in old format using hasItemExpired
-				if (hasItemExpired(entry)) {
+				if (hasItemExpired(cursor.value)) {
 					keysToDelete.push(cursor.key as string);
 				}
 				cursor.continue();

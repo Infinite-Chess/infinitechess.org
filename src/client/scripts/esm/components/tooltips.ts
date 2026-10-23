@@ -20,9 +20,25 @@
 
 import docutil from '../util/docutil.js';
 
-// Variables -------------------------------------------------------------------
+// Types -----------------------------------------------------------------------
 
-const tooltipClasses: string[] = [
+/** Per-element hover/click state, lazily created on first interaction. */
+interface TooltipState {
+	isHovering: boolean;
+	isHolding: boolean;
+	tooltipVisible: boolean;
+	/** Timer to show the tooltip after the hover delay. */
+	hoveringTimer: number | undefined;
+	/** Timer after which tooltip suppression (from a click) is cleared. */
+	suppressTimer: number | undefined;
+	/** True while the tooltip is temporarily suppressed due to a click. */
+	suppressed: boolean;
+}
+
+// Constants -------------------------------------------------------------------
+
+/** The direction classes, one of which makes an element a tooltip target. */
+const TOOLTIP_CLASSES: string[] = [
 	'tooltip-dl',
 	'tooltip-d',
 	'tooltip-dr',
@@ -31,7 +47,7 @@ const tooltipClasses: string[] = [
 	'tooltip-ur',
 ];
 /** CSS selector matching any element that is a tooltip target (has both a direction class and data-tooltip). */
-const TOOLTIP_SELECTOR = tooltipClasses.map((cls) => `.${cls}[data-tooltip]`).join(', ');
+const TOOLTIP_SELECTOR = TOOLTIP_CLASSES.map((cls) => `.${cls}[data-tooltip]`).join(', ');
 
 /** Pixels between the target element edge and the tooltip box. */
 const TOOLTIP_GAP = 8;
@@ -52,19 +68,6 @@ const SUPPRESS_COOLDOWN_MS: number = 2000;
 const FAST_TRANSITION_COOLDOWN_MS: number = 750;
 
 // State -----------------------------------------------------------------------
-
-/** Per-element hover/click state, lazily created on first interaction. */
-interface TooltipState {
-	isHovering: boolean;
-	isHolding: boolean;
-	tooltipVisible: boolean;
-	/** Timer to show the tooltip after the hover delay. */
-	hoveringTimer: number | undefined;
-	/** Timer after which tooltip suppression (from a click) is cleared. */
-	suppressTimer: number | undefined;
-	/** True while the tooltip is temporarily suppressed due to a click. */
-	suppressed: boolean;
-}
 
 /** Per-element state map. WeakMap ensures GC when elements are removed from the DOM. */
 const elementStates = new WeakMap<Element, TooltipState>();
@@ -115,7 +118,7 @@ function findTooltipAncestor(el: Element | null): HTMLElement | null {
  * or null if the element has none.
  */
 function getTooltipClass(element: Element): string | null {
-	return tooltipClasses.find((cls) => element.classList.contains(cls)) ?? null;
+	return TOOLTIP_CLASSES.find((cls) => element.classList.contains(cls)) ?? null;
 }
 
 /** Creates the singleton tooltip box and arrow elements (called once on first use). */
@@ -167,9 +170,6 @@ function shrinkWrapTooltip(el: HTMLDivElement): void {
 
 /** Enables fast-transition mode so the next tooltip appears without delay. */
 function enableFastTransition(): void {
-	if (fastTransitionMode) return; // Already on!
-
-	// console.log("Enabled fast transition");
 	fastTransitionMode = true;
 }
 
@@ -181,9 +181,6 @@ function cancelFastTransitionExpiryTimer(): void {
 
 /** Disables fast-transition mode. */
 function disableFastTransition(): void {
-	if (!fastTransitionMode) return;
-
-	// console.log("Disabled fast transition");
 	fastTransitionTimeoutID = undefined;
 	fastTransitionMode = false;
 }

@@ -83,7 +83,7 @@ function append(entry: ChatEntry): void {
 	if (stickToBottom) scrollToBottom();
 }
 
-/** Whether the log holds at least one typed message. Notices don't count.*/
+/** Whether the log holds at least one typed message. Notices don't count. */
 function hasPlayerMessages(): boolean {
 	return Boolean(element_ChatLog?.querySelector('.chat-message'));
 }

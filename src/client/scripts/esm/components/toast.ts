@@ -73,7 +73,7 @@ function show(text: string, options: ToastOptions = {}): void {
 function startTimer(duration: number): void {
 	window.clearTimeout(timerId);
 	window.clearTimeout(hideTimerId);
-	timerId = window.setTimeout(dismiss, duration);
+	timerId = window.setTimeout(() => dismiss(), duration);
 }
 
 /** Dismisses the currently shown toast. */

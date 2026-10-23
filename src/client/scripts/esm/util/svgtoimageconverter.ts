@@ -15,14 +15,7 @@ async function convertSVGsToImages(svgElements: SVGElement[]): Promise<HTMLImage
 		const conversionPromises = svgElements.map((svgElement) => svgToImage(svgElement));
 
 		// Wait for all the conversion promises to resolve concurrently
-		const readyImages = await Promise.all(conversionPromises);
-
-		// Optional: Append the images to the doc for debugging
-		// for (const img of readyImages) {
-		//     document.body.appendChild(img);
-		// }
-
-		return readyImages;
+		return await Promise.all(conversionPromises);
 	} catch (e) {
 		// Although we assume individual svgToImage calls resolve, Promise.all itself
 		// could theoretically encounter an issue, or svgToImage might throw a sync error.
@@ -92,9 +85,6 @@ async function normalizeImagePixelData(
 	// Wait for the image to load
 	await processedImg.decode();
 
-	// Append the image to the document for debugging
-	// document.body.appendChild(img);
-
 	return processedImg;
 }
 
@@ -103,6 +93,5 @@ async function normalizeImagePixelData(
 export default {
 	convertSVGsToImages,
 	svgToImage,
-	svgStringToImage,
 	normalizeImagePixelData,
 };

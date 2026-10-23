@@ -27,7 +27,7 @@ import drawoffers from './drawoffers.js';
 import socketsubs from '../../socket/socketsubs.js';
 import socketsend from '../../socket/socketsend.js';
 import enginegame from '../../game/chess/enginegame.js';
-import gameactions from './gui/guigameactions.js';
+import guigameactions from './gui/guigameactions.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
 import { SocketBus } from '../../socket/SocketBus.js';
@@ -205,14 +205,14 @@ function setParticipantState(participantState?: ParticipantState): void {
 	else guidisconnect.onOpponentReturn();
 
 	// Restore the rematch button's state (present only once the game is over).
-	if (participantState.rematch) gameactions.setRematchState(participantState.rematch);
+	if (participantState.rematch) guigameactions.setRematchState(participantState.rematch);
 
 	if (participantState.chat) guichat.reconcile(participantState.chat);
 }
 
 /** Applies the overlay a LEAN gamestate carries: the rematch handshake and the chat. */
 function setLeanParticipantState(participantState: LeanParticipantState): void {
-	gameactions.setRematchState(participantState.rematch);
+	guigameactions.setRematchState(participantState.rematch);
 	if (participantState.chat) guichat.reconcile(participantState.chat);
 }
 

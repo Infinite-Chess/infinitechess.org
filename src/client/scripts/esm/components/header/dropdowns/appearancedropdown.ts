@@ -15,6 +15,11 @@ import preferences from '../../../util/preferences.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
 
+// Types -----------------------------------------------------------------------
+
+/** The site's light/dark color scheme. */
+type Theme = 'dark' | 'light';
+
 // Document Elements -----------------------------------------------------------
 
 const appearanceDropdownTitle = document.querySelector('.appearance-dropdown .dropdown-title')!;
@@ -42,12 +47,8 @@ const advancedEffectsCheckbox = document.querySelector<HTMLInputElement>(
 /** The key used to store the light/dark theme preference in localStorage. */
 const THEME_KEY = 'color-scheme';
 
-const THEME_DARK = 'dark';
-const THEME_LIGHT = 'light';
-
-// Types -----------------------------------------------------------------------
-
-type Theme = typeof THEME_DARK | typeof THEME_LIGHT;
+const THEME_DARK: Theme = 'dark';
+const THEME_LIGHT: Theme = 'light';
 
 // Functions -------------------------------------------------------------------
 

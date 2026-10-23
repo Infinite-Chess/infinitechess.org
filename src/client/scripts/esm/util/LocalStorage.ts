@@ -28,6 +28,7 @@ interface Entry {
 /** For debugging. This prints to the console all save and delete operations. */
 const PRINT_CHANGES = false;
 
+/** How long an entry lives when its saver names no expiry. */
 const DEFAULT_EXPIRY_MS = timeutil.toMillis(24, 'hours');
 // const DEFAULT_EXPIRY_MS = timeutil.toMillis(20, 'seconds');
 
@@ -76,11 +77,6 @@ function loadItem(key: string): unknown {
 		deleteItem(key);
 		return;
 	}
-	// Not expired...
-
-	// console.log(`Fetched key ${key} from local storage:`);
-	// console.log(save);
-
 	return save.value;
 }
 
@@ -105,25 +101,15 @@ function isEntry(save: unknown): save is Entry {
 	);
 }
 
+/** Whether an entry is past its expiry. */
 function hasItemExpired(save: Entry): boolean {
 	return Date.now() >= save.expires;
 }
 
+/** Deletes every one of our entries that has expired. */
 function eraseExpiredItems(): void {
-	const keys = Object.keys(localStorage);
-
-	// if (keys.length > 0) console.log(`Items in local storage: ${JSON.stringify(keys)}`);
-
-	for (const key of keys) {
+	for (const key of Object.keys(localStorage)) {
 		loadItem(key); // Auto-deletes expired items
-	}
-}
-
-function eraseAll(): void {
-	console.log('Erasing ALL items in local storage...');
-	const keys = Object.keys(localStorage);
-	for (const key of keys) {
-		deleteItem(key); // Auto-deletes expired items
 	}
 }
 
@@ -134,5 +120,4 @@ export default {
 	loadItem,
 	deleteItem,
 	eraseExpiredItems,
-	eraseAll,
 };

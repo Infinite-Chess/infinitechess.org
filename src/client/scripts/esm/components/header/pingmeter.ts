@@ -1,66 +1,48 @@
 // src/client/scripts/esm/components/header/pingmeter.ts
 
 /**
- * This script manages the display and updates of the ping meter.
+ * The settings dropdown's ping meter: the socket's round-trip time as a number and colored bars,
+ * or a loading animation while a connection is opening.
  */
 
 import { SocketBus } from '../../socket/SocketBus.js';
 
-// Document Elements -----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const pingMeter = document.querySelector('.ping-meter')!;
 const pingBars = document.querySelector('.ping-bars')!;
 const pingValue = document.querySelector('.ping-value')!;
 const loadingAnim = document.querySelector('.ping-meter .svg-pawn')!; // Spinning-pawn loading animation
 
-// Variables -------------------------------------------------------------------
+// Listeners -------------------------------------------------------------------
+
+SocketBus.addEventListener('ping', (event) => updatePing(event.detail));
+SocketBus.addEventListener('opening', () => openMeterAndDisplayLoading());
+SocketBus.addEventListener('closed', () => closeMeter());
+// Fires right after `closed` on an involuntary close, overriding closeMeter()
+// above so a reconnecting socket shows the loading animation instead.
+SocketBus.addEventListener('connection-lost', () => openMeterAndDisplayLoading());
 
 // Functions -------------------------------------------------------------------
 
-(function init() {
-	initEventListeners();
-})();
-
-function initEventListeners(): void {
-	SocketBus.addEventListener('ping', updatePing);
-	SocketBus.addEventListener('opening', openMeterAndDisplayLoading);
-	SocketBus.addEventListener('closed', closeMeter);
-	// Fires right after `closed` on an involuntary close, overriding closeMeter()
-	// above so a reconnecting socket shows the loading animation instead.
-	SocketBus.addEventListener('connection-lost', openMeterAndDisplayLoading);
-}
-
-function updatePing(event: CustomEvent): void {
+/** Shows a fresh round-trip time, in milliseconds. */
+function updatePing(ping: number): void {
 	showPing_hideLoadingAnim();
-	const newPing = event.detail;
-	// console.log(`New ping! ${newPing}`);
-	pingValue.textContent = newPing;
-	updateBarCount(newPing);
+	pingValue.textContent = String(ping);
+	updateBarCount(ping);
 }
 
+/** Lights as many bars as the ping earns, colored by how many that is. */
 function updateBarCount(ping: number): void {
-	removeAllColor();
 	const newBarCount = getBarCount(ping);
 	const color = newBarCount >= 3 ? 'green' : newBarCount === 2 ? 'yellow' : 'red';
-	for (let i = 1; i <= newBarCount; i++) {
-		const thisPingBar = pingBars.children[i - 1]!;
-		thisPingBar.classList.add(color);
+	for (const [i, bar] of [...pingBars.children].entries()) {
+		bar.classList.remove('green', 'yellow', 'red');
+		if (i < newBarCount) bar.classList.add(color);
 	}
 }
 
-function removeAllColor(): void {
-	for (let i = 1; i <= pingBars.children.length; i++) {
-		const thisPingBar = pingBars.children[i - 1]!;
-		thisPingBar.classList.remove('green');
-		thisPingBar.classList.remove('yellow');
-		thisPingBar.classList.remove('red');
-	}
-}
-
-/**
- * Returns the number of Bars that should be lit up according to the given ping.
- * This can be customized.
- */
+/** Returns the number of bars that should be lit up according to the given ping. */
 function getBarCount(ping: number): number {
 	if (ping <= 150) return 4;
 	else if (ping <= 300) return 3;
@@ -68,6 +50,7 @@ function getBarCount(ping: number): number {
 	else return 1;
 }
 
+/** Shows the bars in place of the loading animation. */
 function showPing_hideLoadingAnim(): void {
 	pingMeter.classList.remove('hidden');
 	pingBars.classList.remove('hidden');
@@ -86,5 +69,3 @@ function openMeterAndDisplayLoading(): void {
 function closeMeter(): void {
 	pingMeter.classList.add('hidden');
 }
-
-export default {};

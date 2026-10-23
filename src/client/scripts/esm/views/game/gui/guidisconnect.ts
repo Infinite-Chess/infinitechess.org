@@ -124,12 +124,12 @@ function isClaimable(): boolean {
 
 /** Claims victory against the disconnected opponent. Server validates the window is open. */
 function callback_ClaimVictory(): void {
-	socketintents.submit('game', 'claimvictory', undefined, isClaimable);
+	socketintents.submit('game', 'claimvictory', undefined, () => isClaimable());
 }
 
 /** Claims a draw against the disconnected opponent. Server validates the window is open. */
 function callback_ClaimDraw(): void {
-	socketintents.submit('game', 'claimdraw', undefined, isClaimable);
+	socketintents.submit('game', 'claimdraw', undefined, () => isClaimable());
 }
 
 element_ClaimVictory?.addEventListener('click', callback_ClaimVictory);

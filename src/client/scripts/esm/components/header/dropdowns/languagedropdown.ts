@@ -13,6 +13,8 @@ const languageDropdown = document.querySelector('.language-dropdown')!;
 const dropdownItems = document.querySelectorAll('.language-dropdown-item');
 const languageDropdownTitle = document.querySelector('.language-dropdown .dropdown-title')!;
 
+// Constants -------------------------------------------------------------------
+
 /** How long the language-override cookie persists, in days. */
 const LANGUAGE_COOKIE_DAYS = 365;
 

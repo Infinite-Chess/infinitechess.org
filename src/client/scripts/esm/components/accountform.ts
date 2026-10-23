@@ -2,7 +2,7 @@
 
 /**
  * Shared field helpers for the account form pages (login, register, register-awaiting,
- * reset-password): localized format-error lookups and an inline error setter.
+ * forgot-password, reset-password): localized format-error lookups and an inline error setter.
  *
  * The "TooLong" validator cases are intentionally unhandled — only bots or hand-crafted
  * requests reach them, so the server is the authoritative guard there.

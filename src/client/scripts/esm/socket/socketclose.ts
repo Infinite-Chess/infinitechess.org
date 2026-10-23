@@ -22,8 +22,9 @@ import socketconnection from './socketconnection.js';
 /** Time before attempting resub after too many requests. */
 const RESUB_DELAY_MS = 10000;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
+/** Whether we're in a rate-limit timeout, during which we won't reconnect. */
 let inTimeout = false;
 
 /** Returns whether we're currently in a rate-limit timeout. */
@@ -35,8 +36,7 @@ function isInTimeout(): boolean {
 
 /**
  * Runs the teardown for a socket that is no longer connected.
- * Cancels echo timers and on-reply functions, then handles reconnection
- * based on the closure reason.
+ * Cancels the socket's timers, then handles reconnection based on the closure reason.
  * @param code - The closure code.
  * @param reason - The reason given for the closure.
  */

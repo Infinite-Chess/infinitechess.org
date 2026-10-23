@@ -21,19 +21,9 @@ import validatorama from './validatorama.js';
 import { SettingsBus } from './SettingsBus.js';
 import { serverfetch } from './serverfetch.js';
 
-/** Prefs that do NOT get saved on the server side */
-const clientSidePrefs: string[] = [
-	'perspective_sensitivity',
-	'perspective_fov',
-	'drag_enabled',
-	'premove_enabled',
-	'fast_transitions_enabled',
-	'coordinates_enabled',
-	'starfield_enabled',
-	'advanced_effects_enabled',
-	'master_volume',
-	'ambience_enabled',
-];
+// Types -----------------------------------------------------------------------
+
+/** Prefs kept on this device only. */
 interface ClientSidePreferences {
 	perspective_sensitivity: number;
 	perspective_fov: number;
@@ -67,41 +57,40 @@ type Preferences = ServerSidePreferences & ClientSidePreferences;
 
 // Constants -------------------------------------------------------------------
 
-// The legal moves shape preference
-const default_legal_moves: 'dots' | 'squares' = 'squares'; // dots/squares
-const default_drag_enabled: boolean = true;
-const default_premove_enabled: boolean = true;
-const default_fast_transitions_enabled: boolean = false;
-/** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
-const default_animations: boolean = true;
-const default_perspective_sensitivity: number = 100;
-const default_perspective_fov: number = 90;
-const default_lingering_annotations: boolean = true;
-const default_coordinates_enabled: boolean = false;
-const default_starfield_enabled: boolean = true;
-const default_advanced_effects_enabled: boolean = true;
-const default_master_volume: number = 1;
-const default_ambience_enabled: boolean = true;
+/** Prefs that do NOT get saved on the server side */
+const CLIENT_SIDE_PREFS: string[] = [
+	'perspective_sensitivity',
+	'perspective_fov',
+	'drag_enabled',
+	'premove_enabled',
+	'fast_transitions_enabled',
+	'coordinates_enabled',
+	'starfield_enabled',
+	'advanced_effects_enabled',
+	'master_volume',
+	'ambience_enabled',
+];
 
 /** The preferences a user starts with. */
 const DEFAULT_PREFERENCES: Preferences = {
 	theme: themes.DEFAULT_THEME,
-	legal_moves: default_legal_moves,
-	perspective_sensitivity: default_perspective_sensitivity,
-	perspective_fov: default_perspective_fov,
-	drag_enabled: default_drag_enabled,
-	premove_enabled: default_premove_enabled,
-	fast_transitions_enabled: default_fast_transitions_enabled,
-	animations: default_animations,
-	lingering_annotations: default_lingering_annotations,
-	coordinates_enabled: default_coordinates_enabled,
-	starfield_enabled: default_starfield_enabled,
-	advanced_effects_enabled: default_advanced_effects_enabled,
-	master_volume: default_master_volume,
-	ambience_enabled: default_ambience_enabled,
+	legal_moves: 'squares',
+	perspective_sensitivity: 100,
+	perspective_fov: 90,
+	drag_enabled: true,
+	premove_enabled: true,
+	fast_transitions_enabled: false,
+	/** When false, animations are instant, only playing the sound. (same as dropping dragged pieces) */
+	animations: true,
+	lingering_annotations: true,
+	coordinates_enabled: false,
+	starfield_enabled: true,
+	advanced_effects_enabled: true,
+	master_volume: 1,
+	ambience_enabled: true,
 };
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The user's preferences. */
 let preferences: Preferences;
@@ -119,10 +108,8 @@ function loadPreferences(): void {
 
 	const cookiePrefs: string | undefined = docutil.getCookieValue('preferences');
 	if (cookiePrefs) {
-		// console.log("Preferences cookie was present!");
 		preferences = JSON.parse(decodeURIComponent(cookiePrefs));
-		// console.log(jsutil.deepCopyObject(preferences));
-		clientSidePrefs.forEach((pref) => (preferences![pref] = browserStoragePrefs[pref]));
+		CLIENT_SIDE_PREFS.forEach((pref) => (preferences![pref] = browserStoragePrefs[pref]));
 	}
 }
 
@@ -161,9 +148,7 @@ async function PUTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 			method: 'PUT',
 			// Still sends it if the page unloads before it fully leaves the browser.
 			keepalive: true,
-			headers: {
-				'Content-Type': 'application/json',
-			} as Record<string, string>,
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ preferences: preparedPrefs }), // Send the preferences as JSON
 		});
 
@@ -181,26 +166,23 @@ async function PUTPrefs(preparedPrefs: ServerSidePreferences): Promise<void> {
 function preparePrefs(): ServerSidePreferences {
 	const prefsCopy: Preferences = jsutil.deepCopyObject(preferences);
 	Object.keys(prefsCopy).forEach((prefName) => {
-		if (clientSidePrefs.includes(prefName)) delete prefsCopy[prefName];
+		if (CLIENT_SIDE_PREFS.includes(prefName)) delete prefsCopy[prefName];
 	});
-	// console.log(`Original preferences: ${JSON.stringify(preferences)}`);
-	// console.log(`Prepared preferences: ${JSON.stringify(prefsCopy)}`);
 	return prefsCopy;
 }
 
 function getBoardColor(): string {
-	return preferences.theme || themes.DEFAULT_THEME;
+	return preferences.theme || DEFAULT_PREFERENCES.theme;
 }
 
 function setBoardColor(boardColor: string): void {
 	preferences.theme = boardColor;
-	// console.log('Set theme');
 	savePreferences();
 	sendPrefsToServer();
 }
 
 function getCoordinatesEnabled(): boolean {
-	return preferences.coordinates_enabled ?? default_coordinates_enabled;
+	return preferences.coordinates_enabled ?? DEFAULT_PREFERENCES.coordinates_enabled;
 }
 
 function setCoordinatesEnabled(value: boolean): void {
@@ -209,7 +191,7 @@ function setCoordinatesEnabled(value: boolean): void {
 }
 
 function getStarfieldMode(): boolean {
-	return preferences.starfield_enabled ?? default_starfield_enabled;
+	return preferences.starfield_enabled ?? DEFAULT_PREFERENCES.starfield_enabled;
 }
 
 function setStarfieldMode(value: boolean): void {
@@ -220,30 +202,26 @@ function setStarfieldMode(value: boolean): void {
 }
 
 function getLegalMovesShape(): 'dots' | 'squares' {
-	return preferences.legal_moves || default_legal_moves;
+	return preferences.legal_moves || DEFAULT_PREFERENCES.legal_moves;
 }
 
 function setLegalMovesShape(legal_moves: 'dots' | 'squares'): void {
-	if (typeof legal_moves !== 'string')
-		throw new Error('Cannot set preference legal_moves when it is not a string.');
 	preferences.legal_moves = legal_moves;
 	savePreferences();
 	sendPrefsToServer();
 }
 
 function getDragEnabled(): boolean {
-	return preferences.drag_enabled ?? default_drag_enabled;
+	return preferences.drag_enabled ?? DEFAULT_PREFERENCES.drag_enabled;
 }
 
 function setDragEnabled(drag_enabled: boolean): void {
-	if (typeof drag_enabled !== 'boolean')
-		throw new Error('Cannot set preference drag_enabled when it is not a boolean.');
 	preferences.drag_enabled = drag_enabled;
 	savePreferences();
 }
 
 function getPremoveEnabled(): boolean {
-	return preferences.premove_enabled ?? default_premove_enabled;
+	return preferences.premove_enabled ?? DEFAULT_PREFERENCES.premove_enabled;
 }
 
 function setPremoveMode(value: boolean): void {
@@ -254,7 +232,7 @@ function setPremoveMode(value: boolean): void {
 }
 
 function getFastTransitionsMode(): boolean {
-	return preferences.fast_transitions_enabled ?? default_fast_transitions_enabled;
+	return preferences.fast_transitions_enabled ?? DEFAULT_PREFERENCES.fast_transitions_enabled;
 }
 
 function setFastTransitionsMode(value: boolean): void {
@@ -263,7 +241,7 @@ function setFastTransitionsMode(value: boolean): void {
 }
 
 function getAnimationsMode(): boolean {
-	return preferences.animations ?? default_animations;
+	return preferences.animations ?? DEFAULT_PREFERENCES.animations;
 }
 
 function setAnimationsMode(animations_enabled: boolean): void {
@@ -273,34 +251,30 @@ function setAnimationsMode(animations_enabled: boolean): void {
 }
 
 function getPerspectiveSensitivity(): number {
-	return preferences.perspective_sensitivity || default_perspective_sensitivity;
+	return preferences.perspective_sensitivity || DEFAULT_PREFERENCES.perspective_sensitivity;
 }
 
 function setPerspectiveSensitivity(perspective_sensitivity: number): void {
-	if (typeof perspective_sensitivity !== 'number')
-		throw new Error('Cannot set preference perspective_sensitivity when it is not a number.');
 	preferences.perspective_sensitivity = perspective_sensitivity;
 	savePreferences();
 }
 
 function getPerspectiveFOV(): number {
-	return preferences.perspective_fov || default_perspective_fov;
+	return preferences.perspective_fov || DEFAULT_PREFERENCES.perspective_fov;
 }
 
 function getDefaultPerspectiveFOV(): number {
-	return default_perspective_fov;
+	return DEFAULT_PREFERENCES.perspective_fov;
 }
 
 function setPerspectiveFOV(perspective_fov: number): void {
-	if (typeof perspective_fov !== 'number')
-		throw new Error('Cannot set preference perspective_fov when it is not a number.');
 	preferences.perspective_fov = perspective_fov;
 	savePreferences();
 	SettingsBus.dispatch('fov-change');
 }
 
 function getLingeringAnnotationsMode(): boolean {
-	return preferences.lingering_annotations ?? default_lingering_annotations;
+	return preferences.lingering_annotations ?? DEFAULT_PREFERENCES.lingering_annotations;
 }
 
 function setLingeringAnnotationsMode(value: boolean): void {
@@ -313,7 +287,7 @@ function setLingeringAnnotationsMode(value: boolean): void {
 
 /** Whether the user has enabled "Advanced Effects" in the settings. */
 function getAdvancedEffectsMode(): boolean {
-	return preferences.advanced_effects_enabled ?? default_advanced_effects_enabled;
+	return preferences.advanced_effects_enabled ?? DEFAULT_PREFERENCES.advanced_effects_enabled;
 }
 
 function setAdvancedEffectsMode(value: boolean): void {
@@ -322,13 +296,10 @@ function setAdvancedEffectsMode(value: boolean): void {
 }
 
 function getMasterVolume(): number {
-	return preferences.master_volume ?? default_master_volume;
+	return preferences.master_volume ?? DEFAULT_PREFERENCES.master_volume;
 }
 
 function setMasterVolume(master_volume: number): void {
-	if (typeof master_volume !== 'number')
-		throw new Error('Cannot set preference master_volume when it is not a number.');
-	if (master_volume > 1) throw new Error('Cannot set master_volume > 1!');
 	preferences.master_volume = master_volume;
 	savePreferences();
 
@@ -337,12 +308,10 @@ function setMasterVolume(master_volume: number): void {
 
 /** Whether the user has enabled "Ambience" in the settings. */
 function getAmbienceEnabled(): boolean {
-	return preferences.ambience_enabled ?? default_ambience_enabled;
+	return preferences.ambience_enabled ?? DEFAULT_PREFERENCES.ambience_enabled;
 }
 
 function setAmbienceEnabled(ambience_enabled: boolean): void {
-	if (typeof ambience_enabled !== 'boolean')
-		throw new Error('Cannot set preference ambience_enabled when it is not a boolean.');
 	preferences.ambience_enabled = ambience_enabled;
 	savePreferences();
 
@@ -401,115 +370,6 @@ function getAnnoteArrowColor(): Color {
 	return themes.getPropertyOfTheme(boardColorName, 'annoteArrowColor');
 }
 
-/*
- * The commented stuff below is ONLY used for fast
- * modifying of theme players using the keyboard keys!
- */
-
-// import { listener_document } from '../game/listeners.js';
-
-// const allProperties = Object.keys(themes.THEMES[themes.DEFAULT_THEME]!);
-// let currPropertyIndex = 0;
-// let currProperty = allProperties[currPropertyIndex]!;
-// function update(): void {
-// 	const themeProperties = themes.THEMES[preferences.theme]!;
-
-// 	if (listener_document.isKeyDown('KeyU')) {
-// 		currPropertyIndex--;
-// 		if (currPropertyIndex < 0) currPropertyIndex = allProperties.length - 1;
-// 		currProperty = allProperties[currPropertyIndex]!;
-// 		console.log(`Selected property: ${currProperty}`);
-// 	}
-// 	if (listener_document.isKeyDown('KeyI')) {
-// 		currPropertyIndex++;
-// 		if (currPropertyIndex > allProperties.length - 1) currPropertyIndex = 0;
-// 		currProperty = allProperties[currPropertyIndex]!;
-// 		console.log(`Selected property: ${currProperty}`);
-// 	}
-
-// 	const amount = 0.02;
-
-// 	if (listener_document.isKeyDown('KeyJ')) {
-// 		const dig = 0;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] += amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-// 	if (listener_document.isKeyDown('KeyM')) {
-// 		const dig = 0;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] -= amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-
-// 	if (listener_document.isKeyDown('KeyK')) {
-// 		const dig = 1;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] += amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-// 	if (listener_document.isKeyDown('Comma')) {
-// 		const dig = 1;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] -= amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-
-// 	if (listener_document.isKeyDown('KeyL')) {
-// 		const dig = 2;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] += amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-// 	if (listener_document.isKeyDown('Period')) {
-// 		const dig = 2;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] -= amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-
-// 	if (listener_document.isKeyDown('Semicolon')) {
-// 		const dig = 3;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] += amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] > 1) themeProperties[currProperty][dig] = 1;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-// 	if (listener_document.isKeyDown('Slash')) {
-// 		const dig = 3;
-// 		// @ts-ignore
-// 		themeProperties[currProperty][dig] -= amount;
-// 		// @ts-ignore
-// 		if (themeProperties[currProperty][dig] < 0) themeProperties[currProperty][dig] = 0;
-// 		// @ts-ignore
-// 		console.log(themeProperties[currProperty]);
-// 	}
-
-// 	if (listener_document.isKeyDown('Backslash')) {
-// 		console.log(JSON.stringify(themes.THEMES[preferences.theme]));
-// 	}
-// }
-
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -550,7 +410,4 @@ export default {
 	getBoxOutlineColor,
 	getAnnoteSquareColor,
 	getAnnoteArrowColor,
-
-	// Only used for temporarily micro adjusting theme properties & colors
-	// update,
 };

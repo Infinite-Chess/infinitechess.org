@@ -50,7 +50,7 @@ export type OutValue<R extends OutRoute, A extends OutAction<R>> = ActionValue<O
 /** Simulated websocket latency in debug mode. */
 const DEBUG_SOCKET_LATENCY_MS = 1000;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Echo timers for sent messages awaiting acknowledgement. */
 let echoTimers: Record<MessageID, { timeSent: number; timeoutID: number }> = {};
@@ -87,8 +87,7 @@ function cancelTimerOfMessageID(ID: number): void {
  * Drops the current websocket when an echo hasn't been heard.
  * Called a few seconds after not hearing a server echo.
  */
-function onEchoTimeout(messageID: MessageID): void {
-	if (messageID) delete echoTimers[messageID];
+function onEchoTimeout(): void {
 	console.log(`Renewing connection after we haven't received an echo for ${socketutil.ECHO_TIMEOUT_MS} ms...`); // prettier-ignore
 	socketconnection.dropSocket(socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW);
 }
@@ -115,7 +114,7 @@ function rescheduleHeartbeatTimer(): void {
 	cancelHeartbeatTimer();
 	if (socketsubs.zeroSubs()) return;
 	heartbeatTimerID = window.setTimeout(
-		onHeartbeatTimeout,
+		() => onHeartbeatTimeout(),
 		socketutil.HEARTBEAT_INTERVAL_MS + socketutil.ECHO_TIMEOUT_MS,
 	);
 }
@@ -176,7 +175,7 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 	// Set a timer to assume disconnection if echo not received
 	echoTimers[payload.id] = {
 		timeSent: Date.now(),
-		timeoutID: window.setTimeout(() => onEchoTimeout(payload.id), socketutil.ECHO_TIMEOUT_MS),
+		timeoutID: window.setTimeout(() => onEchoTimeout(), socketutil.ECHO_TIMEOUT_MS),
 	};
 
 	transmit(socket, message);

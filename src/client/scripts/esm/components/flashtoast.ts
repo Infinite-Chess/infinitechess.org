@@ -8,8 +8,12 @@
 
 import toast from './toast.js';
 
+// Constants -------------------------------------------------------------------
+
 /** sessionStorage key holding a pending flash-toast message. */
 const STORAGE_KEY = 'flashtoast';
+
+// Flash Toasts ----------------------------------------------------------------
 
 /** Queues a toast to be shown on the next page load (after a redirect/navigation). */
 function queue(text: string): void {
@@ -23,5 +27,7 @@ function consume(): void {
 	sessionStorage.removeItem(STORAGE_KEY);
 	toast.show(text);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { queue, consume };

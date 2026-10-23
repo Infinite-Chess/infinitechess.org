@@ -80,8 +80,6 @@ function handleGameState(
  * This can rarely happen when we move after the game is already over,
  * or if we're disconnected when our opponent made their move.
  * THIS CAN EVEN BE CALLED when our moves match the server's!
- * @param gamefile - The gamefile
- * @param moves - The moves list in the most compact form: `['1,2>3,4','5,6>7,8Q']`
  * @param claimedGameConclusion - The supposed game conclusion after synchronizing our opponents move
  * @param forceSync - If true, skip the early-exit submit path and force our move list to exactly match the server's
  * @returns Whether we adopted the server's move list. False if the opponent played an illegal move, which we report.
@@ -146,8 +144,7 @@ function synchronizeMovesList(
 			const playerOfMove = gamerules.getColorThatPlayedMoveIndex(gamefile.gameRules, i);
 			const isOpponentMove = playerOfMove !== ourColor;
 
-			const thisShortmove = moves[i]!; // '1,2>3,4=Q'  The shortmove from the server's move list to add
-			// Convert the move from compact short format "x,y>x,y=N" to JSON.
+			const thisShortmove = moves[i]!;
 			// Guaranteed by the server to be parsable.
 			const moveTagged: MoveTagged = icnmoves.parseTokenMove(thisShortmove.token);
 
@@ -179,15 +176,11 @@ function synchronizeMovesList(
 
 		// Whether we're good to physically play the next premove depends on whether it is our turn or not,
 		// AND whether we forwarded at least one of our own moves that the server had that we didn't.
-		if (!atleastOneOfOurMovesWasForwarded && ourColor === gamefile.whosTurn) {
-			return true; // Good to physically play next premove
-		} else {
-			return false; // Don't physically play next premove
-		}
+		return !atleastOneOfOurMovesWasForwarded && ourColor === gamefile.whosTurn;
 	});
 
-	// If we happened to forward one of our own moves forwarded (not sure when our state
-	// would be so behind to inherit this), then also cancel all premoves we had.
+	// If we forwarded one of our own moves (not sure when our state would be
+	// so behind to inherit this), then also cancel all premoves we had.
 	if (atleastOneOfOurMovesWasForwarded) premoves.cancelPremoves(gamefile, mesh);
 
 	if (opponentPlayedIllegalMove) return false;
@@ -199,11 +192,10 @@ function synchronizeMovesList(
 }
 
 /**
- * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we only agree on the starting position.
- * @param serverMoves - The server's moves list in compact form: `[{ token: '1,2>3,4' }, { token: '5,6>7,8Q' }]`
+ * Finds the latest move index at which our moves and the server's moves match. Returns -1 if we
+ * only agree on the starting position.
  */
 function findLatestMatchingMoveIndex(ourMoves: MoveRecord[], serverMoves: MovePacket[]): number {
-	if (ourMoves.length === 0) return -1; // We only agree with the starting position
 	for (let i = 0; i < ourMoves.length; i++) {
 		if (ourMoves[i]!.token !== serverMoves[i]?.token) return i - 1; // We agree up to the previous move, but not this one
 	}

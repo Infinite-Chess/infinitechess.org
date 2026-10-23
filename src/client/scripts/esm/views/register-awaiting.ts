@@ -16,31 +16,6 @@ import flashtoast from '../components/flashtoast.js';
 import accountform from '../components/accountform.js';
 import { serverfetch } from '../util/serverfetch.js';
 
-// Constants -------------------------------------------------------------------
-
-/**
- * Backoff schedule for verification polling. Each step's `intervalMs` applies until that much
- * total elapsed time (`untilMs`) has passed since polling began; the final step (`untilMs: Infinity`)
- * then holds steady until the pending registration expires.
- *
- * The medium verify time is ~27 seconds. It drops off sharply after 3-4m.
- */
-const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly intervalMs: number }[] =
-	[
-		{ untilMs: timeutil.toMillis(1, 'minutes'), intervalMs: 3000 }, // 0–1m: every 3s
-		{ untilMs: timeutil.toMillis(3, 'minutes'), intervalMs: 5000 }, // 1–3m: every 5s
-		{ untilMs: timeutil.toMillis(4, 'minutes'), intervalMs: 10000 }, // 3–5m: every 10s
-		{ untilMs: timeutil.toMillis(10, 'minutes'), intervalMs: 20000 }, // 5–10m: every 20s
-		{ untilMs: Infinity, intervalMs: 30000 }, // 10m+: every 30s
-	];
-
-/**
- * Stop polling after this long, as a backstop. Set just past the 24h pending-registration expiry
- * (EXPIRY_MS, server-side) — by then the poll returns 'expired' and the
- * page reloads, so this only catches a truly orphaned tab (e.g. clock skew) that never does.
- */
-const POLL_MAX_DURATION_MS = timeutil.toMillis(24, 'hours') + timeutil.toMillis(1, 'minutes');
-
 // Elements --------------------------------------------------------------------
 
 const awaitingCard = document.querySelector<HTMLElement>('#awaiting-card')!;
@@ -50,6 +25,31 @@ const changeGroup = document.querySelector<HTMLElement>('#change-email')!;
 const newEmailInput = document.querySelector<HTMLInputElement>('#new-email')!;
 const newEmailError = document.querySelector<HTMLParagraphElement>('#new-email-error')!;
 const changeSubmit = document.querySelector<HTMLButtonElement>('#change-email-submit')!;
+
+// Constants -------------------------------------------------------------------
+
+/**
+ * Backoff schedule for verification polling. Each step's `intervalMs` applies until that much
+ * total elapsed time (`untilMs`) has passed since polling began; the final step (`untilMs: Infinity`)
+ * then holds steady until the pending registration expires.
+ *
+ * The median verify time is ~27 seconds. It drops off sharply after 3-4m.
+ */
+const POLL_BACKOFF_SCHEDULE: readonly { readonly untilMs: number; readonly intervalMs: number }[] =
+	[
+		{ untilMs: timeutil.toMillis(1, 'minutes'), intervalMs: 3000 }, // 0–1m: every 3s
+		{ untilMs: timeutil.toMillis(3, 'minutes'), intervalMs: 5000 }, // 1–3m: every 5s
+		{ untilMs: timeutil.toMillis(4, 'minutes'), intervalMs: 10000 }, // 3–4m: every 10s
+		{ untilMs: timeutil.toMillis(10, 'minutes'), intervalMs: 20000 }, // 4–10m: every 20s
+		{ untilMs: Infinity, intervalMs: 30000 }, // 10m+: every 30s
+	];
+
+/**
+ * Stop polling after this long, as a backstop. Set just past the 24h pending-registration expiry
+ * (EXPIRY_MS, server-side) — by then the poll returns 'expired' and the
+ * page reloads, so this only catches a truly orphaned tab (e.g. clock skew) that never does.
+ */
+const POLL_MAX_DURATION_MS = timeutil.toMillis(24, 'hours') + timeutil.toMillis(1, 'minutes');
 
 // State -----------------------------------------------------------------------
 
@@ -74,10 +74,8 @@ let newEmailValid = false;
 
 /** Returns the backoff interval to wait given how long polling has been running. */
 function pollIntervalForElapsed(elapsedMs: number): number {
-	for (const step of POLL_BACKOFF_SCHEDULE) {
-		if (elapsedMs < step.untilMs) return step.intervalMs;
-	}
-	return POLL_BACKOFF_SCHEDULE[POLL_BACKOFF_SCHEDULE.length - 1]!.intervalMs;
+	// The final step's `Infinity` always matches.
+	return POLL_BACKOFF_SCHEDULE.find((step) => elapsedMs < step.untilMs)!.intervalMs;
 }
 
 /** Begins polling for email verification. Idempotent — a second call is a no-op. */
@@ -181,7 +179,7 @@ function validateNewEmail(revealErrors: boolean): void {
 	else if (newEmailValid) setEmailError();
 }
 
-/** POSTs the new email; on success reloads the page (the reload is the "it worked" feedback). */
+/** PUTs the new email; on success reloads the page (the reload is the "it worked" feedback). */
 async function submitNewEmail(): Promise<void> {
 	// Authoritative gate: reveal any unseen format error and bail without sending.
 	validateNewEmail(true);

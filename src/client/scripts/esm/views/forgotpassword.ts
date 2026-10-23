@@ -8,8 +8,7 @@
  * exists, preventing enumeration. Server errors and network failures surface inline.
  */
 
-import validators from '../../../../shared/util/validators.js';
-
+import accountform from '../components/accountform.js';
 import { serverfetch } from '../util/serverfetch.js';
 
 // Elements --------------------------------------------------------------------
@@ -24,9 +23,7 @@ const confirmation = document.querySelector<HTMLDivElement>('#forgot-confirmatio
 
 /** Shows an error beneath the field (format, server, or network), or clears it when called with no message. */
 function setError(message?: string): void {
-	errorElement.textContent = message ?? '';
-	errorElement.classList.toggle('hidden', message === undefined);
-	emailInput.classList.toggle('input-error', message !== undefined);
+	accountform.setFieldError(errorElement, message, emailInput);
 }
 
 /** Requests a password-reset link for the entered email. */
@@ -35,10 +32,8 @@ async function submitForgotPassword(): Promise<void> {
 	if (!email) return; // Backup for whitespace-only input (native `required` blocks truly-empty submits).
 
 	// Validate format client-side for UX only; never reveals whether the address is registered.
-	if (validators.validateEmail(email) !== validators.EmailValidationResult.Ok) {
-		setError(t.shared.account.email_invalid);
-		return;
-	}
+	const formatError = accountform.emailError(email);
+	if (formatError !== undefined) return setError(formatError);
 
 	setError();
 	submitButton.disabled = true;

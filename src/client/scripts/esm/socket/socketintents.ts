@@ -60,7 +60,7 @@ type Intent = {
  */
 const INTENT_LIFETIME_MS = 10000;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** Intents held per route, in submission order. Only ever non-empty while that route is out of sync. */
 const held: Record<SubscribedRoute, Intent[]> = { lobby: [], challenge: [], game: [] };
@@ -129,8 +129,7 @@ function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends Out
 ): void {
 	const key: IntentKey = `${route}/${action}`;
 	const intent: Intent = {
-		// Records the id it goes out under, so the ack for it can release the lock. One that
-		// couldn't be sent at all is released right away — nothing is coming back to release it.
+		// Records the id it goes out under, so the ack for it can release the lock.
 		send: async () => {
 			const messageID = await socketsend.send(route, action, value, true);
 			// Couldn't go out, so nothing is coming back to release it. Otherwise it stays
@@ -218,7 +217,7 @@ function onRouteSynced(route: SubscribedRoute): void {
 export default {
 	isOutstanding,
 	submit,
-	isRouteReady,
 	onAck,
+	isRouteReady,
 	onRouteSynced,
 };
