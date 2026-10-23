@@ -196,6 +196,7 @@ followed, tell me.
     - Saving live games to the database: `docs/systems/LIVE_GAME_PERSISTENCE.md`
     - Password reset: `docs/systems/PASSWORD_RESET.md`
     - Account registration: `docs/systems/REGISTRATION.md`
+    - Engine-assistance detection: `docs/systems/CHEAT_DETECTION.md`
 
 ### Stored data
 
