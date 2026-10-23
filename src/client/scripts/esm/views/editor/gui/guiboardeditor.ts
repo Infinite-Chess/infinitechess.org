@@ -20,8 +20,7 @@ import editorhandoff from '../../../handoffs/editorhandoff.js';
 import selectiontool from '../tools/selection/selectiontool.js';
 import guiloadposition from './actions/loadposition/guiloadposition.js';
 import stransformations from '../tools/selection/stransformations.js';
-import guiresetposition from './actions/guiresetposition.js';
-import guiclearposition from './actions/guiclearposition.js';
+import guipositionconfirm from './actions/guipositionconfirm.js';
 import guiloadpositionsavelist from './actions/loadposition/guiloadpositionsavelist.js';
 
 // Elements --------------------------------------------------------------------
@@ -135,8 +134,8 @@ function closeListeners(): void {
 
 /** Close and reset the positioning and contents of all floating windows */
 function closeAllFloatingWindows(resetPositioning: boolean): void {
-	guiresetposition.close(resetPositioning);
-	guiclearposition.close(resetPositioning);
+	guipositionconfirm.reset.close(resetPositioning);
+	guipositionconfirm.clear.close(resetPositioning);
 	guiloadposition.close(resetPositioning);
 	guigamerules.close(resetPositioning);
 }
@@ -170,19 +169,19 @@ function callback_Action(e: Event): void {
 	switch (action) {
 		// Position ---------------------
 		case 'reset': {
-			const wasOpen = guiresetposition.isOpen();
+			const wasOpen = guipositionconfirm.reset.isOpen();
 			closeAllFloatingWindows(false);
 			// Skip confirmation dialog if there are no unsaved changes
 			if (!boardeditor.isPositionDirty()) eactions.reset();
-			else if (!wasOpen) guiresetposition.open();
+			else if (!wasOpen) guipositionconfirm.reset.open();
 			return;
 		}
 		case 'clearall': {
-			const wasOpen = guiclearposition.isOpen();
+			const wasOpen = guipositionconfirm.clear.isOpen();
 			closeAllFloatingWindows(false);
 			// Skip confirmation dialog if there are no unsaved changes
 			if (!boardeditor.isPositionDirty()) eactions.clearAll();
-			else if (!wasOpen) guiclearposition.open();
+			else if (!wasOpen) guipositionconfirm.clear.open();
 			return;
 		}
 		case 'load-position': {
