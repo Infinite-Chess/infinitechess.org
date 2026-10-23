@@ -1,48 +1,48 @@
 // build/server.ts
 
+/**
+ * The server build: transpiles every server and shared script 1:1 into /dist, unbundled.
+ */
+
 import { glob } from 'glob';
 import esbuild, { BuildOptions } from 'esbuild';
 
 import { getESBuildLogStatusLogger } from './plugins.js';
 
-// ================================= CONSTANTS =================================
+// Constants -------------------------------------------------------------------
 
-const entryPoints = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
+const ENTRY_POINTS = await glob(['src/server/**/*.{ts,js}', 'src/shared/**/*.{ts,js}'], {
 	ignore: ['**/*.test.{ts,js}'],
 });
 
-// ================================= BUILDING ===================================
+// Options ---------------------------------------------------------------------
 
-const esbuildServerRebuildPlugin = getESBuildLogStatusLogger(
+const BuildLogPlugin = getESBuildLogStatusLogger(
 	'✅ Server Build successful.',
 	'❌ Server Build failed.',
 );
 
-const esbuildOptions: BuildOptions = {
+const BUILD_OPTIONS: BuildOptions = {
 	// Transpile all TS files from BOTH directories
-	entryPoints: entryPoints,
+	entryPoints: ENTRY_POINTS,
 	platform: 'node',
 	bundle: false, // No bundling for the server. Just transpile each file individually
 	outdir: 'dist',
 	format: 'esm',
 	sourcemap: true, // Patches file paths from server console errors to the correct src/ file
-	plugins: [esbuildServerRebuildPlugin],
+	plugins: [BuildLogPlugin],
 };
 
-// ================================= BUILDING ===================================
+// Building --------------------------------------------------------------------
 
-/** Builds the server's scripts, transpiling them all into javascript (no bundling). */
+/** Builds the server's scripts, once or watching for changes. */
 export async function buildServer(isDev: boolean): Promise<void> {
-	// console.log(`Building server in ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'} mode...`);
-
-	const context = await esbuild.context(esbuildOptions);
+	const context = await esbuild.context(BUILD_OPTIONS);
 
 	if (isDev) {
 		await context.watch();
-		// console.log('esbuild is watching for SERVER changes...');
 	} else {
 		await context.rebuild();
 		context.dispose();
-		// console.log('Server build complete.');
 	}
 }

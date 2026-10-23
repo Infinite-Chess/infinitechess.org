@@ -52,7 +52,6 @@ export default [
 				// MOST OF THE GAME SCRIPTS are ESM scripts, importing their own definitions, so we don't need to list them below.
 				translations: 'readonly', // Injected into the html by Nunjucks templates
 				header: 'readonly',
-				htmlscript: 'readonly',
 				EventListener: 'readonly',
 			},
 		},

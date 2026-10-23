@@ -11,7 +11,7 @@ import ts from 'typescript';
 import path from 'node:path';
 import esbuild from 'esbuild';
 
-import { ESMResolveOptions } from '../../build/client.js';
+import { RESOLVE_OPTIONS } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -108,14 +108,14 @@ function bundle(
 	{ minify = false, plugins = [] }: { minify?: boolean; plugins?: esbuild.Plugin[] } = {},
 ): Promise<esbuild.BuildResult<{ metafile: true; write: false }>> {
 	return esbuild.build({
-		...ESMResolveOptions,
+		...RESOLVE_OPTIONS,
 		entryPoints,
 		metafile: true,
 		write: false,
 		minify,
 		logLevel: 'silent',
 		outdir: 'srcgraph-virtual-out', // Never written (write: false).
-		plugins: [...ESMResolveOptions.plugins, ...plugins],
+		plugins: [...RESOLVE_OPTIONS.plugins, ...plugins],
 	});
 }
 

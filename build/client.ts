@@ -1,8 +1,8 @@
 // build/client.ts
 
 /**
- * The client build: bundles the ESM and CJS entry points with esbuild, writes the asset
- * manifest, and in production further minifies the scripts with SWC and the CSS with lightningcss.
+ * The client build: bundles the entry points with esbuild, writes the asset manifest, and in
+ * production further minifies the scripts with SWC and the CSS with lightningcss.
  */
 
 import fs from 'fs';
@@ -25,7 +25,7 @@ import { getEngineGlueUrl, getEngineVersion } from './engine-wasm.js';
 
 // Targetted browsers for CSS transpilation
 // Format: https://github.com/browserslist/browserslist?tab=readme-ov-file#query-composition
-const cssTargets = browserslistToTargets(browserslist('defaults'));
+const CSS_TARGETS = browserslistToTargets(browserslist('defaults'));
 
 /**
  * Any ES Module that any HTML document IMPORTS directly!
@@ -33,7 +33,7 @@ const cssTargets = browserslistToTargets(browserslist('defaults'));
  * ESBuild has to build each of them and their dependancies
  * into their own bundle!
  */
-export const ESMEntryPoints = [
+export const ENTRY_POINTS = [
 	// Stylesheets — bundled as content-hashed CSS entry points.
 	'src/client/css/global.css',
 	'src/client/css/header.css',
@@ -79,19 +79,11 @@ export const ESMEntryPoints = [
 	// 'src/client/scripts/esm/views/checkmatepractice/checkmatepractice.ts',
 ];
 
-/** CommonJS modules imported by html pages. */
-const CJSEntryPoints = ['src/client/scripts/cjs/game/htmlscript.ts'];
-
 // Plugins ---------------------------------------------------------------------
 
-const ESMBuildPlugin = getESBuildLogStatusLogger(
-	'✅ Client ESM Build successful.',
-	'❌ Client ESM Build failed.',
-);
-
-const CJSBuildPlugin = getESBuildLogStatusLogger(
-	'✅ Client CJS Build successful.',
-	'❌ Client CJS Build failed.',
+const BuildLogPlugin = getESBuildLogStatusLogger(
+	'✅ Client Build successful.',
+	'❌ Client Build failed.',
 );
 
 /**
@@ -189,8 +181,8 @@ function writeManifest(metafile: Metafile): void {
 
 // Options ---------------------------------------------------------------------
 
-/** How the ESM build finds and loads modules — what any bundle needs to match the real build's. */
-export const ESMResolveOptions = {
+/** How the build finds and loads modules — what any bundle needs to match the real build's. */
+export const RESOLVE_OPTIONS = {
 	bundle: true,
 	format: 'esm',
 	loader: { '.wasm': 'file' },
@@ -200,135 +192,58 @@ export const ESMResolveOptions = {
 	plugins: [GLSLMinifyPlugin],
 } satisfies BuildOptions;
 
-const ESMBuildOptions: BuildOptions = {
-	...ESMResolveOptions,
-	entryPoints: ESMEntryPoints,
-	outdir: './dist/client',
-	chunkNames: 'scripts/esm/[name]-[hash]',
-	/**
-	 * Enable code splitting, which means if multiple entry points require the same module,
-	 * that dependancy will be separated out of both of them which means it isn't duplicated,
-	 * and there's only one instance of it per page.
-	 * This also means more requests to the server, but not many.
-	 * If this is false, multiple copies of the same code may be loaded onto a page,
-	 * each belonging to a separate entry point module.
-	 */
-	splitting: true,
-	sourcemap: true, // Enables sourcemaps for debugging in the browser.
-	// No esbuild minification: production minifies with SWC, which is more compact.
-	metafile: true, // Generate metadata about the build, which we use to create our own manifest.json
-};
-
-const CJSBuildOptions: BuildOptions = {
-	bundle: true,
-	entryPoints: CJSEntryPoints,
-	outdir: './dist/client/scripts/cjs',
-	outbase: 'src/client/scripts/cjs', // Without this, htmlscript.js gets put in cjs/ instead of cjs/game/
-	format: 'cjs',
-	sourcemap: true,
-};
-
 // Building --------------------------------------------------------------------
 
 /** Builds the client's scripts and minifies css. */
 export async function buildClient(isDev: boolean): Promise<void> {
-	// Create signaling plugins to wait for the initial build in watch mode
-	const { plugin: esmInitialBuildPlugin, initialBuild: esmInitialBuild } =
-		getInitialBuildPlugin();
-	const { plugin: cjsInitialBuildPlugin, initialBuild: cjsInitialBuild } =
-		getInitialBuildPlugin();
+	const { plugin: initialBuildPlugin, initialBuild } = getInitialBuildPlugin();
 
-	const ESMContext = await esbuild.context({
-		...ESMBuildOptions,
+	const context = await esbuild.context({
+		...RESOLVE_OPTIONS,
+		entryPoints: ENTRY_POINTS,
+		outdir: './dist/client',
 		entryNames: '[dir]/[name]-[hash]', // Content-hash output file names
+		chunkNames: 'scripts/esm/[name]-[hash]',
+		// Shared dependencies become their own chunks, so a page loads each once instead of
+		// once per entry point that bundles it.
+		splitting: true,
+		sourcemap: true, // Enables sourcemaps for debugging in the browser.
+		// No esbuild minification: production minifies with SWC, which is more compact.
+		metafile: true, // Generate metadata about the build, which we use to create our own manifest.json
 		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
-		plugins: [
-			ESMBuildPlugin,
-			...ESMResolveOptions.plugins,
-			esmInitialBuildPlugin,
-			ManifestPlugin,
-		],
-	});
-	const CJSContext = await esbuild.context({
-		...CJSBuildOptions,
-		legalComments: isDev ? undefined : 'none', // Only strip copyright notices in production.
-		plugins: [CJSBuildPlugin, GLSLMinifyPlugin, cjsInitialBuildPlugin],
+		plugins: [BuildLogPlugin, ...RESOLVE_OPTIONS.plugins, initialBuildPlugin, ManifestPlugin],
 	});
 
 	if (isDev) {
-		// Start watch mode. This kicks off the initial builds
-		ESMContext.watch();
-		CJSContext.watch();
-
-		// Wait for both of the initial builds to complete
-		await Promise.all([esmInitialBuild, cjsInitialBuild]);
+		context.watch();
+		await initialBuild;
 	} else {
-		/**
-		 * ESBuild takes each entry point and all of their dependencies and merges them bundling them into one file.
-		 * If multiple entry points share dependencies, then those dependencies will be split into separate modules,
-		 * which means they aren't duplicated, and there's only one instance of it per page.
-		 * This also means more requests to the server, but not many.
-		 */
-		// Production
-		// Build once and exit since not in watch mode
-		await ESMContext.rebuild();
-		ESMContext.dispose();
-
-		await CJSContext.rebuild();
-		CJSContext.dispose();
-
-		// Minify JS and CSS
-		// Further minify them. This cuts off their size a further 60%!!!
-		await minifyScriptDirectory(
-			'./dist/client/scripts/cjs/',
-			'./dist/client/scripts/cjs/',
-			false,
-		);
-		await minifyScriptDirectory(
-			'./dist/client/scripts/esm/',
-			'./dist/client/scripts/esm/',
-			true,
-		);
+		await context.rebuild();
+		context.dispose();
+		await minifyScripts();
 		await minifyCSSFiles();
 	}
 }
 
-/**
- * Minifies all JavaScript files in a directory and writes them to an output directory.
- * @param inputDir - The directory to scan for scripts.
- * @param outputDir - The directory where the minified files will be written.
- * @param module - True if the scripts are ES Modules instead of CommonJS.
- * @returns Resolves when all files are minified.
- */
-async function minifyScriptDirectory(
-	inputDir: string,
-	outputDir: string,
-	module: boolean,
-): Promise<void> {
-	const files = await glob('**/*.js', { cwd: inputDir, nodir: true });
+/** Minifies the built scripts in place. */
+async function minifyScripts(): Promise<void> {
+	const dir = './dist/client/scripts/esm/';
+	const files = await glob('**/*.js', { cwd: dir, nodir: true });
 
 	for (const file of files) {
-		const inputFilePath = path.join(inputDir, file);
-		const outputFilePath = path.join(outputDir, file);
-
-		const content = await readFile(inputFilePath, 'utf-8');
+		const filePath = path.join(dir, file);
+		const content = await readFile(filePath, 'utf-8');
 		const minified = await swc.minify(content, {
 			mangle: true, // Enable variable name mangling
 			compress: true, // Enable compression
 			sourceMap: false,
-			module, // Include if we're minifying ES Modules instead of Common JS
+			module: true,
 		});
-
-		// Write the minified file to the output directory
-		fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
-		fs.writeFileSync(outputFilePath, minified.code);
+		fs.writeFileSync(filePath, minified.code);
 	}
 }
 
-/**
- * Minifies all CSS files under dist/client/ (esbuild output), preserving the original structure.
- * @returns Resolves when all CSS files are processed.
- */
+/** Minifies the built CSS files in place. */
 async function minifyCSSFiles(): Promise<void> {
 	// Bundle and compress all css files
 	const cssFiles = await glob('**/*.css', { cwd: './dist/client', nodir: true });
@@ -336,7 +251,7 @@ async function minifyCSSFiles(): Promise<void> {
 		// Minify css files
 		const outputFilePath = `./dist/client/${file}`;
 		const { code } = transform({
-			targets: cssTargets,
+			targets: CSS_TARGETS,
 			code: Buffer.from(await readFile(outputFilePath, 'utf8')),
 			minify: true,
 			filename: path.basename(outputFilePath),

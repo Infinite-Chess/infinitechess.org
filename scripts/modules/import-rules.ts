@@ -21,7 +21,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 
 import srcgraph from './srcgraph.js';
-import { ESMEntryPoints } from '../../build/client.js';
+import { ENTRY_POINTS } from '../../build/client.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -254,7 +254,7 @@ const GATES: Gate[] = [
 ];
 
 /** Only script entry points — the bundled CSS entries are skipped. */
-const ENTRIES = ESMEntryPoints.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
+const ENTRIES = ENTRY_POINTS.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
 
 // Helper Functions ------------------------------------------------------------
 
