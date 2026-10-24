@@ -77,21 +77,6 @@ function generate(): void {
 		`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`,
 	);
 
-	// Rating Abuse table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS rating_abuse (
-			user_id                     INTEGER NOT NULL,
-			leaderboard_id              INTEGER NOT NULL,
-			game_count_since_last_check INTEGER,
-
-			PRIMARY KEY (user_id, leaderboard_id),
-			FOREIGN KEY (user_id, leaderboard_id)
-				REFERENCES leaderboards(user_id, leaderboard_id) ON DELETE CASCADE
-		);
-	`);
-	// To quickly get all rating_abuse entries for a specific user
-	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
-
 	// --- Authentication & Account Lifecycle ---
 
 	// Pending Registrations table — verify-first registration staging, before a real member row exists
