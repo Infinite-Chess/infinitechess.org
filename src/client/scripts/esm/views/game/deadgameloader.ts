@@ -16,6 +16,7 @@ import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js'
 
 import toast from '../../components/toast.js';
 import onlinegame from './onlinegame.js';
+import { serverfetch } from '../../util/serverfetch.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -39,7 +40,7 @@ async function load(): Promise<void> {
  * a non-OK response, or the JSON body is malformed.
  */
 async function fetchDeadState(): Promise<DeadGameState> {
-	const response = await fetch(`/api/game/${uuid.base10ToBase62(window.gamePageData.id)}`);
+	const response = await serverfetch(`/api/game/${uuid.base10ToBase62(window.gamePageData.id)}`);
 	if (!response.ok) throw new Error(`Game fetch failed (${response.status})`);
 	return await response.json();
 }

@@ -78,10 +78,9 @@ flow:
    or an individual page template for page-specific ones) calls `scriptT('<component>')`.
 2. Nunjucks's built-in `| json` filter serializes the returned object to JSON, and `| safe` tells
    Nunjucks not to HTML-escape the resulting JSON (safe because every string was already
-   XSS-sanitized at load time by the loader's whitelist filter, which permits only
-   `em / strong / b / i / br`).
+   XSS-sanitized at load time by the loader's whitelist filter — see [Boot](#boot)).
 3. The result is embedded as `window.t = { <component>: {...} };` in the `<head>`. Today,
-   [layout.njk:41](/src/server/views/layout.njk#L41) does this for `header` and `shared`:
+   [layout.njk](/src/server/views/layout.njk) does this for `header` and `shared`:
 
     ```njk
     <script>window.t = { header: {{ scriptT('header') | json | safe }}, shared: {{ scriptT('shared') | json | safe }} };</script>

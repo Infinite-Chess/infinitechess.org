@@ -17,14 +17,6 @@ interface TimeControlsConfig {
 	onCommit: () => void;
 }
 
-// Constants -------------------------------------------------------------------
-
-/** Mappings from slider index to actual time control values for both time control sliders. */
-const TIME_CONTROL_SLIDER_MAPPINGS = {
-	base: clockutil.VALID_BASE_MINUTES,
-	increment: clockutil.VALID_INCREMENT_SECS,
-};
-
 // Elements --------------------------------------------------------------------
 
 const element_timeSliders = document.getElementById('time-sliders')!;
@@ -33,6 +25,14 @@ const element_minutesDisplay = document.getElementById('minutes-display')!;
 const element_sliderIncrement = document.getElementById('slider-increment') as HTMLInputElement;
 const element_incrementDisplay = document.getElementById('increment-display')!;
 const element_presetButtons = document.querySelectorAll<HTMLElement>('.preset-btn');
+
+// Constants -------------------------------------------------------------------
+
+/** Mappings from slider index to actual time control values for both time control sliders. */
+const TIME_CONTROL_SLIDER_MAPPINGS = {
+	base: clockutil.VALID_BASE_MINUTES,
+	increment: clockutil.VALID_INCREMENT_SECS,
+};
 
 // State -----------------------------------------------------------------------
 

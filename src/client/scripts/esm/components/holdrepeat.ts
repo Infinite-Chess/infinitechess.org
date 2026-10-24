@@ -8,6 +8,9 @@
  * Throttling and legality of the action are the caller's responsibility.
  */
 
+// Types -----------------------------------------------------------------------
+
+/** Timing of the auto-repeat. */
 interface HoldRepeatOptions {
 	/** Milliseconds to hold before auto-repeat begins. */
 	holdDelay?: number;
@@ -15,8 +18,14 @@ interface HoldRepeatOptions {
 	repeatInterval?: number;
 }
 
+// Constants -------------------------------------------------------------------
+
+/** Default {@link HoldRepeatOptions.holdDelay}. */
 const DEFAULT_HOLD_DELAY = 250;
+/** Default {@link HoldRepeatOptions.repeatInterval}. */
 const DEFAULT_REPEAT_INTERVAL = 60;
+
+// Wiring ----------------------------------------------------------------------
 
 /** Makes `element` fire `onFire` on click, and auto-repeat `onFire` while held. */
 function make(
@@ -44,6 +53,7 @@ function make(
 		}, holdDelay);
 	}
 
+	/** Cancels the chain, wherever it is. */
 	function stopRepeat(): void {
 		clearTimeout(timeoutID);
 		clearInterval(intervalID);

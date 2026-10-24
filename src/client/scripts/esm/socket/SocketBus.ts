@@ -21,7 +21,7 @@ interface SocketBusEvents {
 	closed: void;
 	/** The socket closed involuntarily and we'll attempt to reconnect. Always dispatched right after `closed`. */
 	'connection-lost': void;
-	/** RRT (Round Trip Time) ping value in milliseconds. */
+	/** RTT (Round Trip Time) ping value in milliseconds. */
 	ping: number;
 	/** Dispatched when application code should attempt to re-subscribe to what they need. */
 	reconnect: void;

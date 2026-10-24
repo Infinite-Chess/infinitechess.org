@@ -1,7 +1,7 @@
 // src/client/scripts/esm/components/header/dropdowns/gameplaydropdown.ts
 
 /**
- * Enable or disable premoves and dragging pieces.
+ * Toggle dragging pieces, premoves, animations, fast transitions, and lingering annotations.
  */
 
 import preferences from '../../../util/preferences.js';

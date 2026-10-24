@@ -32,21 +32,10 @@ interface ActiveGameEntry {
 
 // State -----------------------------------------------------------------------
 
-/**
- * Contains what members are currently in a game: `{ member: entry }`
- * Users that are present in this list are not allowed to join another game until they're
- * deleted from here. As soon as a game is over, we can {@link remove()},
- * even though the game may not be finalized or evicted yet.
- */
-const membersInActiveGames: Record<number, ActiveGameEntry> = {};
-
-/**
- * Contains what browsers are currently in a game: `{ browser: entry }`
- * Users that are present in this list are not allowed to join another game until they're
- * deleted from here. As soon as a game is over, we can {@link remove()}
- * even though the game may not be finalized or evicted yet.
- */
-const browsersInActiveGames: Record<string, ActiveGameEntry> = {};
+/** Each member's entry, by user_id. Removed the moment their game ends, before it's finalized. */
+const membersInActiveGames = new Map<number, ActiveGameEntry>();
+/** Each guest browser's entry, by browser-id. Removed at the same moment. */
+const browsersInActiveGames = new Map<string, ActiveGameEntry>();
 
 // Functions -------------------------------------------------------------------
 
@@ -64,8 +53,8 @@ function add(
 	awaitingNavigateNotice: boolean,
 ): void {
 	const entry: ActiveGameEntry = { gameID: id, role, awaitingNavigateNotice };
-	if (user.signedIn) membersInActiveGames[user.user_id] = entry;
-	else browsersInActiveGames[user.browser_id] = entry;
+	if (user.signedIn) membersInActiveGames.set(user.user_id, entry);
+	else browsersInActiveGames.set(user.browser_id, entry);
 }
 
 /**
@@ -80,14 +69,14 @@ function remove(user: AuthMemberInfo, gameID: number): void {
 	// If they DON'T belong to that game, that means they speedily
 	// resigned and started a new game, so don't modify this!
 	if (user.signedIn) {
-		if (membersInActiveGames[user.user_id]?.gameID === gameID)
-			delete membersInActiveGames[user.user_id];
-		else if (membersInActiveGames[user.user_id] !== undefined)
+		if (membersInActiveGames.get(user.user_id)?.gameID === gameID)
+			membersInActiveGames.delete(user.user_id);
+		else if (membersInActiveGames.has(user.user_id))
 			console.log('Not removing member from active games because they speedily joined a new game!'); // prettier-ignore
 	} else {
-		if (browsersInActiveGames[user.browser_id]?.gameID === gameID)
-			delete browsersInActiveGames[user.browser_id];
-		else if (browsersInActiveGames[user.browser_id] !== undefined)
+		if (browsersInActiveGames.get(user.browser_id)?.gameID === gameID)
+			browsersInActiveGames.delete(user.browser_id);
+		else if (browsersInActiveGames.has(user.browser_id))
 			console.log('Not removing browser from active games because they speedily joined a new game!'); // prettier-ignore
 	}
 }
@@ -99,22 +88,22 @@ function remove(user: AuthMemberInfo, gameID: number): void {
  */
 function hasSocket(ws: CustomWebSocket): boolean {
 	const player = ws.metadata.memberInfo;
-	// Allow a member to still join a new game, even if they're browser may be connected to one already.
+	// Allow a member to still join a new game, even if their browser may be connected to one already.
 	if (player.signedIn) {
 		// Their username trumps their browser id.
-		return player.user_id in membersInActiveGames;
-	} else return player.browser_id in browsersInActiveGames;
+		return membersInActiveGames.has(player.user_id);
+	} else return browsersInActiveGames.has(player.browser_id);
 }
 
 /** Gets the active-game entry of a player, if they belong to one. */
 function getEntry(player: AuthMemberInfo): ActiveGameEntry | undefined {
 	if (player.signedIn) return getEntryOfUser(player.user_id);
-	else return browsersInActiveGames[player.browser_id];
+	else return browsersInActiveGames.get(player.browser_id);
 }
 
 /** Gets the active-game entry of a signed-in member, for callers holding only their user_id. */
 function getEntryOfUser(user_id: number): ActiveGameEntry | undefined {
-	return membersInActiveGames[user_id];
+	return membersInActiveGames.get(user_id);
 }
 
 /**

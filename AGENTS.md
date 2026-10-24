@@ -164,8 +164,9 @@ followed, tell me.
       countless details of everything unrelated, no agent or human is going to want to read that.
     - Staple-ons which serve to amend existing comments. Prefer **rewriting** the comments from
       scratch instead.
-    - Prior code state talk. We do not need to concern ourselves with old state. Move on mentally;
-      do not give old code state free rent forever in our mind. We are _focused_ on the next work.
+    - Prior code state talk, said or implied: a comment that only makes sense in defense of old
+      code, like one vouching for a removed guard's absence. Do not give old code state free rent in
+      our mind; we are _focused_ on the next work.
     - Common sense things, or that which can be inferred from nearby comments.
     - Statements explaining or justifying why code is the way that it is. Me asking you why code is
       that way isn't me arguing with you about making it a different way; it's me hyper-looking for
@@ -332,9 +333,10 @@ disagree, study more siblings before trusting either.
 - A single-export module exports _inline_ at its declaration (`export function foo()`). Sibling
   symmetry overrides this: if the surrounding family all reads `<module>.<fn>`, keep the default
   object. Match the callers' neighborhood.
-- Nothing gets exported — including types — without a consumer outside the module.
-  `scripts/modules/orphan-exports.ts <root>` lists the ones that break this; it matches textually,
-  so confirm each hit before deleting.
+- Nothing gets exported — including types — without a consumer outside the module, unless it
+  completes a set, dormant code will need it back, or it serves an occasional one-off use; mark that
+  last kind with a comment, as nothing else reveals it. `scripts/modules/orphan-exports.ts <root>`
+  lists candidates; it matches textually, so confirm each hit before deleting.
 - Import identifiers match the script's basename; if a local name collides, rename the local, don't
   alias the import.
 

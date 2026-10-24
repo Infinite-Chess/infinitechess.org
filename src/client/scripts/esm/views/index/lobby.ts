@@ -235,7 +235,8 @@ function armGracePeriods(
 		const timer = window.setTimeout(() => {
 			graceTimers.delete(seek.id);
 			// Skipped once the seek has left the list, where the re-render would be a no-op.
-			if (seekMap.has(seek.id)) renderSeekList([...seekMap.values()].map(outSeekToLobbySeek));
+			if (seekMap.has(seek.id))
+				renderSeekList([...seekMap.values()].map((s) => outSeekToLobbySeek(s)));
 		}, remaining);
 		graceTimers.set(seek.id, timer);
 	});
@@ -585,7 +586,6 @@ function createSideDotVNode(color: LobbySeek['color']): VNode | null {
 // Exports ---------------------------------------------------------------------
 
 export default {
-	clearSeekList,
 	handleLobbyState,
 	onSeekListUpdate,
 	onViewerCountUpdate,
@@ -596,4 +596,5 @@ export default {
 	createEngineGame,
 	subscribe,
 	exitIdle,
+	clearSeekList,
 };

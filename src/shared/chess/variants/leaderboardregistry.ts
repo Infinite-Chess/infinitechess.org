@@ -7,7 +7,7 @@
 
 import type { Player } from '../util/typeutil.js';
 import type { TimeControl } from '../util/clockutil.js';
-import type { SeekVariant } from '../util/variantselection.js';
+import type { SeekVariant, OutSeekVariant } from '../util/variantselection.js';
 import type { VariantCode } from '../util/variantcodes.js';
 import type { GameModifier } from '../util/modutil.js';
 
@@ -52,12 +52,12 @@ const BY_VARIANT: Partial<Record<VariantCode, Leaderboard>> = {
  * The leaderboard a seek or game belongs to, or `undefined` if it belongs to none.
  * Only preset variants can: a custom position is unique to its game.
  */
-function ofVariant(variant: SeekVariant): Leaderboard | undefined {
+function ofVariant(variant: OutSeekVariant): Leaderboard | undefined {
 	return variant.kind === 'preset' ? BY_VARIANT[variant.code] : undefined;
 }
 
 /** The leaderboard a player's rating in a variant is read from: its own, else INFINITY. */
-function ratingSourceOf(variant: SeekVariant): Leaderboard {
+function ratingSourceOf(variant: OutSeekVariant): Leaderboard {
 	return ofVariant(variant) ?? IDS.INFINITY;
 }
 

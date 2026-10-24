@@ -134,16 +134,6 @@ function getLastSegmentOfURL(): string {
 	return segments[segments.length - 1] ?? ''; // Fallback to an empty string if no segment exists
 }
 
-/**
- * Reads a query‐param from the current URL.
- * @param name - The name of the parameter to read.
- * @returns The parameter's value, or null if not present.
- */
-function getQueryParam(name: string): string | null {
-	const urlParams = new URLSearchParams(window.location.search);
-	return urlParams.get(name);
-}
-
 // Cookies ---------------------------------------------------------------------
 
 /**
@@ -183,7 +173,8 @@ function updateCookie(cookieName: string, value: string, days: number): void {
  * @param cookieName - The name of the cookie you would like to delete.
  */
 function deleteCookie(cookieName: string): void {
-	document.cookie = cookieName + '=; Max-Age=-99999999;';
+	// The path must match the cookie's, '/' for every cookie of ours, or this misses it on sub-paths.
+	document.cookie = cookieName + '=; Max-Age=-99999999; path=/';
 }
 
 // DOM -------------------------------------------------------------------------
@@ -218,7 +209,6 @@ export default {
 	onPixelDensityChange,
 	// URLs
 	getLastSegmentOfURL,
-	getQueryParam,
 	// Cookies
 	getCookieValue,
 	updateCookie,

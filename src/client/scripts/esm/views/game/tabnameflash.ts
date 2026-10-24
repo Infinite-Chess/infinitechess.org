@@ -1,8 +1,8 @@
 // src/client/scripts/esm/views/game/tabnameflash.ts
 
 /**
- * This script controls the flashing of the tab name "YOUR MOVE"
- * when it is your turn and your in another tab.
+ * Flashes the tab name "YOUR MOVE" while it is your turn and you're in another tab,
+ * and plays a reminder sound if you stay away.
  */
 
 import moveutil from '../../../../../shared/chess/logic/moveutil.js';
@@ -18,7 +18,7 @@ import gamesession from '../../game/chess/gamesession.js';
 /** Number of millis to wait before reminding us a 2nd time it's our move by playing a sound effect. */
 const MOVE_SOUND_REMINDER_MS: number = timeutil.toMillis(20, 'seconds');
 
-/** The original tab title. We will always revert to this after temporarily changing the name name to alert player's it's their move. */
+/** The original tab title, restored after flashing it. */
 const ORIGINAL_TITLE: string = document.title;
 
 /** How rapidly the tab title should flash "YOUR MOVE" */
@@ -78,7 +78,7 @@ function flashTabNameYOUR_MOVE(parity: boolean): void {
 
 	document.title = parity ? t.game.your_move : ORIGINAL_TITLE;
 	// Set a timer for the next toggle
-	timeoutID = setTimeout(flashTabNameYOUR_MOVE, FLASH_INTERVAL_MS, !parity);
+	timeoutID = setTimeout(() => flashTabNameYOUR_MOVE(!parity), FLASH_INTERVAL_MS);
 }
 
 /** Stops flashing, restoring the original tab title. */

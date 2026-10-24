@@ -11,7 +11,7 @@
 import { EventBus } from '../../../../shared/util/EventBus.js';
 
 interface SettingsBusEvents {
-	// =========== Appearance ============
+	// --- Appearance ---
 
 	/** Dispatched when the board theme changes. Listeners re-read their colors from preferences.ts. */
 	'theme-change': void;
@@ -22,7 +22,7 @@ interface SettingsBusEvents {
 	/** Dispatched when the starfield background is enabled or disabled. */
 	'starfield-toggle': boolean;
 
-	// =========== Gameplay ============
+	// --- Gameplay ---
 
 	/** Dispatched when premoving is enabled or disabled. */
 	'premoves-toggle': boolean;
@@ -31,7 +31,7 @@ interface SettingsBusEvents {
 	/** Dispatched when perspective mode's field of view changes. */
 	'fov-change': void;
 
-	// =========== Sound ============
+	// --- Sound ---
 
 	/** Dispatched when the master volume changes. Carries the new level, 0 (silent) to 1 (full). */
 	'master-volume-change': number;

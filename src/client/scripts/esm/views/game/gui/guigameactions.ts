@@ -53,6 +53,53 @@ const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElem
 // A link (SSR'd href), so it navigates natively and honors ctrl/cmd/middle-click.
 const element_Analysis = document.getElementById('btn-analysis') as HTMLAnchorElement;
 
+// Buttons to briefly disable when their action block first appears.
+const elements_GraceButtons = new Map<Element, HTMLElement[]>();
+if (element_ActionsDrawOffer && element_AcceptDraw && element_RejectDraw)
+	elements_GraceButtons.set(element_ActionsDrawOffer, [element_AcceptDraw, element_RejectDraw]);
+elements_GraceButtons.set(
+	element_ActionsOver,
+	element_Rematch ? [element_Rematch, element_Analysis] : [element_Analysis],
+);
+
+// Constants -------------------------------------------------------------------
+
+// --- Appearance grace period ---
+
+/**
+ * How long a freshly-revealed block's buttons stay disabled, so
+ * a click landing the instant it appears can't accidentally fire.
+ * KEEP IN SYNC with the lobby's seek grace period (lobby.ts).
+ */
+const GRACE_MS = 667;
+
+// --- Two-click confirmation ---
+
+/** How long a button waits for its confirming second click before reverting. */
+const CONFIRM_REVERT_MS = 3000;
+
+// State -----------------------------------------------------------------------
+
+// --- Appearance grace period ---
+
+/** Blocks mid-grace, mapped to their pending re-enable timer. */
+const graceTimers = new Map<Element, number>();
+
+// --- Two-click confirmation ---
+
+/** Buttons mid-confirmation, mapped to their pending auto-revert timer. */
+const confirmTimers = new Map<HTMLElement, number>();
+
+// --- Rematch ---
+
+/** Whether WE have extended a rematch offer this game (button disabled, waiting on opponent). */
+let weOfferedRematch = false;
+/** Whether our OPPONENT has an outstanding rematch offer (button glows). */
+let opponentOfferedRematch = false;
+
+/** Whether our opponent is currently connected (button disabled while they're gone). */
+let opponentPresentPostGame = true;
+
 // Events ----------------------------------------------------------------------
 
 // Correct the SSR'd guess once the game loads, then swap to actions-over on conclusion.
@@ -134,31 +181,12 @@ function updateResignAbortButtons(): void {
 // Appearance grace period -----------------------------------------------------
 
 /**
- * How long a freshly-revealed block's buttons stay disabled, so
- * a click landing the instant it appears can't accidentally fire.
- * KEEP IN SYNC with the lobby's seek grace period (lobby.ts).
- */
-const GRACE_MS = 667;
-
-/** Buttons to briefly disable when their action block first appears. */
-const graceButtons = new Map<Element, HTMLElement[]>();
-if (element_ActionsDrawOffer && element_AcceptDraw && element_RejectDraw)
-	graceButtons.set(element_ActionsDrawOffer, [element_AcceptDraw, element_RejectDraw]);
-graceButtons.set(
-	element_ActionsOver,
-	element_Rematch ? [element_Rematch, element_Analysis] : [element_Analysis],
-);
-
-/** Blocks mid-grace, mapped to their pending re-enable timer. */
-const graceTimers = new Map<Element, number>();
-
-/**
- * Marks `block`'s {@link graceButtons} aria-disabled for {@link GRACE_MS}, then restores them.
+ * Marks `block`'s {@link elements_GraceButtons} aria-disabled for {@link GRACE_MS}, then restores them.
  * Deliberately not the `disabled` property: the Analysis action is a link, and this leaves each
  * button's genuine disabled state (e.g. rematch's) untouched.
  */
 function armGracePeriod(block: Element): void {
-	const buttons = graceButtons.get(block);
+	const buttons = elements_GraceButtons.get(block);
 	if (!buttons) return; // Block has no grace-disabled buttons (e.g. actions-live).
 	for (const button of buttons) button.setAttribute('aria-disabled', 'true');
 	clearTimeout(graceTimers.get(block));
@@ -173,14 +201,9 @@ function armGracePeriod(block: Element): void {
 
 // Two-click confirmation ------------------------------------------------------
 
-const CONFIRM_REVERT_MS = 3000;
-
-/** Buttons mid-confirmation, mapped to their pending auto-revert timer. */
-const confirmTimers = new Map<HTMLElement, number>();
-
 /**
- * Wraps a one-click action behind a two-click confirmation. The first click
- * adds the `confirming` class (a purely visual cue) and arms a 3s auto-revert;
+ * Wraps a one-click action behind a two-click confirmation. The first click adds the
+ * `confirming` class (a purely visual cue) and arms a {@link CONFIRM_REVERT_MS} auto-revert;
  * a second click within that window clears the state and runs `action`.
  */
 function withConfirmation(button: HTMLElement, action: () => void): () => void {
@@ -238,14 +261,6 @@ function callback_Abort(): void {
 }
 
 // Rematch ---------------------------------------------------------------------
-
-/** Whether WE have extended a rematch offer this game (button disabled, waiting on opponent). */
-let weOfferedRematch = false;
-/** Whether our OPPONENT has an outstanding rematch offer (button glows). */
-let opponentOfferedRematch = false;
-
-/** Whether our opponent is currently connected (button disabled while they're gone). */
-let opponentPresentPostGame = true;
 
 /**
  * Repaints the rematch button: glows while the opponent has an offer out (and we haven't

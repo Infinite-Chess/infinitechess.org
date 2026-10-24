@@ -129,7 +129,7 @@ sentences and the ladders' wording are the single source of the report's phrasin
 **`RULES`** — "which pages may reach this target", matched against page bundles. The page sets are
 built from two constants: `INTERACTIVE_BOARD_PAGES` (`views/game/`, `views/analysis/`, plus the
 dormant `views/editor/` and `views/checkmatepractice/`) and `SOCKET_PAGES` (`views/index/`,
-`views/game/`, `views/challenge/`). Reachability only sees pages listed in `ESMEntryPoints`, so a
+`views/game/`, `views/challenge/`). Reachability only sees pages listed in `ENTRY_POINTS`, so a
 dormant page is never tested and its listing here stays inert until that entry lands.
 
 | Target                  | Allowed pages                                                                                                                                    |

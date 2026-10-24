@@ -33,17 +33,6 @@ interface Standing {
 
 // Replay ----------------------------------------------------------------------
 
-/** Runs `action` with the clock reading `now`: the rating code decays RD up to Date.now(). */
-function at<T>(now: number, action: () => T): T {
-	const realNow = Date.now;
-	Date.now = (): number => now;
-	try {
-		return action();
-	} finally {
-		Date.now = realNow;
-	}
-}
-
 /** When a game finished, epoch ms. */
 function finish(game: GameRow): number {
 	return timeutil.sqliteToTimestamp(game.date) + (game.time_duration_millis ?? 0);
@@ -63,13 +52,13 @@ for (const game of games) {
 		const standing = standings.get(key) ?? { elo: ratingCalculation.DEFAULT_LEADERBOARD_ELO, rd: ratingCalculation.DEFAULT_LEADERBOARD_RD, last: null }; // prettier-ignore
 		standings.set(key, standing);
 		ratingData[p.player_number] = { elo_at_game: standing.elo, rating_deviation_at_game: standing.rd, rd_last_update_date: standing.last }; // prettier-ignore
-		rds[`${game.game_id}/${p.user_id}`] = at(finish(game), () => ratingCalculation.getTrueRD(standing.rd, standing.last)); // prettier-ignore
+		rds[`${game.game_id}/${p.user_id}`] = ratingCalculation.getTrueRD(standing.rd, standing.last, finish(game)); // prettier-ignore
 	}
 	if (players.some((p) => p.score === null)) continue;
 
 	// As the game was logged: at its end.
 	const white = players.find((p) => p.player_number === 1)!;
-	at(finish(game), () => ratingCalculation.computeChanges(ratingData, white.score === 1 ? 1 : white.score === 0 ? 2 : null)); // prettier-ignore
+	ratingCalculation.computeChanges(ratingData, white.score === 1 ? 1 : white.score === 0 ? 2 : null, finish(game)); // prettier-ignore
 
 	for (const p of players) {
 		const data = ratingData[p.player_number]!;

@@ -31,7 +31,7 @@ const AUTO_CLOSE_CUSHION = 10000;
  */
 const RECONNECT_DELAY_MS = [0, 2500, 5000] as const;
 
-// Variables -------------------------------------------------------------------
+// State -----------------------------------------------------------------------
 
 /** The websocket object used to communicate with the server. */
 let socket: WebSocket | undefined;
@@ -246,7 +246,6 @@ export default {
 	// Socket Lifecycle
 	establishSocket,
 	syncIdleCloseTimer,
-	closeSocket,
 	dropSocket,
 	scheduleReconnect,
 	// Resubscription

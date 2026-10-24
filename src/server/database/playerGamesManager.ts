@@ -18,9 +18,9 @@ export interface PlayerGamesRecord {
 	game_id: number;
 	player_number: number;
 	score: number | null;
-	elo_at_game: number | null;
+	elo_at_game: number;
 	elo_change_from_game: number | null;
-	rating_deviation_at_game: number | null;
+	rating_deviation_at_game: number;
 	rating_deviation_after_game: number | null;
 }
 

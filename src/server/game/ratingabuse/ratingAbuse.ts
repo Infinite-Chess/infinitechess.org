@@ -25,15 +25,13 @@ import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
-import logEvents from '../../utility/logEvents.js';
 import abuseChecks from './abuseChecks.js';
 import abuseReport from './abuseReport.js';
-import gameUtility from '../gamemanager/gameUtility.js';
 import gamesManager from '../../database/gamesManager.js';
 import deadGameState from '../gamemanager/deadGameState.js';
 import memberManager from '../../database/memberManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
-import ratingAbuseManager from '../../database/ratingAbuseManager.js';
+import playerStatsManager from '../../database/playerStatsManager.js';
 import refreshTokenManager from '../../database/refreshTokenManager.js';
 
 // Constants -------------------------------------------------------------------
@@ -47,27 +45,16 @@ const GAME_INTERVAL_TO_MEASURE = 5;
 function measureAfterGame(servergame: ServerGame): void {
 	// Do not monitor suspicion levels, if game was unrated
 	if (!servergame.match.rated) return;
-	// Skip if the game was aborted (this also covers 0 moves),
-	// the game will NOT have added an entry in the leaderboards table for the players!
+	// Skip aborted games: they don't add to the rated game count, so they'd repeat the last check.
 	if (servergame.gameConclusion!.victor === undefined) return;
 
-	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = leaderboardregistry.ofVariant(servergame.match.variant);
-	if (leaderboard_id === undefined) return;
+	const leaderboard_id = leaderboardregistry.ofVariant(servergame.match.variant)!; // Will always be defined if the game is rated.
 
-	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {
-		if (!player.identifier.signedIn) {
-			void logEvents.addAndPrint(
-				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameUtility.getSimplifiedGameString(servergame)}`,
-				'errLog',
-			);
-			continue;
-		}
-		const user_id = player.identifier.user_id;
-		const username = player.identifier.username;
+	for (const { identifier } of Object.values(servergame.match.playerData)) {
+		if (!identifier.signedIn) continue; // Narrows the type only: rated games seat members alone.
 
 		try {
-			measurePlayer(user_id, username, leaderboard_id);
+			measurePlayer(identifier.user_id, identifier.username, leaderboard_id);
 		} catch {
 			// Already logged. Skip this player's check
 		}
@@ -80,7 +67,10 @@ function measureAfterGame(servergame: ServerGame): void {
  * @throws If a database error occurs.
  */
 function measurePlayer(user_id: number, username: string, leaderboard_id: number): void {
-	if (!consumeCheckInterval(user_id, leaderboard_id)) return; // Not enough games played since the last check yet.
+	// Only every GAME_INTERVAL_TO_MEASURE-th rated game is checked. The count spans every
+	// leaderboard, which is exact while INFINITY is the only one.
+	const stats = playerStatsManager.getData(user_id, ['game_count_rated'])!; // Rated games finalize before an account can go.
+	if (stats.game_count_rated % GAME_INTERVAL_TO_MEASURE !== 0) return;
 
 	// Retrieve the most recent ranked non-aborted games from the player_games table
 	const recentPlayerGamesEntries = playerGamesManager.getRecentNRatedForUser(
@@ -109,34 +99,6 @@ function measurePlayer(user_id: number, username: string, leaderboard_id: number
 
 	const ctx = { user_id, username, netRatingChange, evidence };
 	abuseReport.reportFlagged(ctx, verdict);
-}
-
-/**
- * Counts this game against the player's check interval, resetting the counter when it trips.
- * @returns Whether a check is now due.
- */
-function consumeCheckInterval(user_id: number, leaderboard_id: number): boolean {
-	// If player is not in rating_abuse table, add him to it
-	if (!ratingAbuseManager.isEntryIn(user_id, leaderboard_id))
-		ratingAbuseManager.addEntry(user_id, leaderboard_id);
-
-	// Access the player rating_abuse data
-	const rating_abuse_data = ratingAbuseManager.getData(user_id, leaderboard_id, [
-		'game_count_since_last_check',
-	]);
-	// Increment game_count_since_last_check by 1
-	const game_count_since_last_check = 1 + (rating_abuse_data.game_count_since_last_check || 0);
-
-	// Early exit condition if the newly incremented game_count_since_last_check is still below the GAME_INTERVAL_TO_MEASURE threshhold
-	if (game_count_since_last_check < GAME_INTERVAL_TO_MEASURE) {
-		ratingAbuseManager.updateColumns(user_id, leaderboard_id, { game_count_since_last_check }); // update rating_abuse table with new value for game_count_since_last_check
-		return false;
-	}
-
-	// Now we run the actual suspicion level check, thereby setting game_count_since_last_check to 0 from now on
-	ratingAbuseManager.updateColumns(user_id, leaderboard_id, { game_count_since_last_check: 0 });
-
-	return true;
 }
 
 // Evidence Gathering ----------------------------------------------------------

@@ -76,12 +76,10 @@ function closeListeners(): void {
 
 function onMouseSensitivityChange(event: Event): void {
 	const value = Number((event.currentTarget as HTMLInputElement).value);
-	// console.log(`Mouse sensitivity changed: ${value}`);
 	setMouseSensitivity(value);
 }
 function onFOVChange(event: Event): void {
 	const value = Number((event.currentTarget as HTMLInputElement).value);
-	// console.log(`FOV changed: ${value}`);
 	setFOV(value);
 }
 

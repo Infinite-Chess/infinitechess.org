@@ -15,6 +15,11 @@ import preferences from '../../../util/preferences.js';
 import { SettingsBus } from '../../../util/SettingsBus.js';
 import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerator.js';
 
+// Types -----------------------------------------------------------------------
+
+/** The site's light/dark color scheme. */
+type Theme = 'dark' | 'light';
+
 // Document Elements -----------------------------------------------------------
 
 const appearanceDropdownTitle = document.querySelector('.appearance-dropdown .dropdown-title')!;
@@ -25,7 +30,7 @@ const legalMoveToggleContainer = document.querySelector<HTMLElement>('[data-lega
 const legalMoveIndicator = document.querySelector<HTMLElement>(
 	'[data-legal-move-toggle] .select-value',
 )!;
-const boardColorList = document.querySelector('.board-color-list')!; // Get the board color list div
+const swatchList = document.querySelector<HTMLElement>('.board-swatches')!;
 
 const coordinatesCheckbox = document.querySelector<HTMLInputElement>(
 	'.boolean-option.coordinates input',
@@ -42,18 +47,15 @@ const advancedEffectsCheckbox = document.querySelector<HTMLInputElement>(
 /** The key used to store the light/dark theme preference in localStorage. */
 const THEME_KEY = 'color-scheme';
 
-const THEME_DARK = 'dark';
-const THEME_LIGHT = 'light';
-
-// Types -----------------------------------------------------------------------
-
-type Theme = typeof THEME_DARK | typeof THEME_LIGHT;
+const THEME_DARK: Theme = 'dark';
+const THEME_LIGHT: Theme = 'light';
 
 // Functions -------------------------------------------------------------------
 
 (function init() {
 	showCheckmarkOnSelectedOptions();
-	addBoardThemesToDropdown();
+	addSwatches();
+	swatchList.addEventListener('click', (event) => onSwatchClick(event));
 	initThemeToggle();
 	initLegalMoveToggle();
 })();
@@ -100,29 +102,19 @@ function showCheckmarkOnSelectedOptions(): void {
 	advancedEffectsCheckbox.checked = preferences.getAdvancedEffectsMode();
 }
 
-async function addBoardThemesToDropdown(): Promise<void> {
-	const themeDictionary = themes.THEMES;
-
-	// Loop through each theme in the dictionary
-	for (const themeName in themeDictionary) {
-		const theme = themeDictionary[themeName]!;
-		const lightTiles = theme.lightTiles;
-		const darkTiles = theme.darkTiles;
-
-		// Create the checkerboard image for the board theme
-		const checkerboardImage = await checkerboardgenerator.createCheckerboardIMG(
-			colorutil.arrayToCssColor(lightTiles), // Convert to CSS color format
-			colorutil.arrayToCssColor(darkTiles), // Convert to CSS color format
-			2, // Width
+/** Adds a swatch for each board theme, then highlights the selected one. */
+async function addSwatches(): Promise<void> {
+	for (const [themeName, theme] of Object.entries(themes.THEMES)) {
+		const swatch = await checkerboardgenerator.createCheckerboardIMG(
+			colorutil.arrayToCssColor(theme.lightTiles),
+			colorutil.arrayToCssColor(theme.darkTiles),
 		);
-		checkerboardImage.setAttribute('data-board-color', themeName);
-		checkerboardImage.setAttribute('draggable', 'false');
-
-		// Append the image to the board color list div
-		boardColorList.appendChild(checkerboardImage);
+		swatch.setAttribute('data-board-color', themeName);
+		swatch.setAttribute('draggable', 'false');
+		swatchList.appendChild(swatch);
 	}
 
-	updateBoardColorSelection();
+	highlightSelectedSwatch();
 }
 
 function open(): void {
@@ -136,7 +128,6 @@ function close(): void {
 
 function initListeners(): void {
 	appearanceDropdownTitle.addEventListener('click', close);
-	initBoardColorListeners();
 	// Coordinates toggle
 	coordinatesCheckbox.addEventListener('click', toggleCoordinates);
 	// Starfield toggle
@@ -146,7 +137,6 @@ function initListeners(): void {
 }
 function closeListeners(): void {
 	appearanceDropdownTitle.removeEventListener('click', close);
-	closeBoardColorListeners();
 	// Coordinates toggle
 	coordinatesCheckbox.removeEventListener('click', toggleCoordinates);
 	// Starfield toggle
@@ -154,39 +144,22 @@ function closeListeners(): void {
 	// Advanced Effects toggle
 	advancedEffectsCheckbox.removeEventListener('click', toggleAdvancedEffects);
 }
-function initBoardColorListeners(): void {
-	for (let i = 0; i < boardColorList.children.length; i++) {
-		const boardColorImg = boardColorList.children[i]!;
-		boardColorImg.addEventListener('click', selectBoardColor);
-	}
-}
-function closeBoardColorListeners(): void {
-	for (let i = 0; i < boardColorList.children.length; i++) {
-		const boardColorImg = boardColorList.children[i]!;
-		boardColorImg.removeEventListener('click', selectBoardColor);
-	}
-}
 
-function selectBoardColor(event: Event): void {
-	const selectedBoardColor = (event.currentTarget as HTMLElement).getAttribute(
-		'data-board-color',
-	)!;
-
-	// Saves it to browser storage
-	preferences.setBoardColor(selectedBoardColor);
-
-	updateBoardColorSelection();
-
+/** Selects the board color of the swatch clicked, if a swatch was. */
+function onSwatchClick(event: MouseEvent): void {
+	const swatch = (event.target as Element).closest('[data-board-color]');
+	if (!swatch) return; // The gap between swatches
+	preferences.setBoardColor(swatch.getAttribute('data-board-color')!);
+	highlightSelectedSwatch();
 	SettingsBus.dispatch('theme-change');
 }
-/** Outlines the current board color selection */
-function updateBoardColorSelection(): void {
+
+/** Outlines the swatch of the selected board color. */
+function highlightSelectedSwatch(): void {
 	const selectedBoardColor = preferences.getBoardColor();
-	for (let i = 0; i < boardColorList.children.length; i++) {
-		const boardColorImg = boardColorList.children[i]!;
-		if (boardColorImg.getAttribute('data-board-color') === selectedBoardColor)
-			boardColorImg.classList.add('selected');
-		else boardColorImg.classList.remove('selected');
+	for (const swatch of swatchList.children) {
+		const isSelected = swatch.getAttribute('data-board-color') === selectedBoardColor;
+		swatch.classList.toggle('selected', isSelected);
 	}
 }
 

@@ -3,13 +3,16 @@
 /**
  * The base every effect zone extends.
  *
- * Owns the ambient soundscape and its fades, and defaults a zone to no post-processing
- * passes. Subclasses supply the effect id, the per-frame update, and the shader uniforms.
+ * Owns the ambient soundscape and its fades, along with the downsampler's for a zone that
+ * downsamples every sound, and defaults a zone to no post-processing passes. Subclasses
+ * supply the effect id, the per-frame update, and the shader uniforms.
  */
 
 import type { UniformValue } from '../../../webgl/Renderable.js';
 import type { PostProcessPass } from '../../../webgl/postprocessing/PostProcessPass.js';
 import type { SoundscapePlayer } from '../../../audio/SoundscapePlayer.js';
+
+import AudioManager from '../../../audio/AudioManager.js';
 
 export abstract class BaseZone {
 	/** The unique integer id this effect zone gets. */
@@ -17,6 +20,9 @@ export abstract class BaseZone {
 
 	/** This zone's ambient soundscape. Undefined for a silent zone. */
 	protected ambience: SoundscapePlayer | undefined;
+
+	/** Whether every sound is downsampled while this zone's ambience plays. */
+	protected readonly downsamplesSound: boolean = false;
 
 	/** Dynamically updates the zone effect. */
 	abstract update(): void;
@@ -32,10 +38,12 @@ export abstract class BaseZone {
 	/** Fades in the ambience. */
 	public fadeInAmbience(transitionDurationMs: number): void {
 		this.ambience?.fadeIn(transitionDurationMs);
+		if (this.downsamplesSound) AudioManager.fadeInDownsampler(transitionDurationMs);
 	}
 
 	/** Fades out the ambience, then stops the track playing. */
 	public fadeOutAmbience(transitionDurationMs: number): void {
 		this.ambience?.fadeOut(transitionDurationMs);
+		if (this.downsamplesSound) AudioManager.fadeOutDownsampler(transitionDurationMs);
 	}
 }

@@ -14,7 +14,22 @@ import jsutil from '../../shared/util/jsutil.js';
 
 import env from '../config/env.js';
 
+// Constants -------------------------------------------------------------------
+
 const BANNED_PATH = path.resolve('database/banned.json');
+
+// State -----------------------------------------------------------------------
+
+/**
+ * The banned IPs and browser-ids, as loaded from {@link BANNED_PATH}.
+ * Each value is a free-form note on the ban; only the key's presence is ever tested.
+ */
+let bannedJSON: {
+	IPs: Record<string, unknown>;
+	'browser-ids': Record<string, unknown>;
+};
+
+// Startup ---------------------------------------------------------------------
 
 ensureBannedFileExists: {
 	if (fs.existsSync(BANNED_PATH)) break ensureBannedFileExists; // Already exists
@@ -34,11 +49,6 @@ ensureBannedFileExists: {
 	console.log('Generated banned file');
 }
 
-/** Each entry's value is a free-form note on the ban; only the key's presence is ever tested. */
-let bannedJSON: {
-	IPs: Record<string, unknown>;
-	'browser-ids': Record<string, unknown>;
-};
 try {
 	bannedJSON = JSON.parse(fs.readFileSync(BANNED_PATH, 'utf-8'));
 } catch (error: unknown) {
@@ -54,6 +64,8 @@ try {
 	}
 }
 
+// Functions -------------------------------------------------------------------
+
 /** Whether the IP address is banned. */
 function isIP(ip: string): boolean {
 	return bannedJSON.IPs[ip] !== undefined;
@@ -61,7 +73,8 @@ function isIP(ip: string): boolean {
 
 /** Whether the browser-id is banned. */
 function isBrowserID(browserID: string): boolean {
-	return bannedJSON['browser-ids'][browserID] !== undefined;
+	// A request can send any browser-id cookie, so an inherited name like "constructor" mustn't match.
+	return Object.hasOwn(bannedJSON['browser-ids'], browserID);
 }
 
 // Exports ---------------------------------------------------------------------

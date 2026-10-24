@@ -181,7 +181,7 @@ it has subscriptions; an unsubscribed socket is closing on its own idle timer an
 with a peer already concluded unreachable can only _stall_ the `close` event — and every consequence
 of the disconnection (dropping subscriptions, telling the opponent) waits on that event.
 `dropSocket()` still emits a close frame in case the wire turns out to be fine, but detaches its
-handlers and runs the local teardown itself with a synthetic `(1006, '')`.
+handlers and runs the local teardown itself with a synthetic `(1000, reason)`.
 
 `ws`'s own `closeTimeout` is lowered to **2500 ms** (from 30 s) in
 [socketServer.ts](/src/server/socket/socketServer.ts) for the same reason.
@@ -320,7 +320,7 @@ abandonment, an abort if not yet resignable, or an engine win by disconnect in a
 | `LOGGED_OUT`                         | `validatorama.reloadAfterLogout()`                                                          |
 | `LOGGED_OUT_SELF`                    | Nothing — this tab asked, and is already navigating home                                    |
 | `CLOSED_BY_CLIENT`                   | Nothing — our own frame coming back                                                         |
-| `CLOSED_BY_CLIENT_RENEW`             | Unreachable: `dropSocket()` detaches `onclose` before sending it                            |
+| `CLOSED_BY_CLIENT_RENEW`             | `scheduleReconnect()` — we dropped a socket we concluded was dead                           |
 
 A `pagehide` listener drops — never closes — the socket with `CLOSED_BY_CLIENT`, so the server knows
 the departure was deliberate. `beforeunload` would fire on an unload the prompt cancels, stranding a
@@ -475,7 +475,7 @@ no difference whether they were one version behind or two.
   off by default — press `3` on the game page
   ([toggles.ts](/src/client/scripts/esm/game/debug/toggles.ts)). On, it prints routed traffic and
   adds 1 s of simulated send latency. Echoes _we_ send are never printed; incoming ones only if
-  `alsoPrintIncomingEchos` is flipped.
+  `PRINT_ECHOS` is flipped.
 - **Server-side simulated latency**: `SIMULATED_WEBSOCKET_LATENCY_MS` in
   [socketSend.ts](/src/server/socket/socketSend.ts). Guarded to throw if non-zero in production.
 - Malformed messages are logged (`logZodError` → errLog server-side, console client-side) and **not

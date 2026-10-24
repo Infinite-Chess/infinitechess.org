@@ -69,13 +69,13 @@ async function open(): Promise<void> {
 
 	// A position handed off from another page takes precedence over the autosave.
 	// Failing that, read in the autosave; failing that, load the Classical position.
-	const pendingHandoff = await editorhandoff.take();
-	const autoSaveState = pendingHandoff === undefined ? await eautosave.loadAutosave() : undefined;
+	const handoff = await editorhandoff.take();
+	const autoSaveState = handoff === undefined ? await eautosave.loadAutosave() : undefined;
 
-	if (pendingHandoff !== undefined) {
+	if (handoff !== undefined) {
 		boardeditor.clearActivePosition();
 		await editorloader.loadVariantOptions(
-			pendingHandoff.variantOptions,
+			handoff,
 			true, // Dirty position: the handed-off position isn't one of the editor's saves
 		);
 	} else if (autoSaveState === undefined) {

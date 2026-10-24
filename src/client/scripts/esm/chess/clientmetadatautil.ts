@@ -8,7 +8,6 @@ import type { GameFile } from '../../../../shared/chess/logic/gamefile.js';
 import type { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
 import type {
 	MetaData,
-	Rating,
 	SourceVariantMetaData,
 } from '../../../../shared/chess/util/metadatautil.js';
 
@@ -59,19 +58,6 @@ function buildSourceVariantMetadata(gamefile: GameFile): SourceVariantMetaData {
 }
 
 /**
- * Parses the elo and confidence from WhiteElo/BlackElo metadata.
- * ONLY HAS AS MUCH PRECISION as what's in the metadata.
- * DOES NOT KNOW whether their current rating is now confident, if their WhiteElo/BlackElo was not confident.
- */
-function getRatingFromWhiteBlackElo(whiteBlackElo: string): Rating {
-	const [elo, emptyStr] = whiteBlackElo.split('?'); // emptyStr will be '' if the '?' is present, otherwise it will be undefined.
-	return {
-		value: Number(elo),
-		confident: emptyStr === undefined,
-	};
-}
-
-/**
  * Resolves the variant from the metadata, normalizes the metadata's
  * `Variant` property to the English display name (if recognized),
  * or deletes it (if not recognized), then returns the resolved {@link VariantCode}.
@@ -97,6 +83,5 @@ function resolveAndNormalizeVariantFromMetadata(metadata: {
 export default {
 	buildMetaDataFromGamefile,
 	buildSourceVariantMetadata,
-	getRatingFromWhiteBlackElo,
 	resolveAndNormalizeVariantFromMetadata,
 };

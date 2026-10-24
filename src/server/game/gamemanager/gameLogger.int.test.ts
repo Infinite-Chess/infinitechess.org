@@ -129,7 +129,7 @@ function expectRatingsChanged(game_id: number, signs: Record<number, 1 | -1>): v
 		const diff = metadatautil.getWhiteBlackRatingDiff(change);
 		expect(tags).toContain(`[${color}RatingDiff "${diff}"]`);
 		const newRating = leaderboardsManager.getPlayerRating(row.user_id, INFINITY)!;
-		expect(newRating.elo).toBeCloseTo(row.elo_at_game! + change);
+		expect(newRating.elo).toBeCloseTo(row.elo_at_game + change);
 	}
 }
 
@@ -143,7 +143,8 @@ describe('gameLogger', () => {
 		databaseTables.clear();
 		alice = createMember('alice');
 		bob = createMember('bob');
-		leaderboardsManager.addUser(alice.user_id, INFINITY, ALICE_RATING.elo, ALICE_RATING.rd);
+		const { elo, rd } = ALICE_RATING;
+		leaderboardsManager.setPlayerRating(alice.user_id, INFINITY, elo, rd);
 	});
 
 	it('snapshots the ratings of an unrated game, changing none', () => {
@@ -155,7 +156,7 @@ describe('gameLogger', () => {
 			2: buildUnchangedRow(BOB_RATING),
 		});
 		expect(getRatingTags(game.match.id)).toEqual([ALICE_RATING.tag, BOB_RATING.tag]);
-		expect(leaderboardsManager.isPlayerIn(bob.user_id, INFINITY)).toBe(false);
+		expect(leaderboardsManager.getPlayerRating(bob.user_id, INFINITY)).toBeUndefined();
 	});
 
 	it('snapshots the ratings of an aborted rated game, changing none', () => {
@@ -169,7 +170,7 @@ describe('gameLogger', () => {
 		expect(getRatingTags(game.match.id)).toEqual([ALICE_RATING.tag, BOB_RATING.tag]);
 		const aliceNow = leaderboardsManager.getPlayerRating(alice.user_id, INFINITY)!;
 		expect(aliceNow.elo).toBe(ALICE_RATING.elo);
-		expect(leaderboardsManager.isPlayerIn(bob.user_id, INFINITY)).toBe(false);
+		expect(leaderboardsManager.getPlayerRating(bob.user_id, INFINITY)).toBeUndefined();
 	});
 
 	it('reads a no-leaderboard variant from INFINITY, and gives a guest no rating', () => {
@@ -190,8 +191,8 @@ describe('gameLogger', () => {
 		expect(rows[1]).toMatchObject({ elo_at_game: ALICE_RATING.elo, rating_deviation_at_game: ALICE_RATING.rd }); // prettier-ignore
 		expect(rows[2]).toMatchObject({ elo_at_game: BOB_RATING.elo, rating_deviation_at_game: BOB_RATING.rd }); // prettier-ignore
 		expectRatingsChanged(game.match.id, { 1: -1, 2: 1 });
-		// Bob's first rated game adds him to the leaderboard, dated.
-		expect(leaderboardsManager.getPlayerRating(bob.user_id, INFINITY)!.rd_last_update_date).not.toBeNull(); // prettier-ignore
+		// Bob's first rated game adds him to the leaderboard.
+		expect(leaderboardsManager.getPlayerRating(bob.user_id, INFINITY)).toBeDefined();
 	});
 
 	it('changes the ratings of a drawn rated game, whose victor is null', () => {
@@ -207,7 +208,7 @@ describe('gameLogger', () => {
 		const game = buildGame(CLASSICAL, false, alice.identity, bob.identity, original);
 		gameLogger.log(game);
 
-		leaderboardsManager.updatePlayerRating(alice.user_id, INFINITY, 2400, 60);
+		leaderboardsManager.setPlayerRating(alice.user_id, INFINITY, 2400, 60);
 		game.moves.pop();
 		game.gameConclusion = { condition: 'aborted' };
 		gameLogger.updateOverturned(game, original, 2);

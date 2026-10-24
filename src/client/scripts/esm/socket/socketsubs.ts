@@ -11,8 +11,12 @@
 
 import socketconnection from './socketconnection.js';
 
+// Types -----------------------------------------------------------------------
+
 /** The routes carrying a server-pushed stream we subscribe to. Excludes 'general', the protocol route. */
 export type SubscribedRoute = 'lobby' | 'challenge' | 'game';
+
+// State -----------------------------------------------------------------------
 
 /** Whether we are subscribed to each route's stream. */
 const subs: Record<SubscribedRoute, boolean> = {
@@ -20,6 +24,8 @@ const subs: Record<SubscribedRoute, boolean> = {
 	challenge: false,
 	game: false,
 };
+
+// Subscriptions ---------------------------------------------------------------
 
 /** Returns true if we're currently not subscribed to anything. */
 function zeroSubs(): boolean {

@@ -9,13 +9,71 @@
  * has run in production.
  */
 
+import type { RatingData } from '../utility/ratingCalculation.js';
+import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { VariantCode } from '../../shared/chess/util/variantcodes.js';
+import type { OutSeekVariant } from '../../shared/chess/util/variantselection.js';
+import type { PlayerGamesRecord } from './playerGamesManager.js';
+
+import timeutil from '../../shared/util/timeutil.js';
+import leaderboardregistry from '../../shared/chess/variants/leaderboardregistry.js';
+
 import db from './database.js';
 import memberManager from './memberManager.js';
 import blacklistManager from './blacklistManager.js';
+import ratingCalculation from '../utility/ratingCalculation.js';
+
+// Types -----------------------------------------------------------------------
+
+/** A `player_games` row, beside the `games` columns its rating replay reads. */
+type LoggedPlayerGameRow = {
+	game_id: number;
+	user_id: number;
+	player_number: Player;
+	score: number | null;
+	elo_at_game: number | null;
+	elo_change_from_game: number | null;
+	date: string;
+	time_duration_millis: number | null;
+	variant: string | null;
+	rated: 0 | 1;
+};
+
+/** A logged game, as its rating replay reads it. */
+type LoggedGame = {
+	game_id: number;
+	/** Epoch ms the game ended. */
+	ended: number;
+	variant: OutSeekVariant;
+	rated: boolean;
+	rows: LoggedPlayerGameRow[];
+};
+
+/** A player's rating on one leaderboard, as a `leaderboards` row holds it. */
+type LeaderboardRating = {
+	elo: number;
+	rating_deviation: number;
+	rd_last_update_date: string | null;
+};
+
+// Constants -------------------------------------------------------------------
+
+/** The rating a player not yet on a leaderboard holds, as `gameLogger` reads it. */
+const DEFAULT_RATING: LeaderboardRating = {
+	elo: ratingCalculation.DEFAULT_LEADERBOARD_ELO,
+	rating_deviation: ratingCalculation.DEFAULT_LEADERBOARD_RD,
+	rd_last_update_date: null,
+};
+
+/** How far a replayed elo or rating change may stray from a stored one. */
+const REPLAY_TOLERANCE = 0.01;
 
 // Scheduling ------------------------------------------------------------------
 
-/** Runs every migration, in order. Call after the tables exist and before the schema is read. */
+/**
+ * Runs every migration, in order. Call after the tables exist and before the schema is read.
+ * Production runs them all in one boot, each on the schema the ones above leave: new ones go last.
+ */
 function run(): void {
 	dropLegacyLiveGamesPosPastedColumnIfPresent();
 	dropLegacyLivePlayerGamesEloColumnIfPresent();
@@ -28,10 +86,11 @@ function run(): void {
 	renameDisconnectByChoiceColumnIfNeeded();
 	addEmptySinceColumnToLiveGamesIfNeeded();
 	dropLiveGamesConclusionColumnsIfPresent();
-	dropPlayerGamesClockAtEndColumnIfPresent();
-	addRatingDeviationColumnsToPlayerGamesIfNeeded();
+	backfillPlayerGamesRatingsIfNeeded();
 	addModifierColumnsIfNeeded();
-	dropRatingAbuseLastAlertedAtColumnIfPresent();
+	dropRatingAbuseTableIfPresent();
+	makeLeaderboardsRdLastUpdateDateNotNullIfNeeded();
+	dropLivePlayerGamesGameIndexIfPresent();
 }
 
 // Individual migrations -------------------------------------------------------
@@ -219,6 +278,8 @@ function addEmptySinceColumnToLiveGamesIfNeeded(): void {
  */
 function dropLiveGamesConclusionColumnsIfPresent(): void {
 	if (!db.columnExists('live_games', 'delete_time')) return; // Already migrated.
+	if (db.get('SELECT 1 FROM live_games WHERE conclusion_condition IS NOT NULL'))
+		throw new Error('live_games holds a concluded game the old build has yet to log, which dropping its conclusion would lose. Run the old build until it logs it (about 10 seconds), then upgrade again.'); // prettier-ignore
 	for (const column of [
 		'conclusion_condition',
 		'conclusion_victor',
@@ -233,30 +294,134 @@ function dropLiveGamesConclusionColumnsIfPresent(): void {
 /**
  * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
  *
- * A concluded game's final clocks are now read back off its ICN's `clk` stamps, matching how
- * PGN records them, so the stored `clock_at_end_millis` is vestigial. Fresh DBs never have it.
- * `engine_games` needs no such migration — it doesn't exist in production yet.
+ * Rebuilds `player_games` with the RD columns and NOT NULL pre-game ratings, derived by replaying
+ * every rated game in finishing order through the live rating code. Keeps every stored elo and
+ * rating change, and writes nothing unless the replay reproduces them all. Elo is exact; a
+ * pre-game RD includes idle decay up to the game, which live logging only applied as far as the
+ * RD job's last, unrecorded run. Also drops the vestigial `clock_at_end_millis`.
  */
-function dropPlayerGamesClockAtEndColumnIfPresent(): void {
-	if (!db.columnExists('player_games', 'clock_at_end_millis')) return; // Already migrated.
-	db.run(`ALTER TABLE player_games DROP COLUMN clock_at_end_millis`);
-	console.log('Temporary DB migration: dropped player_games.clock_at_end_millis column.');
+function backfillPlayerGamesRatingsIfNeeded(): void {
+	if (!db.columnIsNullable('player_games', 'elo_at_game')) return; // Already migrated.
+	const records = replayRatings(readGamesInFinishingOrder());
+	db.transaction(() => rebuildPlayerGamesTable(records))();
+	console.log('Temporary DB migration: backfilled player_games ratings and made them NOT NULL.');
+}
+
+/** Every logged game with its `player_games` rows, ordered by when it ended. */
+function readGamesInFinishingOrder(): LoggedGame[] {
+	const rows = db.all<LoggedPlayerGameRow>(`
+		SELECT pg.game_id, pg.user_id, pg.player_number, pg.score, pg.elo_at_game, pg.elo_change_from_game,
+			g.date, g.time_duration_millis, g.variant, g.rated
+		FROM player_games pg JOIN games g ON g.game_id = pg.game_id
+	`);
+	const games = new Map<number, LoggedGame>();
+	for (const row of rows) {
+		let game = games.get(row.game_id);
+		if (game === undefined) {
+			const variant: OutSeekVariant = row.variant === null ? { kind: 'custom' } : { kind: 'preset', code: row.variant as VariantCode }; // prettier-ignore
+			// Every game here lacking a duration predates rated play, so ordering it by start is exact.
+			const ended = timeutil.sqliteToTimestamp(row.date) + (row.time_duration_millis ?? 0);
+			game = { game_id: row.game_id, ended, variant, rated: row.rated === 1, rows: [] };
+			games.set(row.game_id, game);
+		}
+		game.rows.push(row);
+	}
+	return [...games.values()].sort((a, b) => a.ended - b.ended || a.game_id - b.game_id);
 }
 
 /**
- * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
- *
- * Adds the nullable `rating_deviation_at_game` / `rating_deviation_after_game` columns to
- * `player_games` — the Glicko RDs before/after the game, so a concluded game's pre-game and
- * new ratings can each report faithful confidence in review (mirroring the live path) instead
- * of being hardcoded confident. Old rows stay NULL (treated as confident, unrecoverable).
- * Fresh DBs get the columns from `generate()`.
+ * Replays every game in order, from every player starting on the default rating, completing
+ * each row with the ratings live logging would have stored.
+ * @throws If a derived elo or rating change disagrees with one already stored.
  */
-function addRatingDeviationColumnsToPlayerGamesIfNeeded(): void {
-	if (db.columnExists('player_games', 'rating_deviation_at_game')) return; // Already migrated.
-	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_at_game REAL');
-	db.run('ALTER TABLE player_games ADD COLUMN rating_deviation_after_game REAL');
-	console.log('Temporary DB migration: added player_games rating_deviation columns.');
+function replayRatings(games: LoggedGame[]): PlayerGamesRecord[] {
+	/** Each player's current rating, keyed by `user_id:leaderboard_id`. */
+	const ratings = new Map<string, LeaderboardRating>();
+	const records: PlayerGamesRecord[] = [];
+
+	for (const game of games) {
+		const leaderboard_id = leaderboardregistry.ratingSourceOf(game.variant);
+		const keyOf = (row: LoggedPlayerGameRow): string => `${row.user_id}:${leaderboard_id}`;
+
+		const ratingData: RatingData = {};
+		for (const row of game.rows) {
+			const rating = ratings.get(keyOf(row)) ?? DEFAULT_RATING;
+			ratingData[row.player_number] = {
+				elo_at_game: rating.elo,
+				rating_deviation_at_game: rating.rating_deviation,
+				rd_last_update_date: rating.rd_last_update_date,
+			};
+		}
+
+		// Unrated and aborted games change no ratings.
+		const changesRatings = game.rated && game.rows.every((row) => row.score !== null);
+		if (changesRatings) {
+			const victor = game.rows.find((row) => row.score === 1)?.player_number ?? null;
+			ratingCalculation.computeChanges(ratingData, victor, game.ended);
+		}
+
+		for (const row of game.rows) {
+			const data = ratingData[row.player_number]!;
+			const elo_change_from_game = data.elo_change_from_game ?? null;
+			if (!doesReplayMatch(row.elo_at_game, data.elo_at_game) || !doesReplayMatch(row.elo_change_from_game, elo_change_from_game))
+				throw new Error(`Rating backfill aborted: game ${row.game_id}, player ${row.player_number} stored elo ${row.elo_at_game} / change ${row.elo_change_from_game}, but the replay derived ${data.elo_at_game} / ${elo_change_from_game}.`); // prettier-ignore
+			records.push({
+				user_id: row.user_id,
+				game_id: row.game_id,
+				player_number: row.player_number,
+				score: row.score,
+				elo_at_game: row.elo_at_game ?? data.elo_at_game,
+				elo_change_from_game: row.elo_change_from_game ?? elo_change_from_game,
+				rating_deviation_at_game: ratingCalculation.getTrueRD(data.rating_deviation_at_game, data.rd_last_update_date, game.ended), // prettier-ignore
+				rating_deviation_after_game: data.rating_deviation_after_game ?? null,
+			});
+			if (changesRatings) {
+				ratings.set(keyOf(row), {
+					elo: data.elo_after_game!,
+					rating_deviation: data.rating_deviation_after_game!,
+					rd_last_update_date: timeutil.timestampToSqlite(game.ended),
+				});
+			}
+		}
+	}
+	return records;
+}
+
+/** Whether a stored value, if any, matches the replay's within {@link REPLAY_TOLERANCE}. */
+function doesReplayMatch(stored: number | null, replayed: number | null): boolean {
+	return (
+		stored === null || (replayed !== null && Math.abs(stored - replayed) <= REPLAY_TOLERANCE)
+	);
+}
+
+/**
+ * Replaces `player_games` with the given rows. Its shape is frozen as of this migration, so a
+ * later `player_games` migration must run AFTER it. Nothing references `player_games`, so the
+ * drop is safe with foreign keys on.
+ */
+function rebuildPlayerGamesTable(records: PlayerGamesRecord[]): void {
+	db.run('DROP TABLE player_games');
+	db.run(`
+		CREATE TABLE player_games (
+			user_id                     INTEGER NOT NULL,
+			game_id                     INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+			player_number               INTEGER NOT NULL,
+			score                       REAL,
+			elo_at_game                 REAL NOT NULL,
+			elo_change_from_game        REAL,
+			rating_deviation_at_game    REAL NOT NULL,
+			rating_deviation_after_game REAL,
+			PRIMARY KEY (user_id, game_id)
+		)
+	`);
+	for (const r of records) {
+		db.run('INSERT INTO player_games VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
+			r.user_id, r.game_id, r.player_number, r.score,
+			r.elo_at_game, r.elo_change_from_game,
+			r.rating_deviation_at_game, r.rating_deviation_after_game,
+		]); // prettier-ignore
+	}
+	db.run('CREATE INDEX idx_player_games_game ON player_games (game_id)');
 }
 
 /**
@@ -277,15 +442,58 @@ function addModifierColumnsIfNeeded(): void {
 /**
  * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
  *
- * The `last_alerted_at` column throttled rating abuse emails to one per player per day.
- * Every flagged measurement is now emailed, so the column is vestigial and needs removing
- * from old DBs. This only logs when the column is found and deleted.
+ * The `rating_abuse` table counted each player's rated games since their last abuse check.
+ * That count is now derived from `player_stats`, so the table is vestigial and needs removing
+ * from old DBs. This only logs when the table is found and dropped.
  */
-function dropRatingAbuseLastAlertedAtColumnIfPresent(): void {
-	if (!db.columnExists('rating_abuse', 'last_alerted_at')) return; // Already migrated.
+function dropRatingAbuseTableIfPresent(): void {
+	if (!db.columnExists('rating_abuse', 'user_id')) return; // Already migrated.
 
-	db.run('ALTER TABLE rating_abuse DROP COLUMN last_alerted_at');
-	console.log('Temporary DB migration: deleted rating_abuse.last_alerted_at column.');
+	db.run('DROP TABLE rating_abuse');
+	console.log('Temporary DB migration: dropped the rating_abuse table.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
+ *
+ * Rebuilds `leaderboards` with `rd_last_update_date` NOT NULL, now that every write stamps it.
+ * Its shape is frozen as of this migration. It must run after `dropRatingAbuseTableIfPresent`:
+ * nothing may reference `leaderboards` while the old table is dropped with foreign keys on.
+ */
+function makeLeaderboardsRdLastUpdateDateNotNullIfNeeded(): void {
+	if (!db.columnIsNullable('leaderboards', 'rd_last_update_date')) return; // Already migrated.
+
+	db.transaction(() => {
+		db.run(`
+			CREATE TABLE leaderboards_new (
+				user_id             INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
+				leaderboard_id      INTEGER NOT NULL,
+				elo                 REAL NOT NULL,
+				rating_deviation    REAL NOT NULL,
+				rd_last_update_date TIMESTAMP NOT NULL,
+				PRIMARY KEY (user_id, leaderboard_id)
+			)
+		`);
+		db.run('INSERT INTO leaderboards_new SELECT user_id, leaderboard_id, elo, rating_deviation, rd_last_update_date FROM leaderboards'); // prettier-ignore
+		db.run('DROP TABLE leaderboards');
+		db.run('ALTER TABLE leaderboards_new RENAME TO leaderboards');
+		db.run('CREATE INDEX idx_leaderboards_user ON leaderboards (user_id)');
+		db.run('CREATE INDEX idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC)'); // prettier-ignore
+	})();
+	console.log('Temporary DB migration: made leaderboards.rd_last_update_date NOT NULL.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
+ *
+ * Production's `live_player_games` carries an `idx_live_player_games_game` index that the
+ * schema doesn't declare, redundant with its primary key, which already leads with `game_id`.
+ * This only logs when the index is found and dropped.
+ */
+function dropLivePlayerGamesGameIndexIfPresent(): void {
+	if (!db.get(`SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_live_player_games_game'`)) return; // prettier-ignore
+	db.run('DROP INDEX idx_live_player_games_game');
+	console.log('Temporary DB migration: dropped the idx_live_player_games_game index.');
 }
 
 // Exports ---------------------------------------------------------------------

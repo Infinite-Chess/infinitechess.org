@@ -11,7 +11,6 @@
  */
 
 import jsonutil from '../../../../shared/util/jsonutil.js';
-import timeutil from '../../../../shared/util/timeutil.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -28,9 +27,6 @@ interface Entry {
 /** For debugging. This prints to the console all save and delete operations. */
 const PRINT_CHANGES = false;
 
-const DEFAULT_EXPIRY_MS = timeutil.toMillis(24, 'hours');
-// const DEFAULT_EXPIRY_MS = timeutil.toMillis(20, 'seconds');
-
 // Initialization --------------------------------------------------------------
 
 // Do this on load every time
@@ -42,10 +38,10 @@ eraseExpiredItems();
  * Saves an item in browser local storage
  * @param key - The key-name to give this entry.
  * @param value - What to save
- * @param [expiryMillis] How long until this entry should be auto-deleted for being stale
+ * @param expiryMillis - How long until this entry should be auto-deleted for being stale
  * @throws A `QuotaExceededError` if the write exceeds the origin's ~5MB localStorage quota.
  */
-function saveItem(key: string, value: unknown, expiryMillis: number = DEFAULT_EXPIRY_MS): void {
+function saveItem(key: string, value: unknown, expiryMillis: number): void {
 	if (PRINT_CHANGES) console.log(`Saving key to local storage: ${key}`);
 	const timeExpires = Date.now() + expiryMillis;
 	const save: Entry = { value, expires: timeExpires };
@@ -76,11 +72,6 @@ function loadItem(key: string): unknown {
 		deleteItem(key);
 		return;
 	}
-	// Not expired...
-
-	// console.log(`Fetched key ${key} from local storage:`);
-	// console.log(save);
-
 	return save.value;
 }
 
@@ -100,30 +91,21 @@ function isEntry(save: unknown): save is Entry {
 	return (
 		typeof save === 'object' &&
 		save !== null &&
+		'value' in save &&
 		'expires' in save &&
 		typeof save.expires === 'number'
 	);
 }
 
+/** Whether an entry is past its expiry. */
 function hasItemExpired(save: Entry): boolean {
 	return Date.now() >= save.expires;
 }
 
+/** Deletes every one of our entries that has expired. */
 function eraseExpiredItems(): void {
-	const keys = Object.keys(localStorage);
-
-	// if (keys.length > 0) console.log(`Items in local storage: ${JSON.stringify(keys)}`);
-
-	for (const key of keys) {
+	for (const key of Object.keys(localStorage)) {
 		loadItem(key); // Auto-deletes expired items
-	}
-}
-
-function eraseAll(): void {
-	console.log('Erasing ALL items in local storage...');
-	const keys = Object.keys(localStorage);
-	for (const key of keys) {
-		deleteItem(key); // Auto-deletes expired items
 	}
 }
 
@@ -134,5 +116,4 @@ export default {
 	loadItem,
 	deleteItem,
 	eraseExpiredItems,
-	eraseAll,
 };

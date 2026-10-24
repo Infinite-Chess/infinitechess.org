@@ -39,6 +39,11 @@ class DownsamplerProcessor extends AudioWorkletProcessor {
 		];
 	}
 
+	/**
+	 * Both shared across channels, which isn't correct downsampling but is the sound we want:
+	 * on stereo audio it jitters where samples are held, smearing what a regular hold grid
+	 * would render as high ringing into a softer crunch.
+	 */
 	private phase = 0;
 	private lastSampleValue = 0;
 

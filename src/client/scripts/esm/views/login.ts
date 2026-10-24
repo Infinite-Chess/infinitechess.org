@@ -3,12 +3,10 @@
 /**
  * Client-side logic for the login page (/login).
  *
- * Submits the credentials to the /auth endpoint. On success it redirects to
- * the page named by the `redirectTo` query param, or the home page otherwise.
- * Failures are surfaced inline beneath the form.
+ * Submits the credentials to the /auth endpoint. On success it navigates to the
+ * home page. Failures are surfaced inline beneath the form.
  */
 
-import docutil from '../util/docutil.js';
 import accountform from '../components/accountform.js';
 import { serverfetch } from '../util/serverfetch.js';
 
@@ -55,8 +53,7 @@ async function submitLogin(): Promise<void> {
 		}
 
 		// Success — the session cookie is now set; navigate away.
-		const redirectTo = docutil.getQueryParam('redirectTo');
-		window.location.assign(redirectTo ?? '/');
+		window.location.assign('/');
 	} catch (e: unknown) {
 		console.error('Login request failed:', e);
 		setError(t.shared.errors.network);

@@ -11,7 +11,7 @@ import ts from 'typescript';
 import path from 'node:path';
 import esbuild from 'esbuild';
 
-import { ESMResolveOptions } from '../../build/client.js';
+import { RESOLVE_OPTIONS } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
@@ -60,15 +60,7 @@ function runtimeSpecifiers(file: string, text: string): string[] {
 		const specifier = staticSpecifierOf(stmt);
 		if (specifier !== undefined) specifiers.push(specifier);
 	}
-	const visit = (n: ts.Node): void => {
-		if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword) {
-			const arg = n.arguments[0];
-			if (arg && ts.isStringLiteral(arg)) specifiers.push(arg.text);
-		}
-		n.forEachChild(visit);
-	};
-	sf.statements.forEach(visit);
-	return specifiers;
+	return [...specifiers, ...dynamicSpecifiers(sf)];
 }
 
 /** The specifier of an import or re-export statement, unless it brings in types alone. */
@@ -100,6 +92,20 @@ function literalText(node: ts.Expression | undefined): string | undefined {
 	return node && ts.isStringLiteral(node) ? node.text : undefined;
 }
 
+/** Every specifier a file loads through a dynamic `import()`. */
+function dynamicSpecifiers(sf: ts.SourceFile): string[] {
+	const specifiers: string[] = [];
+	const visit = (n: ts.Node): void => {
+		if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword) {
+			const arg = n.arguments[0];
+			if (arg && ts.isStringLiteral(arg)) specifiers.push(arg.text);
+		}
+		n.forEachChild(visit);
+	};
+	sf.statements.forEach(visit);
+	return specifiers;
+}
+
 // Bundling --------------------------------------------------------------------
 
 /** Bundles client entries in memory, resolving exactly as the real client build does. */
@@ -108,14 +114,14 @@ function bundle(
 	{ minify = false, plugins = [] }: { minify?: boolean; plugins?: esbuild.Plugin[] } = {},
 ): Promise<esbuild.BuildResult<{ metafile: true; write: false }>> {
 	return esbuild.build({
-		...ESMResolveOptions,
+		...RESOLVE_OPTIONS,
 		entryPoints,
 		metafile: true,
 		write: false,
 		minify,
 		logLevel: 'silent',
 		outdir: 'srcgraph-virtual-out', // Never written (write: false).
-		plugins: [...ESMResolveOptions.plugins, ...plugins],
+		plugins: [...RESOLVE_OPTIONS.plugins, ...plugins],
 	});
 }
 
@@ -129,6 +135,7 @@ export default {
 	resolveRelative,
 	// Imports
 	runtimeSpecifiers,
+	dynamicSpecifiers,
 	// Bundling
 	bundle,
 };

@@ -182,10 +182,7 @@ function assembleStaticGameState(
 			continue;
 		}
 
-		const rating =
-			row.elo_at_game !== null
-				? ratingCalculation.toRating(row.elo_at_game, row.rating_deviation_at_game)
-				: undefined;
+		const rating = ratingCalculation.toRating(row.elo_at_game, row.rating_deviation_at_game);
 		// A deleted account keeps its row but loses its members lookup.
 		const member = memberManager.getDataByCriteria(['username'], 'user_id', row.user_id);
 		participants[color] = member

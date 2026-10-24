@@ -19,23 +19,23 @@
  * coupling one: use `importers.ts` when type-only edges matter. A module shown as unreachable may
  * still be imported for its types.
  *
- * Pages with no entry in ESMEntryPoints yet are still scanned, and marked `*` in the output.
+ * Pages with no entry in ENTRY_POINTS yet are still scanned, and marked `*` in the output.
  * See docs/systems/BUILD.md — that list is hand-maintained.
  */
 
 import { globSync } from 'node:fs';
 
 import srcgraph from './srcgraph.js';
-import { ESMEntryPoints } from '../../build/client.js';
+import { ENTRY_POINTS } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
 const E = 'src/client/scripts/esm/';
 
 /** Live script entries, read from the build so this can never drift. */
-const LIVE = ESMEntryPoints.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
+const LIVE = ENTRY_POINTS.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
 
-/** Pages that exist but have no entry in ESMEntryPoints yet. Marked `*` when printed. */
+/** Pages that exist but have no entry in ENTRY_POINTS yet. Marked `*` when printed. */
 const DORMANT = [
 	`${E}views/editor/boardeditor.ts`,
 	`${E}views/checkmatepractice/checkmatepractice.ts`,

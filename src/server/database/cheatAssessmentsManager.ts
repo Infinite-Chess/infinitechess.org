@@ -21,10 +21,7 @@ export type CheatAssessmentsRecord = {
 	updated_at: number;
 } & AssessmentOutcome;
 
-/**
- * A player's evidence from one game, with the rating they held going into it. The rating columns
- * are only null on rows logged before they existed, and no game that old is ever assessed.
- */
+/** A player's evidence from one game, with the rating they held going into it. */
 interface RecentEvidence {
 	game_id: number;
 	evidence: string;

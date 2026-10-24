@@ -58,56 +58,23 @@ async function retryFetch(
 	};
 
 	let currentDelayMs = options.initialDelayMs;
-	// Helper for logging the URL
-	const getUrlString = (targetUrl: typeof url): string => {
-		if (typeof targetUrl === 'string') return targetUrl;
-		if (targetUrl instanceof URL) return targetUrl.href;
-		if (targetUrl instanceof Request) return targetUrl.url;
-		return 'Unknown URL';
-	};
-	const urlString = getUrlString(url);
-
 	for (let attempt = 1; attempt <= options.maxAttempts; attempt++) {
 		const isLastAttempt = attempt === options.maxAttempts;
 
 		try {
-			// console.log(`retryFetch: Attempt ${attempt}/${options.maxAttempts} for ${urlString}...`);
 			const response = await serverfetch(url, fetchInit);
-
-			// Check for retryable server errors (5xx)
-			if (response.status >= 500 && response.status <= 599) {
-				if (isLastAttempt) {
-					// console.warn(`retryFetch: Max attempts reached. Last attempt for ${urlString} resulted in status ${response.status}.`);
-					return response; // Return the final 5xx response
-				}
-				// Not the last attempt, so log and prepare for retry
-				// console.warn(`retryFetch: Attempt ${attempt} for ${urlString} failed with status ${response.status}. Retrying...`);
-				// Fall through to wait and retry
-			} else {
-				// Not a 5xx error. Could be 2xx (success), 4xx (client error), or other.
-				// No retry for these based on the hardcoded logic.
-				return response;
-			}
+			// Only a 5xx is retried, and the last one is returned as is.
+			if (response.status < 500 || response.status > 599 || isLastAttempt) return response;
 		} catch (error) {
-			// Network error occurred
-			if (isLastAttempt) {
-				// console.error(`retryFetch: Max attempts reached. Last attempt for ${urlString} failed with network error:`, error);
-				throw error; // Re-throw the final network error
-			}
-			// Not the last attempt, so log and prepare for retry
-			// console.warn(`retryFetch: Attempt ${attempt} for ${urlString} failed with network error: ${(error as Error).message}. Retrying...`);
-			// Fall through to wait and retry
+			if (isLastAttempt) throw error; // The final network error
 		}
 
-		// If we reach here, a retry is scheduled (and it's not the last attempt)
-		await new Promise((resolve) => setTimeout(resolve, currentDelayMs));
+		await new Promise<void>((resolve) => setTimeout(() => resolve(), currentDelayMs));
 		currentDelayMs *= options.backoffFactor;
 	}
 
-	// This line should be theoretically unreachable if options.maxAttempts >= 1,
-	// as the loop will always return or throw on its final iteration.
-	// It's included for defensive programming in case of unexpected state.
-	throw new Error(`retryFetch: Exited retry loop unexpectedly for ${urlString}. This should not happen if maxAttempts >= 1.`); // prettier-ignore
+	// Only reached when maxAttempts < 1: otherwise the final attempt returns or throws.
+	throw new Error(`retryFetch: maxAttempts must be at least 1, got ${options.maxAttempts}.`);
 }
 
 export { retryFetch };

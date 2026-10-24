@@ -54,8 +54,6 @@ const audioContext: AudioContext = new AudioContext();
 
 /** An input bus for all sound chains before they reach the master gain. Allows for global effects. */
 const effectsBus = audioContext.createGain();
-/** The global downsampler effect node. Null until the worklet is loaded. */
-let globalDownsampler: DownsamplerNode | null = null;
 /** The gain node for the "dry" (unprocessed) signal path around the downsampler. */
 const downsamplerDryGain = audioContext.createGain();
 downsamplerDryGain.gain.value = 1; // Default to 100% dry signal
@@ -92,8 +90,7 @@ limiter.connect(audioContext.destination);
 // Asynchronously load and initialize the Downsampler worklet.
 (async () => {
 	try {
-		const downsamplerNode = await DownsamplerNode.create(audioContext);
-		globalDownsampler = downsamplerNode;
+		const globalDownsampler = await DownsamplerNode.create(audioContext);
 
 		// Set the static parameters for the downsampler effect
 		globalDownsampler.downsampling!.value = 20; // Default: 20
@@ -135,20 +132,12 @@ function getDestination(): AudioNode {
 
 /** Fades in the global downsampler effect over a given duration. */
 function fadeInDownsampler(durationMillis: number): void {
-	if (!globalDownsampler) {
-		console.warn('Downsampler not loaded yet, cannot fade in.');
-		return;
-	}
 	AudioUtils.applyPerceptualFade(audioContext, downsamplerDryGain.gain, 0, durationMillis);
 	AudioUtils.applyPerceptualFade(audioContext, downsamplerWetGain.gain, 1, durationMillis);
 }
 
 /** Fades out the global downsampler effect over a given duration. */
 function fadeOutDownsampler(durationMillis: number): void {
-	if (!globalDownsampler) {
-		console.warn('Downsampler not loaded yet, cannot fade out.');
-		return;
-	}
 	AudioUtils.applyPerceptualFade(audioContext, downsamplerDryGain.gain, 1, durationMillis);
 	AudioUtils.applyPerceptualFade(audioContext, downsamplerWetGain.gain, 0, durationMillis);
 }

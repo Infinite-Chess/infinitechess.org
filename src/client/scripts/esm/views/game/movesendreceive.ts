@@ -35,10 +35,9 @@ GameBus.addEventListener('engine-move-played', () => sendMove());
 
 // Functions -------------------------------------------------------------------
 
-/** Called when selection.js moves a piece. This will send it to the server if we're in an online game. */
+/** Called when we or our engine play a move, sending it to the server. */
 function sendMove(): void {
 	if (!onlinegame.areInSync()) return; // Skip, our move will be auto-submitted when we resync
-	// console.log("Sending our move..");
 
 	const gamefile = gameslot.getGamefile()!;
 	submitMove(gamefile, gamefile.moves.length - 1);
@@ -49,7 +48,7 @@ function submitMove(gamefile: GameFile, moveIndex: number): void {
 	const isLastMove = moveIndex === gamefile.moves.length - 1;
 
 	const data = {
-		move: gamefile.moves[moveIndex]!.token, // "x,y>x,y=Q"
+		move: gamefile.moves[moveIndex]!.token,
 		moveNumber: moveIndex + 1,
 		// Only our latest move can have triggered the conclusion we detected locally.
 		gameConclusion: isLastMove ? gamefile.gameConclusion : undefined,
@@ -86,12 +85,10 @@ function handleMove(
 		return;
 	}
 
-	// Convert the move from compact short format "x,y>x,y=N" to JSON.
-	// Gauranteed by the server to be parsable.
+	// Guaranteed by the server to be parsable.
 	const moveTagged: MoveTagged = icnmoves.parseTokenMove(message.move.token);
 
 	premoves.performWithUnapplied(gamefile, mesh, () => {
-		// If not legal, this will be a string for why it is illegal.
 		// THIS ATTACHES ANY SPECIAL TAGS TO THE MOVE
 		const conclusion = onlinegame.isValidated(gamefile) ? 'trusted' : message.gameConclusion;
 		const moveValidationResult = movevalidation.isOpponentsMoveLegal(gamefile, moveTagged, conclusion); // prettier-ignore
@@ -100,14 +97,9 @@ function handleMove(
 		checkAndReportIllegalOpponentMove(gamefile, moveValidationResult, message.move.token, message.moveNumber); // prettier-ignore
 		if (!moveValidationResult.valid) return false; // Don't physically play next premove
 
-		// At this stage, the move is legal, or allowed anyway in a private game. Apply it.
-
 		// For online games, the server is boss, so its conclusion is the one we adopt.
 		movesequence.makeMoveKeepingView(gamefile, mesh, moveValidationResult.tagged, message.gameConclusion); // prettier-ignore
 
-		// Edit the clocks
-
-		// Adjust the timer whos turn it is depending on ping.
 		applyClockValues(gamefile, message.clockValues);
 
 		if (gamefileutility.isGameOver(gamefile)) gameslot.concludeGame();
@@ -175,7 +167,6 @@ function applyClockValues(gamefile: GameFile, clockValues: ClockValues | undefin
 // Exports ---------------------------------------------------------------------
 
 export default {
-	sendMove,
 	submitMovesFrom,
 	handleMove,
 	checkAndReportIllegalOpponentMove,

@@ -555,7 +555,7 @@ p.theme-title {
 	color: var(--c-text-muted);
 }
 
-.board-color-list {
+.board-swatches {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, 45.5px);
 	justify-content: center;
@@ -564,7 +564,7 @@ p.theme-title {
 	border-bottom: 1px solid var(--c-border);
 }
 
-.board-color-list img {
+.board-swatches img {
 	width: 45.5px;
 	image-rendering: pixelated;
 	border-radius: 2px;
@@ -574,8 +574,8 @@ p.theme-title {
 	align-self: center;
 }
 
-.board-color-list img:hover,
-.board-color-list img.selected {
+.board-swatches img:hover,
+.board-swatches img.selected {
 	outline: 5px solid var(--c-text-strong);
 }
 

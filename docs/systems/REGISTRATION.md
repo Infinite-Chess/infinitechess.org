@@ -97,9 +97,9 @@ The register browser's awaiting page
 `pending` → keep waiting; `expired`/`blacklisted` → reload (the server re-renders the right
 variant); `verified` → queue a toast and redirect home. On `verified` the server — because _this_
 browser holds the `claim_token` cookie — issues it a session
-([sessionManager.ts](/src/server/controllers/sessionManager.ts) `createNewSession`) and clears the
-pending cookie. This is the only place a session is issued. The browser that entered the password is
-typically the device the user wants to be logged in on, not the one they checked their emails with.
+([sessionManager.ts](/src/server/auth/sessionManager.ts) `create`) and clears the pending cookie.
+This is the only place a session is issued. The browser that entered the password is typically the
+device the user wants to be logged in on, not the one they checked their emails with.
 
 ## The `pending_registrations` table
 
@@ -136,11 +136,14 @@ same address acts as a resend.
 **Undeliverable / blacklisted** — permanent hard bounces are recorded in `email_blacklist`
 ([blacklistManager.ts](/src/server/database/blacklistManager.ts)), populated from the AWS SES
 webhook ([awsWebhook.ts](/src/server/controllers/awsWebhook.ts)). The server refuses to send to a
-blacklisted address. - The awaiting page has a dedicated **blacklisted variant**: when the pending
-address is blacklisted, the SSR template omits `data-awaiting` (so the client **doesn't poll**), the
-page displays "Bad address" and shows the change-email field **expanded by default** — changing it
-is the onl way forward. - The poll returns `blacklisted` (distinct from `pending`) if the address
-gets blacklisted while waiting; the client reloads to pick up the blacklisted variant.
+blacklisted address.
+
+- The awaiting page has a dedicated **blacklisted variant**: when the pending address is
+  blacklisted, the SSR template omits `data-awaiting` (so the client **doesn't poll**), the page
+  displays "Bad address" and shows the change-email field **expanded by default** — changing it is
+  the only way forward.
+- The poll returns `blacklisted` (distinct from `pending`) if the address gets blacklisted while
+  waiting; the client reloads to pick up the blacklisted variant.
 
 ## Rate limits
 
@@ -176,7 +179,7 @@ only for dev seeding and tests.
 | Verification email                                                   | [emailService.ts](/src/server/utility/emailService.ts)                                                                                                                                     |
 | Turnstile verification                                               | [turnstile.ts](/src/server/controllers/turnstile.ts)                                                                                                                                       |
 | Email blacklist                                                      | [blacklistManager.ts](/src/server/database/blacklistManager.ts) / [awsWebhook.ts](/src/server/controllers/awsWebhook.ts)                                                                   |
-| Session issuance (poll only)                                         | [sessionManager.ts](/src/server/controllers/sessionManager.ts)                                                                                                                             |
+| Session issuance (poll only)                                         | [sessionManager.ts](/src/server/auth/sessionManager.ts)                                                                                                                                    |
 | Page routes / API routes                                             | [root.ts](/src/server/routes/root.ts) / [register.ts](/src/server/routes/register.ts), [api.ts](/src/server/routes/api.ts)                                                                 |
 | SSR templates                                                        | `src/server/views/register.njk`, `register-awaiting.njk`, `verify.njk`                                                                                                                     |
 | Client scripts                                                       | [register.ts](/src/client/scripts/esm/views/register.ts), [register-awaiting.ts](/src/client/scripts/esm/views/register-awaiting.ts), [verify.ts](/src/client/scripts/esm/views/verify.ts) |

@@ -66,7 +66,7 @@ function generate(): void {
 			elo                 REAL NOT NULL,
 			rating_deviation    REAL NOT NULL,
 			-- Add other Glicko fields if needed (volatility)
-			rd_last_update_date TIMESTAMP,
+			rd_last_update_date TIMESTAMP NOT NULL,
 			PRIMARY KEY (user_id, leaderboard_id) -- Composite key essential
 		);
 	`);
@@ -76,21 +76,6 @@ function generate(): void {
 	db.run(
 		`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`,
 	);
-
-	// Rating Abuse table
-	db.run(`
-		CREATE TABLE IF NOT EXISTS rating_abuse (
-			user_id                     INTEGER NOT NULL,
-			leaderboard_id              INTEGER NOT NULL,
-			game_count_since_last_check INTEGER,
-
-			PRIMARY KEY (user_id, leaderboard_id),
-			FOREIGN KEY (user_id, leaderboard_id)
-				REFERENCES leaderboards(user_id, leaderboard_id) ON DELETE CASCADE
-		);
-	`);
-	// To quickly get all rating_abuse entries for a specific user
-	db.run(`CREATE INDEX IF NOT EXISTS idx_rating_abuse_user ON rating_abuse (user_id);`);
 
 	// Cheat Cases table — a player engine-assistance detection suspects, for admins to decide on
 	db.run(`
@@ -222,9 +207,9 @@ function generate(): void {
 			game_id                     INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number               INTEGER NOT NULL, -- 1 => White  2 => Black
 			score                       REAL, -- 1 => Win   0.5 => Draw   0 => Loss   NULL => Aborted
-			elo_at_game                 REAL, -- Rating before the game, rated or not
+			elo_at_game                 REAL NOT NULL, -- Rating before the game, rated or not
 			elo_change_from_game        REAL, -- Specified only if the game was rated
-			rating_deviation_at_game    REAL, -- Glicko RD before the game, rated or not; drives the pre-game rating's confidence.
+			rating_deviation_at_game    REAL NOT NULL, -- Glicko RD before the game, rated or not; drives the pre-game rating's confidence.
 			rating_deviation_after_game REAL, -- Glicko RD after the game; drives the new rating's confidence. Specified only if the game was rated.
 			PRIMARY KEY (user_id, game_id) -- Ensures unique link
 		);

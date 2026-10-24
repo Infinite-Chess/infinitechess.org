@@ -142,15 +142,7 @@ function updateLeaderboardsInTransaction(
 		const player = Number(playerStr) as Player;
 		const user_id = getUserID(match.playerData[player])!; // The snapshot holds only signed-in players.
 		const data = ratingData[player]!;
-		if (!leaderboardsManager.isPlayerIn(user_id, leaderboard_id)) {
-			leaderboardsManager.addUser(
-				user_id,
-				leaderboard_id,
-				ratingCalculation.DEFAULT_LEADERBOARD_ELO,
-				ratingCalculation.DEFAULT_LEADERBOARD_RD,
-			);
-		}
-		leaderboardsManager.updatePlayerRating(
+		leaderboardsManager.setPlayerRating(
 			user_id,
 			leaderboard_id,
 			data.elo_after_game!,
@@ -192,7 +184,8 @@ function addGameRecordsInTransaction(
 		private: match.private ? 1 : 0,
 		...encodeConclusion(conclusion),
 		move_count: servergame.moves.length,
-		time_duration_millis: match.timeEnded ? match.timeEnded - match.timeCreated : null,
+		// timeEnded is set alongside the conclusion, by gameLifecycle.applyConclusion.
+		time_duration_millis: match.timeEnded! - match.timeCreated,
 		icn, // Use the pre-generated ICN
 		...modifierColumns.toColumns(match.modifiers),
 	});
@@ -454,8 +447,7 @@ function readLoggedRatings(game_id: number): PlayerGroup<Rating> {
 	const rows = playerGamesManager.getOfGame(game_id, ['player_number', 'elo_at_game', 'rating_deviation_at_game']); // prettier-ignore
 	const ratings: PlayerGroup<Rating> = {};
 	for (const row of rows) {
-		// Only legacy rows have a null elo_at_game, and those games are long finalized: never overturned.
-		ratings[row.player_number as Player] = ratingCalculation.toRating(row.elo_at_game!, row.rating_deviation_at_game); // prettier-ignore
+		ratings[row.player_number as Player] = ratingCalculation.toRating(row.elo_at_game, row.rating_deviation_at_game); // prettier-ignore
 	}
 	return ratings;
 }

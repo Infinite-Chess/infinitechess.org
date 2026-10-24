@@ -8,17 +8,25 @@
  * section before first paint (see html[data-home-prompt='dismissed'] in index.css).
  */
 
-/** localStorage key shared with the inline head script in index.njk. */
-const STORAGE_KEY = 'home-prompt-dismissed';
+// Elements --------------------------------------------------------------------
 
 const section = document.getElementById('new-prompt')!;
 const dismissBtn = document.getElementById('new-prompt-dismiss')!;
 const tutorialBtn = document.getElementById('new-prompt-tutorial')!;
 
+// Constants -------------------------------------------------------------------
+
+/** localStorage key shared with the inline head script in index.njk. */
+const STORAGE_KEY = 'home-prompt-dismissed';
+
+// Dismissal -------------------------------------------------------------------
+
+/** Remembers the prompt as dismissed, so it stays hidden on later visits. */
 function markDismissed(): void {
 	localStorage.setItem(STORAGE_KEY, '1');
 }
 
+/** Dismisses the prompt, collapsing it now. */
 function dismiss(): void {
 	markDismissed();
 	section.classList.add('collapsed');

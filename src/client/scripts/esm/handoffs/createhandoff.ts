@@ -7,6 +7,8 @@
  * IndexedDB (not localStorage) because handed-off positions can exceed 1MB.
  */
 
+import type { ZodType } from 'zod';
+
 import IndexedDB from '../util/IndexedDB.js';
 
 // Types -----------------------------------------------------------------------
@@ -18,7 +20,7 @@ export interface Handoff<T> {
 	 * @throws If the payload can't be written.
 	 */
 	save(payload: T): Promise<void>;
-	/** Consumes (reads and clears) a pending payload, or undefined if there is none or the read failed. */
+	/** Consumes (reads and clears) a pending payload, or undefined if none, unreadable or malformed. */
 	take(): Promise<T | undefined>;
 }
 
@@ -28,19 +30,31 @@ export interface Handoff<T> {
  * Creates a handoff slot backed by one IndexedDB key.
  * @param key - IndexedDB key the payload is stashed under.
  * @param expiryMillis - How long a stashed payload stays valid before being auto-discarded.
+ * @param schema - What a payload must match to be taken.
  */
-export function createHandoff<T>(key: string, expiryMillis: number): Handoff<T> {
+export function createHandoff<T>(
+	key: string,
+	expiryMillis: number,
+	schema: ZodType<T>,
+): Handoff<T> {
 	return {
 		async save(payload: T): Promise<void> {
 			await IndexedDB.saveItem(key, payload, expiryMillis);
 		},
 		async take(): Promise<T | undefined> {
-			const payload = await IndexedDB.loadItem<T>(key).catch((err: unknown) => {
+			const raw = await IndexedDB.loadItem(key).catch((err: unknown) => {
 				console.error(`Failed to read handoff "${key}":`, err);
 				return undefined;
 			});
-			if (payload !== undefined) await IndexedDB.deleteItem(key);
-			return payload;
+			if (raw === undefined) return undefined;
+			await IndexedDB.deleteItem(key);
+
+			const parsed = schema.safeParse(raw);
+			if (!parsed.success) {
+				console.error(`Discarding malformed handoff "${key}":`, parsed.error);
+				return undefined;
+			}
+			return parsed.data;
 		},
 	};
 }

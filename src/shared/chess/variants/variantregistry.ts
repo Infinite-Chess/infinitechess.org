@@ -216,11 +216,12 @@ function getGroupIconId(group: VariantGroup | 'custom'): string {
 /**
  * Resolves a variant string (English name or code) sourced from metadata into a {@link VariantCode}.
  * Warns if the variant is not recognized.
+ * @param variantName - May be hand-crafted (a seek's ICN), so inherited keys mustn't match.
  */
 function resolveCode(variantName: string | undefined): VariantCode | undefined {
 	if (variantName === undefined) return undefined;
 	// Direct code match
-	if (variantName in REGISTRY) return variantName as VariantCode;
+	if (Object.hasOwn(REGISTRY, variantName)) return variantName as VariantCode;
 	// Search by English display name
 	for (const [code, variantEntry] of Object.entries(REGISTRY) as [
 		VariantCode,

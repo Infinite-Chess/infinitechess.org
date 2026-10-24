@@ -203,52 +203,52 @@ function embedUsernameContainerDisplayIntoParent(
 	parent_element.appendChild(child_element);
 }
 
-/**
- * Test's if the mouse click event was inside a username embed.
- * @param event
- * @returns The nearest .username-embed element, or null if the click was outside
- */
-function wasEventClickInsideUsernameContainer(event: MouseEvent): boolean {
-	const targetNode = event.target as Node;
-	const el = targetNode instanceof Element ? targetNode : targetNode.parentElement;
-	return el?.closest<HTMLDivElement>('.username-embed') !== null;
-}
+// /**
+//  * Test's if the mouse click event was inside a username embed.
+//  * @param event
+//  * @returns The nearest .username-embed element, or null if the click was outside
+//  */
+// function wasEventClickInsideUsernameContainer(event: MouseEvent): boolean {
+// 	const targetNode = event.target as Node;
+// 	const el = targetNode instanceof Element ? targetNode : targetNode.parentElement;
+// 	return el?.closest<HTMLDivElement>('.username-embed') !== null;
+// }
 
-/** Adds the elo change div to an existing username container. */
-function createEloChangeItem(
-	usernamecontainer: UsernameContainer,
-	newRating: Rating,
-	ratingChange: number,
-): void {
-	if (!usernamecontainer.properties.rating)
-		throw Error('Cannot create elo change item for usernamecontainer without rating!');
+// /** Adds the elo change div to an existing username container. */
+// function createEloChangeItem(
+// 	usernamecontainer: UsernameContainer,
+// 	newRating: Rating,
+// 	ratingChange: number,
+// ): void {
+// 	if (!usernamecontainer.properties.rating)
+// 		throw Error('Cannot create elo change item for usernamecontainer without rating!');
 
-	// Previous rating value
-	const oldValue = usernamecontainer.properties.rating.value;
+// 	// Previous rating value
+// 	const oldValue = usernamecontainer.properties.rating.value;
 
-	// Update rating in usernamecontainer
-	usernamecontainer.properties.rating = {
-		value: newRating.value,
-		confident: newRating.confident,
-		change: ratingChange,
-	};
+// 	// Update rating in usernamecontainer
+// 	usernamecontainer.properties.rating = {
+// 		value: newRating.value,
+// 		confident: newRating.confident,
+// 		change: ratingChange,
+// 	};
 
-	// rating change element
-	const eloChangeDiv = document.createElement('div');
-	eloChangeDiv.classList.add('eloChange');
-	usernamecontainer.element.appendChild(eloChangeDiv);
+// 	// rating change element
+// 	const eloChangeDiv = document.createElement('div');
+// 	eloChangeDiv.classList.add('eloChange');
+// 	usernamecontainer.element.appendChild(eloChangeDiv);
 
-	updateUsernameContainerRatingTextContent(usernamecontainer);
+// 	updateUsernameContainerRatingTextContent(usernamecontainer);
 
-	// Animate...
-	animateRatingChange(
-		usernamecontainer,
-		oldValue,
-		newRating.value,
-		ratingChange,
-		newRating.confident,
-	);
-}
+// 	// Animate...
+// 	animateRatingChange(
+// 		usernamecontainer,
+// 		oldValue,
+// 		newRating.value,
+// 		ratingChange,
+// 		newRating.confident,
+// 	);
+// }
 
 /**
  * Updates the text contents of each of the username container element's rating elements,
@@ -398,8 +398,5 @@ function animateNumber(
 
 export default {
 	createUsernameContainer,
-	// extractPropertiesFromUsernameContainerElement,
 	embedUsernameContainerDisplayIntoParent,
-	wasEventClickInsideUsernameContainer,
-	createEloChangeItem,
 };

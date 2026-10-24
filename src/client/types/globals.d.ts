@@ -61,19 +61,6 @@ declare global {
 	 */
 	const t: ScriptTranslations;
 
-	/** htmlscript injected inline inside the game page. It handles the loading animation. */
-	var htmlscript: {
-		/** Called on failure to load a page asset. */
-		callback_LoadingError: () => void;
-		/** Removes this specific html element's listener for a loading error. */
-		removeOnerror: (this: HTMLElement) => void;
-	};
-
-	/** Main script that starts the game loop. Called from htmlscript.js */
-	var main: {
-		start: () => void;
-	};
-
 	/**
 	 * Hashed URL for the downsampler audio worklet processor script, injected by Nunjucks via the asset manifest.
 	 *

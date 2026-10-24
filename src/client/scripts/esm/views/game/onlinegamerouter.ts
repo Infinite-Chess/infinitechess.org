@@ -36,7 +36,7 @@ import onlinegame from './onlinegame.js';
 import flashtoast from '../../components/flashtoast.js';
 import socketsubs from '../../socket/socketsubs.js';
 import pingmanager from './pingmanager.js';
-import gameactions from './gui/guigameactions.js';
+import guigameactions from './gui/guigameactions.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guigamemeta from '../../game/gui/guigamemeta.js';
 import { GameBus } from '../../board/GameBus.js';
@@ -156,13 +156,13 @@ function routeMessage(contents: RoutedGameMessage): void {
 			guichat.append(contents.value);
 			break;
 		case 'rematchoffer':
-			gameactions.onOpponentRematchOffer();
+			guigameactions.onOpponentRematchOffer();
 			break;
 		case 'opponentleft':
-			gameactions.onOpponentLeft();
+			guigameactions.onOpponentLeft();
 			break;
 		case 'opponentreturn':
-			gameactions.onOpponentReturn();
+			guigameactions.onOpponentReturn();
 			break;
 		case 'finalized':
 			onlinegame.onFinalized();
@@ -257,7 +257,7 @@ function handleGameConclusion(gamefile: GameFile, message: GameConclusionMessage
 	gamefile.gameConclusion = message.gameConclusion; // Must be set before editing the clocks.
 	movesendreceive.applyClockValues(gamefile, message.clockValues);
 	// Set rematch state now before concluding reveals the button.
-	if (message.rematch) gameactions.setRematchState(message.rematch);
+	if (message.rematch) guigameactions.setRematchState(message.rematch);
 	gameslot.concludeGame();
 }
 
@@ -269,7 +269,7 @@ function handleDetached(): void {
 	guispectators.updateSpectatorCount(0);
 	socketsubs.deleteSub('game');
 	onlinegame.onDetached(); // Prevents a reconnect from trying to re-subscribe.
-	gameactions.onDetached();
+	guigameactions.onDetached();
 	guichat.onDetached();
 	guichatreport.onDetached();
 }
@@ -305,7 +305,3 @@ function resolveRematchViewColor(role: Player | undefined): Player | undefined {
 	const pinned = gameurl.parseViewColorCode(docutil.getLastSegmentOfURL());
 	return pinned !== undefined ? typeutil.invertPlayer(pinned) : undefined;
 }
-
-// Exports ---------------------------------------------------------------------
-
-export default { receiveMessage };

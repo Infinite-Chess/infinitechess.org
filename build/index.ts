@@ -1,11 +1,8 @@
 // build/index.ts
 
 /**
- * This script deploys all files and assets from /src/client to /dist in order to run the website.
- *
- * Development mode: Transpile all TypeScript files to JavaScript.
- * Production mode: Transpile and bundle all TypeScript files to JavaScript, and minify via @swc/core.
- * 					Further, all css files are minified by lightningcss.
+ * The build's entry point: readies the engine, then builds the client and the server into /dist.
+ * With `--dev` both builds watch for changes instead, and the client skips its minification.
  */
 
 import { buildClient } from './client.js';
@@ -33,5 +30,3 @@ copyEngineToDist();
 // Build both client and server scripts
 // Await all so the script doesn't finish and node terminate before esbuild is done.
 await Promise.all([buildClient(USE_DEVELOPMENT_BUILD), buildServer(USE_DEVELOPMENT_BUILD)]);
-
-// console.log('Build process finished.');

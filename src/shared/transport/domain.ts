@@ -59,7 +59,7 @@ const GameIDSchema = z.number().int().nonnegative();
 export type Participant = z.infer<typeof ParticipantSchema>;
 const ParticipantSchema = z.discriminatedUnion('type', [
 	...PublicIdentitySchema.options,
-	z.strictObject({ type: z.literal('deleted'), rating: metadatautil.RatingSchema.optional() }),
+	z.strictObject({ type: z.literal('deleted'), rating: metadatautil.RatingSchema }),
 	z.strictObject({
 		type: z.literal('engine'),
 		engine: z.literal(Object.keys(engineregistry.REGISTRY) as ValidEngine[]),

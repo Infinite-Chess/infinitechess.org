@@ -161,7 +161,7 @@ function getToggleValue(attr: ToggleGroupAttribute): string {
 
 /**
  * Restores the options remembered from the player's last visit, then consumes a pending
- * handoff - that order, so a handoff's variant trumps. The model is initially closed on
+ * handoff - that order, so a handoff's variant trumps. The modal is initially closed on
  * page load anyway, so the flash between the two is never seen.
  */
 async function loadStartupState(): Promise<void> {

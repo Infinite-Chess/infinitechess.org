@@ -84,9 +84,6 @@ const openHandlers = subDropdowns.map(({ module }) => () => {
 
 	updateBoardAccent();
 	SettingsBus.addEventListener('theme-change', updateBoardAccent);
-
-	// [DEBUGGING] Instantly open the settings dropdown on page refresh
-	// openSettingsDropdown();
 })();
 
 function toggleSettingsDropdown(): void {
@@ -143,12 +140,9 @@ function closeSettingsDropdownIfClickedAway(event: MouseEvent | TouchEvent): voi
 	}
 }
 function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
-	// Check if the click was outside the dropdown
-	let clickedDropdown = false;
-	allSettingsDropdowns.forEach((dropdown) => {
-		if (event.target instanceof Node && dropdown.contains(event.target)) clickedDropdown = true;
-	});
-	return clickedDropdown;
+	const target = event.target;
+	if (!(target instanceof Node)) return false;
+	return allSettingsDropdowns.some((dropdown) => dropdown.contains(target));
 }
 
 /** Matches --c-board-accent and --c-board-accent-bright to the current board theme. */

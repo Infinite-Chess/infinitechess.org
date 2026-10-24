@@ -23,11 +23,6 @@ import gamesound from '../../board/gamesound.js';
 import { SocketBus } from '../../socket/SocketBus.js';
 import socketintents from '../../socket/socketintents.js';
 
-// Constants -------------------------------------------------------------------
-
-/** How long the copy control shows its confirmation. */
-const COPIED_CONFIRMATION_MS = 1500;
-
 // Elements --------------------------------------------------------------------
 
 // --- Owner only ---
@@ -43,6 +38,11 @@ const element_ingame = document.getElementById('challenge-ingame');
 const element_ingameJoin = document.getElementById('challenge-ingame-join');
 /** Only present when they can never accept: signed out, and the challenge is rated. */
 const element_signinRequired = document.getElementById('challenge-signin-required');
+
+// Constants -------------------------------------------------------------------
+
+/** How long the copy control shows its confirmation. */
+const COPIED_CONFIRMATION_MS = 1500;
 
 // State -----------------------------------------------------------------------
 

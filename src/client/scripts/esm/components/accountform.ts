@@ -2,7 +2,8 @@
 
 /**
  * Shared field helpers for the account form pages (login, register, register-awaiting,
- * reset-password): localized format-error lookups and an inline error setter.
+ * forgot-password, reset-password): localized format-error lookups, field validation, and an
+ * inline error setter.
  *
  * The "TooLong" validator cases are intentionally unhandled — only bots or hand-crafted
  * requests reach them, so the server is the authoritative guard there.
@@ -44,6 +45,25 @@ function passwordError(value: string): string | undefined {
 }
 
 /**
+ * Re-checks a field's format, "reward early, punish late": an error only appears once revealed,
+ * but clears the moment the field turns valid. An empty field is invalid but shows no error.
+ * @param reveal - Shows any error (on blur or submit), instead of only clearing one (while typing).
+ * @returns Whether the field is valid.
+ */
+function validateField(
+	input: HTMLInputElement,
+	errorElement: HTMLParagraphElement,
+	formatError: (value: string) => string | undefined,
+	reveal: boolean,
+): boolean {
+	const message = input.value.length === 0 ? undefined : formatError(input.value);
+	const valid = input.value.length > 0 && message === undefined;
+	if (reveal) setFieldError(errorElement, message, input);
+	else if (valid) setFieldError(errorElement, undefined, input);
+	return valid;
+}
+
+/**
  * Shows `message` in `errorElement`, or clears it when omitted. Pass `input` to also toggle its
  * `input-error` class (field-level errors); omit it for form-level errors.
  */
@@ -61,5 +81,6 @@ export default {
 	usernameError,
 	emailError,
 	passwordError,
+	validateField,
 	setFieldError,
 };

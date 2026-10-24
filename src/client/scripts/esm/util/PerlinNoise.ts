@@ -4,12 +4,13 @@
  * A factory for creating a tileable (periodic) 1D Perlin-style noise generator.
  */
 
+// Constants -------------------------------------------------------------------
+
 /**
  * A pre-shuffled array of numbers from 0-255.
  * This is a standard permutation table used in many noise algorithms.
- * We double it to avoid needing extra modulo operations inside the noise function.
  */
-const p = [
+const PERMUTATION = [
 	151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
 	142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219,
 	203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175,
@@ -24,7 +25,8 @@ const p = [
 	121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195,
 	78, 66, 215, 61, 156, 180,
 ];
-const perm = [...p, ...p];
+
+// Noise -----------------------------------------------------------------------
 
 /** A simple linear interpolation function. */
 function lerp(a: number, b: number, t: number): number {
@@ -46,10 +48,7 @@ function create1DNoiseGenerator(period: number): (t: number) => number {
 
 	// Pre-calculate random gradients for the length of the period.
 	// For 1D noise, a "gradient" is just a random number, either 1 or -1.
-	const gradients = new Array(period);
-	for (let i = 0; i < period; i++) {
-		gradients[i] = perm[i]! % 2 === 0 ? 1 : -1;
-	}
+	const gradients = PERMUTATION.slice(0, period).map((n) => (n % 2 === 0 ? 1 : -1));
 
 	return (t: number) => {
 		// Find the integer grid points surrounding t
@@ -77,6 +76,8 @@ function create1DNoiseGenerator(period: number): (t: number) => number {
 		return lerp(n0, n1, fadeT) * 2.2;
 	};
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	create1DNoiseGenerator,
