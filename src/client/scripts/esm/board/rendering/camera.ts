@@ -20,11 +20,11 @@ import type { Mat4 } from '../../webgl/Renderable.js';
 import type { ScreenShake } from './screenshake.js';
 import type { DoubleBoundingBox } from '../../../../../shared/util/math/bounds.js';
 
+import * as mat4 from 'gl-matrix/mat4';
 import bd, { BigDecimal } from '@naviary/bigdecimal';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 
-import mat4 from '../../webgl/gl-matrix.js';
 import docutil from '../../util/docutil.js';
 import preferences from '../../util/preferences.js';
 import { GameBus } from '../GameBus.js';

@@ -9,7 +9,8 @@
 
 import type { Mat4 } from '../../webgl/Renderable.js';
 
-import mat4 from '../../webgl/gl-matrix.js';
+import * as mat4 from 'gl-matrix/mat4';
+
 import deltatime from '../deltatime.js';
 import { GameBus } from '../GameBus.js';
 

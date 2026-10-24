@@ -32,13 +32,7 @@ const parsed = new Map(
 	allFiles.map((f) => [f, ts.createSourceFile(f, text.get(f)!, ts.ScriptTarget.Latest, true)]),
 );
 
-// Vendored files opt out of linting wholesale, and aren't ours to prune.
-const scanned = allFiles.filter(
-	(f) =>
-		f.startsWith(target) &&
-		!f.endsWith('.d.ts') &&
-		!text.get(f)!.includes('/* eslint-disable */'),
-);
+const scanned = allFiles.filter((f) => f.startsWith(target) && !f.endsWith('.d.ts'));
 if (scanned.length === 0) {
 	console.error(`No files under "${target}".`);
 	process.exit(1);

@@ -24,6 +24,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.22.2",
     "express-rate-limit": "^8.5.2",
+    "gl-matrix": "^3.4.4",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "marked": "^14.1.2",

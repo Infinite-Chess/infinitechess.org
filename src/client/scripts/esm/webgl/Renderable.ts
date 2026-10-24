@@ -12,7 +12,8 @@ import type { TypedArray } from './BufferUtil.js';
 import type { ShaderProgram } from './ShaderProgram.js';
 import type { AttributeName, ProgramManager, ProgramMap } from './ProgramManager.js';
 
-import mat4 from './gl-matrix.js';
+import * as mat4 from 'gl-matrix/mat4';
+
 import BufferUtil from './BufferUtil.js';
 
 // Types -----------------------------------------------------------------------
