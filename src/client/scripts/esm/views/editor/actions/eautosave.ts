@@ -39,7 +39,7 @@ const ActivePositionSchema = z.union([
  * Complete save state as written by the autosave.
  * active_position is optional because the user may not have a named/saved position open.
  */
-export type EditorAutosaveState = z.infer<typeof AutosaveStateSchema>;
+type EditorAutosaveState = z.infer<typeof AutosaveStateSchema>;
 const AutosaveStateSchema = z.strictObject({
 	active_position: ActivePositionSchema.optional(),
 	/** Whether the position has unsaved changes. */

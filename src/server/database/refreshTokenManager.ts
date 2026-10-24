@@ -274,11 +274,9 @@ function resolveValidTokenRecord(token: string, IP?: string): RefreshTokenRecord
 
 export default {
 	// Finding
-	find,
 	findAllForUsers,
 	// Adding & Updating
 	add,
-	updateIP,
 	markConsumed,
 	// Deleting
 	remove,
