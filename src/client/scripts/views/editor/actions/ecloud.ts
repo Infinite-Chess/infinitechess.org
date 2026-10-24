@@ -12,11 +12,11 @@ import jsutil from '../../../../../shared/util/jsutil.js';
 
 import toast from '../../../components/toast.js';
 import esave from './esave.js';
+import editor from '../editor.js';
 import eactions from './eactions.js';
 import savesapi from '../../../savedpositions/savesapi.js';
 import savestore from '../../../savedpositions/savestore.js';
 import egamerules from '../egamerules.js';
-import boardeditor from '../boardeditor.js';
 import validatorama from '../../../util/validatorama.js';
 import cloudstore, {
 	ICNConversionError,
@@ -45,7 +45,7 @@ function toastSaveCloudError(err: unknown): void {
  * Reads live game state instead of local storage.
  */
 async function saveCloud(position_name: string): Promise<void> {
-	if (!boardeditor.isPositionDirty()) {
+	if (!editor.isPositionDirty()) {
 		toast.show(translations.editor.no_changes);
 		return;
 	}
@@ -73,7 +73,7 @@ async function saveCloud(position_name: string): Promise<void> {
 	}
 
 	toast.show(translations.editor.saved_to_cloud);
-	boardeditor.markPositionClean();
+	editor.markPositionClean();
 }
 
 /**
@@ -140,8 +140,8 @@ async function transferPositionToCloud(
 	// Success! Delete local copy now.
 	await savestore.deleteLocal(position_name);
 
-	if (boardeditor.isActivePosition(position_name, 'local'))
-		boardeditor.setActivePosition({
+	if (editor.isActivePosition(position_name, 'local'))
+		editor.setActivePosition({
 			name: position_name,
 			storage_type: 'cloud',
 			owner: validatorama.getOurUsername()!,
@@ -174,8 +174,8 @@ async function removePositionFromCloud(
 	// Success! Save locally now.
 	await savestore.saveState(editorSaveState);
 
-	if (boardeditor.isActivePosition(position_name, 'cloud'))
-		boardeditor.setActivePosition({ name: position_name, storage_type: 'local' });
+	if (editor.isActivePosition(position_name, 'cloud'))
+		editor.setActivePosition({ name: position_name, storage_type: 'local' });
 
 	toast.show(translations.editor.saved_locally);
 	return saves;

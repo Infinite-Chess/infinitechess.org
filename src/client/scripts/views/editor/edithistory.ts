@@ -20,6 +20,7 @@ import boardutil from '../../../../shared/chess/logic/boardutil.js';
 import boardchanges from '../../../../shared/chess/logic/boardchanges.js';
 
 import arrows from '../../board/rendering/arrows/arrows.js';
+import editor from './editor.js';
 import gameslot from '../../game/chess/gameslot.js';
 import miniimage from '../../game/rendering/miniimage.js';
 import selection from '../../game/chess/selection.js';
@@ -27,7 +28,6 @@ import gamescene from '../../game/rendering/gamescene.js';
 import egamerules from './egamerules.js';
 import drawingtool from './tools/drawingtool.js';
 import { GameBus } from '../../board/GameBus.js';
-import boardeditor from './boardeditor.js';
 import guinavigation from './gui/guinavigation.js';
 import graphicalchanges from '../../board/rendering/graphicalchanges.js';
 import arrowinteraction from '../../game/rendering/arrows/arrowinteraction.js';
@@ -128,7 +128,7 @@ function addEditToHistory(edit: Edit): void {
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
 
-	boardeditor.markPositionDirty();
+	editor.markPositionDirty();
 }
 
 /** Undoes the most recent edit. */
@@ -158,7 +158,7 @@ function undo(): void {
 
 	guinavigation.update_EditButtons();
 
-	boardeditor.markPositionDirty();
+	editor.markPositionDirty();
 }
 
 /** Redoes the next edit in the history. */
@@ -179,7 +179,7 @@ function redo(): void {
 	indexOfThisEdit!++;
 	guinavigation.update_EditButtons();
 
-	boardeditor.markPositionDirty();
+	editor.markPositionDirty();
 }
 
 // Querying --------------------------------------------------------------------

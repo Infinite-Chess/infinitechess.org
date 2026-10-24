@@ -16,8 +16,8 @@ import icnposition from '../../../../../../shared/chess/logic/icn/icnposition.js
 import icnconverter from '../../../../../../shared/chess/logic/icn/icnconverter.js';
 import typeutil, { RawType } from '../../../../../../shared/chess/util/typeutil.js';
 
+import editor from '../../editor.js';
 import gameslot from '../../../../game/chess/gameslot.js';
-import boardeditor from '../../boardeditor.js';
 import edithistory from '../../edithistory.js';
 import guifloatingwindow from '../guifloatingwindow.js';
 import egamerules, { GameRulesGUIinfo } from '../../egamerules.js';
@@ -316,7 +316,7 @@ function readGameRules(): void {
 	edithistory.addEditToHistory(edit);
 	// Mark as dirty anyway, since edithistory.addEditToHistory() may early exit
 	// if the edit has no changes, but gamerule changes still consider the position dirty.
-	boardeditor.markPositionDirty();
+	editor.markPositionDirty();
 }
 
 /** Outlines `input` as invalid if it holds text that isn't `valid`, and returns `valid`. */

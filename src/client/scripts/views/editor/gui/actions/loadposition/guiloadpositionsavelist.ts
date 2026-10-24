@@ -14,10 +14,10 @@ import type {
 
 import esave from '../../../actions/esave.js';
 import ecloud from '../../../actions/ecloud.js';
+import editor from '../../../editor.js';
 import docutil from '../../../../../util/docutil.js';
 import eactions from '../../../actions/eactions.js';
 import savestore from '../../../../../savedpositions/savestore.js';
-import boardeditor from '../../../boardeditor.js';
 import { GameBus } from '../../../../../board/GameBus.js';
 import validatorama from '../../../../../util/validatorama.js';
 import guiloadposition from './guiloadposition.js';
@@ -165,8 +165,7 @@ async function performDelete(position_name: string, storage_type: StorageType): 
 		await savestore.deleteLocal(position_name);
 	}
 	// Clear active position name if the deleted position was active
-	if (boardeditor.isActivePosition(position_name, storage_type))
-		boardeditor.clearActivePosition();
+	if (editor.isActivePosition(position_name, storage_type)) editor.clearActivePosition();
 	updateSavedPositionListUI(preloadedCloudSaves);
 }
 
@@ -289,7 +288,7 @@ function generateRowForSavedPositionsElement(
 	loadBtn.dataset['tooltip'] = translations.editor.tooltip_load_position;
 	registerButtonClick(loadBtn, () => {
 		// Skip confirmation modal if the position has no unsaved changes
-		if (!boardeditor.isPositionDirty()) {
+		if (!editor.isPositionDirty()) {
 			performLoad(position_name, save.storage_type);
 		} else {
 			guiloadpositionmodal.openModal('load', position_name, () =>
@@ -329,7 +328,7 @@ function generateRowForSavedPositionsElement(
 	row.appendChild(deleteBtn);
 
 	// Highlight row if position is active
-	if (boardeditor.isActivePosition(position_name, save.storage_type))
+	if (editor.isActivePosition(position_name, save.storage_type))
 		row.classList.add('active-position');
 
 	return row;

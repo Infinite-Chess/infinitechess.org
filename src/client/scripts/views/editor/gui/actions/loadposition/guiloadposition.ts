@@ -8,8 +8,8 @@
 import gamelimits from '../../../../../../../shared/chess/util/gamelimits.js';
 
 import esave from '../../../actions/esave.js';
+import editor from '../../../editor.js';
 import savestore from '../../../../../savedpositions/savestore.js';
-import boardeditor from '../../../boardeditor.js';
 import guifloatingwindow from '../../guifloatingwindow.js';
 import guiloadpositionmodal from './guiloadpositionmodal.js';
 import guiloadpositionsavelist from './guiloadpositionsavelist.js';
@@ -126,7 +126,7 @@ async function onSaveButtonPress(): Promise<void> {
 	if (await savestore.localSaveExists(positionname)) {
 		guiloadpositionmodal.openModal('overwrite_save', positionname, async () => {
 			await esave.saveLocal(positionname);
-			boardeditor.setActivePosition({ name: positionname, storage_type: 'local' });
+			editor.setActivePosition({ name: positionname, storage_type: 'local' });
 			guiloadpositionsavelist.updateSavedPositionListUI();
 		});
 		return;
@@ -134,7 +134,7 @@ async function onSaveButtonPress(): Promise<void> {
 
 	// No existing save found — save locally
 	await esave.saveLocal(positionname);
-	boardeditor.setActivePosition({ name: positionname, storage_type: 'local' });
+	editor.setActivePosition({ name: positionname, storage_type: 'local' });
 	element_saveAsPositionName.value = '';
 	guiloadpositionsavelist.updateSavedPositionListUI();
 }

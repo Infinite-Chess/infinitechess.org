@@ -10,8 +10,8 @@ import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js'
 
 import jsutil from '../../../../shared/util/jsutil.js';
 
+import editor from './editor.js';
 import gamesession from '../../game/chess/gamesession.js';
-import boardeditor from './boardeditor.js';
 
 // Load Paths ------------------------------------------------------------------
 
@@ -28,7 +28,7 @@ async function loadClassical(): Promise<void> {
 		// Costs an image for EVERY piece in the spritesheet, which can take a few seconds.
 		additional: { editor: true },
 	});
-	await boardeditor.init(true);
+	await editor.init(true);
 }
 
 /**
@@ -54,7 +54,7 @@ async function loadVariantOptions(
 		viewWhitePerspective: true,
 		additional: { variantOptions, editor: true },
 	});
-	await boardeditor.init(dirty, variantOptionsCopy, pawnDoublePush, castling);
+	await editor.init(dirty, variantOptionsCopy, pawnDoublePush, castling);
 }
 
 // Exports ---------------------------------------------------------------------

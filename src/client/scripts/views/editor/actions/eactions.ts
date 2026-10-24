@@ -18,7 +18,7 @@ import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
 import type { Board } from '../../../../../shared/chess/logic/boardinit.js';
 import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
 import type { MoveParsed } from '../../../../../shared/chess/logic/icn/icnmoves.js';
-import type { ActivePosition } from '../boardeditor.js';
+import type { ActivePosition } from '../editor.js';
 import type { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
 import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes.js';
 
@@ -46,11 +46,11 @@ import gamefile, {
 } from '../../../../../shared/chess/logic/gamefile.js';
 
 import toast from '../../../components/toast.js';
+import editor from '../editor.js';
 import docutil from '../../../util/docutil.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import egamerules from '../egamerules.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
-import boardeditor from '../boardeditor.js';
 import edithistory from '../edithistory.js';
 import editorloader from '../editorloader.js';
 import validatorama from '../../../util/validatorama.js';
@@ -79,7 +79,7 @@ async function reset(): Promise<void> {
 	// Load default board editor position
 	await editorloader.loadClassical();
 	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
-	boardeditor.clearActivePosition();
+	editor.clearActivePosition();
 }
 
 /** Clears the entire board editor position. */
@@ -102,7 +102,7 @@ async function clearAll(): Promise<void> {
 		false,
 	);
 	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
-	boardeditor.clearActivePosition();
+	editor.clearActivePosition();
 }
 
 /** Loads a position from a savestate. */
@@ -120,7 +120,7 @@ async function load(editorSaveState: EditorSaveState, storage_type: StorageType)
 		editorSaveState.castling,
 	);
 	// AFTER the load: setting flushes the autosave, which serializes the live gamefile.
-	boardeditor.setActivePosition(new_active_position);
+	editor.setActivePosition(new_active_position);
 	toast.show(translations.editor.position_loaded);
 }
 

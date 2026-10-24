@@ -7,13 +7,13 @@
 
 import esave from '../actions/esave.js';
 import ecloud from '../actions/ecloud.js';
+import editor from '../editor.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import eactions from '../actions/eactions.js';
 import eautosave from '../actions/eautosave.js';
 import guitoolbar from './guitoolbar.js';
 import guipalette from './guipalette.js';
 import gamesession from '../../../game/chess/gamesession.js';
-import boardeditor from '../boardeditor.js';
 import editorloader from '../editorloader.js';
 import guigamerules from './actions/guigamerules.js';
 import editorhandoff from '../../../handoffs/editorhandoff.js';
@@ -73,18 +73,18 @@ async function open(): Promise<void> {
 	const autoSaveState = handoff === undefined ? await eautosave.loadAutosave() : undefined;
 
 	if (handoff !== undefined) {
-		boardeditor.clearActivePosition();
+		editor.clearActivePosition();
 		await editorloader.loadVariantOptions(
 			handoff,
 			true, // Dirty position: the handed-off position isn't one of the editor's saves
 		);
 	} else if (autoSaveState === undefined) {
-		boardeditor.clearActivePosition();
+		editor.clearActivePosition();
 		await editorloader.loadClassical();
 	} else {
 		if (autoSaveState.active_position !== undefined)
-			boardeditor.setActivePosition(autoSaveState.active_position);
-		else boardeditor.clearActivePosition();
+			editor.setActivePosition(autoSaveState.active_position);
+		else editor.clearActivePosition();
 
 		await editorloader.loadVariantOptions(
 			autoSaveState.variantOptions,
@@ -172,7 +172,7 @@ function callback_Action(e: Event): void {
 			const wasOpen = guipositionconfirm.reset.isOpen();
 			closeAllFloatingWindows(false);
 			// Skip confirmation dialog if there are no unsaved changes
-			if (!boardeditor.isPositionDirty()) eactions.reset();
+			if (!editor.isPositionDirty()) eactions.reset();
 			else if (!wasOpen) guipositionconfirm.reset.open();
 			return;
 		}
@@ -180,7 +180,7 @@ function callback_Action(e: Event): void {
 			const wasOpen = guipositionconfirm.clear.isOpen();
 			closeAllFloatingWindows(false);
 			// Skip confirmation dialog if there are no unsaved changes
-			if (!boardeditor.isPositionDirty()) eactions.clearAll();
+			if (!editor.isPositionDirty()) eactions.clearAll();
 			else if (!wasOpen) guipositionconfirm.clear.open();
 			return;
 		}
@@ -197,7 +197,7 @@ function callback_Action(e: Event): void {
 			return;
 		}
 		case 'save-position': {
-			const active_position = boardeditor.getActivePosition();
+			const active_position = editor.getActivePosition();
 			if (active_position === undefined) {
 				// If there is no active position name, treat this the same way as "Save as" if that window is not open
 				const wasOpen = guiloadposition.getMode() !== 'save-as';

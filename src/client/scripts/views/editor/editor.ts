@@ -1,4 +1,4 @@
-// src/client/scripts/views/editor/boardeditor.ts
+// src/client/scripts/views/editor/editor.ts
 
 /**
  * Core manager for the Board Editor.

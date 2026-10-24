@@ -1,16 +1,16 @@
 // src/client/scripts/views/editor/actions/esave.ts
 
 /**
- * Handles the saving of positions in boardeditor
+ * Handles the saving of positions in the board editor.
  */
 
 import type { EditorSaveState } from '../../../savedpositions/storetypes.js';
 
 import toast from '../../../components/toast.js';
+import editor from '../editor.js';
 import eactions from './eactions.js';
 import savestore from '../../../savedpositions/savestore.js';
 import egamerules from '../egamerules.js';
-import boardeditor from '../boardeditor.js';
 
 // State -----------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ async function saveLocal(position_name: string): Promise<void> {
 		});
 		// A pending re-save supersedes this one, and reports once it lands.
 		if (positionSavePending === undefined) {
-			boardeditor.markPositionClean();
+			editor.markPositionClean();
 			toast.show(translations.editor.saved_in_browser);
 		}
 	} catch (err) {
