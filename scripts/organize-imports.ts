@@ -28,7 +28,8 @@
  * 4. Regular source imports from client (src/client/)
  * 5. Regular source imports from tests (src/tests/)
  * 6. Regular source imports from server (src/server/)
- * 7. Side-effect imports
+ * 7. Regular source imports from anywhere else (e.g. src/types/)
+ * 8. Side-effect imports
  *
  * SORTING WITHIN GROUPS:
  * - Multi-line imports last
@@ -43,22 +44,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Constants -------------------------------------------------------------------
-
-/** Regex pattern to match " from " followed by a quote in import statements */
-const FROM_WITH_QUOTE_PATTERN = /\sfrom\s+['"]/;
-
-/** Path to the shared directory */
-const SHARED_DIR = path.resolve(process.cwd(), 'src/shared');
-/** Path to the client directory */
-const CLIENT_DIR = path.resolve(process.cwd(), 'src/client');
-/** Path to the tests directory */
-const TESTS_DIR = path.resolve(process.cwd(), 'src/tests');
-/** Path to the server directory */
-const SERVER_DIR = path.resolve(process.cwd(), 'src/server');
-
 // Types -----------------------------------------------------------------------
 
+/** A source directory whose relative imports get their own group. */
+type SourceDir = (typeof SOURCE_DIRS)[number]['name'];
+
+/** One import statement, with what decides its group and its place within it. */
 interface Import {
 	raw: string;
 	isType: boolean;
@@ -66,142 +57,26 @@ interface Import {
 	isSideEffect: boolean;
 	isMultiLine: boolean;
 	lengthBeforeFrom: number;
-	/** Which source directory this relative import belongs to, or null if it's a package import or not in shared/client/tests/server directories */
-	sourceDir: 'shared' | 'client' | 'tests' | 'server' | null;
+	/** Which source directory this relative import belongs to, or null if it's a package import or in none of them */
+	sourceDir: SourceDir | null;
 }
 
-// Helper Functions ------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
-/**
- * Resolves an import path from the current file and determines which source directory it belongs to.
- * @param currentFilePath - Absolute path to the file being processed
- * @param importPath - The path from the import statement (e.g., '../../../shared/util/timeutil.js')
- * @returns 'shared', 'client', 'tests', 'server', or null if not in any of these directories
- */
-function resolveImportSourceDir(
-	currentFilePath: string,
-	importPath: string,
-): 'shared' | 'client' | 'tests' | 'server' | null {
-	// Don't process package imports
-	if (!importPath.startsWith('.') && !path.isAbsolute(importPath)) {
-		return null;
-	}
+/** Regex pattern to match " from " followed by a quote in import statements */
+const FROM_WITH_QUOTE_PATTERN = /\sfrom\s+['"]/;
 
-	// Resolve the import path relative to the current file's directory
-	const currentFileDir = path.dirname(currentFilePath);
-	const resolvedImportPath = path.resolve(currentFileDir, importPath);
-
-	// Check if the resolved path is within one of our source directories
-	// We need to ensure proper directory boundaries (not just string prefix matching)
-	const sharedDirWithSep = SHARED_DIR + path.sep;
-	const clientDirWithSep = CLIENT_DIR + path.sep;
-	const testsDirWithSep = TESTS_DIR + path.sep;
-	const serverDirWithSep = SERVER_DIR + path.sep;
-
-	if (resolvedImportPath === SHARED_DIR || resolvedImportPath.startsWith(sharedDirWithSep)) {
-		return 'shared';
-	} else if (
-		resolvedImportPath === CLIENT_DIR ||
-		resolvedImportPath.startsWith(clientDirWithSep)
-	) {
-		return 'client';
-	} else if (resolvedImportPath === TESTS_DIR || resolvedImportPath.startsWith(testsDirWithSep)) {
-		return 'tests';
-	} else if (
-		resolvedImportPath === SERVER_DIR ||
-		resolvedImportPath.startsWith(serverDirWithSep)
-	) {
-		return 'server';
-	}
-
-	return null;
-}
-
-function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: string): Import {
-	const lines = importText.split('\n');
-	const importLine = hasTsIgnore ? lines[lines.length - 1]! : lines[0]!;
-	const trimmed = importLine.trim();
-
-	// Check if type import
-	const isType = trimmed.startsWith('import type ') || trimmed.startsWith('import type{');
-
-	// Check if side-effect import (no bindings)
-	const isSideEffect = /^import\s+['"][^'"]+['"];?/.test(trimmed);
-
-	// Determine if package or source
-	const fromMatch = importText.match(/from\s+(['"])(.*?)\1/);
-	const fromPath = fromMatch ? fromMatch[2]! : '';
-	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
-
-	// Determine which source directory the import belongs to
-	const sourceDir = isPackage ? null : resolveImportSourceDir(currentFilePath, fromPath);
-
-	// Calculate length before "from" followed by whitespace and a quote
-	// For ts-ignore imports, calculate from the import line only, not including the comment
-	const textForLength = hasTsIgnore ? importLine : importText;
-	const match = FROM_WITH_QUOTE_PATTERN.exec(textForLength);
-	const lengthBeforeFrom = match ? match.index : textForLength.length;
-
-	// Check if multi-line
-	const isMultiLine = importText.includes('\n') && !hasTsIgnore;
-
-	return {
-		raw: importText,
-		isType,
-		isPackage,
-		isSideEffect,
-		isMultiLine,
-		lengthBeforeFrom,
-		sourceDir,
-	};
-}
-
-function compareImports(a: Import, b: Import): number {
-	// First: multi-line imports come last
-	if (a.isMultiLine !== b.isMultiLine) {
-		return a.isMultiLine ? 1 : -1;
-	}
-
-	// Second: by length before "from"
-	return a.lengthBeforeFrom - b.lengthBeforeFrom;
-}
+/** The source directories whose relative imports each get their own group, in group order. */
+const SOURCE_DIRS = [
+	{ name: 'shared', dir: path.resolve(process.cwd(), 'src/shared') },
+	{ name: 'client', dir: path.resolve(process.cwd(), 'src/client') },
+	{ name: 'tests', dir: path.resolve(process.cwd(), 'src/tests') },
+	{ name: 'server', dir: path.resolve(process.cwd(), 'src/server') },
+] as const;
 
 // Import Extraction -----------------------------------------------------------
 
-function findImportBoundaries(lines: string[]): { start: number; end: number } | null {
-	let start = -1;
-	let end = -1;
-
-	for (let i = 0; i < lines.length; i++) {
-		const trimmed = lines[i]!.trim();
-
-		// Skip empty lines
-		if (!trimmed) continue;
-		// Check for comments
-		else if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
-			continue;
-		}
-		// Check for import. Unindented only: an indented one is nested, e.g. in a `declare module` block.
-		else if (lines[i]!.startsWith('import ')) {
-			if (start === -1) start = i;
-			end = i;
-
-			// Handle multi-line imports
-			// Imports end at a non-commented semicolon
-			while (i < lines.length - 1 && !lines[i]!.split('//')[0]!.includes(';')) {
-				i++;
-				end = i;
-			}
-		} else {
-			// SAFETY STOP: We hit code that is NOT an import and NOT a comment.
-			// If we have found an import block already, stop looking.
-			if (start !== -1) break;
-		}
-	}
-
-	return start !== -1 ? { start, end } : null;
-}
-
+/** Splits a file into its import statements and the text above and below them. */
 function extractImports(
 	content: string,
 	filePath: string,
@@ -212,8 +87,6 @@ function extractImports(
 } {
 	const lines = content.split('\n');
 	const boundaries = findImportBoundaries(lines);
-
-	// console.log('Import boundaries:', boundaries);
 
 	if (!boundaries) {
 		return {
@@ -235,8 +108,8 @@ function extractImports(
 	// Extract imports within boundaries
 	const imports: Import[] = [];
 	let i = actualStart;
-	let hasTsIgnore = false; // Move outside loop
-	let tsIgnoreLine = ''; // Move outside loop
+	let hasTsIgnore = false;
+	let tsIgnoreLine = '';
 
 	while (i <= boundaries.end) {
 		const line = lines[i]!;
@@ -248,17 +121,17 @@ function extractImports(
 			tsIgnoreLine = line;
 			i++;
 			if (i > boundaries.end) break;
-			continue; // Continue to next line
+			continue;
 		}
 
 		// Skip empty lines and all comments (except we already handled @ts-ignore)
-		if (!trimmed || (trimmed.startsWith('//') && !trimmed.startsWith('import '))) {
+		if (!trimmed || trimmed.startsWith('//')) {
 			i++;
 			continue;
 		}
 
 		// Skip multi-line comments
-		if (trimmed.startsWith('/*') || trimmed.startsWith('/**')) {
+		if (trimmed.startsWith('/*')) {
 			while (i <= boundaries.end && !lines[i]!.includes('*/')) {
 				i++;
 			}
@@ -271,31 +144,16 @@ function extractImports(
 			let importText = line;
 			i++;
 
-			// Collect multi-line import
-			// TODO: WHY IS THIS SO WEIRD?!
-			// "Stop if the previous line contains a semicolon"?!
-			while (i <= boundaries.end && !lines[i - 1]!.split('//')[0]!.includes(';')) {
-				importText += '\n' + lines[i]; // Add the next line
+			// Collect lines until the last one collected ends the statement
+			while (i <= boundaries.end && !doesEndStatement(lines[i - 1]!)) {
+				importText += '\n' + lines[i];
 				i++;
-				// console.log('Collecting multi-line import:', lines[i]);
 			}
 
-			// Prepend ts-ignore if present
-			if (hasTsIgnore) {
-				importText = tsIgnoreLine + '\n' + importText;
-			}
+			if (hasTsIgnore) importText = tsIgnoreLine + '\n' + importText;
 
-			// console.log('Whole import:');
-			// console.log(importText);
-			// console.log('\n');
+			imports.push(parseImport(importText, hasTsIgnore, filePath));
 
-			const parsedImport = parseImport(importText, hasTsIgnore, filePath);
-
-			// console.log('Parsed import:', parsedImport, '\n');
-
-			imports.push(parsedImport);
-
-			// Reset ts-ignore flag after using it
 			hasTsIgnore = false;
 			tsIgnoreLine = '';
 		} else {
@@ -306,140 +164,153 @@ function extractImports(
 	return { imports, beforeImports, afterImports };
 }
 
+/** The first and last line of the file's import section, or null if it has none. */
+function findImportBoundaries(lines: string[]): { start: number; end: number } | null {
+	let start = -1;
+	let end = -1;
+
+	for (let i = 0; i < lines.length; i++) {
+		const trimmed = lines[i]!.trim();
+
+		// Skip empty lines
+		if (!trimmed) continue;
+		// Check for comments
+		else if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+			continue;
+		}
+		// Check for import. Unindented only: an indented one is nested, e.g. in a `declare module` block.
+		else if (lines[i]!.startsWith('import ')) {
+			if (start === -1) start = i;
+			end = i;
+
+			// Multi-line imports run until their statement ends
+			while (i < lines.length - 1 && !doesEndStatement(lines[i]!)) {
+				i++;
+				end = i;
+			}
+		} else {
+			// SAFETY STOP: We hit code that is NOT an import and NOT a comment.
+			// If we have found an import block already, stop looking.
+			if (start !== -1) break;
+		}
+	}
+
+	return start !== -1 ? { start, end } : null;
+}
+
+/** Whether a line ends a statement: it has a semicolon outside any `//` comment. */
+function doesEndStatement(line: string): boolean {
+	return line.split('//')[0]!.includes(';');
+}
+
+/** Parses one import statement, with any `@ts-ignore` line above it, into an {@link Import}. */
+function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: string): Import {
+	const lines = importText.split('\n');
+	const importLine = hasTsIgnore ? lines[lines.length - 1]! : lines[0]!;
+	const trimmed = importLine.trim();
+
+	const isType = trimmed.startsWith('import type ') || trimmed.startsWith('import type{');
+
+	// Check if side-effect import (no bindings)
+	const isSideEffect = /^import\s+['"][^'"]+['"];?/.test(trimmed);
+
+	const fromMatch = importText.match(/from\s+(['"])(.*?)\1/);
+	const fromPath = fromMatch ? fromMatch[2]! : '';
+	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
+
+	const sourceDir =
+		fromPath && !isPackage ? resolveImportSourceDir(currentFilePath, fromPath) : null;
+
+	// Calculate length before "from" followed by whitespace and a quote
+	// For ts-ignore imports, calculate from the import line only, not including the comment
+	const textForLength = hasTsIgnore ? importLine : importText;
+	const match = FROM_WITH_QUOTE_PATTERN.exec(textForLength);
+	const lengthBeforeFrom = match ? match.index : textForLength.length;
+
+	const isMultiLine = importText.includes('\n') && !hasTsIgnore;
+
+	return {
+		raw: importText,
+		isType,
+		isPackage,
+		isSideEffect,
+		isMultiLine,
+		lengthBeforeFrom,
+		sourceDir,
+	};
+}
+
+/** Which source directory a relative import path resolves into, or null if it's in none. */
+function resolveImportSourceDir(currentFilePath: string, importPath: string): SourceDir | null {
+	const resolved = path.resolve(path.dirname(currentFilePath), importPath);
+	// Match whole directories, not string prefixes: src/shared-x is not inside src/shared
+	const match = SOURCE_DIRS.find(
+		({ dir }) => resolved === dir || resolved.startsWith(dir + path.sep),
+	);
+	return match?.name ?? null;
+}
+
 // Import Sorting --------------------------------------------------------------
 
+/** Arranges the imports into their groups, each sorted, with blank lines between groups. */
 function organizeImports(imports: Import[]): string {
-	// Group imports
-	const typeImports: Import[] = [];
-	const packageImports: Import[] = [];
-	const sharedImports: Import[] = [];
-	const clientImports: Import[] = [];
-	const testsImports: Import[] = [];
-	const serverImports: Import[] = [];
-	const otherSourceImports: Import[] = []; // For relative imports outside shared/client/tests/server (e.g., from src/types)
-	const sideEffectImports: Import[] = [];
+	const sideEffectImports = imports.filter((imp) => imp.isSideEffect);
+	const typeImports = imports.filter((imp) => !imp.isSideEffect && imp.isType);
+	const regularImports = imports.filter((imp) => !imp.isSideEffect && !imp.isType);
+	const packageImports = regularImports.filter((imp) => imp.isPackage);
+	const sourceImports = regularImports.filter((imp) => !imp.isPackage);
+	const sourceGroups = [
+		...SOURCE_DIRS.map(({ name }) => sourceImports.filter((imp) => imp.sourceDir === name)),
+		sourceImports.filter((imp) => imp.sourceDir === null),
+	];
 
-	for (const imp of imports) {
-		if (imp.isSideEffect) {
-			sideEffectImports.push(imp);
-		} else if (imp.isType) {
-			typeImports.push(imp);
-		} else if (imp.isPackage) {
-			packageImports.push(imp);
-		} else {
-			// Source imports - categorize by directory
-			if (imp.sourceDir === 'shared') {
-				sharedImports.push(imp);
-			} else if (imp.sourceDir === 'client') {
-				clientImports.push(imp);
-			} else if (imp.sourceDir === 'tests') {
-				testsImports.push(imp);
-			} else if (imp.sourceDir === 'server') {
-				serverImports.push(imp);
-			} else {
-				otherSourceImports.push(imp);
-			}
-		}
-	}
-
-	// Sort each group
+	// Within types: package before source
 	typeImports.sort((a, b) => {
-		// Within types: package before source
-		if (a.isPackage !== b.isPackage) {
-			return a.isPackage ? -1 : 1;
-		}
+		if (a.isPackage !== b.isPackage) return a.isPackage ? -1 : 1;
 		return compareImports(a, b);
 	});
-
-	packageImports.sort(compareImports);
-	sharedImports.sort(compareImports);
-	clientImports.sort(compareImports);
-	testsImports.sort(compareImports);
-	serverImports.sort(compareImports);
-	otherSourceImports.sort(compareImports);
+	for (const group of [packageImports, ...sourceGroups]) {
+		group.sort((a, b) => compareImports(a, b));
+	}
 	sideEffectImports.sort((a, b) => a.raw.length - b.raw.length);
 
-	// Build groups array
-	const groups: string[] = [];
+	return [typeImports, packageImports, ...sourceGroups, sideEffectImports]
+		.filter((group) => group.length > 0)
+		.map((group) => group.map((imp) => imp.raw).join('\n'))
+		.join('\n\n');
+}
 
-	if (typeImports.length > 0) {
-		groups.push(typeImports.map((i) => i.raw).join('\n'));
-	}
-
-	if (packageImports.length > 0) {
-		groups.push(packageImports.map((i) => i.raw).join('\n'));
-	}
-
-	// Add source imports in order: shared, client, tests, server
-	if (sharedImports.length > 0) {
-		groups.push(sharedImports.map((i) => i.raw).join('\n'));
-	}
-
-	if (clientImports.length > 0) {
-		groups.push(clientImports.map((i) => i.raw).join('\n'));
-	}
-
-	if (testsImports.length > 0) {
-		groups.push(testsImports.map((i) => i.raw).join('\n'));
-	}
-
-	if (serverImports.length > 0) {
-		groups.push(serverImports.map((i) => i.raw).join('\n'));
-	}
-
-	// Other source imports that don't belong to shared/client/server
-	if (otherSourceImports.length > 0) {
-		groups.push(otherSourceImports.map((i) => i.raw).join('\n'));
-	}
-
-	if (sideEffectImports.length > 0) {
-		groups.push(sideEffectImports.map((i) => i.raw).join('\n'));
-	}
-
-	// Join groups with blank lines
-	return groups.join('\n\n');
+/** Orders two imports of one group: multi-line ones last, then by length before "from". */
+function compareImports(a: Import, b: Import): number {
+	if (a.isMultiLine !== b.isMultiLine) return a.isMultiLine ? 1 : -1;
+	return a.lengthBeforeFrom - b.lengthBeforeFrom;
 }
 
 // File Processing -------------------------------------------------------------
 
+/** Rewrites a file with its imports organized, returning whether anything changed. */
 function processFile(filePath: string): boolean {
 	const content = fs.readFileSync(filePath, 'utf-8');
-	const absoluteFilePath = path.resolve(filePath);
-	const { imports, beforeImports, afterImports } = extractImports(content, absoluteFilePath);
+	const { imports, beforeImports, afterImports } = extractImports(
+		content,
+		path.resolve(filePath),
+	);
 
-	if (imports.length === 0) {
-		return false;
-	}
+	if (imports.length === 0) return false;
 
-	const organizedImports = organizeImports(imports);
-
-	// Build new content
 	let newContent = '';
+	if (beforeImports) newContent = beforeImports.trimEnd() + '\n\n';
+	newContent += organizeImports(imports);
+	if (afterImports) newContent += '\n\n' + afterImports.trimStart();
 
-	// Add content before imports
-	if (beforeImports) {
-		newContent = beforeImports.trimEnd() + '\n\n';
-	}
-
-	// Add organized imports
-	newContent += organizedImports;
-
-	// Add content after imports
-	if (afterImports) {
-		newContent += '\n\n' + afterImports.trimStart();
-	}
-
-	// Write if changed
-	if (content !== newContent) {
-		fs.writeFileSync(filePath, newContent, 'utf-8');
-		return true;
-	}
-
-	return false;
+	if (content === newContent) return false;
+	fs.writeFileSync(filePath, newContent, 'utf-8');
+	return true;
 }
 
 // Main Execution --------------------------------------------------------------
 
+/** Organizes the imports of every .ts file passed as an argument. */
 function main(): void {
 	const args = process.argv.slice(2);
 
@@ -448,7 +319,6 @@ function main(): void {
 		process.exit(1);
 	}
 
-	// Filter for only .ts files
 	const tsFiles = args.filter((f) => f.endsWith('.ts'));
 
 	let changed = 0;
