@@ -41,12 +41,12 @@ const GAME_INTERVAL_TO_MEASURE = 5;
 
 // Measurement -----------------------------------------------------------------
 
-/** Monitor suspicion levels for all players who played a particular game in a particular leaderboard. */
+/**
+ * Monitor suspicion levels for all players of a rated game. Aborted games are skipped: they
+ * don't add to the rated game count, so they'd repeat the last check.
+ */
 function measureAfterGame(servergame: ServerGame): void {
-	// Do not monitor suspicion levels, if game was unrated
-	if (!servergame.match.rated) return;
-	// Skip aborted games: they don't add to the rated game count, so they'd repeat the last check.
-	if (servergame.gameConclusion!.victor === undefined) return;
+	if (!servergame.match.rated || servergame.gameConclusion!.victor === undefined) return;
 
 	const leaderboard_id = leaderboardregistry.ofVariant(servergame.match.variant)!; // Will always be defined if the game is rated.
 
