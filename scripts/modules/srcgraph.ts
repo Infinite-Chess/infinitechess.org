@@ -22,7 +22,7 @@ const SRC_ROOTS = ['src/shared', 'src/client', 'src/server'];
 
 /** Trims the noisy common prefix so paths read cleanly. */
 function short(file: string): string {
-	return file.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
+	return file.replace(/^src\/client\/scripts\//, '').replace(/^src\//, '');
 }
 
 /** Every .ts/.js file across all three src/ roots. */
