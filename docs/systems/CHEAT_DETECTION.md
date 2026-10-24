@@ -202,7 +202,8 @@ setups.
 One line instead of five raised every score, honest ones too (highest honest 270). At equal
 false-case rates five lines catch more of every style but rescue: full engine by 3 games 72% vs 56%,
 or 41% vs 32% at the shipped rate. Four and six lines lose too: at the lines matching the shipped
-worst case (~1,000 and ~1,700), full engine by 5 games 70% and under 73% vs 83%.
+worst case (~1,000 and ~1,700), full engine by 5 games 70% and under 73% vs 83%, though the
+good-move grouping was designed at five lines: four folds "all good" into 3–4, six merges 5 with 6.
 
 ### The good-move line
 
