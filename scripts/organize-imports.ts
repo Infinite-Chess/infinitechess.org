@@ -76,126 +76,51 @@ const SOURCE_DIRS = [
 
 // Import Extraction -----------------------------------------------------------
 
-/** Splits a file into its import statements and the text above and below them. */
-function extractImports(
-	content: string,
+/** Parses the file's import section, with its first and last line, or returns null if it has none. */
+function parseImportSection(
+	lines: string[],
 	filePath: string,
-): {
-	imports: Import[];
-	beforeImports: string;
-	afterImports: string;
-} {
-	const lines = content.split('\n');
-	const boundaries = findImportBoundaries(lines);
-
-	if (!boundaries) {
-		return {
-			imports: [],
-			beforeImports: content,
-			afterImports: '',
-		};
-	}
-
-	// Find all @ts-ignore lines before the start
-	let actualStart = boundaries.start;
-	while (actualStart > 0 && lines[actualStart - 1]!.trim().startsWith('// @ts-ignore')) {
-		actualStart--;
-	}
-
-	const beforeImports = lines.slice(0, actualStart).join('\n');
-	const afterImports = lines.slice(boundaries.end + 1).join('\n');
-
-	// Extract imports within boundaries
+): { imports: Import[]; start: number; end: number } | null {
 	const imports: Import[] = [];
-	let i = actualStart;
-	let hasTsIgnore = false;
-	let tsIgnoreLine = '';
-
-	while (i <= boundaries.end) {
-		const line = lines[i]!;
-		const trimmed = line.trim();
-
-		// Check for @ts-ignore
-		if (trimmed.startsWith('// @ts-ignore')) {
-			hasTsIgnore = true;
-			tsIgnoreLine = line;
-			i++;
-			if (i > boundaries.end) break;
-			continue;
-		}
-
-		// Skip empty lines and all comments (except we already handled @ts-ignore)
-		if (!trimmed || trimmed.startsWith('//')) {
-			i++;
-			continue;
-		}
-
-		// Skip multi-line comments
-		if (trimmed.startsWith('/*')) {
-			while (i <= boundaries.end && !lines[i]!.includes('*/')) {
-				i++;
-			}
-			i++; // Skip the closing */
-			continue;
-		}
-
-		// Process import statement
-		if (trimmed.startsWith('import ')) {
-			let importText = line;
-			i++;
-
-			// Collect lines until the last one collected ends the statement
-			while (i <= boundaries.end && !doesEndStatement(lines[i - 1]!)) {
-				importText += '\n' + lines[i];
-				i++;
-			}
-
-			if (hasTsIgnore) importText = tsIgnoreLine + '\n' + importText;
-
-			imports.push(parseImport(importText, hasTsIgnore, filePath));
-
-			hasTsIgnore = false;
-			tsIgnoreLine = '';
-		} else {
-			i++;
-		}
-	}
-
-	return { imports, beforeImports, afterImports };
-}
-
-/** The first and last line of the file's import section, or null if it has none. */
-function findImportBoundaries(lines: string[]): { start: number; end: number } | null {
 	let start = -1;
 	let end = -1;
+	/** The latest `@ts-ignore` line not yet attached to an import. */
+	let pendingTsIgnore: number | undefined;
 
 	for (let i = 0; i < lines.length; i++) {
 		const trimmed = lines[i]!.trim();
 
-		// Skip empty lines
-		if (!trimmed) continue;
-		// Check for comments
-		else if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+		if (trimmed.startsWith('// @ts-ignore')) {
+			pendingTsIgnore = i;
 			continue;
 		}
-		// Check for import. Unindented only: an indented one is nested, e.g. in a `declare module` block.
-		else if (lines[i]!.startsWith('import ')) {
-			if (start === -1) start = i;
-			end = i;
-
-			// Multi-line imports run until their statement ends
-			while (i < lines.length - 1 && !doesEndStatement(lines[i]!)) {
-				i++;
-				end = i;
-			}
-		} else {
-			// SAFETY STOP: We hit code that is NOT an import and NOT a comment.
-			// If we have found an import block already, stop looking.
-			if (start !== -1) break;
+		if (!trimmed || trimmed.startsWith('//')) continue;
+		if (trimmed.startsWith('/*')) {
+			while (i < lines.length - 1 && !lines[i]!.includes('*/')) i++;
+			continue;
 		}
+		// Unindented only: an indented import is nested, e.g. in a `declare module` block.
+		if (!lines[i]!.startsWith('import ')) {
+			if (start !== -1) break; // The first code after the imports ends the section
+			continue;
+		}
+
+		// Inside the section a @ts-ignore attaches to the next import; above it, only if directly above
+		const tsIgnore = start !== -1 || pendingTsIgnore === i - 1 ? pendingTsIgnore : undefined;
+		pendingTsIgnore = undefined;
+
+		const statementStart = i;
+		while (i < lines.length - 1 && !doesEndStatement(lines[i]!)) i++;
+
+		if (start === -1) start = tsIgnore ?? statementStart;
+		end = i;
+		const statement = lines.slice(statementStart, i + 1).join('\n');
+		imports.push(
+			parseImport(statement, tsIgnore === undefined ? undefined : lines[tsIgnore], filePath),
+		);
 	}
 
-	return start !== -1 ? { start, end } : null;
+	return start === -1 ? null : { imports, start, end };
 }
 
 /** Whether a line ends a statement: it has a semicolon outside any `//` comment. */
@@ -203,18 +128,18 @@ function doesEndStatement(line: string): boolean {
 	return line.split('//')[0]!.includes(';');
 }
 
-/** Parses one import statement, with any `@ts-ignore` line above it, into an {@link Import}. */
-function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: string): Import {
-	const lines = importText.split('\n');
-	const importLine = hasTsIgnore ? lines[lines.length - 1]! : lines[0]!;
-	const trimmed = importLine.trim();
-
-	const isType = trimmed.startsWith('import type ') || trimmed.startsWith('import type{');
+/** Parses one import statement, and the `@ts-ignore` line above it if any, into an {@link Import}. */
+function parseImport(
+	statement: string,
+	tsIgnoreLine: string | undefined,
+	currentFilePath: string,
+): Import {
+	const isType = statement.startsWith('import type ') || statement.startsWith('import type{');
 
 	// Check if side-effect import (no bindings)
-	const isSideEffect = /^import\s+['"][^'"]+['"];?/.test(trimmed);
+	const isSideEffect = /^import\s+['"][^'"]+['"];?/.test(statement);
 
-	const fromMatch = importText.match(/from\s+(['"])(.*?)\1/);
+	const fromMatch = statement.match(/from\s+(['"])(.*?)\1/);
 	const fromPath = fromMatch ? fromMatch[2]! : '';
 	const isPackage = !!fromPath && !fromPath.startsWith('.') && !fromPath.startsWith('/');
 
@@ -222,15 +147,13 @@ function parseImport(importText: string, hasTsIgnore: boolean, currentFilePath: 
 		fromPath && !isPackage ? resolveImportSourceDir(currentFilePath, fromPath) : null;
 
 	// Calculate length before "from" followed by whitespace and a quote
-	// For ts-ignore imports, calculate from the import line only, not including the comment
-	const textForLength = hasTsIgnore ? importLine : importText;
-	const match = FROM_WITH_QUOTE_PATTERN.exec(textForLength);
-	const lengthBeforeFrom = match ? match.index : textForLength.length;
+	const match = FROM_WITH_QUOTE_PATTERN.exec(statement);
+	const lengthBeforeFrom = match ? match.index : statement.length;
 
-	const isMultiLine = importText.includes('\n') && !hasTsIgnore;
+	const isMultiLine = statement.includes('\n');
 
 	return {
-		raw: importText,
+		raw: tsIgnoreLine === undefined ? statement : tsIgnoreLine + '\n' + statement,
 		isType,
 		isPackage,
 		isSideEffect,
@@ -291,16 +214,16 @@ function compareImports(a: Import, b: Import): number {
 /** Rewrites a file with its imports organized, returning whether anything changed. */
 function processFile(filePath: string): boolean {
 	const content = fs.readFileSync(filePath, 'utf-8');
-	const { imports, beforeImports, afterImports } = extractImports(
-		content,
-		path.resolve(filePath),
-	);
+	const lines = content.split('\n');
+	const section = parseImportSection(lines, path.resolve(filePath));
+	if (!section) return false;
 
-	if (imports.length === 0) return false;
+	const beforeImports = lines.slice(0, section.start).join('\n');
+	const afterImports = lines.slice(section.end + 1).join('\n');
 
 	let newContent = '';
 	if (beforeImports) newContent = beforeImports.trimEnd() + '\n\n';
-	newContent += organizeImports(imports);
+	newContent += organizeImports(section.imports);
 	if (afterImports) newContent += '\n\n' + afterImports.trimStart();
 
 	if (content === newContent) return false;
