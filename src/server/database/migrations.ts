@@ -89,6 +89,7 @@ function run(): void {
 	backfillPlayerGamesRatingsIfNeeded();
 	addModifierColumnsIfNeeded();
 	dropRatingAbuseTableIfPresent();
+	makeLeaderboardsRdLastUpdateDateNotNullIfNeeded();
 }
 
 // Individual migrations -------------------------------------------------------
@@ -449,6 +450,36 @@ function dropRatingAbuseTableIfPresent(): void {
 
 	db.run('DROP TABLE rating_abuse');
 	console.log('Temporary DB migration: dropped the rating_abuse table.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
+ *
+ * Rebuilds `leaderboards` with `rd_last_update_date` NOT NULL, now that every write stamps it.
+ * Its shape is frozen as of this migration. It must run after `dropRatingAbuseTableIfPresent`:
+ * nothing may reference `leaderboards` while the old table is dropped with foreign keys on.
+ */
+function makeLeaderboardsRdLastUpdateDateNotNullIfNeeded(): void {
+	if (!db.columnIsNullable('leaderboards', 'rd_last_update_date')) return; // Already migrated.
+
+	db.transaction(() => {
+		db.run(`
+			CREATE TABLE leaderboards_new (
+				user_id             INTEGER NOT NULL REFERENCES members(user_id) ON DELETE CASCADE,
+				leaderboard_id      INTEGER NOT NULL,
+				elo                 REAL NOT NULL,
+				rating_deviation    REAL NOT NULL,
+				rd_last_update_date TIMESTAMP NOT NULL,
+				PRIMARY KEY (user_id, leaderboard_id)
+			)
+		`);
+		db.run('INSERT INTO leaderboards_new SELECT user_id, leaderboard_id, elo, rating_deviation, rd_last_update_date FROM leaderboards'); // prettier-ignore
+		db.run('DROP TABLE leaderboards');
+		db.run('ALTER TABLE leaderboards_new RENAME TO leaderboards');
+		db.run('CREATE INDEX idx_leaderboards_user ON leaderboards (user_id)');
+		db.run('CREATE INDEX idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC)'); // prettier-ignore
+	})();
+	console.log('Temporary DB migration: made leaderboards.rd_last_update_date NOT NULL.');
 }
 
 // Exports ---------------------------------------------------------------------

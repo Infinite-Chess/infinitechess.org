@@ -66,7 +66,7 @@ function generate(): void {
 			elo                 REAL NOT NULL,
 			rating_deviation    REAL NOT NULL,
 			-- Add other Glicko fields if needed (volatility)
-			rd_last_update_date TIMESTAMP,
+			rd_last_update_date TIMESTAMP NOT NULL,
 			PRIMARY KEY (user_id, leaderboard_id) -- Composite key essential
 		);
 	`);

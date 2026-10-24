@@ -21,80 +21,34 @@ interface LeaderboardEntry {
 	leaderboard_id: number;
 	elo: number;
 	rating_deviation: number;
-	/** Can be null if no games played yet */
-	rd_last_update_date: string | null;
+	rd_last_update_date: string;
 }
 
 // Methods ---------------------------------------------------------------------
 
 /**
- * The core logic for adding a user to a leaderboard.
- * This function is "unsafe" as it throws errors on failure, making it
- * suitable for use inside a database transaction.
+ * Sets a player's rating on a specific leaderboard, adding them to it if absent,
+ * and stamps the rating deviation's last update as now.
  * @throws If a database error occurs.
  */
-function addUser(user_id: number, leaderboard_id: Leaderboard, elo: number, rd: number): void {
-	const query = `
-		INSERT INTO leaderboards (
-			user_id,
-			leaderboard_id,
-			elo,
-			rating_deviation
-			-- rd_last_update_date will be NULL by default
-		) VALUES (?, ?, ?, ?)
-	`;
-	db.call(
-		() => db.run(query, [user_id, leaderboard_id, elo, rd]),
-		`Error adding user "${user_id}" to leaderboard "${leaderboard_id}"`,
-	);
-}
-
-/**
- * Updates the rating values for a player on a specific leaderboard.
- * This function throws errors on failure, making it suitable for use
- * inside a database transaction which can catch the error and roll back.
- * Callers outside of transactions should implement their own error handling.
- * @throws If a database error occurs.
- */
-function updatePlayerRating(
+function setPlayerRating(
 	user_id: number,
 	leaderboard_id: Leaderboard,
 	elo: number,
 	rd: number,
 ): void {
 	const query = `
-		UPDATE leaderboards
-		SET elo = ?,
-			rating_deviation = ?,
-			rd_last_update_date = CURRENT_TIMESTAMP -- Automatically update timestamp on rating change
-		WHERE user_id = ? AND leaderboard_id = ?
+		INSERT INTO leaderboards (user_id, leaderboard_id, elo, rating_deviation, rd_last_update_date)
+		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT (user_id, leaderboard_id) DO UPDATE SET
+			elo = excluded.elo,
+			rating_deviation = excluded.rating_deviation,
+			rd_last_update_date = excluded.rd_last_update_date
 	`;
 	db.call(
-		() => db.run(query, [elo, rd, user_id, leaderboard_id]),
-		`Error updating leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`,
+		() => db.run(query, [user_id, leaderboard_id, elo, rd]),
+		`Error setting leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`,
 	);
-}
-
-/**
- * Checks if a player exists on a specific leaderboard.
- * Relies on the composite primary key (user_id, leaderboard_id).
- * @param user_id - The ID of the user to check.
- * @param leaderboard_id - The ID of the leaderboard to check within.
- * @returns True if the player exists on the specified leaderboard, false otherwise.
- * @throws If a database error occurs.
- */
-function isPlayerIn(user_id: number, leaderboard_id: Leaderboard): boolean {
-	const query = `
-        SELECT 1
-        FROM leaderboards
-        WHERE user_id = ? AND leaderboard_id = ?
-        LIMIT 1;
-    `;
-	const result = db.call(
-		() => db.get<{ '1': 1 }>(query, [user_id, leaderboard_id]),
-		`Error checking existence of user "${user_id}" on leaderboard "${leaderboard_id}"`,
-	);
-	return !!result;
 }
 
 /**
@@ -236,7 +190,7 @@ function updateAllRatingDeviationsOfLeaderboardTable(): void {
 				entry.rating_deviation,
 				entry.rd_last_update_date,
 			);
-			updatePlayerRating(
+			setPlayerRating(
 				entry.user_id,
 				entry.leaderboard_id as Leaderboard,
 				entry.elo,
@@ -260,9 +214,7 @@ function updateAllRatingDeviationsOfLeaderboardTable(): void {
 
 export default {
 	// Methods
-	addUser,
-	updatePlayerRating,
-	isPlayerIn,
+	setPlayerRating,
 	getPlayerRating,
 	getTopPlayers,
 	getPlayerRank,

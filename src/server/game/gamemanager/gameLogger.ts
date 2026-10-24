@@ -141,15 +141,7 @@ function updateLeaderboardsInTransaction(
 		const player = Number(playerStr) as Player;
 		const user_id = getUserID(match.playerData[player])!; // The snapshot holds only signed-in players.
 		const data = ratingData[player]!;
-		if (!leaderboardsManager.isPlayerIn(user_id, leaderboard_id)) {
-			leaderboardsManager.addUser(
-				user_id,
-				leaderboard_id,
-				ratingCalculation.DEFAULT_LEADERBOARD_ELO,
-				ratingCalculation.DEFAULT_LEADERBOARD_RD,
-			);
-		}
-		leaderboardsManager.updatePlayerRating(
+		leaderboardsManager.setPlayerRating(
 			user_id,
 			leaderboard_id,
 			data.elo_after_game!,
