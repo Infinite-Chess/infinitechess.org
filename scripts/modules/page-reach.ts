@@ -26,15 +26,11 @@ import path from 'node:path';
 import { globSync } from 'node:fs';
 
 import srcgraph from './srcgraph.js';
-import { ENTRY_POINTS } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
 const CLIENT_ROOT = 'src/client/scripts/';
 const VIEWS_ROOT = `${CLIENT_ROOT}views/`;
-
-/** Live script entries, read from the build so this can never drift. */
-const LIVE = ENTRY_POINTS.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
 
 /**
  * Pages not in ENTRY_POINTS yet, found by name: a page's entry is always
@@ -45,9 +41,9 @@ const DORMANT = [
 	...globSync(`${VIEWS_ROOT}*/*.ts`).filter(
 		(f) => path.basename(f, '.ts') === path.basename(path.dirname(f)),
 	),
-].filter((f) => !LIVE.includes(f));
+].filter((f) => !srcgraph.SCRIPT_ENTRIES.includes(f));
 
-const entries = [...LIVE, ...DORMANT];
+const entries = [...srcgraph.SCRIPT_ENTRIES, ...DORMANT];
 
 // Helper Functions ------------------------------------------------------------
 

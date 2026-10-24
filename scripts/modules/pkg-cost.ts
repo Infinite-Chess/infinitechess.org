@@ -20,7 +20,6 @@ import type { Plugin } from 'esbuild';
 import fs from 'node:fs';
 
 import srcgraph from './srcgraph.js';
-import { ENTRY_POINTS } from '../../build/client.js';
 
 // Arguments -------------------------------------------------------------------
 
@@ -109,10 +108,9 @@ function kb(n: number): string {
 
 // Report ----------------------------------------------------------------------
 
-const scripts = ENTRY_POINTS.filter((e) => /\.(ts|js)$/.test(e));
-for (const e of scripts) {
+for (const e of srcgraph.SCRIPT_ENTRIES) {
 	const trail = pathToPackage(e, pkg);
-	const label = e.replace('src/client/scripts/', '');
+	const label = srcgraph.short(e);
 	if (!trail) {
 		console.log(`  no ${pkg}   ${label}`);
 		continue;
