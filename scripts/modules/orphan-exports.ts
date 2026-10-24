@@ -10,9 +10,9 @@
  * Nothing should be exported — types included — without a consumer outside its module, so every
  * hit is either a dead `export` keyword to drop or a symbol whose module is the wrong home.
  *
- * Matching is TEXTUAL — a symbol's name across all of src/, a member's as `<import>.<member>` in
- * its module's importers — so a name like a common word can hide a real orphan. Treat the output
- * as a candidate list and confirm each one before deleting.
+ * Matching is TEXTUAL — a symbol's name across src/ and scripts/, a member's as
+ * `<import>.<member>` in its module's importers — so a name like a common word can hide a real
+ * orphan. Treat the output as a candidate list and confirm each one before deleting.
  */
 
 import fs from 'node:fs';
@@ -26,7 +26,7 @@ const target = process.argv[2] ?? 'src/shared';
 
 // Graph -----------------------------------------------------------------------
 
-const allFiles = srcgraph.walkSrc();
+const allFiles = [...srcgraph.walkSrc(), ...srcgraph.walkScripts('scripts')];
 const text = new Map(allFiles.map((f) => [f, fs.readFileSync(f, 'utf8')]));
 const parsed = new Map(
 	allFiles.map((f) => [f, ts.createSourceFile(f, text.get(f)!, ts.ScriptTarget.Latest, true)]),
