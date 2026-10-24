@@ -67,31 +67,32 @@ const RD_UPDATE_FREQUENCY = timeutil.toMillis(24, 'hours');
 // Functions -------------------------------------------------------------------
 
 /** The displayed {@link Rating} of a stored elo and rating deviation. */
-function toRating(elo: number, rating_deviation: number | null): Rating {
+function toRating(elo: number, rating_deviation: number): Rating {
 	return { value: elo, confident: isRatingConfident(rating_deviation) };
 }
 
-/**
- * Derives whether a stored rating deviation is low enough for the rating to be
- * displayed as confident. A null RD (pre-migration rows) falls back to confident.
- */
-function isRatingConfident(rating_deviation: number | null): boolean {
-	return rating_deviation === null || rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
+/** Derives whether a stored rating deviation is low enough for the rating to be displayed as confident. */
+function isRatingConfident(rating_deviation: number): boolean {
+	return rating_deviation <= UNCERTAIN_LEADERBOARD_RD;
 }
 
 /**
- * Computes the effective rating deviation for the current rating period, as for Glicko-1 algorithm
+ * Computes the effective rating deviation after idle decay, as for Glicko-1 algorithm.
+ * @param now - The epoch ms to decay the deviation up to.
  */
-function getTrueRD(rating_deviation: number, rd_last_update_date: string | null): number {
+function getTrueRD(
+	rating_deviation: number,
+	rd_last_update_date: string | null,
+	now = Date.now(),
+): number {
 	if (rd_last_update_date === null) return rating_deviation;
 	else {
 		const last_rated_game_timestamp = timeutil.sqliteToTimestamp(rd_last_update_date);
-		const current_timestamp = Date.now();
 
 		// fraction of elapsed time over length of a standard rating period -> noninteger in general
 		const rating_periods_elapsed = Math.max(
 			0,
-			(current_timestamp - last_rated_game_timestamp) / RATING_PERIOD_DURATION,
+			(now - last_rated_game_timestamp) / RATING_PERIOD_DURATION,
 		);
 
 		return Math.max(
@@ -148,8 +149,13 @@ function new_RD(r: number, RD: number, r_opp: number, RD_opp: number): number {
  * Takes ratingdata object as an input, with entries: elo_at_game, rating_deviation_at_game and rd_last_update_date.
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
  * MUTATING. Modifies original ratingdata object.
+ * @param now - The epoch ms the game ended, up to which each player's deviation decays.
  */
-function computeChanges(ratingdata: RatingData, victor: Player | null): RatingData {
+function computeChanges(
+	ratingdata: RatingData,
+	victor: Player | null,
+	now = Date.now(),
+): RatingData {
 	// Currently, only rating calculations for 2-player games with White vs Black are supported
 	const playerCount = Object.keys(ratingdata).length;
 	if (playerCount !== 2) throw Error('Rating changes are only supported in two player games!');
@@ -161,10 +167,12 @@ function computeChanges(ratingdata: RatingData, victor: Player | null): RatingDa
 	const RD1 = getTrueRD(
 		ratingdata[p.WHITE]!.rating_deviation_at_game,
 		ratingdata[p.WHITE]!.rd_last_update_date,
+		now,
 	);
 	const RD2 = getTrueRD(
 		ratingdata[p.BLACK]!.rating_deviation_at_game,
 		ratingdata[p.BLACK]!.rd_last_update_date,
+		now,
 	);
 	const outcome_white = victor === p.WHITE ? 1 : victor === p.BLACK ? 0 : 0.5;
 	const outcome_black = victor === p.WHITE ? 0 : victor === p.BLACK ? 1 : 0.5;
@@ -180,7 +188,7 @@ function computeChanges(ratingdata: RatingData, victor: Player | null): RatingDa
 	return ratingdata;
 }
 
-// FOR TESTING. Keep for when we ever modify ratings in the future =========================
+// FOR TESTING. Keep for when we ever modify ratings in the future. Documented dev tooling: never delete.
 
 /**
  * DISCUSSION of testing:

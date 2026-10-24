@@ -129,7 +129,7 @@ function expectRatingsChanged(game_id: number, signs: Record<number, 1 | -1>): v
 		const diff = metadatautil.getWhiteBlackRatingDiff(change);
 		expect(tags).toContain(`[${color}RatingDiff "${diff}"]`);
 		const newRating = leaderboardsManager.getPlayerRating(row.user_id, INFINITY)!;
-		expect(newRating.elo).toBeCloseTo(row.elo_at_game! + change);
+		expect(newRating.elo).toBeCloseTo(row.elo_at_game + change);
 	}
 }
 

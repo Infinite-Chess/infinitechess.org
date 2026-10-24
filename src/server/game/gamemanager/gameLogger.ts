@@ -453,8 +453,7 @@ function readLoggedRatings(game_id: number): PlayerGroup<Rating> {
 	const rows = playerGamesManager.getOfGame(game_id, ['player_number', 'elo_at_game', 'rating_deviation_at_game']); // prettier-ignore
 	const ratings: PlayerGroup<Rating> = {};
 	for (const row of rows) {
-		// Only legacy rows have a null elo_at_game, and those games are long finalized: never overturned.
-		ratings[row.player_number as Player] = ratingCalculation.toRating(row.elo_at_game!, row.rating_deviation_at_game); // prettier-ignore
+		ratings[row.player_number as Player] = ratingCalculation.toRating(row.elo_at_game, row.rating_deviation_at_game); // prettier-ignore
 	}
 	return ratings;
 }

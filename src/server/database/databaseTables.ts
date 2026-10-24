@@ -214,9 +214,9 @@ function generate(): void {
 			game_id                     INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
 			player_number               INTEGER NOT NULL, -- 1 => White  2 => Black
 			score                       REAL, -- 1 => Win   0.5 => Draw   0 => Loss   NULL => Aborted
-			elo_at_game                 REAL, -- Rating before the game, rated or not
+			elo_at_game                 REAL NOT NULL, -- Rating before the game, rated or not
 			elo_change_from_game        REAL, -- Specified only if the game was rated
-			rating_deviation_at_game    REAL, -- Glicko RD before the game, rated or not; drives the pre-game rating's confidence.
+			rating_deviation_at_game    REAL NOT NULL, -- Glicko RD before the game, rated or not; drives the pre-game rating's confidence.
 			rating_deviation_after_game REAL, -- Glicko RD after the game; drives the new rating's confidence. Specified only if the game was rated.
 			PRIMARY KEY (user_id, game_id) -- Ensures unique link
 		);
