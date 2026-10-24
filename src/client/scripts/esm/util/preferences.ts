@@ -61,7 +61,7 @@ const STORAGE_KEY = 'preferences';
 /** The cookie the server delivers a logged-in user's server-side preferences in. */
 const COOKIE_NAME = 'preferences';
 
-/** How long saved preferences survive without being changed. */
+/** How long saved preferences last after their latest change before expiring. */
 const EXPIRY_MS = timeutil.toMillis(1, 'years');
 
 /** The server-side preferences a user starts with. */

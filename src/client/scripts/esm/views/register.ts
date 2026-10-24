@@ -56,6 +56,21 @@ function setFormError(message?: string): void {
 	accountform.setFieldError(formError, message);
 }
 
+/** Re-checks the username's format and records its validity. */
+function validateUsername(reveal: boolean): void {
+	usernameValid = accountform.validateField(usernameInput, usernameError, accountform.usernameError, reveal); // prettier-ignore
+}
+
+/** Re-checks the password's format and records its validity. */
+function validatePassword(reveal: boolean): void {
+	passwordValid = accountform.validateField(passwordInput, passwordError, accountform.passwordError, reveal); // prettier-ignore
+}
+
+/** Re-checks the email's format and records its validity. */
+function validateEmail(reveal: boolean): void {
+	emailValid = accountform.validateField(emailInput, emailError, accountform.emailError, reveal);
+}
+
 /**
  * Reflects the form's *visible* state on the submit button: enabled as long as
  * all three fields have some text, none are currently showing an error, and the
@@ -195,21 +210,6 @@ async function submitRegister(): Promise<void> {
 		resetTurnstile(); // Re-issue a fresh token for the retry.
 		refreshSubmit();
 	}
-}
-
-/** Re-checks the username's format and records its validity. */
-function validateUsername(reveal: boolean): void {
-	usernameValid = accountform.validateField(usernameInput, usernameError, accountform.usernameError, reveal); // prettier-ignore
-}
-
-/** Re-checks the password's format and records its validity. */
-function validatePassword(reveal: boolean): void {
-	passwordValid = accountform.validateField(passwordInput, passwordError, accountform.passwordError, reveal); // prettier-ignore
-}
-
-/** Re-checks the email's format and records its validity. */
-function validateEmail(reveal: boolean): void {
-	emailValid = accountform.validateField(emailInput, emailError, accountform.emailError, reveal);
 }
 
 // Event Listeners -------------------------------------------------------------

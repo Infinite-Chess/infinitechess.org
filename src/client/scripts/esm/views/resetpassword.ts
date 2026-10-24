@@ -29,26 +29,23 @@ const token = docutil.getLastSegmentOfURL();
 
 // Functions -------------------------------------------------------------------
 
-/** Shows an error beneath the field (format, server, or network), or clears it when called with no message. */
+/** Shows a server or network error beneath the field, or clears it when called with no message. */
 function setError(message?: string): void {
 	accountform.setFieldError(errorElement!, message, passwordInput!);
 }
 
-/** Enables the submit button once the password is a valid length. */
+/** Re-checks the password's format. */
+function validatePassword(reveal: boolean): void {
+	accountform.validateField(passwordInput!, errorElement!, accountform.passwordError, reveal);
+}
+
+/** Enables the submit button once the password is a valid length, so only valid ones submit. */
 function refreshSubmit(): void {
 	submitButton!.disabled = accountform.passwordError(passwordInput!.value) !== undefined;
 }
 
 /** Submits the new password, navigating home on success. */
 async function submit(): Promise<void> {
-	// Authoritative gate: reveal any unseen format error, focus the field, and bail.
-	const passwordMessage = accountform.passwordError(passwordInput!.value);
-	if (passwordMessage !== undefined) {
-		setError(passwordMessage);
-		passwordInput!.focus();
-		return;
-	}
-
 	setError();
 	submitButton!.disabled = true;
 
@@ -96,17 +93,17 @@ if (form) {
 	});
 
 	passwordInput!.addEventListener('input', (): void => {
-		accountform.validateField(passwordInput!, errorElement!, accountform.passwordError, false);
+		validatePassword(false);
 		refreshSubmit();
 	});
 	passwordInput!.addEventListener('blur', (): void => {
-		accountform.validateField(passwordInput!, errorElement!, accountform.passwordError, true);
+		validatePassword(true);
 		refreshSubmit();
 	});
 
 	// Enter on a too-short password can't submit (disabled button), so reveal the error like blur.
 	passwordInput!.addEventListener('keydown', (event: KeyboardEvent): void => {
-		if (event.key === 'Enter') setError(accountform.passwordError(passwordInput!.value));
+		if (event.key === 'Enter') validatePassword(true);
 	});
 
 	passwordInput!.focus();

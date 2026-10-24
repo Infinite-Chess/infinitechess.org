@@ -101,7 +101,7 @@ async function openCurrentPositionInEditor(): Promise<void> {
 	const position = exportCurrentPosition();
 	if (!position) return;
 
-	await editorhandoff.save({ variantOptions: position.variantOptions });
+	await editorhandoff.save(position.variantOptions);
 	window.location.assign('/editor');
 }
 

@@ -35,7 +35,7 @@ const BUILD_OPTIONS: BuildOptions = {
 
 // Building --------------------------------------------------------------------
 
-/** Builds the server's scripts, once or watching for changes. */
+/** Builds the server's scripts once, or in dev, on every change. */
 export async function buildServer(isDev: boolean): Promise<void> {
 	const context = await esbuild.context(BUILD_OPTIONS);
 

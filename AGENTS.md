@@ -164,8 +164,9 @@ followed, tell me.
       countless details of everything unrelated, no agent or human is going to want to read that.
     - Staple-ons which serve to amend existing comments. Prefer **rewriting** the comments from
       scratch instead.
-    - Prior code state talk. We do not need to concern ourselves with old state. Move on mentally;
-      do not give old code state free rent forever in our mind. We are _focused_ on the next work.
+    - Prior code state talk, said or implied: a comment that only makes sense in defense of old
+      code, like one vouching for a removed guard's absence. Do not give old code state free rent in
+      our mind; we are _focused_ on the next work.
     - Common sense things, or that which can be inferred from nearby comments.
     - Statements explaining or justifying why code is the way that it is. Me asking you why code is
       that way isn't me arguing with you about making it a different way; it's me hyper-looking for

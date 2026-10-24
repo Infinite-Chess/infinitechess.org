@@ -32,12 +32,9 @@ interface ActiveGameEntry {
 
 // State -----------------------------------------------------------------------
 
-/**
- * Each member's entry, by user_id. Removable as soon as their game is over,
- * even before it's finalized or evicted.
- */
+/** Each member's entry, by user_id. Removed the moment their game ends, before it's finalized. */
 const membersInActiveGames = new Map<number, ActiveGameEntry>();
-/** Each guest browser's entry, by browser-id. Removable at the same moment. */
+/** Each guest browser's entry, by browser-id. Removed at the same moment. */
 const browsersInActiveGames = new Map<string, ActiveGameEntry>();
 
 // Functions -------------------------------------------------------------------

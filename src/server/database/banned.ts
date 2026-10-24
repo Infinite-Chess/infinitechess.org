@@ -20,7 +20,10 @@ const BANNED_PATH = path.resolve('database/banned.json');
 
 // State -----------------------------------------------------------------------
 
-/** Each entry's value is a free-form note on the ban; only the key's presence is ever tested. */
+/**
+ * The banned IPs and browser-ids, as loaded from {@link BANNED_PATH}.
+ * Each value is a free-form note on the ban; only the key's presence is ever tested.
+ */
 let bannedJSON: {
 	IPs: Record<string, unknown>;
 	'browser-ids': Record<string, unknown>;
@@ -70,6 +73,7 @@ function isIP(ip: string): boolean {
 
 /** Whether the browser-id is banned. */
 function isBrowserID(browserID: string): boolean {
+	// A request can send any browser-id cookie, so an inherited name like "constructor" mustn't match.
 	return Object.hasOwn(bannedJSON['browser-ids'], browserID);
 }
 

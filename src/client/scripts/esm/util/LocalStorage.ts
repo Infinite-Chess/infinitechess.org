@@ -91,6 +91,7 @@ function isEntry(save: unknown): save is Entry {
 	return (
 		typeof save === 'object' &&
 		save !== null &&
+		'value' in save &&
 		'expires' in save &&
 		typeof save.expires === 'number'
 	);

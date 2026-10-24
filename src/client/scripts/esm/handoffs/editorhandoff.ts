@@ -23,14 +23,11 @@ const EXPIRY_MS = timeutil.toMillis(5, 'minutes');
 
 // Schemas ---------------------------------------------------------------------
 
-/** A pending position handed off to the board editor from another page. */
-const EditorHandoffSchema = z.strictObject({
-	/**
-	 * The position for the editor to open, in place of its autosave. Checked for object-ness
-	 * only: it can hold millions of pieces, and walking them would freeze the page.
-	 */
-	variantOptions: z.custom<VariantOptions>((v) => typeof v === 'object' && v !== null),
-});
+/**
+ * The position for the editor to open, in place of its autosave. Checked for object-ness
+ * only: it can hold millions of pieces, and walking them would freeze the page.
+ */
+const EditorHandoffSchema = z.custom<VariantOptions>((v) => typeof v === 'object' && v !== null);
 
 // Exports ---------------------------------------------------------------------
 

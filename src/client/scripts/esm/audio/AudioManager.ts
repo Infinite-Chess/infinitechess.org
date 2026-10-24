@@ -130,8 +130,6 @@ function getDestination(): AudioNode {
 
 // Public API ------------------------------------------------------------------
 
-// Both fades are safe before the worklet loads: they act on the wet/dry gains it later wires in.
-
 /** Fades in the global downsampler effect over a given duration. */
 function fadeInDownsampler(durationMillis: number): void {
 	AudioUtils.applyPerceptualFade(audioContext, downsamplerDryGain.gain, 0, durationMillis);
