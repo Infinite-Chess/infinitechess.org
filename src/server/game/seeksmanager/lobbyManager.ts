@@ -34,18 +34,10 @@ const DISCONNECT_CUSHION_MS = 5000; // 5 seconds
 
 // State -----------------------------------------------------------------------
 
-/**
- * An object containing usernames for the keys, and setTimeout timer ID's for the values,
- * that represent the timers that are currently active to delete all a player's seeks
- * since they've disconnected.
- */
-const timersMember: Record<number, ReturnType<typeof setTimeout>> = {};
-/**
- * An object containing browser-ids for the keys, and setTimeout timer ID's for the values,
- * that represent the timers that are currently active to delete all a browser's seeks
- * since they've disconnected.
- */
-const timersBrowser: Record<string, ReturnType<typeof setTimeout>> = {};
+/** Each disconnected member's running timer to delete their seeks, by user_id. */
+const timersMember = new Map<number, ReturnType<typeof setTimeout>>();
+/** Each disconnected browser's running timer to delete their seeks, by browser-id. */
+const timersBrowser = new Map<string, ReturnType<typeof setTimeout>>();
 
 // Subscribing -----------------------------------------------------------------
 
@@ -79,10 +71,9 @@ function unsubscribe(ws: CustomWebSocket, involuntary?: boolean): void {
 	if (!involuntary) return deleteSeeksIfNotConnected(owner); // Delete their existing seeks
 
 	// The closure WASN'T by choice! Set a 5s timer to give them time to reconnect before deleting their seek!
-	// console.log("Setting a 5-second timer to delete a user's seek!");
 	const timeout = setTimeout(() => deleteSeeksIfNotConnected(owner), DISCONNECT_CUSHION_MS);
-	if (owner.signedIn) timersMember[owner.user_id] = timeout;
-	else timersBrowser[owner.browser_id] = timeout;
+	if (owner.signedIn) timersMember.set(owner.user_id, timeout);
+	else timersBrowser.set(owner.browser_id, timeout);
 }
 
 // Seek Cushion ----------------------------------------------------------------
@@ -93,11 +84,11 @@ function unsubscribe(ws: CustomWebSocket, involuntary?: boolean): void {
  */
 function cancelCushionTimer(ws: CustomWebSocket): void {
 	if (ws.metadata.memberInfo.signedIn) {
-		clearTimeout(timersMember[ws.metadata.memberInfo.user_id]);
-		delete timersMember[ws.metadata.memberInfo.user_id];
-	} else if (ws.metadata) {
-		clearTimeout(timersBrowser[ws.metadata.memberInfo.browser_id]);
-		delete timersBrowser[ws.metadata.memberInfo.browser_id];
+		clearTimeout(timersMember.get(ws.metadata.memberInfo.user_id));
+		timersMember.delete(ws.metadata.memberInfo.user_id);
+	} else {
+		clearTimeout(timersBrowser.get(ws.metadata.memberInfo.browser_id));
+		timersBrowser.delete(ws.metadata.memberInfo.browser_id);
 	}
 }
 
