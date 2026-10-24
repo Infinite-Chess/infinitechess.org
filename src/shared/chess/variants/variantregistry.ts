@@ -220,7 +220,7 @@ function getGroupIconId(group: VariantGroup | 'custom'): string {
 function resolveCode(variantName: string | undefined): VariantCode | undefined {
 	if (variantName === undefined) return undefined;
 	// Direct code match
-	if (variantName in REGISTRY) return variantName as VariantCode;
+	if (Object.hasOwn(REGISTRY, variantName)) return variantName as VariantCode;
 	// Search by English display name
 	for (const [code, variantEntry] of Object.entries(REGISTRY) as [
 		VariantCode,
