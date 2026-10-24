@@ -5,18 +5,20 @@
  * their own file uses.
  *
  * Usage:
- *   npx tsx scripts/modules/orphan-exports.ts [src/shared | src/server | src/client | any path prefix]
+ *   npx tsx scripts/modules/orphan-exports.ts [src/shared | src/server | src/client | scripts | any path prefix]
  *
  * Nothing should be exported — types included — without a consumer outside its module, so every
  * hit is either a dead `export` keyword to drop or a symbol whose module is the wrong home.
  *
- * Matching is TEXTUAL — a symbol's name across src/ and scripts/, a member's as
- * `<import>.<member>` in its module's importers — so a name like a common word can hide a real
- * orphan. Treat the output as a candidate list and confirm each one before deleting.
+ * Matching is by NAME — a symbol's as any code identifier across src/, scripts/ and build/, a
+ * member's as `<import>.<member>` in its module's importers — so an unrelated same-named symbol can
+ * hide a real orphan, and a module an importer uses whole counts as reading every member. Treat the
+ * output as a candidate list and confirm each one before deleting.
  */
 
 import fs from 'node:fs';
 import ts from 'typescript';
+import { execFileSync } from 'node:child_process';
 
 import srcgraph from './srcgraph.js';
 
@@ -26,11 +28,22 @@ const target = process.argv[2] ?? 'src/shared';
 
 // Graph -----------------------------------------------------------------------
 
-const allFiles = [...srcgraph.walkSrc(), ...srcgraph.walkScripts('scripts')];
-const text = new Map(allFiles.map((f) => [f, fs.readFileSync(f, 'utf8')]));
+// Every script not gitignored, so generated output is neither scanned nor counted as a consumer.
+const allFiles = execFileSync(
+	'git',
+	['ls-files', '-co', '--exclude-standard', '--', 'src', 'scripts', 'build'],
+	{ encoding: 'utf8' },
+)
+	.split('\n')
+	.filter((f) => /\.(ts|js)$/.test(f) && fs.existsSync(f)); // Tracked but deleted on disk.
 const parsed = new Map(
-	allFiles.map((f) => [f, ts.createSourceFile(f, text.get(f)!, ts.ScriptTarget.Latest, true)]),
+	allFiles.map((f) => [
+		f,
+		ts.createSourceFile(f, fs.readFileSync(f, 'utf8'), ts.ScriptTarget.Latest, true),
+	]),
 );
+/** file -> every identifier in its code, so comments and strings never match. */
+const identifiers = new Map(allFiles.map((f) => [f, identifiersIn(parsed.get(f)!)]));
 
 const scanned = allFiles.filter((f) => f.startsWith(target) && !f.endsWith('.d.ts'));
 if (scanned.length === 0) {
@@ -57,6 +70,17 @@ for (const f of allFiles) {
 		const module = srcgraph.resolveRelative(f, spec);
 		if (module !== undefined) dynamicallyImported.add(module);
 	}
+}
+
+/** Every identifier node in a source file. */
+function identifiersIn(sf: ts.SourceFile): ts.Identifier[] {
+	const ids: ts.Identifier[] = [];
+	const visit = (n: ts.Node): void => {
+		if (ts.isIdentifier(n)) ids.push(n);
+		n.forEachChild(visit);
+	};
+	visit(sf);
+	return ids;
 }
 
 // Top-level exports -----------------------------------------------------------
@@ -117,21 +141,22 @@ function defaultMembers(f: string): string[] {
 
 /** Whether an importer reads `member` off the local name it bound the default export to. */
 function readsMember(importer: string, name: string, member: string): boolean {
-	const source = text.get(importer)!;
-	if (new RegExp(`\\b${name}\\s*\\??\\.\\s*${member}\\b`).test(source)) return true;
-	// Used whole (passed along, spread, destructured), it could be reading any member.
-	const wholeUses = source.match(new RegExp(`\\b${name}\\b(?!\\s*\\??\\.)`, 'g'));
-	return (wholeUses?.length ?? 0) > 1; // One is the import itself.
+	return identifiers.get(importer)!.some((id) => {
+		const p = id.parent;
+		if (id.text !== name || ts.isImportClause(p)) return false;
+		if (ts.isPropertyAccessExpression(p)) return p.expression === id && p.name.text === member;
+		if (ts.isQualifiedName(p)) return p.left === id && p.right.text === member; // `typeof name.member`
+		return true; // Used whole (passed along, spread, destructured), it could be reading any member.
+	});
 }
 
 // Report ----------------------------------------------------------------------
 
 let total = 0;
 for (const f of scanned) {
-	const orphans = exportedNames(f).filter((n) => {
-		const re = new RegExp(`\\b${n}\\b`);
-		return !allFiles.some((o) => o !== f && re.test(text.get(o)!));
-	});
+	const orphans = exportedNames(f).filter(
+		(n) => !allFiles.some((o) => o !== f && identifiers.get(o)!.some((id) => id.text === n)),
+	);
 	orphans.push(...orphanMembers(f).map((member) => `default.${member}`));
 	if (orphans.length === 0) continue;
 	total += orphans.length;

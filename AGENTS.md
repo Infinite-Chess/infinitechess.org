@@ -336,7 +336,7 @@ disagree, study more siblings before trusting either.
 - Nothing gets exported — including types — without a consumer outside the module, unless it
   completes a set, dormant code will need it back, or it serves an occasional one-off use; mark that
   last kind with a comment, as nothing else reveals it. `scripts/modules/orphan-exports.ts <root>`
-  lists candidates; it matches textually, so confirm each hit before deleting.
+  lists candidates; it matches by name, so confirm each hit before deleting.
 - Import identifiers match the script's basename; if a local name collides, rename the local, don't
   alias the import.
 
