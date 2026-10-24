@@ -183,7 +183,8 @@ function addGameRecordsInTransaction(
 		private: match.private ? 1 : 0,
 		...encodeConclusion(conclusion),
 		move_count: servergame.moves.length,
-		time_duration_millis: match.timeEnded ? match.timeEnded - match.timeCreated : null,
+		// timeEnded is set alongside the conclusion, by gameLifecycle.applyConclusion.
+		time_duration_millis: match.timeEnded! - match.timeCreated,
 		icn, // Use the pre-generated ICN
 		...modifierColumns.toColumns(match.modifiers),
 	});
