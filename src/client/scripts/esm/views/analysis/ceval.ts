@@ -92,6 +92,7 @@ const MAX_DEPTH = 64;
 const MIN_DEPTH = 1;
 /** Hash size choices in MB (engine caps its TT at 64MB). */
 const HASH_OPTIONS: number[] = [16, 32, 64];
+/** Most engine lines the panel offers (the engine itself allows up to 16). */
 const MAX_MULTI_PV = 5;
 /** UI update throttle. */
 const THROTTLE_MS = 60;
