@@ -820,9 +820,11 @@
 		.review-stats.panel {
 			grid-area: stats;
 		}
+		/* Hugs its content rather than stretching over the two-column layout's slack row. */
 		.game-meta,
 		.variant-setup {
 			grid-area: info;
+			align-self: start;
 			margin-bottom: var(--sidebar-gap);
 		}
 	}
