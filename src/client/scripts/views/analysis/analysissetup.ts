@@ -1,0 +1,95 @@
+// src/client/scripts/views/analysis/analysissetup.ts
+
+/**
+ * The plain /analysis page's variant setup panel: wires the shared variant selector
+ * widget so that committing a selection (a preset, saved position, or ICN) — or toggling
+ * a modifier — loads that position onto the analysis board.
+ *
+ * Only used on /analysis (not /analysis/:id, which renders no setup panel). Loaded
+ * dynamically so its variant-selector imports never run where the widget DOM is absent.
+ */
+
+import docutil from '../../util/docutil.js';
+import gamesession from '../../game/chess/gamesession.js';
+import { GameBus } from '../../board/GameBus.js';
+import analysisloader from './analysisloader.js';
+import variantselector from '../../board/variantselector/variantselector.js';
+import modifierselector from '../../board/variantselector/modifierselector.js';
+
+// State -----------------------------------------------------------------------
+
+/** Whether a load was refused mid-load, owed once the in-flight one finishes. */
+let loadOwed = false;
+
+// Functions -------------------------------------------------------------------
+
+/** Wires the widget's commit callbacks to load the selection onto the board. */
+function init(): void {
+	// Allow analyzing positions of any size.
+	variantselector.initVariantGroupDropdown({ isSeekContext: false, onCommit: loadSelection });
+	variantselector.initIcnValidation();
+	modifierselector.initModifierSelector({
+		// A modifier commit re-judges the selection before loading it: the Slide Limit rebuilds the
+		// movesets, so the game validated without it is not the game about to be played.
+		onCommit: () =>
+			void variantselector.revalidateCustomSelection().then(() => loadSelection()),
+	});
+	// A move on the board abandons any un-committed selection (e.g. an opened, empty From-ICN
+	// field), so snap the display back to the variant actually loaded on the board.
+	GameBus.addEventListener('physical-move', () => variantselector.restoreAcceptedDisplay());
+	// Fires for every load, whoever started it (the initial one included) and whether it
+	// finished or failed — matching the isLoading() check the owed load is waiting on.
+	// Deferred out of the dispatch, since draining unloads the game its listeners are reading.
+	GameBus.addEventListener('load-ended', () => queueMicrotask(drainOwedLoad));
+	document.addEventListener('paste', onPaste);
+}
+
+/**
+ * Pasting anywhere on the page routes the clipboard through the From-ICN field —
+ * loading it if it's a legal position, or surfacing the ICN error if it isn't.
+ */
+function onPaste(e: ClipboardEvent): void {
+	if (docutil.isTypingInTextField()) return; // The paste belongs to the field (e.g. the ICN input itself)
+	// clipboardData is only ever absent on synthetic events, but the DOM types it nullable.
+	const icn = e.clipboardData?.getData('text/plain').trim();
+	if (!icn) return; // Nothing textual was pasted (e.g. an image)
+	void variantselector.applyIcn(icn);
+}
+
+/** Loads the variant selector's current selection onto the board (fresh preset, saved position, or ICN). */
+function loadSelection(): void {
+	// Don't stomp an in-flight load — an unloaded gamefile would crash its graphical
+	// half. Owe it instead, so a modifier toggle made mid-load isn't silently swallowed.
+	if (gamesession.isLoading()) {
+		loadOwed = true;
+		return;
+	}
+
+	const modifiers = modifierselector.getGameModifiers();
+	const selection = variantselector.getSelection();
+
+	if (selection.kind === 'preset') {
+		void analysisloader.loadVariant(selection.code, modifiers);
+	} else {
+		// Custom (saved position or ICN) — only load once it resolves to a legal position.
+		const custom = variantselector.getCustomPosition();
+		if (custom === null) return;
+		// Put the very game the validation gate built onto the board, rather than
+		// building an identical second one. It was built with these same modifiers.
+		void analysisloader.pastePrebuiltGame(custom.gamefile, custom.source, modifiers);
+	}
+
+	// Remember what's now loaded, so a later board move can revert the display to it.
+	variantselector.snapshotAccepted();
+}
+
+/** Runs the load refused during the one that just finished, re-reading the selection fresh. */
+function drainOwedLoad(): void {
+	if (!loadOwed) return;
+	loadOwed = false;
+	loadSelection();
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default { init };

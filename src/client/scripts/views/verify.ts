@@ -1,0 +1,85 @@
+// src/client/scripts/views/verify.ts
+
+/**
+ * Client-side logic for the inert verify landing page (/verify/:token).
+ *
+ * Clicking the button POSTs to /api/verify/:token, swaps in place
+ * either a success confirmation or an invalid/expired message.
+ * A transient network error shows inline and leaves the button clickable.
+ */
+
+import docutil from '../util/docutil.js';
+import { serverfetch } from '../util/serverfetch.js';
+
+// Elements --------------------------------------------------------------------
+
+// Present only on the prompt state; the already-verified and invalid states are fully SSR'd, so
+// there's nothing to wire up there.
+const button = document.querySelector<HTMLButtonElement>('#verify-button');
+const error = document.querySelector<HTMLElement>('#verify-error');
+
+// Verification ----------------------------------------------------------------
+
+/** Hides the prompt elements (heading, subtitle, button, inline error) before showing a result state. */
+function hidePrompt(): void {
+	document.querySelector<HTMLElement>('#verify-title')!.classList.add('hidden');
+	document.querySelector<HTMLElement>('#verify-subtitle')!.classList.add('hidden');
+	error!.classList.add('hidden');
+	button!.classList.add('hidden');
+}
+
+/** Reveals the invalid/expired state (already rendered, hidden) and removes the prompt. */
+function showInvalid(): void {
+	hidePrompt();
+	document.querySelector<HTMLElement>('#verify-invalid-title')!.classList.remove('hidden');
+	document.querySelector<HTMLElement>('#verify-invalid-text')!.classList.remove('hidden');
+	document.querySelector<HTMLElement>('#verify-invalid-prompt')!.classList.remove('hidden');
+}
+
+/** Shows a transient inline error beneath the button and re-enables it for a retry. */
+function showRetryableError(message: string): void {
+	error!.textContent = message;
+	error!.classList.remove('hidden');
+	button!.disabled = false;
+}
+
+/**
+ * Consumes the token: POSTs to /api/verify/:token. Success swaps in the confirmation;
+ * an invalid/expired token (400) reveals the dead-link state; a network/server error stays retryable.
+ */
+async function verify(): Promise<void> {
+	button!.disabled = true;
+	error!.classList.add('hidden');
+	try {
+		// The token is the last path segment of this page's URL (GET /verify/:token).
+		const token = docutil.getLastSegmentOfURL();
+		const response = await serverfetch(`/api/verify/${token}`, { method: 'POST' });
+		if (response.ok) {
+			hidePrompt();
+			document
+				.querySelector<HTMLElement>('#verify-success-title')!
+				.classList.remove('hidden');
+			document.querySelector<HTMLElement>('#verify-success')!.classList.remove('hidden');
+			return;
+		}
+		// 400 → the token is no longer valid (expired before promotion, or overwritten)
+		if (response.status === 400) {
+			showInvalid();
+			return;
+		}
+		// Any other status (e.g. 500 server error) -> allow retry
+		const body: { message?: string } = await response.json();
+		showRetryableError(body.message ?? t.shared.errors.fallback);
+	} catch (e: unknown) {
+		console.error('Verification request failed:', e);
+		showRetryableError(t.shared.errors.network);
+	}
+}
+
+// Event Listeners -------------------------------------------------------------
+
+if (button) {
+	button.addEventListener('click', (): void => {
+		verify();
+	});
+}

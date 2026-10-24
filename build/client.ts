@@ -49,34 +49,34 @@ export const ENTRY_POINTS = [
 	'src/client/css/icnvalidator.css',
 
 	// Scripts
-	'src/client/scripts/esm/components/header/header.ts',
-	'src/client/scripts/esm/views/index/index.ts',
-	'src/client/scripts/esm/views/register.ts',
-	'src/client/scripts/esm/views/register-awaiting.ts',
-	'src/client/scripts/esm/views/verify.ts',
-	'src/client/scripts/esm/views/login.ts',
-	'src/client/scripts/esm/views/forgotpassword.ts',
-	'src/client/scripts/esm/views/resetpassword.ts',
-	'src/client/scripts/esm/views/game/game.ts',
-	'src/client/scripts/esm/views/challenge/challenge.ts',
-	'src/client/scripts/esm/views/analysis/analysis.ts',
-	'src/client/scripts/esm/views/icnvalidator/icnvalidator.ts',
+	'src/client/scripts/components/header/header.ts',
+	'src/client/scripts/views/index/index.ts',
+	'src/client/scripts/views/register.ts',
+	'src/client/scripts/views/register-awaiting.ts',
+	'src/client/scripts/views/verify.ts',
+	'src/client/scripts/views/login.ts',
+	'src/client/scripts/views/forgotpassword.ts',
+	'src/client/scripts/views/resetpassword.ts',
+	'src/client/scripts/views/game/game.ts',
+	'src/client/scripts/views/challenge/challenge.ts',
+	'src/client/scripts/views/analysis/analysis.ts',
+	'src/client/scripts/views/icnvalidator/icnvalidator.ts',
 
 	// Workers
-	'src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts',
-	'src/client/scripts/esm/views/icnvalidator/icnvalidator.worker.ts',
-	'src/client/scripts/esm/game/chess/engines/apeiron.worker.ts',
-	'src/client/scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts',
+	'src/client/scripts/views/analysis/apeironanalysis.worker.ts',
+	'src/client/scripts/views/icnvalidator/icnvalidator.worker.ts',
+	'src/client/scripts/game/chess/engines/apeiron.worker.ts',
+	'src/client/scripts/game/chess/engines/enginecheckmatepractice.worker.ts',
 
 	// Other
-	'src/client/scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts',
+	'src/client/scripts/audio/processors/downsampler/DownsamplerProcessor.ts',
 
 	// Dormant — pages whose code is not yet repurposed for the redesign.
-	// 'src/client/scripts/esm/views/leaderboard.ts',
-	// 'src/client/scripts/esm/views/news/news.ts',
-	// 'src/client/scripts/esm/views/guide.ts',
-	// 'src/client/scripts/esm/views/admin.ts',
-	// 'src/client/scripts/esm/views/checkmatepractice/checkmatepractice.ts',
+	// 'src/client/scripts/views/leaderboard.ts',
+	// 'src/client/scripts/views/news/news.ts',
+	// 'src/client/scripts/views/guide.ts',
+	// 'src/client/scripts/views/admin.ts',
+	// 'src/client/scripts/views/checkmatepractice/checkmatepractice.ts',
 ];
 
 // Plugins ---------------------------------------------------------------------
@@ -159,15 +159,15 @@ const ManifestPlugin: Plugin = {
 
 /**
  * Reads esbuild's metafile and writes dist/manifest.json — a flat map of
- * logical entry-point names (e.g. "scripts/esm/views/index.ts") to their
- * web-relative output paths (e.g. "/scripts/esm/views/index-ABCD1234.js").
+ * logical entry-point names (e.g. "scripts/views/index.ts") to their
+ * web-relative output paths (e.g. "/scripts/views/index-ABCD1234.js").
  */
 function writeManifest(metafile: Metafile): void {
 	const manifest: Record<string, string> = {};
 
 	for (const [rawOutputPath, output] of Object.entries(metafile.outputs)) {
 		if (!output.entryPoint) continue; // Skip shared chunks — only track entry points.
-		const key = output.entryPoint.replace(/^src\/client\//, ''); // "src/client/scripts/esm/views/index.ts" → "scripts/esm/views/index.ts"
+		const key = output.entryPoint.replace(/^src\/client\//, ''); // "src/client/scripts/views/index.ts" → "scripts/views/index.ts"
 		manifest[key] = '/' + rawOutputPath.replace(/^dist\/client\//, '');
 	}
 
@@ -203,7 +203,7 @@ export async function buildClient(isDev: boolean): Promise<void> {
 		entryPoints: ENTRY_POINTS,
 		outdir: './dist/client',
 		entryNames: '[dir]/[name]-[hash]', // Content-hash output file names
-		chunkNames: 'scripts/esm/[name]-[hash]',
+		chunkNames: 'scripts/[name]-[hash]',
 		// Shared dependencies become their own chunks, so a page loads each once instead of
 		// once per entry point that bundles it.
 		splitting: true,
@@ -227,7 +227,7 @@ export async function buildClient(isDev: boolean): Promise<void> {
 
 /** Minifies the built scripts in place. */
 async function minifyScripts(): Promise<void> {
-	const dir = './dist/client/scripts/esm/';
+	const dir = './dist/client/scripts/';
 	const files = await glob('**/*.js', { cwd: dir, nodir: true });
 
 	for (const file of files) {

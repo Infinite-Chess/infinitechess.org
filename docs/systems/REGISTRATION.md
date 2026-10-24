@@ -92,7 +92,7 @@ to "head back to where you signed up."
 ### 3. Sign in — `GET /api/register/awaiting/status` (the poll)
 
 The register browser's awaiting page
-([register-awaiting.ts](/src/client/scripts/esm/views/register-awaiting.ts)) polls
+([register-awaiting.ts](/src/client/scripts/views/register-awaiting.ts)) polls
 `GET /api/register/awaiting/status` on a backoff schedule. The poll returns one of four statuses:
 `pending` → keep waiting; `expired`/`blacklisted` → reload (the server re-renders the right
 variant); `verified` → queue a toast and redirect home. On `verified` the server — because _this_
@@ -168,19 +168,19 @@ only for dev seeding and tests.
 
 ## File map
 
-| Concern                                                              | File                                                                                                                                                                                       |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Register POST, awaiting page-state, poll, change-email, availability | [registerController.ts](/src/server/controllers/registerController.ts)                                                                                                                     |
-| Verify page-state + promotion                                        | [verifyAccountController.ts](/src/server/controllers/verifyAccountController.ts)                                                                                                           |
-| Pending-table SQL & TTL constant                                     | [pendingRegistrationManager.ts](/src/server/database/pendingRegistrationManager.ts)                                                                                                        |
-| Pending-table schema                                                 | [databaseTables.ts](/src/server/database/databaseTables.ts)                                                                                                                                |
-| `add` / `promote` / availability reads                               | [memberManager.ts](/src/server/database/memberManager.ts)                                                                                                                                  |
-| Field validation (format, blacklist, MX)                             | [accountValidation.ts](/src/server/controllers/accountValidation.ts)                                                                                                                       |
-| Verification email                                                   | [emailService.ts](/src/server/utility/emailService.ts)                                                                                                                                     |
-| Turnstile verification                                               | [turnstile.ts](/src/server/controllers/turnstile.ts)                                                                                                                                       |
-| Email blacklist                                                      | [blacklistManager.ts](/src/server/database/blacklistManager.ts) / [awsWebhook.ts](/src/server/controllers/awsWebhook.ts)                                                                   |
-| Session issuance (poll only)                                         | [sessionManager.ts](/src/server/auth/sessionManager.ts)                                                                                                                                    |
-| Page routes / API routes                                             | [root.ts](/src/server/routes/root.ts) / [register.ts](/src/server/routes/register.ts), [api.ts](/src/server/routes/api.ts)                                                                 |
-| SSR templates                                                        | `src/server/views/register.njk`, `register-awaiting.njk`, `verify.njk`                                                                                                                     |
-| Client scripts                                                       | [register.ts](/src/client/scripts/esm/views/register.ts), [register-awaiting.ts](/src/client/scripts/esm/views/register-awaiting.ts), [verify.ts](/src/client/scripts/esm/views/verify.ts) |
-| Expiry sweep                                                         | [cleanupTasks.ts](/src/server/database/cleanupTasks.ts)                                                                                                                                    |
+| Concern                                                              | File                                                                                                                                                                           |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Register POST, awaiting page-state, poll, change-email, availability | [registerController.ts](/src/server/controllers/registerController.ts)                                                                                                         |
+| Verify page-state + promotion                                        | [verifyAccountController.ts](/src/server/controllers/verifyAccountController.ts)                                                                                               |
+| Pending-table SQL & TTL constant                                     | [pendingRegistrationManager.ts](/src/server/database/pendingRegistrationManager.ts)                                                                                            |
+| Pending-table schema                                                 | [databaseTables.ts](/src/server/database/databaseTables.ts)                                                                                                                    |
+| `add` / `promote` / availability reads                               | [memberManager.ts](/src/server/database/memberManager.ts)                                                                                                                      |
+| Field validation (format, blacklist, MX)                             | [accountValidation.ts](/src/server/controllers/accountValidation.ts)                                                                                                           |
+| Verification email                                                   | [emailService.ts](/src/server/utility/emailService.ts)                                                                                                                         |
+| Turnstile verification                                               | [turnstile.ts](/src/server/controllers/turnstile.ts)                                                                                                                           |
+| Email blacklist                                                      | [blacklistManager.ts](/src/server/database/blacklistManager.ts) / [awsWebhook.ts](/src/server/controllers/awsWebhook.ts)                                                       |
+| Session issuance (poll only)                                         | [sessionManager.ts](/src/server/auth/sessionManager.ts)                                                                                                                        |
+| Page routes / API routes                                             | [root.ts](/src/server/routes/root.ts) / [register.ts](/src/server/routes/register.ts), [api.ts](/src/server/routes/api.ts)                                                     |
+| SSR templates                                                        | `src/server/views/register.njk`, `register-awaiting.njk`, `verify.njk`                                                                                                         |
+| Client scripts                                                       | [register.ts](/src/client/scripts/views/register.ts), [register-awaiting.ts](/src/client/scripts/views/register-awaiting.ts), [verify.ts](/src/client/scripts/views/verify.ts) |
+| Expiry sweep                                                         | [cleanupTasks.ts](/src/server/database/cleanupTasks.ts)                                                                                                                        |

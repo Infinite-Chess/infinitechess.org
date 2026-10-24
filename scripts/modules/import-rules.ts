@@ -11,7 +11,7 @@
  * page-reach.ts, pkg-cost.ts — answer placement questions, and move-module.ts performs the
  * move.
  *
- * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off the front,
+ * All paths are "short form": "src/client/scripts/" or "src/" chopped off the front,
  * giving views/index/index.ts and shared/chess/util/typeutil.ts.
  */
 
@@ -107,7 +107,7 @@ const FLOOR_PURPOSE = 'any page';
  */
 const LADDERS: Record<RootName, Ladder> = {
 	client: {
-		root: 'src/client/scripts/esm/',
+		root: 'src/client/scripts/',
 		prefix: '',
 		ranks: [
 			{ units: ['util/', 'webgl/'], purpose: FLOOR_PURPOSE },

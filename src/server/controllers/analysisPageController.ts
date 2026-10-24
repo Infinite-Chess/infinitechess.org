@@ -35,7 +35,7 @@ interface AnalysisPageState {
 // Constants -------------------------------------------------------------------
 
 /** The analysis engine's worker script, as keyed in the asset manifest. */
-const ANALYSIS_WORKER_SOURCE = 'scripts/esm/views/analysis/apeironanalysis.worker.ts';
+const ANALYSIS_WORKER_SOURCE = 'scripts/views/analysis/apeironanalysis.worker.ts';
 
 /** Cache all variant groups and their variants. */
 const variantGroups = variantregistry.getGroupsWithVariants();

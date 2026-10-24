@@ -30,7 +30,7 @@ import { ENTRY_POINTS } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
-const E = 'src/client/scripts/esm/';
+const E = 'src/client/scripts/';
 
 /** Live script entries, read from the build so this can never drift. */
 const LIVE = ENTRY_POINTS.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));

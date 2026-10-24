@@ -1,0 +1,222 @@
+// src/client/scripts/views/analysis/gui/guianalysisactions.ts
+
+/**
+ * The analysis page's "More actions" menu — flip board, open the position in the editor,
+ * the "Continue from here" choices that hand the position off to the lobby, and Export ICN
+ * (copies the current game's ICN to the clipboard, also bound to the page's copy shortcut).
+ */
+
+import type { ModalMode } from '../../../handoffs/gamesetuphandoff.js';
+import type { GameFile, VariantOptions } from '../../../../../shared/chess/logic/gamefile.js';
+
+import icnconverter from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+
+import view from './guianalysisview.js';
+import toast from '../../../components/toast.js';
+import docutil from '../../../util/docutil.js';
+import movetree from '../movetree.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import gamesession from '../../../game/chess/gamesession.js';
+import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
+import editorhandoff from '../../../handoffs/editorhandoff.js';
+import analysisloader from '../analysisloader.js';
+import gamecompressor from '../../../chess/gamecompressor.js';
+import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
+
+// Elements --------------------------------------------------------------------
+
+const element_ActionsButton = document.getElementById('btn-analysis-actions') as HTMLButtonElement;
+const element_ActionsMenu = document.getElementById('analysis-actions-menu')!;
+const element_Flip = document.getElementById('btn-flip') as HTMLButtonElement;
+const element_EditCurrent = document.getElementById('btn-edit-current') as HTMLButtonElement;
+const element_ContinueFromHere = document.getElementById(
+	'btn-continue-from-here',
+) as HTMLButtonElement;
+const element_ContinueChoiceMenu = document.getElementById('continue-choice-menu')!;
+const element_ContinuePublicSeek = document.getElementById(
+	'continue-public-seek',
+) as HTMLButtonElement;
+const element_ContinuePlayComputer = document.getElementById(
+	'continue-play-computer',
+) as HTMLButtonElement;
+const element_ContinueChallengeFriend = document.getElementById(
+	'continue-challenge-friend',
+) as HTMLButtonElement;
+const element_ExportIcn = document.getElementById('btn-export-icn') as HTMLButtonElement;
+
+// The "More actions" menu -----------------------------------------------------
+
+/** Wires the "More actions" menu and its buttons. Called once by the page entry. */
+function init(): void {
+	element_ActionsButton.addEventListener('click', (e) => {
+		e.stopPropagation();
+		toggleActionsMenu();
+	});
+	document.addEventListener('pointerdown', (e) => {
+		if (!(e.target instanceof Node)) return;
+		if (
+			element_ActionsButton.contains(e.target) ||
+			element_ActionsMenu.contains(e.target) ||
+			element_ContinueChoiceMenu.contains(e.target)
+		)
+			return;
+		closeActionsMenu();
+		closeContinueFromHereChoice();
+	});
+	element_Flip.addEventListener('click', () => {
+		view.flipBoard();
+		closeActionsMenu();
+	});
+	element_EditCurrent.addEventListener('click', () => {
+		closeActionsMenu();
+		void openCurrentPositionInEditor();
+	});
+	element_ContinueFromHere.addEventListener('click', () => {
+		closeActionsMenu();
+		openContinueFromHereChoice();
+	});
+	element_ContinuePublicSeek.addEventListener(
+		'click',
+		() => void continueFromHereInLobby('online'),
+	);
+	element_ContinuePlayComputer.addEventListener(
+		'click',
+		() => void continueFromHereInLobby('computer'),
+	);
+	element_ContinueChallengeFriend.addEventListener(
+		'click',
+		() => void continueFromHereInLobby('friend'),
+	);
+	element_ExportIcn.addEventListener('click', () => {
+		closeActionsMenu();
+		void exportIcnToClipboard();
+	});
+	document.addEventListener('copy', onCopy);
+}
+
+/** Hands the current position off to the board editor and navigates there. */
+async function openCurrentPositionInEditor(): Promise<void> {
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
+	const position = exportCurrentPosition();
+	if (!position) return;
+
+	await editorhandoff.save(position.variantOptions);
+	window.location.assign('/editor');
+}
+
+/** Exports the current position as ICN plus the variant options needed to reload it, or undefined if nothing's loaded. */
+function exportCurrentPosition(): { icn: string; variantOptions: VariantOptions } | undefined {
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return undefined;
+
+	const presetOverrides = annotations.getPresetOverrides();
+	const position = gamecompressor.compressGamefile(gamefile, true, presetOverrides);
+	if (!position.position) return undefined;
+
+	const variantOptions: VariantOptions = {
+		fullMove: position.fullMove,
+		gameRules: position.gameRules,
+		position: position.position,
+		state_global: {
+			specialRights: position.state_global.specialRights ?? new Set(),
+			enpassant: position.state_global.enpassant,
+			moveRuleState: position.state_global.moveRuleState,
+		},
+	};
+
+	position.metadata = metadatautil.trimTo(
+		position.metadata,
+		metadatautil.SOURCE_VARIANT_METADATA,
+	);
+	const icn = icnconverter.LongToShort_Format(position, icnconverter.COMPACT_FORMAT_OPTIONS);
+	return { icn, variantOptions };
+}
+
+/** Copying anywhere on the page exports the game's ICN, as the Export ICN button does. */
+function onCopy(): void {
+	if (docutil.isCopyingText()) return;
+	void exportIcnToClipboard();
+}
+
+/** Copies the whole game's ICN to the clipboard. */
+async function exportIcnToClipboard(): Promise<void> {
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return;
+	if (await docutil.copyToClipboard(getGameICN(gamefile))) {
+		toast.show(t.analysis.clipboard.copied);
+	} else {
+		toast.show(t.analysis.clipboard.denied, { error: true });
+	}
+}
+
+/**
+ * Serializes the active line's every move, regardless of the viewed ply, to compact ICN.
+ * Only the loaded game itself carries its record metadata and time control — an edited
+ * line was never played, so either would misattribute it.
+ */
+function getGameICN(gamefile: GameFile): string {
+	const presetOverrides = annotations.getPresetOverrides();
+	const longformIn = gamecompressor.compressGamefile(gamefile, false, presetOverrides);
+	if (movetree.isLoadedGame(movetree.getActiveLine()))
+		longformIn.metadata = { ...longformIn.metadata, ...analysisloader.getRecordMetadata() };
+	else delete longformIn.metadata.TimeControl;
+	return icnconverter.LongToShort_Format(longformIn, icnconverter.COMPACT_FORMAT_OPTIONS);
+}
+
+/** Opens the "Continue from here" sub-menu, provided the position can be exported. */
+function openContinueFromHereChoice(): void {
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
+	if (!exportCurrentPosition()) return;
+
+	element_ContinueChoiceMenu.classList.remove('hidden');
+	syncActionsToggle();
+}
+
+/**
+ * Hands the current position off to the lobby's game setup modal and navigates there.
+ * The lobby auto-opens the modal in the given mode with the position pre-filled;
+ * any position errors surface there via the modal's own validation.
+ */
+async function continueFromHereInLobby(mode: ModalMode): Promise<void> {
+	if (gamesession.isLoading()) return gamesession.showPleaseWait();
+	const position = exportCurrentPosition();
+	if (!position) return;
+
+	await gamesetuphandoff.save({ icn: position.icn, mode });
+	window.location.assign('/');
+}
+
+/** Closes the "Continue from here" sub-menu. */
+function closeContinueFromHereChoice(): void {
+	element_ContinueChoiceMenu.classList.add('hidden');
+	syncActionsToggle();
+}
+
+/** Closes the actions menu. */
+function closeActionsMenu(): void {
+	element_ActionsMenu.classList.add('hidden');
+	syncActionsToggle();
+}
+
+/** Toggles the actions menu, closing the "Continue from here" sub-menu alongside it. */
+function toggleActionsMenu(): void {
+	const shouldOpen = element_ActionsMenu.classList.contains('hidden');
+	element_ContinueChoiceMenu.classList.add('hidden');
+	element_ActionsMenu.classList.toggle('hidden', !shouldOpen);
+	syncActionsToggle();
+}
+
+/** Keeps the toggle button's active state in sync with whether either menu is open. */
+function syncActionsToggle(): void {
+	const anyOpen =
+		!element_ActionsMenu.classList.contains('hidden') ||
+		!element_ContinueChoiceMenu.classList.contains('hidden');
+	element_ActionsButton.classList.toggle('active', anyOpen);
+	element_ActionsButton.setAttribute('aria-expanded', String(anyOpen));
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default { init };

@@ -67,8 +67,8 @@ literals, so a message assembled into a variable first would smuggle extra keys 
 
 Each side then declares its own `OutMessages` map
 ([socketSend.ts](/src/server/socket/socketSend.ts),
-[socketsend.ts](/src/client/scripts/esm/socket/socketsend.ts)) for the direction it sends, which is
-what makes `socketSend.send(ws, 'game', 'move', …)` fully type-checked on route/action/value.
+[socketsend.ts](/src/client/scripts/socket/socketsend.ts)) for the direction it sends, which is what
+makes `socketSend.send(ws, 'game', 'move', …)` fully type-checked on route/action/value.
 
 ### Adding a message
 
@@ -78,7 +78,7 @@ what makes `socketSend.send(ws, 'game', 'move', …)` fully type-checked on rout
    [lobbyRouter.ts](/src/server/game/seeksmanager/lobbyRouter.ts),
    [gameRouter.ts](/src/server/game/gamemanager/gameRouter.ts),
    [challengeRouter.ts](/src/server/game/seeksmanager/challengeRouter.ts)). Client: the `general`
-   switch in [socketreceive.ts](/src/client/scripts/esm/socket/socketreceive.ts), or a `SocketBus`
+   switch in [socketreceive.ts](/src/client/scripts/socket/socketreceive.ts), or a `SocketBus`
    listener for `lobby`/`game`/`challenge`.
 3. Send it through that direction's send function — never `socket.send` directly.
 4. **Bump `PROTOCOL_VERSION`** — unless prod is already behind it (see below).
@@ -155,8 +155,8 @@ Two different questions, two different receipts. **Neither is ever echoed back**
   stuck outstanding forever is worse than one acked after failing.
 
 The client's echo round-trip time is what feeds the ping meter
-([pingmeter.ts](/src/client/scripts/esm/components/header/pingmeter.ts)) and the clock ping
-adjustment ([pingmanager.ts](/src/client/scripts/esm/views/game/pingmanager.ts)).
+([pingmeter.ts](/src/client/scripts/components/header/pingmeter.ts)) and the clock ping adjustment
+([pingmanager.ts](/src/client/scripts/views/game/pingmanager.ts)).
 
 **Echoes are deliberately unlogged and unmetered server-side.** An echo isn't traffic the client
 chose to send — we oblige one per message _we_ send — so charging their rate budget for our own send
@@ -306,7 +306,7 @@ abandonment, an abort if not yet resignable, or an engine win by disconnect in a
 
 ### Client-side close handling
 
-[socketclose.ts](/src/client/scripts/esm/socket/socketclose.ts) clears pending timers, dispatches
+[socketclose.ts](/src/client/scripts/socket/socketclose.ts) clears pending timers, dispatches
 `closed` (then `connection-lost` if involuntary _and_ we had subs), clears its sub flags, and:
 
 | Trigger                              | Response                                                                                    |
@@ -347,8 +347,8 @@ server-side by `subscribe`, which resolves participant-vs-spectator itself from
 `getSocketRoleInGame()` (subscription metadata, falling back to identity for a fresh reconnect).
 Likewise `challenge` is attached by its own `subscribe`.
 
-Client-side, [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts) tracks only `lobby`,
-`game` and `challenge` booleans — a spectator's attachment is also `game`. This is a **local intent
+Client-side, [socketsubs.ts](/src/client/scripts/socket/socketsubs.ts) tracks only `lobby`, `game`
+and `challenge` booleans — a spectator's attachment is also `game`. This is a **local intent
 record**, not authoritative state: it exists so a reconnect knows what to re-request, and so the
 socket knows when it may auto-close. It is wiped on every close.
 
@@ -357,7 +357,7 @@ A second socket subscribing as the same player **in a game** evicts the first: t
 
 ### Game (re)subscription: `subscribe` vs. `subscriberematch`
 
-The client's [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts) tracks a monotonic
+The client's [onlinegame.ts](/src/client/scripts/views/game/onlinegame.ts) tracks a monotonic
 `stage`, which decides what a reconnect asks for:
 
 | Stage         | Meaning                                        | Reconnect sends                    |
@@ -375,14 +375,14 @@ id isn't in memory — the client then reloads so SSR serves the dead review pag
 so they reload into SSR the same way.
 
 A dead game is loaded over **HTTP**, not the socket
-([deadgameloader.ts](/src/client/scripts/esm/views/game/deadgameloader.ts)) — it normalizes the
-fetched state into the same `gamestate` shape and no socket is opened at all.
+([deadgameloader.ts](/src/client/scripts/views/game/deadgameloader.ts)) — it normalizes the fetched
+state into the same `gamestate` shape and no socket is opened at all.
 
 ## Resync and desync
 
 `gamestate` is the universal repair message.
-[resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts) rewinds and forwards our board until
-it matches the server's move list, validates each opponent move as it goes (reporting an illegal one
+[resyncer.ts](/src/client/scripts/views/game/resyncer.ts) rewinds and forwards our board until it
+matches the server's move list, validates each opponent move as it goes (reporting an illegal one
 where the game permits it), and applies the conclusion.
 
 - If the server's list is a strict **prefix** of ours, the game hasn't concluded, and we're allowed
@@ -413,7 +413,7 @@ Messages arriving before the gamefile's logical part exists are **queued** and r
 
 ## The SocketBus
 
-[SocketBus.ts](/src/client/scripts/esm/socket/SocketBus.ts) is the client's typed event bus; nothing
+[SocketBus.ts](/src/client/scripts/socket/SocketBus.ts) is the client's typed event bus; nothing
 imports a socket handler directly, handlers self-register.
 
 | Event                          | Fired when                                                                                 |
@@ -428,7 +428,7 @@ imports a socket handler directly, handlers self-register.
 
 ## The intent layer (client)
 
-[socketintents.ts](/src/client/scripts/esm/socket/socketintents.ts) sits above the raw transport for
+[socketintents.ts](/src/client/scripts/socket/socketintents.ts) sits above the raw transport for
 **user-triggered** actions (create/cancel/accept seek, create engine game, accept/cancel a
 challenge, abort, resign, engine resign, claim victory/draw, draw offers, rematch offers). Two
 problems it solves:
@@ -471,11 +471,10 @@ no difference whether they were one version behind or two.
   and every inbound message to `wsInLog/`, every outbound to `wsOutLog/`. Messages are truncated at
   2048 chars. Each upgrade gets an `R` correlation id, each inbound message a `W` one, so every log
   line a message produces shares an id.
-- **Client** ([socketlogger.ts](/src/client/scripts/esm/socket/socketlogger.ts)) is a dev toggle,
-  off by default — press `3` on the game page
-  ([toggles.ts](/src/client/scripts/esm/game/debug/toggles.ts)). On, it prints routed traffic and
-  adds 1 s of simulated send latency. Echoes _we_ send are never printed; incoming ones only if
-  `PRINT_ECHOS` is flipped.
+- **Client** ([socketlogger.ts](/src/client/scripts/socket/socketlogger.ts)) is a dev toggle, off by
+  default — press `3` on the game page ([toggles.ts](/src/client/scripts/game/debug/toggles.ts)).
+  On, it prints routed traffic and adds 1 s of simulated send latency. Echoes _we_ send are never
+  printed; incoming ones only if `PRINT_ECHOS` is flipped.
 - **Server-side simulated latency**: `SIMULATED_WEBSOCKET_LATENCY_MS` in
   [socketSend.ts](/src/server/socket/socketSend.ts). Guarded to throw if non-zero in production.
 - Malformed messages are logged (`logZodError` → errLog server-side, console client-side) and **not
@@ -523,14 +522,14 @@ no difference whether they were one version behind or two.
 | Game count, featured games: selection + broadcasts | [featuredGames.ts](/src/server/game/featured/featuredGames.ts), [featuredSelection.ts](/src/server/game/featured/featuredSelection.ts)                                                                                                                                                                                |
 | Challenge-page subscribe, expiry, pushes           | [challengeManager.ts](/src/server/game/seeksmanager/challengeManager.ts), [activeSeeks.ts](/src/server/game/seeksmanager/activeSeeks.ts)                                                                                                                                                                              |
 | In-game status to lobby + challenge pages          | [inGameStatus.ts](/src/server/game/seeksmanager/inGameStatus.ts)                                                                                                                                                                                                                                                      |
-| **Client** — connection lifecycle, reconnect       | [socketconnection.ts](/src/client/scripts/esm/socket/socketconnection.ts)                                                                                                                                                                                                                                             |
-| Send, echo timers, inactivity watchdog             | [socketsend.ts](/src/client/scripts/esm/socket/socketsend.ts)                                                                                                                                                                                                                                                         |
-| Validate, echo, dispatch                           | [socketreceive.ts](/src/client/scripts/esm/socket/socketreceive.ts)                                                                                                                                                                                                                                                   |
-| Close handling, reconnect policy, timeouts         | [socketclose.ts](/src/client/scripts/esm/socket/socketclose.ts)                                                                                                                                                                                                                                                       |
-| Local subscription record                          | [socketsubs.ts](/src/client/scripts/esm/socket/socketsubs.ts)                                                                                                                                                                                                                                                         |
-| Intent hold/lock layer                             | [socketintents.ts](/src/client/scripts/esm/socket/socketintents.ts)                                                                                                                                                                                                                                                   |
-| Event bus                                          | [SocketBus.ts](/src/client/scripts/esm/socket/SocketBus.ts)                                                                                                                                                                                                                                                           |
-| This tab's own id                                  | [ourtabid.ts](/src/client/scripts/esm/util/ourtabid.ts)                                                                                                                                                                                                                                                               |
-| Game-route handling, stage machine, resync         | [onlinegamerouter.ts](/src/client/scripts/esm/views/game/onlinegamerouter.ts), [onlinegame.ts](/src/client/scripts/esm/views/game/onlinegame.ts), [resyncer.ts](/src/client/scripts/esm/views/game/resyncer.ts)                                                                                                       |
-| Lobby-route handling                               | [index.ts](/src/client/scripts/esm/views/index/index.ts), [lobby.ts](/src/client/scripts/esm/views/index/lobby.ts)                                                                                                                                                                                                    |
-| Challenge-route handling                           | [challenge.ts](/src/client/scripts/esm/views/challenge/challenge.ts), [challengecard.ts](/src/client/scripts/esm/views/challenge/challengecard.ts)                                                                                                                                                                    |
+| **Client** — connection lifecycle, reconnect       | [socketconnection.ts](/src/client/scripts/socket/socketconnection.ts)                                                                                                                                                                                                                                                 |
+| Send, echo timers, inactivity watchdog             | [socketsend.ts](/src/client/scripts/socket/socketsend.ts)                                                                                                                                                                                                                                                             |
+| Validate, echo, dispatch                           | [socketreceive.ts](/src/client/scripts/socket/socketreceive.ts)                                                                                                                                                                                                                                                       |
+| Close handling, reconnect policy, timeouts         | [socketclose.ts](/src/client/scripts/socket/socketclose.ts)                                                                                                                                                                                                                                                           |
+| Local subscription record                          | [socketsubs.ts](/src/client/scripts/socket/socketsubs.ts)                                                                                                                                                                                                                                                             |
+| Intent hold/lock layer                             | [socketintents.ts](/src/client/scripts/socket/socketintents.ts)                                                                                                                                                                                                                                                       |
+| Event bus                                          | [SocketBus.ts](/src/client/scripts/socket/SocketBus.ts)                                                                                                                                                                                                                                                               |
+| This tab's own id                                  | [ourtabid.ts](/src/client/scripts/util/ourtabid.ts)                                                                                                                                                                                                                                                                   |
+| Game-route handling, stage machine, resync         | [onlinegamerouter.ts](/src/client/scripts/views/game/onlinegamerouter.ts), [onlinegame.ts](/src/client/scripts/views/game/onlinegame.ts), [resyncer.ts](/src/client/scripts/views/game/resyncer.ts)                                                                                                                   |
+| Lobby-route handling                               | [index.ts](/src/client/scripts/views/index/index.ts), [lobby.ts](/src/client/scripts/views/index/lobby.ts)                                                                                                                                                                                                            |
+| Challenge-route handling                           | [challenge.ts](/src/client/scripts/views/challenge/challenge.ts), [challengecard.ts](/src/client/scripts/views/challenge/challengecard.ts)                                                                                                                                                                            |

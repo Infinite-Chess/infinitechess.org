@@ -126,9 +126,9 @@ Runtime consumption:
   `window.analysisPageData.engineUrl`. The engine **name+version** is SSR'd separately — nunjucks
   computes an `engineNameVersioned` global from `manifest['engineVersion']` and injects it into the
   panel; the client never handles the version.
-- [ceval.ts](/src/client/scripts/esm/views/analysis/ceval.ts) spawns the worker and posts
-  `cmd:'init'` with `engineUrl`.
-  [apeironanalysis.worker.ts](/src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts) does
+- [ceval.ts](/src/client/scripts/views/analysis/ceval.ts) spawns the worker and posts `cmd:'init'`
+  with `engineUrl`.
+  [apeironanalysis.worker.ts](/src/client/scripts/views/analysis/apeironanalysis.worker.ts) does
   `import(engineUrl)` → `wasm.default()` (loads the sibling `.wasm`). If the build exports
   `initThreadPool` it runs multithreaded **Lazy SMP** (needs the `snippets/` and a
   cross-origin-isolated page); otherwise it degrades to single-thread.
@@ -171,15 +171,15 @@ auto-reconnect). Engine download/extract time never touches users.
 
 ## File map
 
-| Concern                                                  | File                                                                                                                                |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Download + extract + version parse                       | [build/engine-wasm.ts](/build/engine-wasm.ts)                                                                                       |
-| Build orchestration (engine steps before esbuild)        | [build/index.ts](/build/index.ts)                                                                                                   |
-| Manifest fold-in (`engine`, `engineVersion`)             | [build/client.ts](/build/client.ts)                                                                                                 |
-| Engine crate metadata (display name, version formatting) | [src/shared/chess/util/engine.ts](/src/shared/chess/util/engine.ts)                                                                 |
-| `engineNameVersioned` SSR global                         | [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts)                                                                     |
-| Analysis page SSR (engineUrl, engine name)               | [src/server/views/analysis.njk](/src/server/views/analysis.njk)                                                                     |
-| Worker: load glue, init threads                          | [src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts](/src/client/scripts/esm/views/analysis/apeironanalysis.worker.ts) |
-| Worker lifecycle / eval driver                           | [src/client/scripts/esm/views/analysis/ceval.ts](/src/client/scripts/esm/views/analysis/ceval.ts)                                   |
-| Site deploy job                                          | [.github/workflows/deploy.yml](/.github/workflows/deploy.yml)                                                                       |
-| Engine build+release job                                 | `Infinite-Chess/apeiron` → `.github/workflows/build-wasm.yml` (separate adjacent repo)                                              |
+| Concern                                                  | File                                                                                                                        |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Download + extract + version parse                       | [build/engine-wasm.ts](/build/engine-wasm.ts)                                                                               |
+| Build orchestration (engine steps before esbuild)        | [build/index.ts](/build/index.ts)                                                                                           |
+| Manifest fold-in (`engine`, `engineVersion`)             | [build/client.ts](/build/client.ts)                                                                                         |
+| Engine crate metadata (display name, version formatting) | [src/shared/chess/util/engine.ts](/src/shared/chess/util/engine.ts)                                                         |
+| `engineNameVersioned` SSR global                         | [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts)                                                             |
+| Analysis page SSR (engineUrl, engine name)               | [src/server/views/analysis.njk](/src/server/views/analysis.njk)                                                             |
+| Worker: load glue, init threads                          | [src/client/scripts/views/analysis/apeironanalysis.worker.ts](/src/client/scripts/views/analysis/apeironanalysis.worker.ts) |
+| Worker lifecycle / eval driver                           | [src/client/scripts/views/analysis/ceval.ts](/src/client/scripts/views/analysis/ceval.ts)                                   |
+| Site deploy job                                          | [.github/workflows/deploy.yml](/.github/workflows/deploy.yml)                                                               |
+| Engine build+release job                                 | `Infinite-Chess/apeiron` → `.github/workflows/build-wasm.yml` (separate adjacent repo)                                      |

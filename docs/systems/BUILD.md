@@ -39,14 +39,14 @@ into `dist/tsc/shared/` (a referenced project may not be `noEmit`); client and s
 
 Bundled with **esbuild** as ES modules (`format: 'esm'`, `bundle: true`, `splitting: true`) →
 `dist/client/`. Code splitting means shared deps become separate hashed chunks
-(`scripts/esm/[name]-[hash]`), loaded once per page instead of duplicated into each bundle.
+(`scripts/[name]-[hash]`), loaded once per page instead of duplicated into each bundle.
 
 ### ⚠️ Entry points are a manual list
 
 `ENTRY_POINTS` in [build/client.ts](/build/client.ts) is a hand-maintained array. **An ES module or
 CSS file is only built if it is an entry point or is imported (transitively) by one.** When you add
 a page, you must add BOTH its stylesheet (`src/client/css/foo.css`) and its client script
-(`src/client/scripts/esm/views/foo.ts`) to `ENTRY_POINTS`, or they silently won't be built and the
+(`src/client/scripts/views/foo.ts`) to `ENTRY_POINTS`, or they silently won't be built and the
 template's manifest lookup will fail. CSS files are listed as entry points directly (esbuild treats
 `.css` as bundleable).
 
@@ -76,15 +76,15 @@ Because filenames are content-hashed, templates can't hardcode them. The flow:
 
 1. The build emits a `metafile`; `ManifestPlugin` calls `writeManifest()` on every (re)build's
    `onEnd`.
-2. `dist/manifest.json` maps **logical name → hashed web path**, e.g. `"scripts/esm/views/login.ts"`
-   → `"/scripts/esm/views/login-ABCD1234.js"` and `"css/login.css"` → `"/css/login-XXXX.css"`. (Keys
-   strip `src/client/`; only true entry points are included — shared chunks are skipped.) It also
-   carries the engine package URL and build version under `engine` and `engineVersion`.
+2. `dist/manifest.json` maps **logical name → hashed web path**, e.g. `"scripts/views/login.ts"` →
+   `"/scripts/views/login-ABCD1234.js"` and `"css/login.css"` → `"/css/login-XXXX.css"`. (Keys strip
+   `src/client/`; only true entry points are included — shared chunks are skipped.) It also carries
+   the engine package URL and build version under `engine` and `engineVersion`.
 3. [src/server/config/manifest.ts](/src/server/config/manifest.ts) loads and caches it;
    [src/server/config/nunjucks.ts](/src/server/config/nunjucks.ts) exposes it as the Nunjucks global
    `manifest`. Templates reference assets via `{{ manifest['css/login.css'] }}` /
-   `{{ manifest['scripts/esm/views/login.ts'] }}`. **The lookup key is the logical name, not the
-   hashed one.**
+   `{{ manifest['scripts/views/login.ts'] }}`. **The lookup key is the logical name, not the hashed
+   one.**
 4. Dev only: nunjucks `fs.watch`es the manifest and refreshes the global on change, so HTML always
    points at the current hash after a rebuild.
 
@@ -121,8 +121,8 @@ appear before the manifest, and the server hard-throws at startup if the manifes
 
 ## Adding a new page — checklist
 
-1. `src/server/views/foo.njk`, `src/client/css/foo.css`, `src/client/scripts/esm/views/foo.ts`.
+1. `src/server/views/foo.njk`, `src/client/css/foo.css`, `src/client/scripts/views/foo.ts`.
 2. **Register `foo.css` and `foo.ts` in `ENTRY_POINTS`** in [build/client.ts](/build/client.ts).
 3. Add the route in [root.ts](/src/server/routes/root.ts); template links assets via
-   `{{ manifest['css/foo.css'] }}` and `{{ manifest['scripts/esm/views/foo.ts'] }}`.
+   `{{ manifest['css/foo.css'] }}` and `{{ manifest['scripts/views/foo.ts'] }}`.
 4. Rebuild (or rely on dev watchers) so cpx copies the `.njk` and the manifest regenerates.

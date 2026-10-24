@@ -1,0 +1,107 @@
+// src/client/scripts/chess/enginewasm.ts
+
+/**
+ * Loads an engine's wasm glue and shared-memory thread pool, and adapts the
+ * engine's own piece codes to the site's ICN abbreviations.
+ */
+
+import type { Player, RawType } from '../../../shared/chess/util/typeutil.js';
+import type {
+	EngineWasmInitOutput,
+	EngineWasmModule,
+} from '../../../shared/chess/util/engineglue.js';
+
+import math from '../../../shared/util/math/math.js';
+import icnposition from '../../../shared/chess/logic/icn/icnposition.js';
+import typeutil, { rawTypes as r } from '../../../shared/chess/util/typeutil.js';
+
+// Wasm Loading ----------------------------------------------------------------
+
+/** Most Lazy SMP threads an engine feature uses without the user choosing more. */
+const DEFAULT_THREAD_CAP = 4;
+/** The engine's own thread cap, the most its 512 MB memory fits beside a 64 MB hash. */
+const MAX_THREAD_CAP = 20;
+
+/**
+ * Whether this browser can run a multithreaded engine build. Requires cross-origin
+ * isolation, without which wasm shared memory isn't backed by a SharedArrayBuffer.
+ */
+const BROWSER_SUPPORTS_THREADS: boolean = (() => {
+	try {
+		if (!globalThis.crossOriginIsolated) return false;
+		if (typeof SharedArrayBuffer !== 'function' || typeof Atomics !== 'object') return false;
+		if (typeof WebAssembly !== 'object') return false;
+		const memory = new WebAssembly.Memory({ shared: true, initial: 1, maximum: 2 });
+		return memory.buffer instanceof SharedArrayBuffer;
+	} catch {
+		return false;
+	}
+})();
+
+/**
+ * Loads the unbundled engine glue and initializes its optional thread pool.
+ * `beforeThreadPool` runs after init but before the pool starts, for setup the
+ * search threads must already see (e.g. hash size).
+ */
+async function load<T extends EngineWasmModule>(
+	engineUrl: string,
+	threads: number,
+	beforeThreadPool?: (wasm: T) => void,
+): Promise<{ wasm: T; output: EngineWasmInitOutput; multithreaded: boolean }> {
+	const glueUrl = new URL(engineUrl, self.location.origin).href;
+	const wasm = (await import(glueUrl)) as T;
+	const output = await wasm.default();
+	beforeThreadPool?.(wasm);
+	const multithreaded = typeof wasm.initThreadPool === 'function';
+	if (threads > 1 && multithreaded) await wasm.initThreadPool!(threads);
+	return { wasm, output, multithreaded };
+}
+
+/** Returns {@link maxThreads}, capped for features that pick the thread count on the user's behalf. */
+function defaultThreads(reserve: number = 0): number {
+	return Math.min(maxThreads(reserve), DEFAULT_THREAD_CAP);
+}
+
+/** Returns the usable hardware-thread count after an optional reservation, up to the engine's cap. */
+function maxThreads(reserve: number = 0): number {
+	if (!BROWSER_SUPPORTS_THREADS) return 1;
+	return math.clamp((navigator.hardwareConcurrency || 2) - reserve, 1, MAX_THREAD_CAP);
+}
+
+// Piece Codes -----------------------------------------------------------------
+
+/**
+ * Apeiron's own single-letter piece codes (its `PieceType::to_str()`, src/board.rs), which
+ * it uses for the `promotion` field of the moves it hands back. They are arbitrary engine
+ * identifiers — not derivable from the site's abbreviations — so the mapping lives here,
+ * while the abbreviations themselves stay owned by icnconverter's `PIECE_CODES`.
+ */
+const ENGINE_PROMOTION_RAWTYPES: Record<string, RawType> = {
+	k: r.KING, p: r.PAWN, n: r.KNIGHT, b: r.BISHOP,
+	r: r.ROOK, q: r.QUEEN, m: r.AMAZON, h: r.HAWK,
+	c: r.CHANCELLOR, a: r.ARCHBISHOP, g: r.GUARD, l: r.CAMEL,
+	i: r.GIRAFFE, z: r.ZEBRA, e: r.CENTAUR, y: r.ROYALQUEEN,
+	d: r.ROYALCENTAUR, s: r.KNIGHTRIDER, u: r.HUYGEN, o: r.ROSE,
+}; // prettier-ignore
+
+/**
+ * Translates one of the engine's promotion codes into the site's ICN piece abbreviation, cased for `mover`.
+ * @throws On an unknown code, which means {@link ENGINE_PROMOTION_RAWTYPES} has drifted
+ * from the engine's piece list.
+ */
+function getPromotionAbbr(engineCode: string, mover: Player): string {
+	const rawType = ENGINE_PROMOTION_RAWTYPES[engineCode.toLowerCase()];
+	if (rawType === undefined) throw Error(`Unknown engine promotion code: (${engineCode})`);
+	return icnposition.getAbbrFromType(typeutil.buildType(rawType, mover));
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Wasm Loading
+	load,
+	defaultThreads,
+	maxThreads,
+	// Piece Codes
+	getPromotionAbbr,
+};

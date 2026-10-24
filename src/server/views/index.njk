@@ -103,7 +103,7 @@
 							<div>{{ t.lobby.table.time }}</div>
 							<div>{{ t.lobby.table.mode }}</div>
 						</div>
-						{# Seek row markup is defined by createSeekRowVNode() in src/client/scripts/esm/views/index/lobby.ts. #}
+						{# Seek row markup is defined by createSeekRowVNode() in src/client/scripts/views/index/lobby.ts. #}
 						<div id="lobby-tbody"></div>
 					</div>
 				</div>
@@ -238,5 +238,5 @@
 {% endblock %}
 
 {% block script %}
-<script type="module" src="{{ manifest['scripts/esm/views/index/index.ts'] }}"></script>
+<script type="module" src="{{ manifest['scripts/views/index/index.ts'] }}"></script>
 {% endblock %}

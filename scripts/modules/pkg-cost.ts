@@ -112,7 +112,7 @@ function kb(n: number): string {
 const scripts = ENTRY_POINTS.filter((e) => /\.(ts|js)$/.test(e));
 for (const e of scripts) {
 	const trail = pathToPackage(e, pkg);
-	const label = e.replace('src/client/scripts/esm/', '');
+	const label = e.replace('src/client/scripts/', '');
 	if (!trail) {
 		console.log(`  no ${pkg}   ${label}`);
 		continue;

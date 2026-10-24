@@ -111,7 +111,7 @@ function getPageState(req: Request): GamePageState | undefined {
 
 	// Only a live engine game still needs the assets to run the engine client-side.
 	if (engineGame && game) {
-		const workerSource = `scripts/esm/game/chess/engines/${engineGame.engine}.worker.ts`;
+		const workerSource = `scripts/game/chess/engines/${engineGame.engine}.worker.ts`;
 		engineGame = { ...engineGame, engineAssets: manifest.getEngineAssets(workerSource) };
 	}
 

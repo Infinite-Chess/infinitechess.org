@@ -1,0 +1,218 @@
+// src/client/scripts/util/docutil.ts
+
+/**
+ * This script contains utility methods for the document/window objects, or the page.
+ *
+ * ZERO dependencies.
+ */
+
+// Constants -------------------------------------------------------------------
+
+/** SVG default namespace */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * True if the page is running on a local environment, which enables some dev/debugging
+ * features. Read once at load — the hostname cannot change without a navigation.
+ */
+const DEV_BUILD: boolean = isLocalEnvironment();
+
+/** The `<input>` types that take typed text. */
+const TEXT_INPUT_TYPES = new Set(['text', 'password', 'search', 'email', 'url', 'tel', 'number']);
+
+// Environment -----------------------------------------------------------------
+
+/**
+ * Determines if the current page is running on a local environment (localhost or local IP).
+ * @returns *true* if the page is running locally, *false* otherwise.
+ */
+function isLocalEnvironment(): boolean {
+	const hostname = window.location.hostname;
+
+	// Check for common localhost hostnames and local IP ranges
+	return (
+		hostname === 'localhost' || // Localhost
+		hostname === '127.0.0.1' || // Loopback IP address
+		hostname.startsWith('192.168.') || // Private IPv4 address space
+		hostname.startsWith('10.') || // Private IPv4 address space
+		(hostname.startsWith('172.') &&
+			parseInt(hostname.split('.')[1]!, 10) >= 16 &&
+			parseInt(hostname.split('.')[1]!, 10) <= 31) // Private IPv4 address space
+	);
+}
+
+// Clipboard -------------------------------------------------------------------
+
+/**
+ * Copies the provided text to the operating system's clipboard.
+ * @returns Whether it succeeded. The reason for a failure is logged, never returned.
+ */
+async function copyToClipboard(text: string): Promise<boolean> {
+	try {
+		await navigator.clipboard.writeText(text);
+		return true;
+	} catch (error) {
+		console.error('Failed to copy to clipboard', error);
+		return false;
+	}
+}
+
+/**
+ * Reads the operating system's clipboard.
+ * @returns Its text, or undefined if access was denied. The reason for a failure is
+ * logged, never returned.
+ */
+async function readFromClipboard(): Promise<string | undefined> {
+	try {
+		return await navigator.clipboard.readText();
+	} catch (error) {
+		console.error('Failed to read from clipboard', error);
+		return undefined;
+	}
+}
+
+/**
+ * Whether a copy or cut belongs to the user's text (a field being typed in, or a selection),
+ * rather than to the page.
+ */
+function isCopyingText(): boolean {
+	return isTypingInTextField() || !!window.getSelection()?.toString();
+}
+
+// Focus -----------------------------------------------------------------------
+
+/**
+ * Whether the user is typing in a text field (text input, textarea, or contenteditable),
+ * meaning keyboard and clipboard events belong to it rather than to the page.
+ */
+function isTypingInTextField(): boolean {
+	const active = document.activeElement;
+	return (
+		(active instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(active.type)) ||
+		active instanceof HTMLTextAreaElement ||
+		(active instanceof HTMLElement && active.isContentEditable)
+	);
+}
+
+// Device ----------------------------------------------------------------------
+
+/** Returns true if the current device has a mouse pointer. */
+function isMouseSupported(): boolean {
+	// "pointer: coarse" are devices will less pointer accuracy (not "fine" like a mouse)
+	// See W3 documentation: https://www.w3.org/TR/mediaqueries-4/#mf-interaction
+	// USING "any-pointer" CAUSES false positives on mobile devices!
+	return window.matchMedia('(pointer: fine)').matches;
+}
+
+/**
+ * Calls back whenever the pixel density alone changes, e.g. the window moving to a retina
+ * monitor — which resizes no element, so a ResizeObserver never sees it.
+ * @param signal - Stops the watching once aborted.
+ */
+function onPixelDensityChange(callback: () => void, signal?: AbortSignal): void {
+	const query = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+	query.addEventListener(
+		'change',
+		() => {
+			callback();
+			onPixelDensityChange(callback, signal); // The query names one exact density, so watch the new one.
+		},
+		{ once: true, signal },
+	);
+}
+
+// URLs ------------------------------------------------------------------------
+
+/**
+ * Gets the last segment of the current URL without query parameters.
+ * "/member/jacob?lng=en-US" ==> "jacob"
+ */
+function getLastSegmentOfURL(): string {
+	const url = new URL(window.location.href);
+	const pathname = url.pathname;
+	const segments = pathname.split('/').filter(Boolean); // Remove empty segments caused by leading/trailing slashes
+	return segments[segments.length - 1] ?? ''; // Fallback to an empty string if no segment exists
+}
+
+// Cookies ---------------------------------------------------------------------
+
+/**
+ * Searches the document for the specified cookie, and returns it if found.
+ * @param cookieName The name of the cookie you would like to retrieve.
+ * @returns The cookie, if it exists, otherwise, undefined.
+ */
+function getCookieValue(cookieName: string): string | undefined {
+	const cookieArray = document.cookie.split('; ');
+
+	for (let i = 0; i < cookieArray.length; i++) {
+		const cookiePair = cookieArray[i]!.split('=');
+		if (cookiePair[0] === cookieName) return cookiePair[1];
+	}
+
+	return; // Typescript is angry without this
+}
+
+/**
+ * Sets a cookie in the document
+ * @param cookieName - The name of the cookie
+ * @param value - The value of the cookie
+ * @param days - How many days until the cookie should expire.
+ */
+function updateCookie(cookieName: string, value: string, days: number): void {
+	let expires = '';
+	if (days) {
+		const date = new Date();
+		date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+		expires = '; expires=' + date.toUTCString();
+	}
+	document.cookie = cookieName + '=' + (value || '') + expires + '; path=/';
+}
+
+/**
+ * Deletes a document cookie.
+ * @param cookieName - The name of the cookie you would like to delete.
+ */
+function deleteCookie(cookieName: string): void {
+	// The path must match the cookie's, '/' for every cookie of ours, or this misses it on sub-paths.
+	document.cookie = cookieName + '=; Max-Age=-99999999; path=/';
+}
+
+// DOM -------------------------------------------------------------------------
+
+/**
+ * Parse an SVG string into a live SVGElement.
+ * @param svgText — a string containing valid `<svg>…</svg>` markup
+ * @returns the newly created SVG element
+ */
+function createSvgElementFromString(svgText: string): SVGElement {
+	const parser = new DOMParser();
+	const doc = parser.parseFromString(svgText, 'image/svg+xml');
+	const svg = doc.querySelector('svg');
+	if (!svg) throw new Error('Failed to parse SVG string.');
+	return svg;
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Constants
+	SVG_NS,
+	DEV_BUILD,
+	// Clipboard
+	copyToClipboard,
+	readFromClipboard,
+	isCopyingText,
+	// Focus
+	isTypingInTextField,
+	// Device
+	isMouseSupported,
+	onPixelDensityChange,
+	// URLs
+	getLastSegmentOfURL,
+	// Cookies
+	getCookieValue,
+	updateCookie,
+	deleteCookie,
+	// DOM
+	createSvgElementFromString,
+};

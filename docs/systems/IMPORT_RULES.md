@@ -8,7 +8,7 @@ client pages may ship which code. Enforced by [import-rules.ts](/scripts/modules
 
 ## The model
 
-- Three roots, each with a ladder: `src/client/scripts/esm/`, `src/server/`, `src/shared/`.
+- Three roots, each with a ladder: `src/client/scripts/`, `src/server/`, `src/shared/`.
 - Imports only ever point **DOWN** a ladder. Units on ONE line share a rank and may import each
   other sideways — bands are deliberate, not exceptions to suppress.
 - Cross-root: tsconfig project references stop shared → client/server and client ↔ server (see
@@ -22,7 +22,7 @@ client pages may ship which code. Enforced by [import-rules.ts](/scripts/modules
       **subject** wins: every rung names a kind of thing. A file does NOT slide down a rung just
       because its lowest consumer allows it. A file that fits no rung's subject is carrying two
       responsibilities — split it rather than picking the least bad rung.
-- All paths inside the checker are "short form": `src/client/scripts/esm/` or `src/` chopped off the
+- All paths inside the checker are "short form": `src/client/scripts/` or `src/` chopped off the
   front (`views/game/gui/x.ts`, `shared/chess/util/typeutil.ts`).
 
 ## The three ladders
