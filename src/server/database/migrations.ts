@@ -90,6 +90,7 @@ function run(): void {
 	addModifierColumnsIfNeeded();
 	dropRatingAbuseTableIfPresent();
 	makeLeaderboardsRdLastUpdateDateNotNullIfNeeded();
+	dropLivePlayerGamesGameIndexIfPresent();
 }
 
 // Individual migrations -------------------------------------------------------
@@ -480,6 +481,19 @@ function makeLeaderboardsRdLastUpdateDateNotNullIfNeeded(): void {
 		db.run('CREATE INDEX idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC)'); // prettier-ignore
 	})();
 	console.log('Temporary DB migration: made leaderboards.rd_last_update_date NOT NULL.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
+ *
+ * Production's `live_player_games` carries an `idx_live_player_games_game` index that the
+ * schema doesn't declare, redundant with its primary key, which already leads with `game_id`.
+ * This only logs when the index is found and dropped.
+ */
+function dropLivePlayerGamesGameIndexIfPresent(): void {
+	if (!db.get(`SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_live_player_games_game'`)) return; // prettier-ignore
+	db.run('DROP INDEX idx_live_player_games_game');
+	console.log('Temporary DB migration: dropped the idx_live_player_games_game index.');
 }
 
 // Exports ---------------------------------------------------------------------
