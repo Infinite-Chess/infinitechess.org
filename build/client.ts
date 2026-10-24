@@ -70,13 +70,6 @@ export const ENTRY_POINTS = [
 
 	// Other
 	'src/client/scripts/audio/processors/downsampler/DownsamplerProcessor.ts',
-
-	// Dormant — pages whose code is not yet repurposed for the redesign.
-	// 'src/client/scripts/views/leaderboard.ts',
-	// 'src/client/scripts/views/news/news.ts',
-	// 'src/client/scripts/views/guide.ts',
-	// 'src/client/scripts/views/admin.ts',
-	// 'src/client/scripts/views/checkmatepractice/checkmatepractice.ts',
 ];
 
 // Plugins ---------------------------------------------------------------------
