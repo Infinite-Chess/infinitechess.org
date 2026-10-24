@@ -181,8 +181,8 @@ function findImportBoundaries(lines: string[]): { start: number; end: number } |
 		else if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
 			continue;
 		}
-		// Check for import
-		else if (trimmed.startsWith('import ')) {
+		// Check for import. Unindented only: an indented one is nested, e.g. in a `declare module` block.
+		else if (lines[i]!.startsWith('import ')) {
 			if (start === -1) start = i;
 			end = i;
 
