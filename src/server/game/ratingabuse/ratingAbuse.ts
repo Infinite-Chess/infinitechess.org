@@ -25,10 +25,8 @@ import clockutil from '../../../shared/chess/util/clockutil.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
-import logEvents from '../../utility/logEvents.js';
 import abuseChecks from './abuseChecks.js';
 import abuseReport from './abuseReport.js';
-import gameUtility from '../gamemanager/gameUtility.js';
 import gamesManager from '../../database/gamesManager.js';
 import deadGameState from '../gamemanager/deadGameState.js';
 import memberManager from '../../database/memberManager.js';
@@ -50,23 +48,13 @@ function measureAfterGame(servergame: ServerGame): void {
 	// Skip aborted games: they don't add to the rated game count, so they'd repeat the last check.
 	if (servergame.gameConclusion!.victor === undefined) return;
 
-	// Do not monitor suspicion levels, if game belongs to no valid leaderboard_id
-	const leaderboard_id = leaderboardregistry.ofVariant(servergame.match.variant);
-	if (leaderboard_id === undefined) return;
+	const leaderboard_id = leaderboardregistry.ofVariant(servergame.match.variant)!; // Will always be defined if the game is rated.
 
-	for (const [playerStr, player] of Object.entries(servergame.match.playerData)) {
-		if (!player.identifier.signedIn) {
-			void logEvents.addAndPrint(
-				`Unexpected: Player "${playerStr}" is not signed in. Game: ${gameUtility.getSimplifiedGameString(servergame)}`,
-				'errLog',
-			);
-			continue;
-		}
-		const user_id = player.identifier.user_id;
-		const username = player.identifier.username;
+	for (const { identifier } of Object.values(servergame.match.playerData)) {
+		if (!identifier.signedIn) continue; // Narrows the type only: rated games seat members alone.
 
 		try {
-			measurePlayer(user_id, username, leaderboard_id);
+			measurePlayer(identifier.user_id, identifier.username, leaderboard_id);
 		} catch {
 			// Already logged. Skip this player's check
 		}
