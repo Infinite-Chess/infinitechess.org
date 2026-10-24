@@ -276,6 +276,8 @@ function addEmptySinceColumnToLiveGamesIfNeeded(): void {
  */
 function dropLiveGamesConclusionColumnsIfPresent(): void {
 	if (!db.columnExists('live_games', 'delete_time')) return; // Already migrated.
+	if (db.get('SELECT 1 FROM live_games WHERE conclusion_condition IS NOT NULL'))
+		throw new Error('live_games holds a concluded game the old build has yet to log, which dropping its conclusion would lose. Run the old build until it logs it (about 10 seconds), then upgrade again.'); // prettier-ignore
 	for (const column of [
 		'conclusion_condition',
 		'conclusion_victor',
