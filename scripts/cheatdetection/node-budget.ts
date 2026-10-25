@@ -80,7 +80,7 @@ function judge(
 	move: string,
 	nodes: number,
 ): MoveOutcome | undefined {
-	const inLines = !before.refused && before.lines.some((line) => moveEvidence.sameMove(line.move, move)); // prettier-ignore
+	const inLines = !before.refused && before.lines.some((line) => line.move === move); // prettier-ignore
 	const after = inLines ? before : analyse(game, [...played, move], nodes);
 	return moveEvidence.gather([before, after], [move], 0)[0]?.outcome;
 }

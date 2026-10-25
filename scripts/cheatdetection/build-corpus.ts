@@ -25,7 +25,6 @@ import timeutil from '../../src/shared/util/timeutil.js';
 import icnconverter from '../../src/shared/chess/logic/icn/icnconverter.js';
 
 import gameReplay from '../../src/server/game/cheatdetection/gameReplay.js';
-import moveEvidence from '../../src/server/game/cheatdetection/moveEvidence.js';
 import ratingCalculation from '../../src/server/utility/ratingCalculation.js';
 
 import corpus from './lib/corpus.js';
@@ -92,7 +91,7 @@ function pending(games: GameData[], allLines: boolean): PendingMove[] {
 				picks.level6,
 			];
 			for (const move of moves) {
-				if (move === undefined || position.lines.some((l) => moveEvidence.sameMove(l.move, move))) continue; // prettier-ignore
+				if (move === undefined || position.lines.some((l) => l.move === move)) continue; // prettier-ignore
 				const key = corpus.afterKey(game.gameId, ply, move);
 				if (!done.has(key)) out.set(key, { gameId: game.gameId, ply, move });
 			}

@@ -116,7 +116,7 @@ function loadCorpus(): GameData[] {
 
 /** The key of a position reached by playing `move` at `ply` of a game. */
 function afterKey(gameId: number, ply: number, move: string): string {
-	return `${gameId}/${ply}/${move.split('=')[0]}`;
+	return `${gameId}/${ply}/${move}`;
 }
 
 /** Every position the off-line pass analysed. */

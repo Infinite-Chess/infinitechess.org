@@ -48,6 +48,9 @@ describe('moveEvidence.gather', () => {
 		expect(judge(position(LINES), '2,2>2,3', position([line('3,3>3,4', -900)]))[0]!.outcome).toBe('miss'); // prettier-ignore
 		const close = [line('1,1>1,2', 50), line('1,1>1,3', 48), line('1,1>1,4', 46), line('1,1>1,5', 44), line('1,1>1,6', 42)]; // prettier-ignore
 		expect(judge(position(close), '2,2>2,3', position([line('3,3>3,4', -45)]))[0]!.outcome).toBe('good'); // prettier-ignore
+		// An underpromotion on the square the first line promotes on is not that line.
+		const promotions = [line('1,7>1,8=Q', 50), ...LINES.slice(1)];
+		expect(judge(position(promotions), '1,7>1,8=B', position([line('3,3>3,4', 50)]))[0]!.outcome).toBe('miss'); // prettier-ignore
 	});
 
 	it('leaves out a move outside the lines whose position after it has no lines to value it by', () => {

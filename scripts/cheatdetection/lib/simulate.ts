@@ -89,15 +89,11 @@ function cheat(
 	const missing: CheatedGame['missing'] = [];
 	const random = rng(game.gameId * 7 + gameIndex);
 	for (const { ply, engine } of choose(game, parity, style, honest, random)) {
-		if (moveEvidence.sameMove(engine, game.moves[ply]!)) continue;
+		if (engine === game.moves[ply]) continue;
 		moves[ply] = engine;
 		const before = game.positions[ply]!;
 		// Judged by its own line.
-		if (
-			!before.refused &&
-			before.lines.some((line) => moveEvidence.sameMove(line.move, engine))
-		)
-			continue;
+		if (!before.refused && before.lines.some((line) => line.move === engine)) continue;
 		const analysed = after.get(corpus.afterKey(game.gameId, ply, engine));
 		if (analysed) afters.set(ply, analysed);
 		else missing.push({ gameId: game.gameId, ply, move: engine });

@@ -94,7 +94,7 @@ function judge(
 	const best = lineValues[0]!;
 	if (best > DECIDED_WIN_PROBABILITY || best < 1 - DECIDED_WIN_PROBABILITY) return undefined;
 
-	const rank = before.lines.findIndex((line) => sameMove(line.move, move));
+	const rank = before.lines.findIndex((line) => line.move === move);
 	const value = rank >= 0 ? lineValues[rank]! : valueOutsideLines(after, lineValues);
 	if (value === undefined) return undefined;
 
@@ -152,16 +152,10 @@ function winProbability(score: EngineScore): number {
 	return winchance.cpToWinProbability(cp);
 }
 
-/** Whether two compact tokens are the same move, ignoring which piece a promotion makes. */
-function sameMove(a: string, b: string): boolean {
-	return a.split('=')[0] === b.split('=')[0];
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	gather,
 	judge,
 	winProbability,
-	sameMove,
 };
