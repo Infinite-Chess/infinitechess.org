@@ -382,12 +382,12 @@ their rating evolved by the site's Glicko code (`account-odds.ts`, 4,000 cheater
 | Established 2800 ± 60 | 9%  | 29% | 53% | 80%  | 95%  | 99%  |
 | Established 3100 ± 60 | 3%  | 12% | 28% | 52%  | 81%  | 93%  |
 
-A higher rating's ceiling leaves less room above it. Prod's highest rating is 2406; winning every
-game against 2000-rated opponents takes 28 games to reach 2500 and 645 to reach 2800. Honest games
-between cheated ones slow a case (10 cheated games among 20: 86%, against 100% for 10 in a row),
-since a run must span both. Partial engine use is largely invisible to move analysis alone: a 20–40%
-engine user looks like a stronger honest player. Catching them is the job of interaction data
-(below).
+A higher rating's ceiling leaves less room above it; above ~2000 these rows are extrapolated (see
+Known holes). Prod's highest rating is 2406; winning every game against 2000-rated opponents takes
+28 games to reach 2500 and 645 to reach 2800. Honest games between cheated ones slow a case (10
+cheated games among 20: 86%, against 100% for 10 in a row), since a run must span both. Partial
+engine use is largely invisible to move analysis alone: a 20–40% engine user looks like a stronger
+honest player. Catching them is the job of interaction data (below).
 
 The site's limited bot levels (1–7; 8 is full strength) are built to play like humans of their
 level, so copying one looks the same; they aren't modelled, since their tuning changes. Level 6
