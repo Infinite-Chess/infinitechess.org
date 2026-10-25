@@ -2,19 +2,12 @@
 
 /**
  * This module manages refresh tokens in the database, providing functions
- * to add, find, delete, and update them in the `refresh_tokens` table,
- * and to validate a presented refresh token against it.
+ * to add, find, delete, and update them in the `refresh_tokens` table.
  */
-
-import type { Request } from 'express';
-import type { TokenPayload } from '../utility/tokenSigner.js';
 
 import timeutil from '../../shared/util/timeutil.js';
 
 import db from './database.js';
-import ip from '../utility/ip.js';
-import tokenSigner from '../utility/tokenSigner.js';
-import memberManager from './memberManager.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -50,38 +43,41 @@ const GRACE_PERIOD_MS = timeutil.toMillis(10, 'seconds');
 // Finding ---------------------------------------------------------------------
 
 /**
- * Finds a refresh token in the database.
+ * Finds a refresh token in the database, unless it was consumed past its grace period.
  * @param token - The JWT refresh token string.
  * @returns The token record if found, otherwise undefined.
  * @throws If a database error occurs.
  */
-function find(token: string): RefreshTokenRecord | undefined {
+function findLive(token: string): RefreshTokenRecord | undefined {
 	const query = `
         SELECT token, user_id, created_at, expires_at, is_persistent, consumed_at, ip_address
         FROM refresh_tokens
         WHERE token = ?
+          AND (consumed_at IS NULL OR consumed_at >= ?)
     `;
 	return db.call(
-		() => db.get<RefreshTokenRecord>(query, [token]),
+		() => db.get<RefreshTokenRecord>(query, [token, Date.now() - GRACE_PERIOD_MS]),
 		'Database error while finding refresh token',
 	);
 }
 
 /**
- * Finds refresh token entries in the database associated with a list of user_ids
+ * Finds the IP address of every refresh token belonging to the given users.
  * @param user_id_list - A list of user IDs
- * @returns A list of RefreshTokenRecords connected to the users in the user_id_list
+ * @returns One entry per refresh token, pairing its user with its last known IP address.
  * @throws If a database error occurs.
  */
-function findAllForUsers(user_id_list: number[]): RefreshTokenRecord[] {
+function findIPsForUsers(
+	user_id_list: number[],
+): Pick<RefreshTokenRecord, 'user_id' | 'ip_address'>[] {
 	const placeholders = user_id_list.map(() => '?').join(', ');
 	const query = `
-        SELECT token, user_id, created_at, expires_at, ip_address
+        SELECT user_id, ip_address
         FROM refresh_tokens
         WHERE user_id IN (${placeholders})
     `;
 	return db.call(
-		() => db.all<RefreshTokenRecord>(query, user_id_list),
+		() => db.all<Pick<RefreshTokenRecord, 'user_id' | 'ip_address'>>(query, user_id_list),
 		`Database error while finding refresh tokens for users ${JSON.stringify(user_id_list)}`,
 	);
 }
@@ -90,26 +86,26 @@ function findAllForUsers(user_id_list: number[]): RefreshTokenRecord[] {
 
 /**
  * Adds a new refresh token record to the database.
- * @param req - The Express request object to get the IP address.
  * @param userId - The ID of the user the token belongs to.
  * @param token - The new JWT refresh token string.
  * @param expiryMillis - How long, in milliseconds, until the token expires.
  * @param isPersistent - Whether this is a persistent ("keep me logged in") session.
+ * @param ip - The IP address the token was issued to, if known.
  * @throws If a database error occurs.
  */
 function add(
-	req: Request,
 	userId: number,
 	token: string,
 	expiryMillis: number,
 	isPersistent: boolean,
+	ip: string | undefined,
 ): void {
 	const now = Date.now();
 	const query = `
         INSERT INTO refresh_tokens (token, user_id, created_at, expires_at, is_persistent, ip_address)
         VALUES (?, ?, ?, ?, ?, ?)
 	`;
-	const ip_address = ip.get(req) || null;
+	const ip_address = ip || null;
 	db.call(
 		() =>
 			db.run(query, [
@@ -196,92 +192,18 @@ function removeExpired(): number {
 	);
 }
 
-// Validating presented tokens -------------------------------------------------
-
-/**
- * Checks if a presented refresh token is valid: not expired, nor tampered, and it's
- * still in the database (not manually invalidated by logging out, or deleting the account).
- * As side effects, deletes dead tokens found, updates the stored IP if it changed,
- * and updates the member's last_seen.
- * @param IP - Has a chance to not be defined on HTTP requests.
- */
-function validate(
-	token: string,
-	IP?: string,
-): { payload: TokenPayload; tokenRecord: RefreshTokenRecord } | undefined {
-	// Decode the token
-	const payload = tokenSigner.verify(token);
-	if (!payload) return undefined; // Expired or tampered
-
-	let tokenRecord: RefreshTokenRecord | undefined;
-	try {
-		// Check against the database
-		tokenRecord = resolveValidTokenRecord(token, IP);
-		if (!tokenRecord) return undefined; // Not in the database (logged out, account deleted, or rotated past its grace period)
-	} catch {
-		// DB error (already logged)
-		return undefined;
-	}
-
-	try {
-		memberManager.updateLastSeen(payload.user_id);
-	} catch {
-		// DB error (already logged). Token is still valid
-	}
-	return { payload, tokenRecord };
-}
-
-/**
- * Checks if a specific refresh token is present in the database, and has not expired,
- * deleting it if it has expired, and updating its last used IP address if it has changed.
- * If not present, it means it has either expired, been manually invalidated by the user logging out, or deleting their account.
- *
- * Returns the token record if found and valid, otherwise undefined.
- * @throws If any database error occurs during the process.
- */
-function resolveValidTokenRecord(token: string, IP?: string): RefreshTokenRecord | undefined {
-	// Find the token in the database.
-	const tokenRecord = find(token);
-
-	if (!tokenRecord) return; // Token must have been manually invalidated by the user logging out, or deleting their account.
-
-	const now = Date.now();
-
-	// Check if it is naturally expired.
-	if (tokenRecord.expires_at < now) {
-		// The token is expired, remove it from the database for cleanup.
-		remove(token);
-		return;
-	}
-
-	// Check if it was consumed (replaced) and the grace period has ended.
-	if (tokenRecord.consumed_at !== null && now - tokenRecord.consumed_at > GRACE_PERIOD_MS) {
-		// The token is "dead" (grace period over). Remove it from the database.
-		remove(token);
-		return;
-	}
-
-	// Update the IP address if it has changed.
-	const IP_New: string | null = IP || null;
-	if (IP_New !== tokenRecord.ip_address) {
-		updateIP(token, IP_New);
-	}
-
-	return tokenRecord;
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
 	// Finding
-	findAllForUsers,
+	findLive,
+	findIPsForUsers,
 	// Adding & Updating
 	add,
+	updateIP,
 	markConsumed,
 	// Deleting
 	remove,
 	removeAllForUser,
 	removeExpired,
-	// Validating presented tokens
-	validate,
 };

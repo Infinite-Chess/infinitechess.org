@@ -147,25 +147,18 @@ function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvi
 		opponentFrequency[opponent_id] = (opponentFrequency[opponent_id] || 0) + 1;
 	}
 
-	// Get the refresh tokens of the user and all his opponents
-	const refreshTokenEntries = refreshTokenManager.findAllForUsers([
-		user_id,
-		...unique_user_id_list,
-	]);
+	// Get the refresh tokens' IP addresses of the user and all his opponents
+	const records = refreshTokenManager.findIPsForUsers([user_id, ...unique_user_id_list]);
 
-	// Extract the IP addresses of the user and his opponents from the refresh tokens
+	// Split the IP addresses between the user and his opponents
 	const ipAddresses: string[] = []; // ip_addresses of the user
 	const opponentIpAddresses: Record<number, string[]> = {}; // ip_addresses of his unique opponents
-	for (const refreshToken of refreshTokenEntries) {
-		if (refreshToken.ip_address === null) continue;
+	for (const record of records) {
+		if (record.ip_address === null) continue;
 
-		// If the refresh token belongs to the user, add his IP address to ipAddresses
-		if (refreshToken.user_id === user_id) ipAddresses.push(refreshToken.ip_address);
-		// Else, add the IP address to the opponent's list
-		else if (refreshToken.user_id in opponentFrequency) {
-			opponentIpAddresses[refreshToken.user_id] =
-				opponentIpAddresses[refreshToken.user_id] || []; // Initialize if undefined
-			opponentIpAddresses[refreshToken.user_id]!.push(refreshToken.ip_address);
+		if (record.user_id === user_id) ipAddresses.push(record.ip_address);
+		else if (record.user_id in opponentFrequency) {
+			(opponentIpAddresses[record.user_id] ??= []).push(record.ip_address);
 		}
 	}
 	// Compare them, wherever both sides have IP addresses to compare

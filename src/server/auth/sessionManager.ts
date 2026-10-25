@@ -11,6 +11,7 @@ import type { RefreshTokenRecord } from '../database/refreshTokenManager.js';
 
 import timeutil from '../../shared/util/timeutil.js';
 
+import ip from '../utility/ip.js';
 import prefsCookie from '../cookies/prefsCookie.js';
 import tokenSigner from '../utility/tokenSigner.js';
 import memberInfoCookie from '../cookies/memberInfoCookie.js';
@@ -57,7 +58,7 @@ function freshen(
 	// Mark old token as consumed so it has a short grace period before it is fully invalidated.
 	refreshTokenManager.markConsumed(tokenRecord.token);
 	// Add the new token to the database.
-	refreshTokenManager.add(req, user_id, newToken, expiryMillis, keepLoggedIn);
+	refreshTokenManager.add(user_id, newToken, expiryMillis, keepLoggedIn, ip.get(req));
 
 	// Send the new token to the user in their cookies.
 	createSessionCookies(res, user_id, username, newToken, expiryMillis);
@@ -90,7 +91,7 @@ function create(
 	const refreshToken = tokenSigner.sign(user_id, username, roles, expiryMillis);
 
 	// Save the refresh token to the database
-	refreshTokenManager.add(req, user_id, refreshToken, expiryMillis, keepLoggedIn);
+	refreshTokenManager.add(user_id, refreshToken, expiryMillis, keepLoggedIn, ip.get(req));
 
 	createSessionCookies(res, user_id, username, refreshToken, expiryMillis);
 }
