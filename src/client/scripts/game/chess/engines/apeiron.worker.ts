@@ -96,6 +96,7 @@ function respondToMoveRequest(data: ApeironMoveRequest): void {
 		// Send generated moves for debugging if requested
 		if (data.requestGeneratedMoves === true) {
 			const legalMoves: WasmMove[] = engine.get_legal_moves_js();
+			// Destinations only: the debug overlay highlights squares, so promotions are dropped.
 			const formattedMoves: string[] = legalMoves.map((m) => `${m.from}>${m.to}`);
 			// Send the generated moves back to the main thread for rendering
 			postMessage({ type: 'generatedMoves', data: formattedMoves } satisfies EngineResponse);
