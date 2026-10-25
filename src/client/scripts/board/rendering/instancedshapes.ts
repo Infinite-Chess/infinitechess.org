@@ -1,0 +1,339 @@
+// src/client/scripts/board/rendering/instancedshapes.ts
+
+/**
+ * This script calculates the vertex data of a single instance
+ * of several different kinds of shapes.
+ *
+ * Many are used for rendering legal moves, like the square, dot, or corner triangles.
+ * The plus sign is used for special rights highlighting.
+ */
+
+import type { Color } from '../../../../shared/types/color.js';
+import type { DoubleCoords } from '../../../../shared/util/coordutil.js';
+
+import meshes from './meshes.js';
+import primitives from './primitives.js';
+import preferences from '../../util/preferences.js';
+import boardgeometry from './boardgeometry.js';
+
+// Constants -------------------------------------------------------------------
+
+/**
+ * Properties for the dots that are rendered on legal squares without an occupying piece.
+ */
+const DOTS = {
+	/** The radius of the dots, where 1 equals the width of one square. */
+	radius: 0.16,
+	/** How many points the edge of the dots have. */
+	resolution: 32,
+	/**
+	 * This will be added to the theme's legal move color's opacity,
+	 * as dots are a little less noticeable than big squares,
+	 * so increasing their opacity helps.
+	 */
+	opacityOffset: 0.2,
+};
+
+/**
+ * Properties for the corner triangles that are rendered on legal squares with an occupied piece,
+ * they typically signify legal captures.
+ */
+const CORNER_TRIS = {
+	/** The radius of the corner triangles, where 1 equals the width of one square. */
+	triWidth: 0.5,
+	/**
+	 * This will be added to the theme's legal move color's opacity,
+	 * as the triangles are a little less noticeable than big squares,
+	 * so increasing their opacity helps.
+	 */
+	opacityOffset: 0.2,
+};
+
+/** Properties for the box outline that is rendered over the hovered square during dragging. */
+const BOX_OUTLINE = {
+	/** The width of the outline border, where 1 equals the width of one square. */
+	edgeWidth: 0.07,
+};
+
+/**
+ * Properties for the plus sign that is rendered when the special rights highlighting
+ * debug mode is enabled, next to each piece that has its special rights.
+ */
+const PLUS_SIGN = {
+	/** Default position of the plus sign center within a square ([0,0] is square center, [0.5,0.5] is top-right corner) */
+	position: [0.3, 0.3] as DoubleCoords,
+	/** Length of both arms (horizontal and vertical) where 1.0 spans full square */
+	armLength: 0.4,
+	/** Width of the plus sign arms */
+	edgeWidth: 0.12,
+	/** Added to color alpha for better visibility */
+	opacityOffset: 0.2,
+};
+
+// Functions -------------------------------------------------------------------
+
+/**
+ * Generates the legal move square instance mesh, centered on [0,0]
+ * @param color - The color [r, g, b, a]. This should MATCH the current theme's legal move color!
+ * @returns The vertex data for the legal move square.
+ */
+function getDataLegalMoveSquare(color: Color): number[] {
+	const coords: DoubleCoords = [0, 0]; // The instance is going to be at [0,0]
+
+	// Generate and return the vertex data for the legal move square.
+	return meshes.QuadModel_Color(coords, color);
+}
+
+/**
+ * Generates the legal move dot instance mesh, centered on [0,0]
+ * @param color - The color [r, g, b, a]. This should MATCH the current theme's legal move color! An offset will be applied to its opacity.
+ * @returns The vertex data for the "legal move dot" (circle).
+ */
+function getDataLegalMoveDot(color: Color): number[] {
+	const colorCopy: Color = [...color]; // Don't mutate the original
+	colorCopy[3] += DOTS.opacityOffset; // Add the offset
+	colorCopy[3] = Math.min(colorCopy[3], 1); // Cap it
+
+	const coords: DoubleCoords = [0, 0]; // The instance is going to be at [0,0]
+	// The calculated dot's x & y have to be the VISUAL-CENTER of the square, not exactly at [0,0]
+	const x = coords[0] + (1 - boardgeometry.getSquareCenterAsNumber()) - 0.5;
+	const y = coords[1] + (1 - boardgeometry.getSquareCenterAsNumber()) - 0.5;
+
+	// Generate and return the vertex data for the legal move dot (circle)
+	return primitives.Circle(x, y, DOTS.radius, DOTS.resolution, colorCopy);
+}
+
+/**
+ * Generates vertex data for four corner triangles used for legal move indicators,
+ * with opacity adjustment and proper visual centering.
+ * @param color - Color [r, g, b, a] from theme (opacity offset will be applied)
+ * @returns Vertex data for four corner triangles
+ */
+function getDataLegalMoveCornerTris(color: [number, number, number, number]): number[] {
+	// Adjust opacity
+	// eslint-disable-next-line prefer-const
+	let [r, g, b, a] = color;
+	a = Math.min(a + CORNER_TRIS.opacityOffset, 1);
+
+	// Calculate visual center position (original [0,0] instance adjusted for board centering)
+	const boardCenterAdjust = 1 - boardgeometry.getSquareCenterAsNumber() - 0.5;
+	const centerX = boardCenterAdjust;
+	const centerY = boardCenterAdjust;
+
+	const vertices: number[] = [];
+	const squareHalfSize = 0.5;
+	const triHalfWidth = CORNER_TRIS.triWidth / 2;
+
+	// Helper to add a single corner triangle
+	const addTriangle = (cornerX: number, cornerY: number, dx: number, dy: number): void => {
+		// prettier-ignore
+		vertices.push(
+			cornerX, cornerY, r, g, b, a,
+			cornerX + dx, cornerY, r, g, b, a,
+			cornerX, cornerY + dy, r, g, b, a
+		);
+	};
+
+	// Generate all four corners
+	addTriangle(centerX - squareHalfSize, centerY + squareHalfSize, triHalfWidth, -triHalfWidth); // Top-left
+	addTriangle(centerX + squareHalfSize, centerY + squareHalfSize, -triHalfWidth, -triHalfWidth); // Top-right
+	addTriangle(centerX - squareHalfSize, centerY - squareHalfSize, triHalfWidth, triHalfWidth); // Bottom-left
+	addTriangle(centerX + squareHalfSize, centerY - squareHalfSize, -triHalfWidth, triHalfWidth); // Bottom-right
+
+	return vertices;
+}
+
+/**
+ * Generates vertex data for a plus sign using 3 non-overlapping rectangles
+ */
+function getDataPlusSign(color: Color): number[] {
+	// eslint-disable-next-line prefer-const
+	let [r, g, b, a] = color;
+	a = Math.min(a + PLUS_SIGN.opacityOffset, 1);
+
+	const halfEdge = PLUS_SIGN.edgeWidth / 2;
+	const armLength = PLUS_SIGN.armLength;
+	const [posX, posY] = PLUS_SIGN.position;
+
+	const vertices: number[] = [];
+
+	// Helper to add quad vertices (2 triangles)
+	// prettier-ignore
+	const addQuad = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void => {
+		// Triangle 1
+		vertices.push(x1, y1, r, g, b, a);
+		vertices.push(x2, y2, r, g, b, a);
+		vertices.push(x3, y3, r, g, b, a);
+		// Triangle 2
+		vertices.push(x3, y3, r, g, b, a);
+		vertices.push(x4, y4, r, g, b, a);
+		vertices.push(x1, y1, r, g, b, a);
+	};
+
+	// Horizontal arm (left segment)
+	addQuad(
+		posX - armLength / 2,
+		posY + halfEdge, // top-left
+		posX - halfEdge,
+		posY + halfEdge, // top-right
+		posX - halfEdge,
+		posY - halfEdge, // bottom-right
+		posX - armLength / 2,
+		posY - halfEdge, // bottom-left
+	);
+	// Horizontal arm (right segment)
+	addQuad(
+		posX + halfEdge,
+		posY + halfEdge, // top-left
+		posX + armLength / 2,
+		posY + halfEdge, // top-right
+		posX + armLength / 2,
+		posY - halfEdge, // bottom-right
+		posX + halfEdge,
+		posY - halfEdge, // bottom-left
+	);
+	// Vertical trunk
+	addQuad(
+		posX - halfEdge,
+		posY + armLength / 2, // top-left
+		posX + halfEdge,
+		posY + armLength / 2, // top-right
+		posX + halfEdge,
+		posY - armLength / 2, // bottom-right
+		posX - halfEdge,
+		posY - armLength / 2, // bottom-left
+	);
+
+	return vertices;
+}
+
+/**
+ * Generates the vertex data for a box outline (frame) indicating a hovered square, centered on [0,0].
+ * The outline wraps exactly around the full square tile. The color is taken from the current theme.
+ * @returns The vertex data for the box outline.
+ */
+function getDataBoxOutline(): number[] {
+	const [r, g, b, a] = preferences.getBoxOutlineColor();
+
+	const squareCenter = boardgeometry.getSquareCenterAsNumber();
+	const centerX = 0.5 - squareCenter;
+	const centerY = 0.5 - squareCenter;
+
+	const halfBox = 0.5;
+	const outerLeft = centerX - halfBox;
+	const outerRight = centerX + halfBox;
+	const outerTop = centerY + halfBox;
+	const outerBottom = centerY - halfBox;
+
+	const edgeWidth = BOX_OUTLINE.edgeWidth;
+	const innerLeft = outerLeft + edgeWidth;
+	const innerRight = outerRight - edgeWidth;
+	const innerTop = outerTop - edgeWidth;
+	const innerBottom = outerBottom + edgeWidth;
+
+	const vertices: number[] = [];
+
+	// Helper to add a rectangle (two triangles)
+	// prettier-ignore
+	function addRectangle(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): void {
+		vertices.push(
+			x1, y1,   r, g, b, a, // Triangle 1, Vertex 1
+			x2, y2,   r, g, b, a, // Triangle 1, Vertex 2
+			x3, y3,   r, g, b, a, // Triangle 1, Vertex 3
+			x3, y3,   r, g, b, a, // Triangle 2, Vertex 1
+			x4, y4,   r, g, b, a, // Triangle 2, Vertex 2
+			x1, y1,   r, g, b, a  // Triangle 2, Vertex 3
+		);
+	}
+
+	// Top edge
+	addRectangle(
+		outerLeft,
+		outerTop, // Outer top-left
+		outerRight,
+		outerTop, // Outer top-right
+		innerRight,
+		innerTop, // Inner top-right
+		innerLeft,
+		innerTop, // Inner top-left
+	);
+
+	// Bottom edge
+	addRectangle(
+		outerLeft,
+		outerBottom, // Outer bottom-left
+		innerLeft,
+		innerBottom, // Inner bottom-left
+		innerRight,
+		innerBottom, // Inner bottom-right
+		outerRight,
+		outerBottom, // Outer bottom-right
+	);
+
+	// Left edge
+	addRectangle(
+		outerLeft,
+		outerTop, // Outer top-left
+		innerLeft,
+		innerTop, // Inner top-left
+		innerLeft,
+		innerBottom, // Inner bottom-left
+		outerLeft,
+		outerBottom, // Outer bottom-left
+	);
+
+	// Right edge
+	addRectangle(
+		outerRight,
+		outerTop, // Outer top-right
+		outerRight,
+		outerBottom, // Outer bottom-right
+		innerRight,
+		innerBottom, // Inner bottom-right
+		innerRight,
+		innerTop, // Inner top-right
+	);
+
+	return vertices;
+}
+
+/**
+ * Generates the vertex data for a single square draw with a texture, centered on [0,0]
+ * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
+ */
+function getDataTexture(inverted: boolean): number[] {
+	let { left, right, bottom, top } = meshes.getCoordBoxModel([0, 0]);
+	if (inverted) {
+		[left, right] = [right, left]; // Swap left and right
+		[bottom, top] = [top, bottom]; // Swap bottom and top
+	}
+	return primitives.Quad_Texture(left, bottom, right, top, 0, 0, 1, 1);
+}
+
+/**
+ * Generates the vertex data for a single square draw with a colored texture, centered on [0,0]
+ * @param inverted - Whether to invert the position data. Should be true if we're viewing black's perspective.
+ */
+function getDataColoredTexture(color: Color, inverted: boolean): number[] {
+	let left = -0.5;
+	let right = 0.5;
+	let bottom = -0.5;
+	let top = 0.5;
+	if (inverted) {
+		[left, right] = [right, left]; // Swap left and right
+		[bottom, top] = [top, bottom]; // Swap bottom and top
+	}
+	return primitives.Quad_ColorTexture(left, bottom, right, top, 0, 0, 1, 1, ...color);
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	getDataLegalMoveSquare,
+	getDataLegalMoveDot,
+	getDataLegalMoveCornerTris,
+	getDataPlusSign,
+	getDataBoxOutline,
+	getDataTexture,
+	getDataColoredTexture,
+};

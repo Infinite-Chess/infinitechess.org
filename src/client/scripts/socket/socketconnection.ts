@@ -1,0 +1,253 @@
+// src/client/scripts/socket/socketconnection.ts
+
+/**
+ * Manages the websocket connection lifecycle: opening, closing,
+ * reconnecting, and resubscribing after unexpected disconnections.
+ * Also owns the socket instance, and the timer that closes it once idle.
+ */
+
+import type { ClosureReason } from '../../../shared/util/socketutil.js';
+
+import tabid from '../../../shared/util/tabid.js';
+import socketutil from '../../../shared/util/socketutil.js';
+
+import thread from '../util/thread.js';
+import docutil from '../util/docutil.js';
+import ourtabid from '../util/ourtabid.js';
+import socketsubs from './socketsubs.js';
+import socketclose from './socketclose.js';
+import socketreceive from './socketreceive.js';
+import { SocketBus } from './SocketBus.js';
+
+// Constants -------------------------------------------------------------------
+
+/** Time to wait for HTTP connection before assuming lost connection. */
+const TIME_TO_WAIT_FOR_HTTP_MS = 5000;
+/** Time the websocket remains open without subscriptions, in milliseconds. */
+const AUTO_CLOSE_CUSHION = 10000;
+/**
+ * Delays in milliseconds to wait before each reconnection attempt.
+ * Indexed by consecutive failure count; the last element repeats indefinitely.
+ */
+const RECONNECT_DELAY_MS = [0, 2500, 5000] as const;
+
+// State -----------------------------------------------------------------------
+
+/** The websocket object used to communicate with the server. */
+let socket: WebSocket | undefined;
+/** True if currently attempting to create a socket connection. */
+let openingSocket = false;
+/**
+ * True if we are having trouble connecting. If true, and we reconnect,
+ * we'll display 'Reconnected.'
+ */
+let noConnection = false;
+/** Number of consecutive failed connection attempts, used to determine reconnect delay. */
+let consecutiveFailures = 0;
+/** The timer ID for a pending scheduleReconnect() call, or undefined if none is pending. */
+let reconnectTimerId: number | undefined;
+/** The timeout ID that auto-closes the socket when we're not subscribed to anything. */
+let timeoutIDToAutoClose: number | undefined;
+
+// Listeners -------------------------------------------------------------------
+
+SocketBus.addEventListener('connection-lost', () => {
+	noConnection = true;
+	console.error('No connection.');
+});
+
+// Tell the server we left deliberately, so it withholds the grace period. NOT 'beforeunload':
+// it fires even for an unload the leave-game prompt may cancel, stranding a staying player on a
+// dead socket. Dropping, not closing: a bfcache freeze defers a close until we return, after
+// 'pageshow' has resubscribed — the late teardown would wipe those fresh subs.
+window.addEventListener('pagehide', () => dropSocket(socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT));
+
+// Network status handling. We do not repeatedly attempt to reconnect while the browser is offline.
+window.addEventListener('offline', () => {
+	console.log('Network connection lost.');
+	// Any scheduled attempt is now doomed; 'online' is what restarts us.
+	clearTimeout(reconnectTimerId);
+	reconnectTimerId = undefined;
+	dropSocket(socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT_RENEW);
+});
+window.addEventListener('online', () => {
+	console.log('Network connection regained.');
+	consecutiveFailures = 0;
+	resubAll();
+});
+
+// Page navigation handling
+window.addEventListener('pageshow', (event) => {
+	if (!event.persisted) return; // Page loaded normally
+	console.log('Page was returned to using the back or forward button.');
+	resubAll();
+});
+
+// Socket Access ---------------------------------------------------------------
+
+/** Returns the current websocket instance, or undefined if not connected. */
+function getSocket(): WebSocket | undefined {
+	return socket;
+}
+
+/** Sets or clears the socket. The idle-close timer derives from it. */
+function setSocket(ws: WebSocket | undefined): void {
+	socket = ws;
+	syncIdleCloseTimer();
+}
+
+// Socket Lifecycle ------------------------------------------------------------
+
+/**
+ * Schedules a reconnection attempt after the appropriate backoff delay.
+ * Calls resubAll() only once the delay has elapsed, so the application
+ * is never told to reconnect before we're actually ready to attempt it.
+ */
+function scheduleReconnect(): void {
+	if (reconnectTimerId !== undefined) return;
+	if (!navigator.onLine) return; // Browser is offline
+	if (consecutiveFailures > 0) noConnection = true;
+	const cappedIndex = Math.min(consecutiveFailures, RECONNECT_DELAY_MS.length - 1);
+	const delay = RECONNECT_DELAY_MS[cappedIndex]!;
+	reconnectTimerId = window.setTimeout(() => {
+		reconnectTimerId = undefined;
+		resubAll();
+	}, delay);
+}
+
+/**
+ * Tries once to open a websocket to the server.
+ * Retries are driven externally: a failed attempt fires onclose,
+ * which calls scheduleReconnect(), which calls resubAll() after a delay.
+ * @returns Whether a socket was successfully opened.
+ */
+async function establishSocket(): Promise<boolean> {
+	if (socketclose.isInTimeout()) return false;
+	if (!navigator.onLine) return false; // Browser is offline
+
+	while (
+		openingSocket ||
+		reconnectTimerId !== undefined ||
+		(socket && socket.readyState !== WebSocket.OPEN)
+	) {
+		if (docutil.DEV_BUILD) console.log('Waiting for the socket to be established or closed..');
+		await thread.sleep(100);
+	}
+	if (socket && socket.readyState === WebSocket.OPEN) return true;
+
+	openingSocket = true;
+
+	const success = await openSocket();
+
+	if (success) {
+		consecutiveFailures = 0;
+		if (noConnection) console.log('Reconnected.');
+		noConnection = false;
+	} else {
+		consecutiveFailures++;
+	}
+
+	openingSocket = false;
+	return success;
+}
+
+/**
+ * Attempts to open our websocket to the server.
+ * @returns Whether the socket was opened successfully.
+ */
+async function openSocket(): Promise<boolean> {
+	SocketBus.dispatch('opening'); // Indicates a socket connection is opening
+	const noResponseTimer = window.setTimeout(() => {
+		noConnection = true;
+		console.error('No connection.');
+	}, TIME_TO_WAIT_FOR_HTTP_MS);
+
+	return new Promise((resolve, _reject) => {
+		let url = `wss://${window.location.hostname}`;
+		if (window.location.port !== '443') url += `:${window.location.port}`;
+		url += `?${tabid.PARAM}=${ourtabid.ID}`;
+		const ws = new WebSocket(url);
+		ws.onopen = () => {
+			clearTimeout(noResponseTimer);
+			setSocket(ws);
+			resolve(true);
+		};
+		ws.onerror = (_event) => {
+			clearTimeout(noResponseTimer);
+			resolve(false);
+		};
+		ws.onmessage = (event: MessageEvent) => socketreceive.onmessage(event);
+		ws.onclose = (event: CloseEvent) => {
+			setSocket(undefined);
+			socketclose.onclose(event.code, event.reason);
+		};
+	});
+}
+
+/**
+ * Arms the timer that auto-closes the socket while nothing is subscribed, or cancels it.
+ * Call on any change to its two inputs: the socket's existence, and our subscription state.
+ */
+function syncIdleCloseTimer(): void {
+	clearTimeout(timeoutIDToAutoClose);
+	timeoutIDToAutoClose = undefined;
+	if (!socket) return; // Nothing to close.
+	if (!socketsubs.zeroSubs()) return; // Still in use.
+	timeoutIDToAutoClose = window.setTimeout(() => closeSocket(), AUTO_CLOSE_CUSHION);
+}
+
+/** Closes the socket. Called when it's no longer in use (no active subscriptions). */
+function closeSocket(): void {
+	if (!socket) return;
+	if (socket.readyState !== WebSocket.OPEN)
+		return console.error("Cannot close socket because it's not open! Yet socket is defined.");
+	socket.close(1000, socketutil.CLOSURE_REASONS.CLOSED_BY_CLIENT);
+}
+
+/**
+ * Tears the socket down immediately, rather than waiting on a close event.
+ *
+ * Browsers expose no terminate(), and a severed network stalls the 'close' event for tens of
+ * seconds — yet every consequence of the disconnection, telling the user included, waits on it.
+ * @param reason - Decides, on each side, whether this closure is one to recover from.
+ */
+function dropSocket(reason: ClosureReason): void {
+	if (!socket) return;
+	const dropped = socket;
+	setSocket(undefined);
+	// Anything this socket does from here — a late close, a message once the network returns —
+	// is moot, and must not reach a session that has since opened a replacement.
+	dropped.onclose = null;
+	dropped.onmessage = null;
+	// Still sent: if the wire is in fact fine, the server hears our reason and can withhold the
+	// grace period. If it isn't, this costs nothing — we're no longer waiting on the response.
+	dropped.close(1000, reason);
+	socketclose.onclose(1000, reason);
+}
+
+// Resubscription --------------------------------------------------------------
+
+/**
+ * Called when the socket unexpectedly closes. Notifies all subs to resubscribe.
+ * Then socketsend.send() lazily reopens the socket.
+ */
+function resubAll(): void {
+	if (docutil.DEV_BUILD) console.log('Resubbing all..');
+	SocketBus.dispatch('reconnect');
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Constants
+	TIME_TO_WAIT_FOR_HTTP_MS,
+	// Socket Access
+	getSocket,
+	// Socket Lifecycle
+	establishSocket,
+	syncIdleCloseTimer,
+	dropSocket,
+	scheduleReconnect,
+	// Resubscription
+	resubAll,
+};

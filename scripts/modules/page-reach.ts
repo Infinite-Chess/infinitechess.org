@@ -4,7 +4,7 @@
  * Which client pages ship a module — the constraint that decides most placement questions.
  *
  * Usage:
- *   npx tsx scripts/modules/page-reach.ts                    every client module, with its page set
+ *   npx tsx scripts/modules/page-reach.ts                    every client module outside views/, with its page set
  *   npx tsx scripts/modules/page-reach.ts <substring> ...    just the matching modules, any root
  *   npx tsx scripts/modules/page-reach.ts <substring> --why  plus the chain that drags each in
  *
@@ -20,50 +20,36 @@
  * still be imported for its types.
  *
  * Pages with no entry in ENTRY_POINTS yet are still scanned, and marked `*` in the output.
- * See docs/systems/BUILD.md — that list is hand-maintained.
  */
 
+import path from 'node:path';
 import { globSync } from 'node:fs';
 
 import srcgraph from './srcgraph.js';
-import { ENTRY_POINTS } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
-const E = 'src/client/scripts/esm/';
+const CLIENT_ROOT = 'src/client/scripts/';
+const VIEWS_ROOT = `${CLIENT_ROOT}views/`;
 
-/** Live script entries, read from the build so this can never drift. */
-const LIVE = ENTRY_POINTS.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
-
-/** Pages that exist but have no entry in ENTRY_POINTS yet. Marked `*` when printed. */
+/**
+ * Pages not in ENTRY_POINTS yet, found by name: a page's entry is always
+ * views/<page>.ts or views/<page>/<page>.ts.
+ */
 const DORMANT = [
-	`${E}views/editor/boardeditor.ts`,
-	`${E}views/checkmatepractice/checkmatepractice.ts`,
-	`${E}views/icnvalidator/icnvalidator.ts`,
-	`${E}views/icnvalidator/icnvalidator.worker.ts`,
-	`${E}views/leaderboard.ts`,
-	`${E}views/news/news.ts`,
-	`${E}views/guide.ts`,
-	`${E}views/admin.ts`,
-];
+	...globSync(`${VIEWS_ROOT}*.ts`),
+	...globSync(`${VIEWS_ROOT}*/*.ts`).filter(
+		(f) => path.basename(f, '.ts') === path.basename(path.dirname(f)),
+	),
+].filter((f) => !srcgraph.SCRIPT_ENTRIES.includes(f));
 
-const entries = [...LIVE, ...DORMANT];
-
-/** Top-level directories reported in bulk mode. */
-const PREFIXES = ['game/', 'util/', 'components/', 'board/', 'chess/', 'webgl/', 'audio/', 'socket/', 'savedpositions/']; // prettier-ignore
+const entries = [...srcgraph.SCRIPT_ENTRIES, ...DORMANT];
 
 // Helper Functions ------------------------------------------------------------
 
-/** A page's display name, suffixed `*` when it is not a registered entry point yet. */
+/** An entry's display name: its file name, suffixed `*` if dormant. */
 function label(entry: string): string {
-	const s = srcgraph.short(entry);
-	let name = s;
-	if (s.startsWith('views/')) {
-		const rest = s.replace('views/', '');
-		name = rest.includes('/') ? rest.split('/')[0]! : rest.replace('.ts', '');
-	} else if (s.startsWith('components/header/')) name = 'header';
-	else if (s.startsWith('game/chess/engines/apeiron')) name = 'apeiron.worker';
-	else if (s.startsWith('game/chess/engines/engineCheckmate')) name = 'cmp.worker';
+	const name = path.basename(entry, '.ts');
 	return DORMANT.includes(entry) ? `${name}*` : name;
 }
 
@@ -136,20 +122,19 @@ if (targets.length > 0) {
 	const byModule = new Map<string, Set<string>>();
 	for (const [entry, graph] of graphs) {
 		for (const m of Object.keys(graph)) {
-			const k = srcgraph.short(m);
-			if (!byModule.has(k)) byModule.set(k, new Set());
-			byModule.get(k)!.add(label(entry));
+			if (!byModule.has(m)) byModule.set(m, new Set());
+			byModule.get(m)!.add(label(entry));
 		}
 	}
 	const rows = [...byModule.entries()]
-		.filter(([m]) => PREFIXES.some((p) => m.startsWith(p)))
-		.map(([m, s]) => ({ m, e: [...s].sort() }))
+		.filter(([m]) => m.startsWith(CLIENT_ROOT) && !m.startsWith(VIEWS_ROOT))
+		.map(([m, s]) => ({ m: srcgraph.short(m), e: [...s].sort() }))
 		.sort((a, b) => a.m.localeCompare(b.m));
 	for (const { m, e } of rows) console.log(`${e.join(',')}\t${m}`);
 
 	// Files that NO page reaches at all.
-	const all = globSync(`${E}**/*.ts`).map((f) => srcgraph.short(f));
+	const all = globSync(`${CLIENT_ROOT}**/*.ts`);
 	const orphans = all.filter((f) => !byModule.has(f) && !f.endsWith('.test.ts'));
 	console.log('\n=== UNREACHABLE ===');
-	for (const o of orphans.sort()) console.log(o);
+	for (const o of orphans.map((f) => srcgraph.short(f)).sort()) console.log(o);
 }

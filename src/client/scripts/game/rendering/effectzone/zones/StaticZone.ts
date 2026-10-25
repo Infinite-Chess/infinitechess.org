@@ -1,0 +1,106 @@
+// src/client/scripts/game/rendering/effectzone/zones/StaticZone.ts
+
+/**
+ * A grey board covered in large TV static, flickering to a new
+ * pattern several times a second.
+ */
+
+import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
+
+import { BaseZone } from '../BaseZone.js';
+import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
+
+export class StaticZone extends BaseZone {
+	/** The unique integer id this effect zone gets. */
+	readonly effectType: number = 7;
+
+	protected override readonly downsamplesSound = true;
+
+	private colorGradePass: ColorGradePass;
+
+	/** How many pixels wide the white noise texture is. */
+	private readonly TEXTURE_WIDTH = 256;
+
+	/** The strength of the effect. */
+	private strength: number = 0.05;
+	/** How large each "pixel" of the static should be, in screen pixels. */
+	private readonly PIXEL_SIZE = 6;
+	/** How often the static pattern should change, in milliseconds. */
+	private readonly UPDATE_INTERVAL = 60;
+
+	// --- STATE ---
+
+	/** The last timestamp the pixels were randomized. */
+	private lastUpdateTime: number = 0;
+	/** The current UV offset. */
+	private uvOffset: [number, number] = [0, 0];
+
+	constructor(programManager: ProgramManager) {
+		super();
+		this.colorGradePass = new ColorGradePass(programManager);
+		this.colorGradePass.saturation = 0.35;
+		this.colorGradePass.brightness = -0.2;
+
+		// Load the ambience...
+
+		const noiseConfig: SoundscapeConfig = {
+			masterVolume: 0.016,
+			layers: [
+				{
+					volume: {
+						base: 1,
+					},
+					source: {
+						type: 'noise',
+					},
+					filters: [
+						{
+							type: 'highpass',
+							frequency: {
+								base: 900,
+							},
+							Q: {
+								base: 1,
+							},
+							gain: {
+								base: 0,
+							},
+						},
+					],
+				},
+			],
+		};
+
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(noiseConfig);
+	}
+
+	public update(): void {
+		// Randomize the pixels every little bit.
+		const now = Date.now();
+		if (now - this.lastUpdateTime > this.UPDATE_INTERVAL) {
+			this.lastUpdateTime = now;
+			// Generate a random offset, but snap it to the pixel grid.
+			this.uvOffset = [
+				Math.floor(Math.random() * this.TEXTURE_WIDTH) / this.TEXTURE_WIDTH,
+				Math.floor(Math.random() * this.TEXTURE_WIDTH) / this.TEXTURE_WIDTH,
+			];
+		}
+	}
+
+	public getUniforms(): Record<string, UniformValue> {
+		return {
+			u7_strength: this.strength,
+			u7_uvOffset: this.uvOffset,
+			u7_pixelWidth: this.TEXTURE_WIDTH,
+			u7_pixelSize: this.PIXEL_SIZE,
+		};
+	}
+
+	public override getPasses(): PostProcessPass[] {
+		return [this.colorGradePass];
+	}
+}

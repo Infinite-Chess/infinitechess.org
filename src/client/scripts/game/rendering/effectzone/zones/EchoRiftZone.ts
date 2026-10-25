@@ -1,0 +1,140 @@
+// src/client/scripts/game/rendering/effectzone/zones/EchoRiftZone.ts
+
+/**
+ * A dark, colorless board seen through cracked glass. The cracks re-form at
+ * random intervals with a snap, over a low rumble.
+ */
+
+import type { UniformValue } from '../../../../webgl/Renderable.js';
+import type { ProgramManager } from '../../../../webgl/ProgramManager.js';
+import type { PostProcessPass } from '../../../../webgl/postprocessing/PostProcessPass.js';
+
+import gamesound from '../../../../board/gamesound.js';
+import PerlinNoise from '../../../../util/PerlinNoise.js';
+import preferences from '../../../../util/preferences.js';
+import { BaseZone } from '../BaseZone.js';
+import { ColorGradePass } from '../../../../webgl/postprocessing/passes/ColorGradePass.js';
+import { VoronoiDistortionPass } from '../../../../webgl/postprocessing/passes/VoronoiDistortionPass.js';
+import { SoundscapeConfig, SoundscapePlayer } from '../../../../audio/SoundscapePlayer.js';
+
+export class EchoRiftZone extends BaseZone {
+	/** The unique integer id this effect zone gets. */
+	readonly effectType: number = 8;
+
+	protected override readonly downsamplesSound = true;
+
+	private colorGradePass: ColorGradePass;
+
+	/** Post Processing Effect bending light through a crystalline voronoi distortion pattern structure. */
+	private voronoiDistortionPass: VoronoiDistortionPass;
+
+	/** A 1D Perlin noise generator for randomizing color grade properties. */
+	private noiseGenerator: (t: number) => number;
+	/** How "zoomed in" the Perlin noise is. Higher values = smoother/slower noise. */
+	private noiseZoom: number = 3000;
+
+	/** The base brightness level around which the brightness will vary. */
+	private baseBrightness: number = -0.39;
+	/** How much the brightness will vary above and below the base brightness. */
+	private brightnessVariation: number = 0.07;
+
+	// --- State ---
+
+	/** The next timestamp the voronoi distortion pass will update the time value, revealing a different pattern. */
+	private nextCrackTime: number = Date.now();
+
+	private baseMillisBetweenCracks: number = 400;
+	private maxMillisBetweenCracks: number = 4000;
+
+	constructor(programManager: ProgramManager) {
+		super();
+		this.voronoiDistortionPass = new VoronoiDistortionPass(programManager);
+
+		this.colorGradePass = new ColorGradePass(programManager);
+		this.colorGradePass.saturation = 0;
+		this.colorGradePass.contrast = 0.3;
+
+		this.noiseGenerator = PerlinNoise.create1DNoiseGenerator(30);
+
+		// Load the ambience...
+
+		const soundConfig: SoundscapeConfig = {
+			masterVolume: 1.0,
+			layers: [
+				{
+					volume: {
+						base: 0.7,
+						lfo: {
+							wave: 'perlin',
+							rate: 1.13,
+							depth: 0.5,
+						},
+					},
+					source: {
+						type: 'noise',
+					},
+					filters: [
+						{
+							type: 'lowpass',
+							frequency: {
+								base: 136,
+							},
+							Q: {
+								base: 1.0001,
+							},
+							gain: {
+								base: 0,
+							},
+						},
+						{
+							type: 'lowpass',
+							frequency: {
+								base: 139,
+							},
+							Q: {
+								base: 1.0001,
+							},
+							gain: {
+								base: 0,
+							},
+						},
+					],
+				},
+			],
+		};
+
+		// Initialize the player with the config.
+		this.ambience = new SoundscapePlayer(soundConfig);
+	}
+
+	public update(): void {
+		// Update cracking of the voronoi distortion effect.
+		if (Date.now() > this.nextCrackTime) {
+			this.voronoiDistortionPass.time = performance.now() / 10;
+			this.nextCrackTime =
+				Date.now() +
+				this.baseMillisBetweenCracks +
+				Math.random() * this.maxMillisBetweenCracks;
+			if (preferences.getAmbienceEnabled()) gamesound.playGlassCrack();
+		}
+
+		// Randomize the brightness
+		const noiseValue = this.noiseGenerator(performance.now() / this.noiseZoom);
+		this.colorGradePass.brightness =
+			this.baseBrightness + noiseValue * this.brightnessVariation;
+	}
+
+	/** Also preloads the glass cracks, which play only while the ambience is on. */
+	public override fadeInAmbience(transitionDurationMs: number): void {
+		gamesound.preloadGlassCracks();
+		super.fadeInAmbience(transitionDurationMs);
+	}
+
+	public getUniforms(): Record<string, UniformValue> {
+		return {};
+	}
+
+	public override getPasses(): PostProcessPass[] {
+		return [this.voronoiDistortionPass, this.colorGradePass];
+	}
+}

@@ -1,0 +1,100 @@
+// src/client/scripts/chess/rendering/imagecache.ts
+
+/**
+ * This script caches the HTMLImageElement objects for the pieces.
+ *
+ * It assumes that `initImagesForGame` is called before any
+ * attempt to retrieve an image using `getPieceImage`.
+ *
+ * Images depend only on piece type, never the loaded game,
+ * so the cache persists across games.
+ */
+
+import type { TypeGroup } from '../../../../shared/chess/util/typeutil.js';
+import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
+
+import typeutil from '../../../../shared/chess/util/typeutil.js';
+import piecethemes from '../../../../shared/chess/util/piecethemes.js';
+
+import svgcache from './svgcache.js';
+import svgtoimageconverter from '../../util/svgtoimageconverter.js';
+
+// State -----------------------------------------------------------------------
+
+/**
+ * The cache storing HTMLImageElement objects for each piece type.
+ * Keys are the numeric piece types.
+ */
+let cachedImages: TypeGroup<HTMLImageElement> = {};
+
+// Functions -------------------------------------------------------------------
+
+/**
+ * Initializes the image cache for the provided gamefile.
+ * Fetches necessary SVGs (using svgcache), converts them to images,
+ * normalizes them, and stores them in the cache.
+ */
+async function initImagesForGame(boardsim: BoardPreview): Promise<void> {
+	// 1. Determine required piece types (excluding already-cached and SVG-less ones)
+	const types = boardsim.existingTypes.filter(
+		(t: number) => !cachedImages[t] && !piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(t)),
+	);
+	if (types.length === 0) return;
+
+	try {
+		// 2. Get SVG elements using the existing svgcache
+		// No width/height needed here as normalization will handle sizing later
+		const svgElements = await svgcache.getSVGElements(types);
+
+		// 3. Convert SVGs to initial Image elements
+		const initialImages = await svgtoimageconverter.convertSVGsToImages(svgElements);
+
+		// 4. Normalize images and populate the cache
+		// Patches firefox bug that darkens the image (when it is partially transparent) caused by double-multiplying the RGB channels by the alpha channel
+		const normalizationPromises: Promise<void>[] = [];
+
+		for (const img of initialImages) {
+			// Ensure the image has an ID which corresponds to the piece type
+			if (!img.id) throw Error('Image is missing ID after conversion from SVG.');
+
+			// Start normalization process for each image
+			const promise = svgtoimageconverter
+				.normalizeImagePixelData(img, 512) // High size to retain resolution during the drawing and re-serialization.
+				.then((normalizedImg) => {
+					cachedImages[Number(img.id)] = normalizedImg;
+				})
+				.catch((error) => {
+					console.error(`Failed to normalize or cache image for type ${typeutil.debugType(Number(img.id))}:`, error); // prettier-ignore
+				});
+			normalizationPromises.push(promise);
+		}
+
+		// Wait for all normalizations to complete
+		await Promise.all(normalizationPromises);
+	} catch (error) {
+		console.error('Error during image cache initialization:', error);
+		// Clear cache on failure to avoid partial state
+		cachedImages = {};
+		// Re-throw the error so the caller knows initialization failed
+		throw error;
+	}
+}
+
+/**
+ * Retrieves a cached HTMLImageElement for the given piece type.
+ * Throws an error if the image for the type is not found in the cache.
+ * Assumes `initImagesForGame` has been successfully called beforehand.
+ */
+function getPieceImage(type: number): HTMLImageElement {
+	const image = cachedImages[type];
+	if (!image)
+		throw new Error(`Image for piece type ${typeutil.debugType(type)} not found in cache. Was initImagesForGame() called?`); // prettier-ignore
+	return image;
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	initImagesForGame,
+	getPieceImage,
+};

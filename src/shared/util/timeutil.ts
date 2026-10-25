@@ -74,30 +74,6 @@ function convertUTCDateUTCTimeToTimeStamp(UTCDate: string, UTCTime: string = '00
 }
 
 /**
- * Whether today falls inside the given month/day range of the current year.
- * @param startMonth - The starting month of the range (1-12).
- * @param startDay - The starting day of the range (1-31).
- * @param endMonth - The ending month of the range (1-12).
- * @param endDay - The ending day of the range (1-31).
- */
-function isCurrentDateWithinRange(
-	startMonth: number,
-	startDay: number,
-	endMonth: number,
-	endDay: number,
-): boolean {
-	const currentDate = new Date();
-	const today = new Date(
-		currentDate.getFullYear(),
-		currentDate.getMonth(),
-		currentDate.getDate(),
-	); // Normalized current date
-	const startDate = new Date(currentDate.getFullYear(), startMonth - 1, startDay);
-	const endDate = new Date(currentDate.getFullYear(), endMonth - 1, endDay);
-	return today >= startDate && today <= endDate;
-}
-
-/**
  * Converts a timestamp (milliseconds since the UNIX epoch)
  * to an ISO 8601 string `2026-06-23T14:30:07.000Z`.
  */
@@ -168,7 +144,6 @@ export default {
 	toMillis,
 	convertTimestampToUTCDateUTCTime,
 	convertUTCDateUTCTimeToTimeStamp,
-	isCurrentDateWithinRange,
 	timestampToISO,
 	sqliteToTimestamp,
 	timestampToSqlite,

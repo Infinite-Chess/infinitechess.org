@@ -303,7 +303,7 @@ preset variants, and live-game persistence writes moves alone with clock comment
 
 Feeding it a gamefile takes one step first —
 `gamecompressor.compressGamefile(gamefile, copySinglePosition?, presetAnnotes?)`
-([gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)) snapshots a gamefile into the
+([gamecompressor.ts](/src/client/scripts/chess/gamecompressor.ts)) snapshots a gamefile into the
 `LongFormatIn` shape the converter wants.
 
 ## Reading an ICN
@@ -376,7 +376,7 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | Parsed ICN → position / `VariantOptions` / packets | [icnimport.ts](/src/shared/chess/logic/icn/icnimport.ts)                                                                                |
 | Parsed ICN → constructed gamefile                  | [gameformulator.ts](/src/shared/chess/game/gameformulator.ts)                                                                           |
 | Whether a parsed position is legal and playable    | [positionlegality.ts](/src/shared/chess/logic/positionlegality.ts), [playability.ts](/src/shared/chess/game/playability.ts)             |
-| Gamefile → the converter's input shape             | [gamecompressor.ts](/src/client/scripts/esm/chess/gamecompressor.ts)                                                                    |
+| Gamefile → the converter's input shape             | [gamecompressor.ts](/src/client/scripts/chess/gamecompressor.ts)                                                                        |
 | Gamerule + win-condition vocabularies              | [gamerules.ts](/src/shared/chess/util/gamerules.ts), [winconutil.ts](/src/shared/chess/util/winconutil.ts)                              |
 | Piece types and player numbers                     | [typeutil.ts](/src/shared/chess/util/typeutil.ts)                                                                                       |
 | Metadata tag definitions                           | [metadatautil.ts](/src/shared/chess/util/metadatautil.ts)                                                                               |
@@ -384,4 +384,4 @@ ICN is not a lossless mirror of a gamefile. What does not survive:
 | Logged-game ICN writer                             | [gamelogger.ts](/src/server/game/gamemanager/gamelogger.ts)                                                                             |
 | Live-game moves column                             | [liveGameValues.ts](/src/server/game/gamemanager/liveGameValues.ts), [LIVE_GAME_PERSISTENCE.md](/docs/systems/LIVE_GAME_PERSISTENCE.md) |
 | Custom-position seek validation                    | [createseek.ts](/src/server/game/seeksmanager/createseek.ts)                                                                            |
-| Bulk validation (dev page and command)             | [chunkvalidator.ts](/src/client/scripts/esm/views/icnvalidator/chunkvalidator.ts)                                                       |
+| Bulk validation (dev page and command)             | [chunkvalidator.ts](/src/client/scripts/views/icnvalidator/chunkvalidator.ts)                                                           |

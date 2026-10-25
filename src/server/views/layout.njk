@@ -44,7 +44,7 @@
     <script>window.t = { header: {{ scriptT('header') | json | safe }}, shared: {{ scriptT('shared') | json | safe }} };</script>
 
     {# Hashed URL for the downsampler audio worklet processor. #}
-    <script>window.$downsamplerProcessorUrl = "{{ manifest['scripts/esm/audio/processors/downsampler/DownsamplerProcessor.ts'] }}";</script>
+    <script>window.$downsamplerProcessorUrl = "{{ manifest['scripts/audio/processors/downsampler/DownsamplerProcessor.ts'] }}";</script>
 
     {# Any extra head content (meta tags, preloads, etc.) #}
     {% block head %}{% endblock %}
@@ -53,7 +53,7 @@
 
     {% block body %}{% endblock %}
 
-    {# Site-wide toast notification. Runtime: scripts/esm/components/toast.ts #}
+    {# Site-wide toast notification. Runtime: scripts/components/toast.ts #}
     {% include "components/toast/toast.njk" %}
 
     {# Pre-load Classical variant loader - used very commonly #}

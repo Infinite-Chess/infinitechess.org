@@ -8,6 +8,7 @@
 
 import type { GameFile } from '../logic/gamefile.js';
 import type { VariantCode } from '../util/variantcodes.js';
+import type { EngineRefusal } from '../util/engineglue.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
 import bimath from '../../util/math/bimath.js';
@@ -20,9 +21,6 @@ import modutil, { ModifierCode } from '../util/modutil.js';
 import typeutil, { Player, RawType, players as p, rawTypes as r } from '../util/typeutil.js';
 
 // Types -----------------------------------------------------------------------
-
-/** Why the engine refused a position it was handed, which only it can tell. */
-export type EngineRefusal = (typeof ENGINE_REFUSALS)[number];
 
 /** Why the engine can't handle a game. Keys into `position_errors.engine` in the shared translations. */
 export type EngineSupportCode =
@@ -73,9 +71,6 @@ const SUPPORTED_PIECES: Set<RawType> = new Set([r.VOID, r.OBSTACLE, r.KING, r.GI
 
 /** Most pieces a position may hold before the engine is too slow to be of any use. */
 const MAX_PIECES = 10_000;
-
-/** The engine's own refusals: pieces too far apart to bring within its coordinates. */
-const ENGINE_REFUSALS = ['too_spread_out'] as const;
 
 // Individual rule checks ------------------------------------------------------
 
@@ -226,7 +221,6 @@ export default {
 	// Constants
 	UNSUPPORTED_VARIANTS,
 	SUPPORTED_MODIFIERS,
-	ENGINE_REFUSALS,
 	// Functions
 	isPlaySupported,
 	isAnalysisSupported,

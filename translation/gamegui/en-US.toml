@@ -1,6 +1,6 @@
 # Translation component: the UI every interactive board page shares (game, analysis, ...).
 # Source template: src/server/views/components/gamegui.njk
-# Its [script] strings serve src/client/scripts/esm/game/, which every board page ships.
+# Its [script] strings serve src/client/scripts/game/, which every board page ships.
 
 [board_controls] # Icon button tooltips
 undo_transition = "Undo transition"

@@ -1,5 +1,5 @@
 {# An interactive board page's sidebar and canvas regions, one macro each, mirroring the client
-   modules in src/client/scripts/esm/game/gui/ that drive them. Regions tagged "SSR-OWNED" are
+   modules in src/client/scripts/game/gui/ that drive them. Regions tagged "SSR-OWNED" are
    rendered from `meta` and must never be re-rendered by the client — it only writes live deltas
    into them (clocks, `tempo`, `eloChange`). Labels come from `t` (= templateT('gamegui')),
    `ts` (= scriptT('gamegui')) and `s` (= scriptT('shared')). #}

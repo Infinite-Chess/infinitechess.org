@@ -77,6 +77,14 @@ function generate(): void {
 		`CREATE INDEX IF NOT EXISTS idx_leaderboards_leaderboard_elo ON leaderboards (leaderboard_id, elo DESC);`,
 	);
 
+	// Cheat Cases table — a player engine-assistance detection suspects, for admins to decide on
+	db.run(`
+		CREATE TABLE IF NOT EXISTS cheat_cases (
+			user_id   INTEGER PRIMARY KEY, -- Account deletion does not delete the case
+			opened_at INTEGER NOT NULL -- Epoch ms
+		);
+	`);
+
 	// --- Authentication & Account Lifecycle ---
 
 	// Pending Registrations table — verify-first registration staging, before a real member row exists
@@ -243,6 +251,23 @@ function generate(): void {
 	`);
 	// Covers a per-game read: one ordered range scan, no table rows fetched.
 	db.run(`CREATE INDEX IF NOT EXISTS idx_chat_entries_game ON chat_entries (game_id, message_id);`); // prettier-ignore
+
+	// Cheat Assessments table — one row per player of each game engine-assistance detection queued
+	db.run(`
+		CREATE TABLE IF NOT EXISTS cheat_assessments (
+			game_id    INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+			user_id    INTEGER NOT NULL,
+			updated_at INTEGER NOT NULL, -- Epoch ms: when queued, then when assessed
+			outcome    TEXT NOT NULL, -- "queued" / "analysed" / "unsupported" / "failed"
+			evidence   TEXT, -- JSON MoveEvidence[] of the player's moves; NULL unless analysed
+			PRIMARY KEY (game_id, user_id),
+			CHECK ((outcome = 'analysed') = (evidence IS NOT NULL))
+		);
+	`);
+	// A player's assessments in time order, for their running score over a recent window
+	db.run(`CREATE INDEX IF NOT EXISTS idx_cheat_assessments_user ON cheat_assessments (user_id, updated_at);`); // prettier-ignore
+	// The games waiting for assessment, in the order they finished, re-queued at startup
+	db.run(`CREATE INDEX IF NOT EXISTS idx_cheat_assessments_queued ON cheat_assessments (updated_at, game_id) WHERE outcome = 'queued';`); // prettier-ignore
 
 	// --- Live Games ---
 

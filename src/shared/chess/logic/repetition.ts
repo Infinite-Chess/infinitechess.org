@@ -1,12 +1,9 @@
 // src/shared/chess/logic/repetition.ts
 
 /**
- * This script contains our algorithm for detecting draw by repetition.
- *
- * It is compatible with the enpassant state, as if 2 positions differ only
- * by the enpassant state, they are considered different.
- *
- * It also takes into account special rights.
+ * Detects repeated positions, for the threefold-repetition draw and for whether a position occurred
+ * before at all. Two positions are equal only with the same side to move, the same enpassant state
+ * and the same special rights.
  */
 
 import type { Board } from './boardinit.js';
@@ -23,12 +20,24 @@ type Flux = `${string},${string},${number | string}`; // `x,y,43` | `x,y,enpassa
 
 // Functions -------------------------------------------------------------------
 
+/** The threefold-repetition draw the position has reached, if any. */
+function detect(boardsim: Board): GameConclusion | undefined {
+	if (countEarlierOccurrences(boardsim, 2) === 2)
+		return { victor: null, condition: 'repetition' };
+	return undefined;
+}
+
+/** Whether the current position, with the same player to move, already occurred earlier in the game. */
+function isRepeated(boardsim: Board): boolean {
+	return countEarlierOccurrences(boardsim, 1) === 1;
+}
+
 /**
- * The threefold-repetition draw the position has reached, if any.
+ * How many earlier positions equal the current one, counting no further than `limit`.
  *
  * Complexity O(m) where m is the move count since the last pawn push or capture or special right loss!
  */
-function detect(boardsim: Board): GameConclusion | undefined {
+function countEarlierOccurrences(boardsim: Board, limit: number): number {
 	const moveList = boardsim.moves;
 	const turnOrderLength = boardsim.gameRules.turnOrder.length;
 	/** What index of the turn order whose turn it is at the front of the game.
@@ -104,14 +113,12 @@ function detect(boardsim: Board): GameConclusion | undefined {
 				// Equal!
 				equalPositionsFound++;
 				indexOfLastEqualPositionFound = index;
-				if (equalPositionsFound === 2) break; // Enough to confirm a repetition draw!
+				if (equalPositionsFound === limit) break;
 			}
 		}
 	}
 
-	// Loop is finished. How many equal positions did we find?
-	if (equalPositionsFound === 2) return { victor: null, condition: 'repetition' };
-	else return undefined;
+	return equalPositionsFound;
 
 	function addSurplus(flux: Flux): void {
 		// If there is a DEFICIT with this exact same key, delete that instead! It's been cancelled-out.
@@ -137,4 +144,4 @@ function isOneWay(move: MoveFull): boolean {
 
 // Exports ---------------------------------------------------------------------
 
-export default { detect };
+export default { detect, isRepeated };

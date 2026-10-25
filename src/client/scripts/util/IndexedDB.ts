@@ -1,0 +1,299 @@
+// src/client/scripts/util/IndexedDB.ts
+
+/**
+ * Asynchronous browser IndexedDB storage, with optional expiry.
+ *
+ * Reach for this over LocalStorage.ts only when entries can be large (~1MB+) — e.g.
+ * full infinite-chess board positions — or when many sizeable entries accumulate,
+ * since localStorage shares a ~5MB origin-wide quota. Otherwise prefer LocalStorage.ts
+ * for its synchronous API.
+ */
+
+import jsutil from '../../../shared/util/jsutil.js';
+
+// Types -----------------------------------------------------------------------
+
+/** An entry in IndexedDB storage */
+interface Entry {
+	/** The actual value of the entry */
+	value: unknown;
+	/** The timestamp the entry will become stale, at which point it should be deleted. */
+	expires?: number;
+}
+
+// Constants -------------------------------------------------------------------
+
+const DB_NAME = 'infinitechess';
+const DB_VERSION = 1;
+const STORE_NAME = 'entries';
+
+// State -----------------------------------------------------------------------
+
+let dbInstance: IDBDatabase | null = null;
+let dbInitPromise: Promise<IDBDatabase> | null = null;
+
+// Initialization --------------------------------------------------------------
+
+// Do this on load every time
+eraseExpiredItems().catch((error: unknown) => {
+	// Can happen in testing environment where IndexedDB is not available
+	const msg = jsutil.getErrorMessage(error);
+	console.error('Error erasing expired IndexedDB items on init:', msg);
+});
+
+// Connection ------------------------------------------------------------------
+
+/**
+ * Initializes the IndexedDB database.
+ * Returns a promise that resolves to the database instance.
+ * @throws If IndexedDB is unavailable, or the database fails to open.
+ */
+function initDB(): Promise<IDBDatabase> {
+	if (dbInstance) return Promise.resolve(dbInstance);
+	if (dbInitPromise) return dbInitPromise;
+
+	dbInitPromise = new Promise((resolve, reject) => {
+		// Check if IndexedDB is available
+		const idb = (globalThis as any).indexedDB;
+		if (!idb) {
+			reject(new Error('IndexedDB is not supported in this browser'));
+			return;
+		}
+
+		const request = idb.open(DB_NAME, DB_VERSION);
+
+		request.onblocked = () => {
+			console.warn('IndexedDB upgrade blocked: another tab/session holds the DB open');
+		};
+
+		request.onerror = () => {
+			dbInitPromise = null; // Allow future calls to retry opening the DB
+			reject(new Error('Failed to open IndexedDB database'));
+		};
+
+		request.onsuccess = () => {
+			dbInstance = request.result;
+			if (dbInstance) {
+				dbInstance.onversionchange = () => dbInstance?.close();
+				resolve(dbInstance);
+			} else {
+				reject(new Error('Failed to initialize IndexedDB database'));
+			}
+		};
+
+		request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
+			const db = (event.target as IDBOpenDBRequest).result;
+
+			// Create object store if it doesn't exist
+			if (!db.objectStoreNames.contains(STORE_NAME)) {
+				db.createObjectStore(STORE_NAME);
+			}
+		};
+	});
+
+	return dbInitPromise;
+}
+
+/** Reset the cached DB instance (close if open) so the next call to initDB() re-initializes. */
+function resetDBInstance(): void {
+	// Close the existing database connection if it’s open (ignore any close errors)
+	try {
+		dbInstance?.close();
+	} catch {
+		// Ignore
+	}
+	// Null out cached references so initDB() will run fresh
+	dbInstance = null;
+	dbInitPromise = null;
+}
+
+// Transactions ----------------------------------------------------------------
+
+/**
+ * Run a readonly transaction and return the request result.
+ * @throws If the database fails to open, or the transaction errors.
+ */
+async function withRead<T>(op: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+	const db = await initDB();
+	return new Promise<T>((resolve, reject) => {
+		// Open a readonly transaction on the object store
+		const tx = db.transaction([STORE_NAME], 'readonly');
+		const store = tx.objectStore(STORE_NAME);
+		// Execute caller-provided operation (e.g., store.get(key))
+		const req = op(store);
+
+		req.onsuccess = () => resolve(req.result as T);
+		// Reject on transaction or request errors
+		tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		req.onerror = () => reject(req.error || new Error('Request error'));
+	});
+}
+
+/**
+ * Run a readwrite transaction. Resolves when the transaction completes.
+ * @throws If the database fails to open, or the transaction errors.
+ */
+async function withWrite<R>(op: (store: IDBObjectStore) => IDBRequest<R>): Promise<void> {
+	const db = await initDB();
+	return new Promise<void>((resolve, reject) => {
+		// Open a readwrite transaction to modify data
+		const tx = db.transaction([STORE_NAME], 'readwrite');
+		const store = tx.objectStore(STORE_NAME);
+		// Execute caller-provided operation (e.g., store.put(...), store.delete(...))
+		const req = op(store);
+
+		// Resolve only after the entire transaction finishes
+		tx.oncomplete = () => resolve();
+		// Reject on transaction or request errors
+		tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		req.onerror = () => reject(req.error || new Error('Request error'));
+	});
+}
+
+// Entries ---------------------------------------------------------------------
+
+/**
+ * Saves an item in browser IndexedDB storage
+ * @param key - The key-name to give this entry.
+ * @param value - What to save
+ * @param [expiryMillis] How long until this entry should be auto-deleted for being stale. Leave undefined to never expire.
+ * @returns A promise that resolves when the item is saved
+ * @throws If IndexedDB is unavailable, or the write fails.
+ */
+async function saveItem<T>(key: string, value: T, expiryMillis?: number): Promise<void> {
+	const timeExpires = expiryMillis !== undefined ? Date.now() + expiryMillis : undefined;
+	const save: Entry = { value, expires: timeExpires };
+	return withWrite((store) => store.put(save, key));
+}
+
+/**
+ * Loads an item from browser IndexedDB storage. Callers must validate the value.
+ * @param key - The name/key of the item in storage
+ * @returns The entry's value, or undefined if absent, expired, or not one of our entries.
+ * @throws If IndexedDB is unavailable, or the read fails.
+ */
+async function loadItem(key: string): Promise<unknown> {
+	const save = await withRead<unknown>((store) => store.get(key));
+	if (save === undefined) return undefined;
+	if (!isEntry(save) || hasItemExpired(save)) {
+		await deleteItem(key);
+		return undefined;
+	}
+	return save.value;
+}
+
+/**
+ * Deletes an item from browser IndexedDB storage
+ * @param key The name/key of the item in storage
+ * @returns A promise that resolves when the item is deleted
+ * @throws If IndexedDB is unavailable, or the delete fails.
+ */
+async function deleteItem(key: string): Promise<void> {
+	return withWrite((store) => store.delete(key));
+}
+
+// Expiry ----------------------------------------------------------------------
+
+/** Whether a stored value is one of the entries we wrote. */
+function isEntry(save: unknown): save is Entry {
+	return (
+		typeof save === 'object' &&
+		save !== null &&
+		'value' in save &&
+		'expires' in save &&
+		(save.expires === undefined || typeof save.expires === 'number')
+	);
+}
+
+/** Whether an entry is past its expiry. */
+function hasItemExpired(save: Entry): boolean {
+	return save.expires !== undefined && Date.now() >= save.expires;
+}
+
+/**
+ * Erases all expired items from IndexedDB storage
+ * @returns A promise that resolves when all expired items are deleted
+ * @throws If IndexedDB is unavailable, or either transaction errors.
+ */
+async function eraseExpiredItems(): Promise<void> {
+	const db = await initDB();
+	const keysToDelete: string[] = [];
+
+	// Use a cursor to iterate through entries and check expiry without deserializing values
+	await new Promise<void>((resolve, reject) => {
+		const tx = db.transaction([STORE_NAME], 'readonly');
+		const store = tx.objectStore(STORE_NAME);
+		const request = store.openCursor();
+
+		request.onsuccess = () => {
+			const cursor = request.result;
+			if (cursor) {
+				const save: unknown = cursor.value;
+				if (!isEntry(save) || hasItemExpired(save)) {
+					keysToDelete.push(cursor.key as string);
+				}
+				cursor.continue();
+			}
+		};
+
+		tx.oncomplete = () => resolve();
+		tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		request.onerror = () => reject(request.error || new Error('Request error'));
+	});
+
+	// Delete all expired items in a single transaction
+	if (keysToDelete.length > 0) {
+		await new Promise<void>((resolve, reject) => {
+			const tx = db.transaction([STORE_NAME], 'readwrite');
+			const store = tx.objectStore(STORE_NAME);
+
+			for (const key of keysToDelete) {
+				store.delete(key);
+			}
+
+			tx.oncomplete = () => resolve();
+			tx.onerror = () => reject(tx.error || new Error('Transaction error'));
+		});
+	}
+}
+
+// Whole store -----------------------------------------------------------------
+
+/**
+ * Gets all keys present in the IndexedDB storage
+ * @returns A promise that resolves to an array of all keys
+ * @throws If IndexedDB is unavailable, or the read fails.
+ */
+async function getAllKeys(): Promise<string[]> {
+	const keys = await withRead<IDBValidKey[]>((store) => store.getAllKeys());
+	return keys as string[];
+}
+
+/**
+ * Erases all items from IndexedDB storage
+ * @returns A promise that resolves when all items are deleted
+ * @throws If IndexedDB is unavailable, or the clear fails.
+ */
+async function eraseAll(): Promise<void> {
+	return withWrite((store) => store.clear());
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Unit test constants
+	DB_NAME,
+	DB_VERSION,
+	STORE_NAME,
+	// Connection
+	resetDBInstance,
+	// Entries
+	saveItem,
+	loadItem,
+	deleteItem,
+	// Expiry
+	eraseExpiredItems,
+	// Whole store
+	getAllKeys,
+	eraseAll,
+};

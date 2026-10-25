@@ -7,8 +7,9 @@
  * This is the WRITE side; `deadGameState.ts` is the READ side
  * that reconstructs a concluded game from these columns.
  *
- * The Cheat-report overturn section stays HERE rather than in `cheatReport.ts`: it reverses
- * cell-for-cell what the log side wrote, and shares three of its helpers. Apart they would drift.
+ * The Illegal-move report overturn section stays HERE rather than in `illegalMoveReport.ts`: it
+ * reverses cell-for-cell what the log side wrote, and shares three of its helpers. Apart they would
+ * drift.
  */
 
 import type { RatingData } from '../../utility/ratingCalculation.js';
@@ -366,10 +367,10 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
 	return playerMoveCounts;
 }
 
-// Cheat-report overturn -------------------------------------------------------
+// Illegal-move report overturn ------------------------------------------------
 
 /**
- * Re-logs an already-logged game after a cheat report overturns its result to an abort.
+ * Re-logs an already-logged game after an illegal-move report overturns its result to an abort.
  * Rewrites the affected `games`/`player_games` cells — or deletes the whole record if the
  * report popped the game down to zero moves (never stored) — and reverses the `player_stats`
  * counters the original conclusion incremented. Runs as one atomic transaction.
@@ -380,12 +381,12 @@ function getPlayerMoveCountsInGame(servergame: ServerGame): PlayerGroup<number> 
  *
  * @param servergame - The game, already overturned in memory (last move popped, conclusion set to aborted).
  * @param originalConclusion - The conclusion that was logged, needed to reverse the right `player_stats` counters.
- * @param cheaterColor - The color whose now-popped move triggered the report; loses one from `moves_played`.
+ * @param offenderColor - The color whose now-popped move triggered the report; loses one from `moves_played`.
  */
 function updateOverturned(
 	servergame: ServerGame,
 	originalConclusion: GameConclusion,
-	cheaterColor: Player,
+	offenderColor: Player,
 ): void {
 	const match = servergame.match;
 	const gameStillExists = servergame.moves.length > 0;
@@ -404,7 +405,7 @@ function updateOverturned(
 			reversePlayerStatsForOverturn(
 				servergame,
 				originalConclusion,
-				cheaterColor,
+				offenderColor,
 				gameStillExists,
 			);
 		});
@@ -412,7 +413,7 @@ function updateOverturned(
 	} catch (error) {
 		const errorMessage = jsutil.getErrorMessage(error);
 		void logEvents.addAndPrint(
-			`Failed to update overturned game ${match.id} in the database after a cheat report. The permanent record may be inconsistent with the in-memory (aborted) result. Error: ${errorMessage}`,
+			`Failed to update overturned game ${match.id} in the database after an illegal-move report. The permanent record may be inconsistent with the in-memory (aborted) result. Error: ${errorMessage}`,
 			'errLog',
 		);
 	}
@@ -455,18 +456,18 @@ function readLoggedRatings(game_id: number): PlayerGroup<Rating> {
  * Corrects the `player_stats` counters for an overturned game: un-counts the original outcome,
  * then re-counts the game as aborted (skipped if it popped down to 0 moves and no longer exists).
  *
- * The single popped move belongs to the cheater, so their pre-pop move count is one higher than
+ * The single popped move belongs to the offender, so their pre-pop move count is one higher than
  * their current (post-pop) count; every other player's is unchanged.
  *
  * @param servergame - The game, already overturned in memory (last move popped, conclusion set to aborted).
  * @param originalConclusion - The conclusion that was logged, whose counters need un-counting.
- * @param cheaterColor - The color whose now-popped move triggered the report; their pre-pop move count is one higher.
+ * @param offenderColor - The color whose now-popped move triggered the report; their pre-pop move count is one higher.
  * @param gameStillExists - False if the report popped the game to 0 moves (deleted, not re-counted as aborted).
  */
 function reversePlayerStatsForOverturn(
 	servergame: ServerGame,
 	originalConclusion: GameConclusion,
-	cheaterColor: Player,
+	offenderColor: Player,
 	gameStillExists: boolean,
 ): void {
 	const match = servergame.match;
@@ -479,7 +480,7 @@ function reversePlayerStatsForOverturn(
 		const user_id = identifier.user_id;
 
 		const postPopMoves = postPopMoveCounts[player]!;
-		const prePopMoves = postPopMoves + (player === cheaterColor ? 1 : 0);
+		const prePopMoves = postPopMoves + (player === offenderColor ? 1 : 0);
 
 		// Un-count exactly what the original conclusion counted (its pre-pop move counts).
 		playerStatsManager.applyGameDelta(user_id, {
@@ -507,6 +508,6 @@ function reversePlayerStatsForOverturn(
 export default {
 	// Functions
 	log,
-	// Cheat-report overturn
+	// Illegal-move report overturn
 	updateOverturned,
 };

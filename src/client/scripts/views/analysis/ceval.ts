@@ -1,0 +1,1005 @@
+// src/client/scripts/views/analysis/ceval.ts
+
+/**
+ * Client-side engine evaluation controller for the analysis board (lichess "ceval"
+ * equivalent). Owns the analysis worker's lifecycle and settings, keeps it pointed
+ * at the currently *viewed* position, and streams normalized (white-POV) engine
+ * updates to UI subscribers, throttled for rendering.
+ */
+
+import type { GameFile } from '../../../../shared/chess/logic/gamefile.js';
+import type { EngineSupportCode } from '../../../../shared/chess/engines/apeironcard.js';
+import type { AnalysisInfo, EngineRefusal } from '../../../../shared/chess/util/engineglue.js';
+import type { AnalysisCommand, AnalysisResponse } from './analysisprotocol.js';
+import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
+
+import * as z from 'zod';
+
+import math from '../../../../shared/util/math/math.js';
+import timeutil from '../../../../shared/util/timeutil.js';
+import gamerules from '../../../../shared/chess/util/gamerules.js';
+import winchance from '../../../../shared/chess/util/winchance.js';
+import engineicn from '../../../../shared/chess/logic/icn/engineicn.js';
+import apeironcard from '../../../../shared/chess/engines/apeironcard.js';
+import { players as p } from '../../../../shared/chess/util/typeutil.js';
+
+import gameslot from '../../game/chess/gameslot.js';
+import enginewasm from '../../chess/enginewasm.js';
+import { GameBus } from '../../board/GameBus.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import gamecompressor from '../../chess/gamecompressor.js';
+import analysisworker from './analysisworker.js';
+
+// Types -----------------------------------------------------------------------
+
+/** A PV line normalized for the UI. */
+export interface CevalLine {
+	/** Compact ICN move tokens ("x,y>x,y=Q"), from the analyzed position. */
+	moves: string[];
+	/** Centipawns, white POV. Absent when mating. */
+	cp?: number;
+	/** Full moves to mate, white POV sign (positive = white mates). */
+	mate?: number;
+	/** Win probability for white in [-1, 1] (lichess winning-chances sigmoid). */
+	winningChances: number;
+}
+
+/** A normalized engine update for the UI. */
+export interface CevalUpdate {
+	depth: number;
+	seldepth: number;
+	nodes: number;
+	nps: number;
+	hashfull: number;
+	lines: CevalLine[];
+	/** The MultiPV count this search was run at (lets a cache hit tell if it holds fewer lines than now wanted). */
+	multiPv: number;
+	/** The depth this analysis is running to (the setting, or {@link MAX_DEPTH} when going deeper). */
+	targetDepth: number;
+	/** The move index this analysis belongs to (gamefile.state.local.moveIndex). */
+	moveIndex: number;
+	/** Whether the engine finished this position (reached target depth / mate / terminal). */
+	done: boolean;
+	/** The viewed position is game-over (no legal moves): no lines will ever come. */
+	terminal: boolean;
+}
+
+/**
+ * Engine lifecycle status, for the UI status row.
+ * `failed` = the engine couldn't load at all, and hasn't been retried since;
+ * `crashed` = this position reliably panics the engine;
+ * `blocked` carries why the engine won't touch the position.
+ */
+export type CevalStatus =
+	| { kind: 'off' | 'loading' | 'computing' | 'idle' | 'failed' | 'crashed' }
+	| { kind: 'blocked'; reason: EngineSupportCode };
+
+interface CevalLegalMovesUpdate {
+	requestId: number;
+	moves: string[];
+}
+
+interface RefreshAnalysisOptions {
+	/** Start this same position again from depth 1, keeping the on-screen cache visible. */
+	restartSearch?: boolean;
+}
+
+// Constants -------------------------------------------------------------------
+
+/** The engine's maximum search depth — the ceiling that "go deeper" runs toward. */
+const MAX_DEPTH = 64;
+/** Lowest selectable target depth. */
+const MIN_DEPTH = 1;
+/** Hash size choices in MB (engine caps its TT at 64MB). */
+const HASH_OPTIONS: number[] = [16, 32, 64];
+/** Most engine lines the panel offers (the engine itself allows up to 16). */
+const MAX_MULTI_PV = 5;
+/** UI update throttle. */
+const THROTTLE_MS = 60;
+/** Crashes on the same position before we give up on it (2 = retry once, then flag it un-analyzable). */
+const CRASHES_BEFORE_GIVING_UP = 2;
+
+const STORAGE_KEY = 'ceval';
+/** How long persisted settings live in local storage; refreshed on every save. */
+const STORAGE_EXPIRY_MS = timeutil.toMillis(1, 'years');
+const DEFAULT_SETTINGS: CevalSettings = {
+	enabled: true,
+	multiPv: 1,
+	hashMb: 16,
+	depth: 20,
+	threads: enginewasm.defaultThreads(),
+};
+
+// Schemas ---------------------------------------------------------------------
+
+/** Engine settings in localStorage. Ranges omitted on purpose — {@link loadSettings} clamps. */
+type CevalSettings = z.infer<typeof CevalSettingsSchema>;
+const CevalSettingsSchema = z.strictObject({
+	/** Whether the engine is toggled on. */
+	enabled: z.boolean(),
+	/** Number of engine lines to search & display (1-5). */
+	multiPv: z.int(),
+	/** Transposition table size in MB. */
+	hashMb: z.int(),
+	/** Target search depth; the analysis stops here until "go deeper" is pressed. */
+	depth: z.int(),
+	/** Lazy SMP search threads (1 = single-threaded). */
+	threads: z.int(),
+});
+
+// State -----------------------------------------------------------------------
+
+/**
+ * The persistent search worker, kept alive across position switches so its
+ * transposition table stays warm.
+ */
+let search: AnalysisWorker | undefined;
+
+/**
+ * Whether the last spawn attempt died before the worker ever loaded.
+ * Cleared by the next spawn, so it never outlives a retry.
+ */
+let engineUnloadable = false;
+
+/**
+ * Whether the served engine build supports Lazy SMP (a single-threaded build exports
+ * no `initThreadPool`). The worker reports it on load; assume true until then.
+ */
+let engineSupportsThreads = true;
+
+/** An idle helper worker that only answers legal-moves queries, so they never queue behind the search. */
+let legal: AnalysisWorker | undefined;
+
+let enabled = false;
+let settings: CevalSettings = loadSettings();
+
+/** The ICN of the position the worker is currently analyzing (undefined once the position is superseded but not yet re-analyzed). */
+let lastAnalyzedIcn: string | undefined;
+/** Whether the next position command should reset the engine's search state. */
+let nextPositionIsNewGame = true;
+/** Snapshot of the analyzed position (for POV + staleness checks). */
+let analyzed:
+	| { requestId: number; icn: string; moveIndex: number; turn: number; multiPv: number }
+	| undefined;
+let activeRequestId = 0;
+/** Whether "go deeper" is active for the current position (search to {@link MAX_DEPTH}). */
+let goDeeperActive = false;
+/** The depth the in-flight analysis is running to. */
+let currentTargetDepth = DEFAULT_SETTINGS.depth;
+/** Allows an intentional same-position restart (e.g. adding PV lines) to repaint lower-depth rows. */
+let allowDepthRegressionForCurrentSearch = false;
+/**
+ * Why the engine won't analyze the viewed position (an unsupported variant/position, or the engine
+ * refusing it), or undefined when analyzable.
+ */
+let blockReason: EngineSupportCode | undefined;
+
+let latestUpdate: CevalUpdate | undefined;
+
+/** Timing machinery for streaming engine output to the UI: the emit throttle + the view-move refresh coalescer. */
+const scheduler: {
+	/** Trailing-edge throttle timer for {@link emitNow}. */
+	timer: ReturnType<typeof setTimeout> | undefined;
+	/** When the last update was emitted (drives the leading-edge throttle in {@link scheduleEmit}). */
+	lastEmitMs: number;
+	/** Whether a coalesced 'view-move' refresh is already scheduled for this microtask. */
+	refreshQueued: boolean;
+} = { timer: undefined, lastEmitMs: 0, refreshQueued: false };
+
+/**
+ * Crashes per position, by ICN. NOT reset by search progress — a crash can arrive after several
+ * depths stream in. A position reaching {@link CRASHES_BEFORE_GIVING_UP} is un-analyzable, and is
+ * never fed to a worker again.
+ */
+const crashCounts = new Map<string, number>();
+
+/** Positions the engine refused, by ICN, so they're blocked without ever being sent again. */
+const refusals = new Map<string, EngineRefusal>();
+
+/** Per-page-session cache of every viewed position's deepest local analysis. */
+const positionCache = new Map<string, CevalUpdate>();
+
+const updateListeners = new Set<(update: CevalUpdate | undefined) => void>();
+const statusListeners = new Set<(status: CevalStatus) => void>();
+const legalMovesListeners = new Set<(update: CevalLegalMovesUpdate) => void>();
+const queuedLegalMovesRequests: { requestId: number; icn: string }[] = [];
+
+// Settings Persistence --------------------------------------------------------
+
+/** The stored engine settings, clamped to valid ranges, or the defaults if none are stored. */
+function loadSettings(): CevalSettings {
+	const raw: unknown = LocalStorage.loadItem(STORAGE_KEY);
+	const parsed = CevalSettingsSchema.safeParse(raw);
+	if (raw !== undefined && !parsed.success)
+		console.warn('[ceval] Discarding stored engine settings in a stale format.');
+	// Copied, never the constant itself — the clamps below mutate what they're given.
+	const loaded: CevalSettings = parsed.success ? parsed.data : { ...DEFAULT_SETTINGS };
+	// Ranges only — the schema already guaranteed integers.
+	loaded.multiPv = math.clamp(loaded.multiPv, 1, MAX_MULTI_PV);
+	if (!HASH_OPTIONS.includes(loaded.hashMb)) loaded.hashMb = DEFAULT_SETTINGS.hashMb;
+	loaded.depth = math.clamp(loaded.depth, MIN_DEPTH, MAX_DEPTH);
+	loaded.threads = math.clamp(loaded.threads, 1, maxThreads());
+	return loaded;
+}
+
+/** Most threads the user can pick: {@link enginewasm.maxThreads} when threading is usable, else 1 (locked). */
+function maxThreads(): number {
+	if (!engineSupportsThreads) return 1;
+	return enginewasm.maxThreads();
+}
+
+/** Saves the current settings to local storage. */
+function persistSettings(): void {
+	try {
+		LocalStorage.saveItem(STORAGE_KEY, settings, STORAGE_EXPIRY_MS);
+	} catch (error) {
+		console.warn('[ceval] Could not save the engine settings:', error);
+	}
+}
+
+// Winning Chances -------------------------------------------------------------
+
+/** Winning chances for a line's eval — mate takes precedence over cp. */
+function lineWinningChances(cp: number | undefined, mate: number | undefined): number {
+	return mate !== undefined ? mateWinningChances(mate) : cpWinningChances(cp ?? 0);
+}
+
+/**
+ * A white-POV forced mate maps to a full win probability (±1),
+ * filling the gauge completely with the winner's color.
+ */
+function mateWinningChances(mate: number): number {
+	return mate > 0 ? 1 : -1;
+}
+
+/** White-POV cp → winning chances for the eval gauge. */
+function cpWinningChances(cp: number): number {
+	// Clamp at ±1200 so a mate (±1) always shows a higher gauge than any non-mate eval.
+	return winchance.cpToWinningChances(cp, 1200);
+}
+
+// Worker Lifecycle ------------------------------------------------------------
+
+/** Spawns (or respawns) the search worker with the current settings and Lazy SMP thread count. */
+function spawnWorker(): void {
+	terminateWorker();
+	engineUnloadable = false;
+	search = analysisworker.spawn({
+		hashMb: settings.hashMb,
+		threads: settings.threads,
+		onMessage: handleWorkerMessage,
+		onFault: handleSearchWorkerFault,
+	});
+	notifyStatus();
+}
+
+/** Kills the search worker, if any. */
+function terminateWorker(): void {
+	if (search) analysisworker.terminate(search);
+	// The stop-flag view points into the terminated worker's memory; the respawn posts a fresh one.
+	search = undefined;
+	// Keep lastAnalyzedIcn: a respawn (e.g. hash change) re-sends the same position
+	// via a forced refresh, so the on-screen eval shouldn't blank.
+}
+
+/** Routes a message from the search worker. */
+function handleWorkerMessage(msg: AnalysisResponse): void {
+	switch (msg.type) {
+		case 'ready':
+			// A single-threaded engine build locks the thread setting to 1 (panel disables the slider).
+			if (!msg.mt && engineSupportsThreads) {
+				engineSupportsThreads = false;
+				if (settings.threads > 1) {
+					settings = { ...settings, threads: 1 };
+					persistSettings();
+				}
+			}
+			refreshAnalysis(true); // Fresh wasm module, so this always restarts from depth 1.
+			notifyStatus();
+			break;
+		case 'info':
+			// NOTE: deliberately does NOT reset the crash counter — a crash can arrive after
+			// several depths stream in, so progress must not clear the per-position count.
+			receiveInfo(msg.requestId, msg.info, false);
+			break;
+		case 'done':
+			receiveInfo(msg.requestId, msg.info, true, msg.reason === 'terminal');
+			notifyStatus();
+			break;
+		case 'refused':
+			if (!analyzed || msg.requestId !== analyzed.requestId) break;
+			refusals.set(analyzed.icn, msg.reason);
+			blockAnalysis(msg.reason);
+			break;
+	}
+}
+
+/** Posts a command to the search worker, if one is running. */
+function send(command: AnalysisCommand): void {
+	search?.worker.postMessage(command);
+}
+
+/** Aborts the search worker's in-flight slice instantly (the search polls this shared flag every node batch). */
+function interruptSearch(): void {
+	if (search) analysisworker.interrupt(search);
+}
+
+/** Ends the in-flight search for good (an interrupt alone resumes it), dropping its tail info. */
+function abandonSearch(): void {
+	interruptSearch();
+	send({ cmd: 'stop' });
+	activeRequestId++;
+	analyzed = undefined;
+}
+
+/** Stops the engine (keeps the worker warm). */
+function stopAnalysis(): void {
+	interruptSearch();
+	send({ cmd: 'stop' });
+	notifyStatus();
+}
+
+/**
+ * Clears every page-side trace of the unloaded game. The workers survive it: the next position
+ * carries `newGame`, which makes the engine drop its searcher and transposition table — all a
+ * respawn would clear, without the wasm reload (which offline can't even complete). The
+ * legal-moves helper builds and frees an engine per request, so it holds nothing to clear.
+ */
+function resetEngineSession(): void {
+	// The old game's search must not outlive it. A not-yet-ready worker has no search to stop, and
+	// the shared flag aborts a running one within a node batch — but a single-threaded build shares
+	// no flag to write and stays blocked inside its unbounded search call, so terminating is the
+	// only way out there (as in gamereview's abortStalledSearch).
+	if (!search?.ready || analysisworker.interrupt(search)) send({ cmd: 'stop' });
+	else terminateWorker();
+	latestUpdate = undefined;
+	analyzed = undefined;
+	activeRequestId++;
+	lastAnalyzedIcn = undefined;
+	nextPositionIsNewGame = true;
+	goDeeperActive = false;
+	currentTargetDepth = settings.depth;
+	allowDepthRegressionForCurrentSearch = false;
+	blockReason = undefined;
+	crashCounts.clear();
+	refusals.clear();
+	positionCache.clear();
+	queuedLegalMovesRequests.length = 0;
+	emitNow();
+	notifyStatus();
+}
+
+// Fault Recovery --------------------------------------------------------------
+
+/**
+ * Handles the search worker dying. An engine that never loaded switches analysis off — a respawn
+ * would only repeat the failure. One that crashed after running is recovered per-position.
+ */
+function handleSearchWorkerFault(fault: AnalysisWorkerFault, reason: string): void {
+	console.error(`[ceval] Analysis worker ${fault}: ${reason}`);
+	if (fault === 'unloadable') handleWorkerFailure();
+	else recoverFromEngineFault();
+}
+
+/**
+ * Switches analysis off entirely, for an engine that can't be loaded at all. Only a deliberate
+ * retry (toggling the engine on, or the next game load) respawns it — recovering an offline user.
+ */
+function handleWorkerFailure(): void {
+	terminateWorker();
+	terminateLegalWorker();
+	engineUnloadable = true;
+	enabled = false;
+	queuedLegalMovesRequests.length = 0;
+	notifyStatus();
+}
+
+/**
+ * Handles a worker crash by counting it against the position it died on ({@link crashCounts}).
+ *
+ * Respawns ONLY to retry that position — that bound is what stops the loop, since a fresh
+ * worker's 'ready' re-feeds the viewed position, so an unconditional respawn would crash,
+ * respawn and re-feed forever with no user input in it. A crash with no retry left (dead
+ * position) or none to attribute (nothing was being analyzed) leaves the slot empty instead;
+ * {@link refreshAnalysis} re-warms it as soon as there's an analyzable position for it.
+ */
+function recoverFromEngineFault(): void {
+	const icn = analyzed?.icn ?? lastAnalyzedIcn;
+	if (icn !== undefined) {
+		const count = (crashCounts.get(icn) ?? 0) + 1;
+		crashCounts.set(icn, count);
+		if (!isPositionDead(icn)) {
+			console.warn(`[ceval] Analysis worker crashed; restarting (crash ${count}).`);
+			restartWorkerForSearch();
+			return;
+		}
+		console.error('[ceval] Analysis engine crashed repeatedly on this position; giving up on it.'); // prettier-ignore
+	} else console.error('[ceval] Analysis worker crashed while idle; not respawning.');
+
+	terminateWorker();
+	refreshAnalysis(true); // Re-warms only if the VIEWED position is analyzable — never the dead one.
+}
+
+/** Whether the engine has crashed on this position too many times to keep trying it. */
+function isPositionDead(icn: string): boolean {
+	return (crashCounts.get(icn) ?? 0) >= CRASHES_BEFORE_GIVING_UP;
+}
+
+/** Respawns the search worker to retry the crashed position, letting shallower depths repaint. */
+function restartWorkerForSearch(): void {
+	allowDepthRegressionForCurrentSearch = true;
+	spawnWorker();
+}
+
+// Legal-Moves Helper Worker ---------------------------------------------------
+
+/** Requests the legal moves for {@link icn} from the idle helper worker (never blocked by the search). */
+function requestLegalMoves(requestId: number, icn: string): void {
+	ensureLegalWorker();
+	if (!legal || !legal.ready) {
+		queuedLegalMovesRequests.push({ requestId, icn });
+		return;
+	}
+	legal.worker.postMessage({ cmd: 'legalmoves', requestId, icn } satisfies AnalysisCommand);
+}
+
+/** Lazily spins up the idle helper worker that answers legal-moves queries (no thread pool — it never searches). */
+function ensureLegalWorker(): void {
+	if (legal) return;
+	legal = analysisworker.spawn({
+		// Arbitrary — it builds a throwaway engine per request and never searches,
+		// so its transposition table is never read. Kept small to waste no memory.
+		hashMb: 16,
+		onMessage: (msg) => {
+			if (msg.type === 'ready') flushQueuedLegalMovesRequests();
+			else if (msg.type === 'legalmoves') receiveLegalMoves(msg);
+		},
+		// Silent by design: the overlay is a debug aid that degrades to showing nothing, and a
+		// helper spawned while offline fails on every request. Its queued requests survive —
+		// the next request spawns a fresh helper, which flushes them.
+		onFault: () => { legal = undefined; }, // prettier-ignore
+	});
+}
+
+/** Sends any legal-move requests that were queued while the helper worker was still spinning up. */
+function flushQueuedLegalMovesRequests(): void {
+	if (!legal || !legal.ready) return;
+	for (const request of queuedLegalMovesRequests.splice(0)) {
+		legal.worker.postMessage({
+			cmd: 'legalmoves',
+			requestId: request.requestId,
+			icn: request.icn,
+		} satisfies AnalysisCommand);
+	}
+}
+
+/** Fans a legal-moves response from the worker out to all subscribers. */
+function receiveLegalMoves(update: CevalLegalMovesUpdate): void {
+	for (const listener of legalMovesListeners) listener(update);
+}
+
+/** Frees the idle legal-moves helper worker. Call when the debug overlay is toggled off. */
+function terminateLegalWorker(): void {
+	if (legal) analysisworker.terminate(legal);
+	legal = undefined;
+}
+
+// Position Tracking -----------------------------------------------------------
+
+/** Coalesces a burst of synchronous 'view-move' events into one refresh of the final position. */
+function scheduleRefresh(): void {
+	if (scheduler.refreshQueued) return;
+	scheduler.refreshQueued = true;
+	queueMicrotask(() => {
+		scheduler.refreshQueued = false;
+		refreshAnalysis();
+	});
+}
+
+/**
+ * Re-points the engine at the currently viewed position and (re)starts the search.
+ * @param force - Resend even if the position is unchanged (used for settings changes
+ *   and toggling the engine on). A same-position resend keeps the currently-shown eval
+ *   on screen (no blank) and preserves the engine's transposition table, so changing
+ *   MultiPV / search time, or toggling the engine off then on, resumes instantly rather
+ *   than resetting the analysis.
+ */
+function refreshAnalysis(force = false, options: RefreshAnalysisOptions = {}): void {
+	if (!enabled) return;
+	// Note: only the logical gamefile is required — 'game-loaded' fires while
+	// graphics are still loading, and analysis shouldn't wait on textures.
+	const gamefile = gameslot.getGamefile();
+	if (!gamefile) return;
+
+	const reason = computeBlockReason(gamefile);
+	if (reason !== undefined) {
+		blockAnalysis(reason);
+		return;
+	}
+
+	const icn = getViewedPositionIcn(gamefile);
+	const refusal = refusals.get(icn);
+	if (refusal !== undefined) {
+		blockAnalysis(refusal);
+		return;
+	}
+
+	if (blockReason !== undefined) {
+		blockReason = undefined;
+		lastAnalyzedIcn = undefined;
+	}
+
+	// This position crashed the engine too many times — never send it again (that just re-crashes
+	// the worker). Checked ahead of the spawn below, so a dead position never costs a wasm load.
+	if (isPositionDead(icn)) {
+		abandonSearch();
+		latestUpdate = undefined;
+		lastAnalyzedIcn = icn;
+		emitNow();
+		notifyStatus();
+		return;
+	}
+
+	// Re-warm the slot a crash left empty, now that there's analyzable work for a worker.
+	if (!search) spawnWorker();
+	if (!search?.ready) return; // A fresh worker re-enters here from its 'ready'.
+
+	const positionChanged = icn !== lastAnalyzedIcn;
+	if (!force && !positionChanged) return;
+
+	if (positionChanged) {
+		// A cache from a lower MultiPV has too few lines for the current setting — drop it and
+		// re-search fresh rather than showing a short list until the engine catches up.
+		if ((positionCache.get(icn)?.multiPv ?? Infinity) < settings.multiPv)
+			positionCache.delete(icn);
+		// "Go deeper" is a one-shot for the position it was pressed on; any new position
+		// (cycling moves or making one) reverts to the default target depth.
+		goDeeperActive = false;
+		allowDepthRegressionForCurrentSearch = false;
+	}
+
+	currentTargetDepth = goDeeperActive ? MAX_DEPTH : settings.depth;
+	const cached = positionCache.get(icn);
+
+	if (positionChanged) {
+		latestUpdate = cached ? retargetCachedUpdate(cached) : undefined;
+		emitNow(); // Show cached eval immediately, or clear when this position is new.
+	}
+
+	// The cache already reached the current target depth (and has enough lines): show it and skip
+	// a fresh cold search entirely, like lichess's doStart early-return. Only "go deeper" (which
+	// raises the target to MAX_DEPTH) or a not-yet-finished cache falls through to a real search.
+	if (
+		cached &&
+		cached.multiPv >= settings.multiPv &&
+		(cached.terminal || cached.depth >= currentTargetDepth)
+	) {
+		abandonSearch(); // Keeps the worker (and its warm hash).
+		latestUpdate = retargetCachedUpdate(cached);
+		emitNow();
+		lastAnalyzedIcn = icn;
+		notifyStatus();
+		return;
+	}
+
+	// ALWAYS interrupt before sending: the worker's search call is unbounded (unsliced), so
+	// queued commands are only processed once the shared stop flag aborts the in-flight call
+	// (within a node batch). The worker keeps its warm transposition table either way, so
+	// re-reaching the prior depth after a position switch is near-instant.
+	interruptSearch();
+
+	const moveIndex = gamefile.state.local.moveIndex;
+	const requestId = ++activeRequestId;
+	analyzed = {
+		requestId,
+		icn,
+		moveIndex,
+		turn: gamerules.getWhosTurnAtMoveIndex(gamefile.gameRules, moveIndex),
+		multiPv: settings.multiPv,
+	};
+
+	send({
+		cmd: 'position',
+		icn,
+		newGame: nextPositionIsNewGame,
+		resetSearch: options.restartSearch,
+	});
+	send({
+		cmd: 'go',
+		opts: { multiPv: settings.multiPv, maxDepth: currentTargetDepth, requestId },
+	});
+	lastAnalyzedIcn = icn;
+	nextPositionIsNewGame = false;
+	notifyStatus();
+}
+
+/**
+ * Why the engine can't analyze `gamefile`'s viewed position, as far as the page can tell without
+ * asking it (4D/5D variants, modifiers, too many pieces, unsupported turn orders/pieces/win
+ * conditions), or undefined. The engine may still refuse the position itself ({@link refusals}).
+ */
+function computeBlockReason(gamefile: GameFile): EngineSupportCode | undefined {
+	const result = apeironcard.isAnalysisSupported(gamefile);
+	return result.supported ? undefined : result.reason;
+}
+
+/** Stops the engine and marks the viewed position un-analyzable, for the given `reason`. */
+function blockAnalysis(reason: EngineSupportCode): void {
+	abandonSearch();
+	blockReason = reason;
+	goDeeperActive = false;
+	lastAnalyzedIcn = undefined;
+	latestUpdate = undefined;
+	emitNow();
+	notifyStatus();
+}
+
+/**
+ * The compact ICN of the position under analysis, carrying its move history up to the viewed ply
+ * so the engine can detect threefold repetition and the fifty-move rule.
+ */
+function getViewedPositionIcn(gamefile: GameFile): string {
+	const longformIn = gamecompressor.compressGamefile(gamefile);
+	longformIn.moves = longformIn.moves?.slice(0, gamefile.state.local.moveIndex + 1);
+	engineicn.prepareForEngine(longformIn);
+	return engineicn.serialize(longformIn);
+}
+
+/** A cached update fitted to the current MultiPV and target depth. */
+function retargetCachedUpdate(update: CevalUpdate): CevalUpdate {
+	// Cache held more lines than now wanted (MultiPV was lowered): trim the extras off the end.
+	const lines = update.lines.slice(0, settings.multiPv);
+	return {
+		...update,
+		lines,
+		targetDepth: currentTargetDepth,
+		done: update.terminal || update.depth >= currentTargetDepth || areAllLinesConclusive(lines),
+	};
+}
+
+/** Whether every line is a forced mate, so searching deeper can't change them. */
+function areAllLinesConclusive(lines: CevalLine[]): boolean {
+	return lines.length > 0 && lines.every((line) => line.mate !== undefined);
+}
+
+// Normalization & Emission ----------------------------------------------------
+
+/** Normalizes the active request's engine info to white POV, then caches and emits it. */
+function receiveInfo(requestId: number, info: AnalysisInfo, done: boolean, terminal = false): void {
+	if (!analyzed) return;
+	if (requestId !== activeRequestId || requestId !== analyzed.requestId) return;
+	const blackPov = analyzed.turn === p.BLACK;
+
+	// Drop lines that repeat an earlier line's first move. The engine's lines arrive
+	// sorted best-first, so the first occurrence of each first move is the strongest
+	// continuation for it — this collapses e.g. a forced position down to the single
+	// real line instead of padding out to the requested MultiPV count.
+	const seenFirstMoves = new Set<string>();
+	const uniqueLines = info.lines.filter((line) => {
+		const first = line.moves[0];
+		if (first === undefined) return true; // Keep an empty/terminal line as-is.
+		if (seenFirstMoves.has(first)) return false;
+		seenFirstMoves.add(first);
+		return true;
+	});
+
+	const lines: CevalLine[] = uniqueLines.map((line) => {
+		const cp = line.cp !== undefined ? (blackPov ? -line.cp : line.cp) : undefined;
+		const mate = line.mate !== undefined ? (blackPov ? -line.mate : line.mate) : undefined;
+		return {
+			moves: line.moves,
+			cp,
+			mate,
+			winningChances: lineWinningChances(cp, mate),
+		};
+	});
+
+	const update: CevalUpdate = {
+		depth: info.depth,
+		seldepth: info.seldepth,
+		nodes: info.nodes,
+		nps: info.nps,
+		hashfull: info.hashfull,
+		lines,
+		multiPv: analyzed.multiPv,
+		targetDepth: currentTargetDepth,
+		moveIndex: analyzed.moveIndex,
+		done,
+		terminal,
+	};
+
+	const cached = positionCache.get(analyzed.icn);
+	if (cached && update.depth < cached.depth && !allowDepthRegressionForCurrentSearch) {
+		// A search can finish shallower than the cache, e.g. a deeper review seed: keep the
+		// cached lines, but the search is still over.
+		if (done) {
+			latestUpdate = { ...retargetCachedUpdate(cached), done: true };
+			emitNow();
+		}
+		return;
+	}
+
+	latestUpdate = update;
+	if (shouldReplaceCachedUpdate(cached, update)) {
+		positionCache.set(analyzed.icn, update);
+		if (cached && update.depth >= cached.depth) allowDepthRegressionForCurrentSearch = false;
+	}
+
+	if (done) emitNow();
+	else scheduleEmit();
+}
+
+/** Whether `update` should replace the cached one: deeper, or as deep with no fewer lines. */
+function shouldReplaceCachedUpdate(cached: CevalUpdate | undefined, update: CevalUpdate): boolean {
+	if (!cached) return true;
+	if (update.terminal || cached.terminal) return true;
+	if (update.depth !== cached.depth) return update.depth > cached.depth;
+	return update.lines.length >= cached.lines.length;
+}
+
+/**
+ * Leading-edge throttle: emit immediately when the last emit is older than {@link THROTTLE_MS}
+ * (so the first depth of a new search shows instantly, and background tabs — where page timers
+ * are heavily throttled — still display progress), else trail with a timer.
+ */
+function scheduleEmit(): void {
+	const elapsed = Date.now() - scheduler.lastEmitMs;
+	if (elapsed >= THROTTLE_MS) return emitNow();
+	if (scheduler.timer === undefined)
+		scheduler.timer = setTimeout(() => emitNow(), THROTTLE_MS - elapsed);
+}
+
+/** Pushes the latest update to every subscriber now, cancelling any pending throttled emit. */
+function emitNow(): void {
+	if (scheduler.timer !== undefined) {
+		clearTimeout(scheduler.timer);
+		scheduler.timer = undefined;
+	}
+	scheduler.lastEmitMs = Date.now();
+	for (const listener of updateListeners) listener(latestUpdate);
+}
+
+/**
+ * Immediately re-pushes the retained eval to the UI, trimmed to the current MultiPV
+ * count. Used on engine-enable and on a MultiPV change so the display reflects the
+ * change at once (old eval on resume, fewer lines on a MultiPV decrease) instead of
+ * blanking until the engine's next update arrives.
+ */
+function reemitCurrent(): void {
+	if (latestUpdate) {
+		latestUpdate = { ...latestUpdate, lines: latestUpdate.lines.slice(0, settings.multiPv) };
+	}
+	emitNow();
+}
+
+/** Pushes the current engine status to every subscriber. */
+function notifyStatus(): void {
+	const status = getStatus();
+	for (const listener of statusListeners) listener(status);
+}
+
+/** The engine's current lifecycle status, for the UI status row. */
+function getStatus(): CevalStatus {
+	// Outranks 'off': the failure switched the engine off itself, so reporting 'off' would
+	// claim the user did. Holds until a retry is attempted, which clears the flag.
+	if (engineUnloadable) return { kind: 'failed' };
+	if (!enabled) return { kind: 'off' };
+	if (lastAnalyzedIcn !== undefined && isPositionDead(lastAnalyzedIcn))
+		return { kind: 'crashed' };
+	if (blockReason !== undefined) return { kind: 'blocked', reason: blockReason };
+	if (!search?.ready) return { kind: 'loading' };
+	if (latestUpdate?.done) return { kind: 'idle' };
+	return { kind: 'computing' };
+}
+
+// Public API ------------------------------------------------------------------
+
+/** Starts the engine and wires it to the board. Must be called before {@link setEnabled}. */
+function init(): void {
+	// Pre-warm the engine immediately, regardless of whether eval is enabled, so its wasm module is
+	// loaded and enabling eval later starts analyzing instantly instead of waiting on a cold load.
+	// refreshAnalysis() no-ops while `enabled` is false, so this doesn't start any searching.
+	spawnWorker();
+
+	// Keep the engine pointed at the viewed position. 'view-move' fires on every
+	// board position change, including physical moves. Coalesce them: an operation like
+	// branching (viewFront to the game's front, then rewinding back) fires several
+	// 'view-move's synchronously, but only the final resting position matters — refreshing
+	// per event would restart the search at each intermediate position it passes through.
+	GameBus.addEventListener('view-move', scheduleRefresh);
+	GameBus.addEventListener('game-loaded', () => {
+		nextPositionIsNewGame = true;
+		// Re-warm regardless of `enabled`, for the unload or crash that left no worker.
+		if (!search) spawnWorker();
+		refreshAnalysis(true);
+	});
+	GameBus.addEventListener('game-unloaded', () => {
+		resetEngineSession();
+	});
+}
+
+/** Whether the user has the engine switched on. */
+function isEnabled(): boolean {
+	return enabled;
+}
+
+/** Whether the engine is refusing to analyze the viewed position for any reason. */
+function isBlocked(): boolean {
+	return blockReason !== undefined;
+}
+
+/**
+ * Switches the engine on or off, persisting the choice and keeping the last eval to restore
+ * when it comes back on.
+ */
+function setEnabled(value: boolean): void {
+	settings = { ...settings, enabled: value };
+	persistSettings();
+	if (enabled === value) return;
+	enabled = value;
+	if (enabled) {
+		refreshAnalysis(true); // Spawns a worker itself if the pre-warmed one crashed/never spawned.
+		// Show the retained eval right away (refreshAnalysis only blanks it when the
+		// position changed while the engine was off) instead of a gap until the resume.
+		reemitCurrent();
+	} else {
+		// Keep latestUpdate so re-enabling can restore it instantly; just stop searching.
+		stopAnalysis();
+	}
+	notifyStatus();
+}
+
+/** A copy of the current engine settings. */
+function getSettings(): CevalSettings {
+	return { ...settings };
+}
+
+/**
+ * Applies new settings, persisting them and restarting whatever is necessary
+ * (a hash change respawns the worker; others just re-issue the search).
+ */
+function updateSettings(partial: Partial<CevalSettings>): void {
+	const previous = settings;
+	settings = { ...settings, ...partial };
+	persistSettings();
+
+	if (!enabled || !search) return;
+	// Changing the target depth clears "go deeper" so the new depth setting takes over.
+	if (partial.depth !== undefined) goDeeperActive = false;
+	if (settings.hashMb !== previous.hashMb || settings.threads !== previous.threads) {
+		spawnWorker(); // Hash size & thread pool are fixed per worker; 'ready' re-issues the search.
+	} else {
+		// Reflect a MultiPV change on screen at once (trim/keep lines) before the engine
+		// re-runs, so it isn't stuck showing the old line count until the next update.
+		if (partial.multiPv !== undefined) reemitCurrent();
+		// Raising MultiPV restarts from depth 1 (warm TT kept); let those lower-depth rows
+		// repaint over the deeper cache so the new line appears at once, not on catch-up.
+		if (partial.multiPv !== undefined && settings.multiPv > previous.multiPv) {
+			allowDepthRegressionForCurrentSearch = true;
+		}
+		// Same position, new search params: keep the current eval visible while the
+		// worker picks up the new target.
+		refreshAnalysis(true, { restartSearch: partial.multiPv !== undefined });
+		// Raising the depth after the search already finished must visibly resume: reflect
+		// the new target and "searching" state now (refreshAnalysis has re-issued the 'go'),
+		// so the stats/progress leave "done" instead of waiting on the first deeper info.
+		if (
+			partial.depth !== undefined &&
+			latestUpdate?.done &&
+			latestUpdate.depth < currentTargetDepth
+		) {
+			latestUpdate = { ...latestUpdate, targetDepth: currentTargetDepth, done: false };
+			emitNow();
+		}
+	}
+}
+
+/** Deepens the current position's analysis: searches on toward {@link MAX_DEPTH}. */
+function goDeeper(): void {
+	goDeeperActive = true;
+	refreshAnalysis(true); // Same position, so the flag survives the position-change reset.
+	// Reflect the new (deeper) target on screen at once — don't wait for the engine's
+	// next info, otherwise the stats would keep showing the old "…/13" target.
+	if (latestUpdate) {
+		latestUpdate = { ...latestUpdate, targetDepth: currentTargetDepth, done: false };
+		emitNow();
+	}
+}
+
+/**
+ * Seeds the position cache with an externally-computed evaluation (the game review).
+ * Ignored when something at least as deep is already cached. Once seeded, the shown
+ * eval only changes when a manual search reaches this depth — the same depth guards
+ * that protect any cached analysis ({@link receiveInfo}, {@link refreshAnalysis}).
+ */
+function seedPositionCache(seed: {
+	icn: string;
+	depth: number;
+	/** The move index (`gamefile.state.local.moveIndex`) at which this position is viewed. */
+	moveIndex: number;
+	/** The line's compact move tokens, from the seeded position. */
+	moves: string[];
+	/** Centipawns, white POV. Absent when mating. */
+	cp?: number;
+	/** Full moves to mate, white POV sign. */
+	mate?: number;
+}): void {
+	const cached = positionCache.get(seed.icn);
+	if (cached && cached.depth >= seed.depth) return;
+
+	const line: CevalLine = {
+		moves: seed.moves,
+		cp: seed.cp,
+		mate: seed.mate,
+		winningChances: lineWinningChances(seed.cp, seed.mate),
+	};
+	positionCache.set(seed.icn, {
+		depth: seed.depth,
+		seldepth: seed.depth,
+		nodes: 0,
+		nps: 0,
+		hashfull: 0,
+		lines: [line],
+		multiPv: 1,
+		targetDepth: seed.depth,
+		moveIndex: seed.moveIndex,
+		done: true,
+		terminal: false,
+	});
+
+	// If a live search is on this exact position, its shallower packets would now be dropped by
+	// receiveInfo's depth guard (freezing the readout); re-run to take the cache-hit fast path.
+	if (seed.icn === lastAnalyzedIcn) refreshAnalysis(true);
+}
+
+/** The last normalized engine update for the current position, if any. */
+function getLatestUpdate(): CevalUpdate | undefined {
+	return latestUpdate;
+}
+
+/** Subscribes to throttled engine updates. `undefined` means "eval cleared". */
+function onUpdate(listener: (update: CevalUpdate | undefined) => void): void {
+	updateListeners.add(listener);
+}
+
+/** Subscribes to engine status changes. */
+function onStatus(listener: (status: CevalStatus) => void): void {
+	statusListeners.add(listener);
+}
+
+/** Subscribes to legal-moves responses. */
+function onLegalMoves(listener: (update: CevalLegalMovesUpdate) => void): void {
+	legalMovesListeners.add(listener);
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Constants
+	MAX_DEPTH,
+	MIN_DEPTH,
+	HASH_OPTIONS,
+	MAX_MULTI_PV,
+	// Settings Persistence
+	maxThreads,
+	// Winning Chances
+	cpWinningChances,
+	// Legal-Moves Helper Worker
+	requestLegalMoves,
+	terminateLegalWorker,
+	// Position Tracking
+	computeBlockReason,
+	// Public API
+	init,
+	isEnabled,
+	isBlocked,
+	setEnabled,
+	getSettings,
+	updateSettings,
+	goDeeper,
+	seedPositionCache,
+	getLatestUpdate,
+	onUpdate,
+	onStatus,
+	onLegalMoves,
+};

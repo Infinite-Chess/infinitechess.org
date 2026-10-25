@@ -61,7 +61,7 @@
 {% endblock %}
 
 {% block script %}
-<script type="module" src="{{ manifest['scripts/esm/views/register.ts'] }}"></script>
+<script type="module" src="{{ manifest['scripts/views/register.ts'] }}"></script>
 {# Runs logically after the module above, so register.ts assigns window.onloadTurnstileCallback before Turnstile's API invokes it. #}
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" defer></script>
 {% endblock %}

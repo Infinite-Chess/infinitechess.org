@@ -39,10 +39,10 @@
 - Ad-hoc scripts — anything you write to answer a question rather than ship a change — go in the
   gitignored `sandbox/`, run from the repo root: `npx tsx sandbox/<name>.ts`. Written outside the
   repo they inherit no `node_modules` and no `"type": "module"`, so top-level `await` fails.
-- When changing legal-move, check, checkmate or game-end logic, run `npm run validate-icn` yourself
-  on the validator dataset (ask me for its path) before your first edit and after, adding
-  `--conclusions` when only game-end logic changed. For refactors and speed-ups the fingerprint must
-  not change.
+- When changing legal-move, check, checkmate or game-end logic, unless it is plainly
+  behavior-identical at a glance, run `npm run validate-icn` yourself on the validator dataset (ask
+  me for its path) before your first edit and after, adding `--conclusions` when only game-end logic
+  changed. For refactors and speed-ups the fingerprint must not change.
 - To send me a test email: `npx tsx scripts/send-test-email.ts <verify|reset|changed> <to>`.
 
 ## Agent rulebook
@@ -152,7 +152,8 @@ followed, tell me.
     discriminated union or object, so illegal combinations can't be typed.
 
 24. Judge hot-path code (per frame, move or piece) on cost, not just correctness. Optimize where we
-    can.
+    can. Unit tests too: one feature's may add at most 100 ms to the run on this machine; past that,
+    optimize them or drop the tests entirely.
 
 ### Comments
 
@@ -197,6 +198,7 @@ followed, tell me.
     - Saving live games to the database: `docs/systems/LIVE_GAME_PERSISTENCE.md`
     - Password reset: `docs/systems/PASSWORD_RESET.md`
     - Account registration: `docs/systems/REGISTRATION.md`
+    - Engine-assistance detection: `docs/systems/CHEAT_DETECTION.md`
 
 ### Stored data
 
@@ -234,7 +236,7 @@ followed, tell me.
 34. After making changes, search for any JSDoc or comment they made false; make sure they aren't
     stale. Make sure touched files' description headers have not become stale. Then go back over all
     documentation and comments you touched or added, _look for the signs_ of AI bloat listed in rule
-    24, and _fix_ them.
+    25, and _fix_ them.
 
 35. After finishing changes that modified at least one script, run `npm run check --silent` —
     format, types, lint, import rules, and tests — and get it passing. Repeat after every subsequent
@@ -310,6 +312,8 @@ disagree, study more siblings before trusting either.
   section a `// Section name -------` divider; one with fewer gets none. Never `=====` bars. Pad the
   dashes so the line is exactly 80 characters. `// --- Name ---` may only mark sub-divisions.
 - Constants UPPER_SNAKE_CASE; mutable state camelCase under `// State`.
+- No magic numbers or strings: name a meaningful literal as a constant, and import one that already
+  exists rather than repeating its value.
 - Constant objects' members are camelCase, but enum-like maps' are UPPER_SNAKE_CASE and `enum`
   members PascalCase; data-keyed tables keep their data's keys.
 - Locals follow whichever casing dominates the surrounding script — camelCase or snake_case
@@ -333,7 +337,7 @@ disagree, study more siblings before trusting either.
 - Nothing gets exported — including types — without a consumer outside the module, unless it
   completes a set, dormant code will need it back, or it serves an occasional one-off use; mark that
   last kind with a comment, as nothing else reveals it. `scripts/modules/orphan-exports.ts <root>`
-  lists candidates; it matches textually, so confirm each hit before deleting.
+  lists candidates; it matches by name, so confirm each hit before deleting.
 - Import identifiers match the script's basename; if a local name collides, rename the local, don't
   alias the import.
 

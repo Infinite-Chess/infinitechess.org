@@ -3,7 +3,7 @@
 /*
  * Site-wide toast notification, loaded on every page.
  * Single element pinned to the top-right; sliding in/out with class changes.
- * See src/client/scripts/esm/components/toast.ts for the runtime.
+ * See src/client/scripts/components/toast.ts for the runtime.
  */
 
 .toast {

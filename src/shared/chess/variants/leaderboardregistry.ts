@@ -7,9 +7,9 @@
 
 import type { Player } from '../util/typeutil.js';
 import type { TimeControl } from '../util/clockutil.js';
-import type { SeekVariant, OutSeekVariant } from '../util/variantselection.js';
 import type { VariantCode } from '../util/variantcodes.js';
 import type { GameModifier } from '../util/modutil.js';
+import type { SeekVariant, OutSeekVariant } from '../util/variantselection.js';
 
 // Types -----------------------------------------------------------------------
 

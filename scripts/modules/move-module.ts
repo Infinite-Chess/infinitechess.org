@@ -4,8 +4,9 @@
  * `git mv`s one or more modules and rewrites every relative import specifier pointing
  * at them, plus the specifiers inside the moved files (vi.mock/vi.doMock module ids
  * included). Paths are recomputed from each file's NEW home, so no hand-counting "../".
- * Pass all moves in ONE run so they resolve against each other. Rewritten
- * specifiers always carry .js, the form Node's ESM resolver requires.
+ * Pass all moves in ONE run so they resolve against each other. Rewritten script
+ * specifiers always carry .js, the form Node's ESM resolver requires; an asset's,
+ * like a .glsl shader's, keeps its own file name.
  *
  * It moves FILES only. Renaming a module's import identifier, and re-sorting the import
  * block, are yours — though the precommit hook re-sorts anyway.
@@ -34,12 +35,18 @@ function newHome(file: string): string {
 	return moves.get(file) ?? file;
 }
 
-/** Resolves an import specifier to the .ts file it means, or null if it isn't first-party. */
+/** Resolves an import specifier to the file it means, or null if it isn't first-party. */
 function resolveSpec(fromDir: string, spec: string): string | null {
 	if (!spec.startsWith('.')) return null;
-	const base = path.resolve(fromDir, spec).replace(/\.js$/, '');
+	const exact = path.resolve(fromDir, spec);
+	const base = exact.replace(/\.js$/, '');
 	for (const cand of [`${base}.ts`, `${base}.js`, path.join(base, 'index.ts')]) {
 		if (fs.existsSync(cand) || moves.has(cand)) return cand;
+	}
+	// A non-script asset imported by its own file name, like a .glsl shader
+	const isAsset = !/\.[cm]?[tj]s$/.test(exact);
+	if (isAsset && (moves.has(exact) || fs.statSync(exact, { throwIfNoEntry: false })?.isFile())) {
+		return exact;
 	}
 	return null;
 }

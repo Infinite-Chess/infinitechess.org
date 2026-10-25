@@ -1,0 +1,272 @@
+// src/client/scripts/views/register.ts
+
+/**
+ * Client-side logic for the register form (/register).
+ *
+ * Validates the username/email/password fields (format via the shared validators, plus on-blur
+ * availability checks against the server) with "reward early, punish late" timing, and submits
+ * via fetch. On success the server has staged a pending registration and set the pending
+ * cookie, so the page navigates to /register/awaiting (which owns the "check your email" state,
+ * polling, and the change-email recovery control).
+ */
+
+import accountform from '../components/accountform.js';
+import { serverfetch } from '../util/serverfetch.js';
+import { SettingsBus } from '../util/SettingsBus.js';
+
+import '../components/passwordtoggle.js';
+
+// Elements --------------------------------------------------------------------
+
+const form = document.querySelector<HTMLFormElement>('#register-form')!;
+const usernameInput = document.querySelector<HTMLInputElement>('#username')!;
+const emailInput = document.querySelector<HTMLInputElement>('#email')!;
+const passwordInput = document.querySelector<HTMLInputElement>('#password')!;
+const submitButton = document.querySelector<HTMLButtonElement>('#register-submit')!;
+const turnstileContainer = document.querySelector<HTMLDivElement>('#turnstile-widget')!;
+const usernameError = document.querySelector<HTMLParagraphElement>('#username-error')!;
+const emailError = document.querySelector<HTMLParagraphElement>('#email-error')!;
+const passwordError = document.querySelector<HTMLParagraphElement>('#password-error')!;
+const formError = document.querySelector<HTMLParagraphElement>('#register-error')!;
+
+// State -----------------------------------------------------------------------
+
+let usernameValid = false;
+let emailValid = false;
+let passwordValid = false;
+
+/** The Turnstile widget id, set once the widget renders; used to reset it for a fresh token. */
+let turnstileWidgetId: string | undefined;
+/** The latest single-use Turnstile token, or undefined until solved / after it's spent or expires. */
+let turnstileToken: string | undefined;
+
+// Functions -------------------------------------------------------------------
+
+/** Shows an error beneath a field, or clears it when called with no message. */
+function setFieldError(
+	input: HTMLInputElement,
+	errorElement: HTMLParagraphElement,
+	message?: string,
+): void {
+	accountform.setFieldError(errorElement, message, input);
+}
+
+/** Shows the form-level submit error, or clears it when called with no message. */
+function setFormError(message?: string): void {
+	accountform.setFieldError(formError, message);
+}
+
+/** Re-checks the username's format and records its validity. */
+function validateUsername(reveal: boolean): void {
+	usernameValid = accountform.validateField(usernameInput, usernameError, accountform.usernameError, reveal); // prettier-ignore
+}
+
+/** Re-checks the password's format and records its validity. */
+function validatePassword(reveal: boolean): void {
+	passwordValid = accountform.validateField(passwordInput, passwordError, accountform.passwordError, reveal); // prettier-ignore
+}
+
+/** Re-checks the email's format and records its validity. */
+function validateEmail(reveal: boolean): void {
+	emailValid = accountform.validateField(emailInput, emailError, accountform.emailError, reveal);
+}
+
+/**
+ * Reflects the form's *visible* state on the submit button: enabled as long as
+ * all three fields have some text, none are currently showing an error, and the
+ * Turnstile bot-check has yielded a token. Field errors keep the button disabled
+ * until fixed; form errors don't gate it.
+ */
+function refreshSubmit(): void {
+	const allFilled =
+		usernameInput.value.length > 0 &&
+		passwordInput.value.length > 0 &&
+		emailInput.value.length > 0;
+	const anyVisibleError = [usernameError, passwordError, emailError].some(
+		(el) => !el.classList.contains('hidden'),
+	);
+	submitButton.disabled = !allFilled || anyVisibleError || turnstileToken === undefined;
+}
+
+// Turnstile -------------------------------------------------------------------
+
+/** Re-issues the Turnstile challenge for a fresh token, clearing the spent one (tokens are single-use). */
+function resetTurnstile(): void {
+	turnstileToken = undefined;
+	if (turnstileWidgetId !== undefined) window.turnstile.reset(turnstileWidgetId);
+}
+
+/** Renders the widget and wires its success/error/expired callbacks to the submit gate. */
+function renderTurnstileWidget(): void {
+	turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+		sitekey: turnstileContainer.dataset['sitekey']!,
+		// Match the page's resolved theme (set on <html> by layout.njk's inline head script).
+		theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark',
+		// Success: store the token and ungate the submit button.
+		callback: (token: string): void => {
+			turnstileToken = token;
+			refreshSubmit();
+		},
+		// Error: drop any token, re-gate submit, and ask the user to retry.
+		'error-callback': (): void => {
+			turnstileToken = undefined;
+			setFormError(t.register.verification_failed);
+			refreshSubmit();
+		},
+		// Expired: a previously-issued token aged out (~300s TTL); re-gate and prompt a retry.
+		'expired-callback': (): void => {
+			turnstileToken = undefined;
+			setFormError(t.register.verification_expired);
+			refreshSubmit();
+		},
+	});
+}
+
+// Turnstile's api.js invokes this once ready.
+window.onloadTurnstileCallback = renderTurnstileWidget;
+
+// When the user switches light/dark theme, re-render the widget.
+SettingsBus.addEventListener('color-scheme-change', (): void => {
+	if (turnstileWidgetId === undefined) return; // Never rendered (api.js failed) — nothing to swap.
+	window.turnstile.remove(turnstileWidgetId);
+	turnstileToken = undefined;
+	refreshSubmit();
+	renderTurnstileWidget();
+});
+
+// Form submission -------------------------------------------------------------
+
+/** Submits the register form, navigating to the awaiting page on success. */
+async function submitRegister(): Promise<void> {
+	// Authoritative gate: a field can be filled but unblurred, so its error may not
+	// have surfaced yet (and the button stayed enabled). Reveal any such errors now,
+	// then focus the first invalid field and bail without sending.
+	validateUsername(true);
+	validatePassword(true);
+	validateEmail(true);
+	refreshSubmit();
+	if (!usernameValid || !passwordValid || !emailValid || !turnstileToken) {
+		if (!usernameValid) usernameInput.focus();
+		else if (!passwordValid) passwordInput.focus();
+		else if (!emailValid) emailInput.focus();
+		return;
+	}
+
+	const username = usernameInput.value;
+	const email = emailInput.value.trim();
+	const password = passwordInput.value;
+
+	setFormError();
+	submitButton.disabled = true;
+
+	try {
+		const response = await serverfetch('/api/register', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				username,
+				email,
+				password,
+				'cf-turnstile-response': turnstileToken,
+			}),
+		});
+
+		if (response.ok) {
+			// The pending cookie is set; the awaiting page owns the rest (check-email, polling, change-email).
+			window.location.assign('/register/awaiting');
+		} else {
+			const result = (await response.json()) as {
+				message?: string;
+				field?: 'username' | 'email' | 'password';
+				resetTurnstile?: boolean;
+			};
+			// Field-attributable failures (taken/blacklisted/invalid) carry a `field` and render
+			// beneath that input; systemic failures (server/network) have none and go form-level.
+			const message = result.message ?? t.shared.errors.fallback;
+			switch (result.field) {
+				case 'username':
+					setFieldError(usernameInput, usernameError, message);
+					usernameValid = false;
+					break;
+				case 'email':
+					setFieldError(emailInput, emailError, message);
+					emailValid = false;
+					break;
+				case 'password':
+					setFieldError(passwordInput, passwordError, message);
+					passwordValid = false;
+					break;
+				default:
+					setFormError(message);
+			}
+			// Only re-issue a token when the server actually spent it (it verifies Turnstile after the field checks).
+			if (result.resetTurnstile) resetTurnstile();
+			refreshSubmit(); // Re-enable for a retry.
+			return;
+		}
+	} catch (e: unknown) {
+		console.error('Registration request failed:', e);
+		setFormError(t.shared.errors.network);
+		resetTurnstile(); // Re-issue a fresh token for the retry.
+		refreshSubmit();
+	}
+}
+
+// Event Listeners -------------------------------------------------------------
+
+form.addEventListener('submit', (event: SubmitEvent): void => {
+	event.preventDefault();
+	submitRegister();
+});
+
+// While typing, recompute validity for the submit button.
+usernameInput.addEventListener('input', (): void => {
+	validateUsername(false);
+	setFormError();
+	refreshSubmit();
+});
+passwordInput.addEventListener('input', (): void => {
+	validatePassword(false);
+	setFormError();
+	refreshSubmit();
+});
+emailInput.addEventListener('input', (): void => {
+	validateEmail(false);
+	setFormError();
+	refreshSubmit();
+});
+
+// On blur, reveal any format error; then — for fields with a server-side check —
+// verify availability if the format is valid.
+usernameInput.addEventListener('blur', async (): Promise<void> => {
+	validateUsername(true);
+	refreshSubmit();
+	if (!usernameValid) return;
+	try {
+		const response = await serverfetch(
+			`/api/register/availability?username=${encodeURIComponent(usernameInput.value)}`,
+		);
+		// If it's rate-limited (or otherwise non-OK), skip silently — don't alert the user.
+		if (!response.ok) return;
+		const result = (await response.json()) as
+			| { available: true }
+			| { available: false; reason: string };
+		if (!result.available) {
+			setFieldError(usernameInput, usernameError, result.reason);
+			usernameValid = false;
+			refreshSubmit();
+		}
+	} catch (e: unknown) {
+		console.error('Username availability check failed:', e);
+	}
+});
+passwordInput.addEventListener('blur', (): void => {
+	validatePassword(true);
+	refreshSubmit();
+});
+emailInput.addEventListener('blur', (): void => {
+	validateEmail(true);
+	refreshSubmit();
+});
+
+usernameInput.focus();

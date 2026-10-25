@@ -1,0 +1,1100 @@
+// src/client/scripts/views/analysis/gamereview.ts
+
+/**
+ * Game review controller (chess.com "Game Review" / lichess "Computer analysis"
+ * equivalent). Evaluates every mainline position of the loaded game with a pool of
+ * single-threaded engine workers, classifies each move by its win-probability loss
+ * (Best → Blunder), and streams results to the UI as they land — the move list
+ * annotates gradually while the review runs.
+ */
+
+import type { GameFile } from '../../../../shared/chess/logic/gamefile.js';
+import type { EngineAssets } from '../../../../shared/chess/util/engineregistry.js';
+import type { LongFormatIn } from '../../../../shared/chess/logic/icn/icnconverter.js';
+import type { MoveEvalLabel } from './moveevals.js';
+import type { ReviewDivision } from './reviewdivision.js';
+import type { AnalysisMoveNode } from './movetree.js';
+import type { Player, PlayerGroup } from '../../../../shared/chess/util/typeutil.js';
+import type { AnalysisInfo, EngineRefusal } from '../../../../shared/chess/util/engineglue.js';
+import type { AnalysisWorker, AnalysisWorkerFault } from './analysisworker.js';
+import type {
+	AnalysisCommand,
+	AnalysisResponse,
+	EvaluateResult,
+	SearchedResult,
+} from './analysisprotocol.js';
+
+import * as z from 'zod';
+
+import math from '../../../../shared/util/math/math.js';
+import timeutil from '../../../../shared/util/timeutil.js';
+import winchance from '../../../../shared/chess/util/winchance.js';
+import engineicn from '../../../../shared/chess/logic/icn/engineicn.js';
+import winconutil from '../../../../shared/chess/util/winconutil.js';
+import apeironcard from '../../../../shared/chess/engines/apeironcard.js';
+import { players as p } from '../../../../shared/chess/util/typeutil.js';
+
+import ceval from './ceval.js';
+import movetree from './movetree.js';
+import gameslot from '../../game/chess/gameslot.js';
+import moveevals from './moveevals.js';
+import { GameBus } from '../../board/GameBus.js';
+import LocalStorage from '../../util/LocalStorage.js';
+import gamecompressor from '../../chess/gamecompressor.js';
+import reviewdivision from './reviewdivision.js';
+import analysisworker from './analysisworker.js';
+import { EvaluateResultSchema } from './analysisprotocol.js';
+
+// Types -----------------------------------------------------------------------
+
+/** A reviewed move's classification tier. Colors live in CSS (`.review-<key>`). */
+type ClassificationKey =
+	| 'best'
+	| 'excellent'
+	| 'good'
+	| 'inaccuracy'
+	| 'mistake'
+	| 'blunder'
+	| 'forced';
+
+/** The review of one mainline move. */
+export interface MoveReview {
+	/** The move-tree node this move belongs to (stable across tree edits). */
+	nodeId: number;
+	/** 0-based mainline ply. */
+	ply: number;
+	/** Who played the move. */
+	color: Player;
+	classification: ClassificationKey;
+	/** Win-probability loss [0,1] from the mover's perspective. */
+	wpLoss: number;
+	/** Per-move accuracy percentage [0,100]. */
+	accuracy: number;
+	/** The engine's best move token ("x,y>x,y"). */
+	bestMove?: string;
+	/** Best continuation from the position before this move, capped to {@link MAX_PV_PLIES}. */
+	pv?: string[];
+	/** Whether the played move matches the engine's best move. */
+	isBestMove: boolean;
+}
+
+/** A move's accuracy [0,100], and its weight in the volatility-weighted game accuracy. */
+interface WeightedAccuracy {
+	accuracy: number;
+	weight: number;
+}
+
+/** One side's review summary, updated live as moves classify. */
+interface PlayerReviewSummary {
+	counts: Record<ClassificationKey, number>;
+	/** Blended (harmonic + volatility-weighted mean) game accuracy [0,100]. */
+	accuracy: number;
+	/** Average centipawn loss. */
+	acpl: number;
+}
+
+/** The whole review's current standing, for the UI. */
+interface ReviewSummary {
+	summaries: PlayerGroup<PlayerReviewSummary>;
+	/** Positions evaluated so far / total. */
+	evaluated: number;
+	total: number;
+}
+
+/**
+ * Where the review stands. Only 'idle' allows a new one to start, and a failed review returns
+ * there at once so it can be — which is why no failed state is reachable here.
+ */
+type ReviewStatus = 'idle' | 'running' | 'done';
+/**
+ * How a review ended. 'unavailable' separates an engine that never loaded from 'failed',
+ * where workers ran but couldn't finish the positions — only the latter is worth retrying.
+ */
+export type ReviewOutcome = 'done' | 'failed' | 'unavailable';
+
+/** The events consumers can subscribe to, and what each hands them. */
+interface ReviewListeners {
+	/** Fired when a position evaluation lands (progress) or the status changes. */
+	progress: () => void;
+	/** Fired when a move's classification resolves, in ply order. */
+	classified: (review: MoveReview) => void;
+	/** Fired once every move is classified, or the review ended without getting there. */
+	finished: (outcome: ReviewOutcome) => void;
+}
+
+/** Persisted engine output. Classifications are deliberately recomputed on restore. */
+interface CachedGameReview {
+	schemaVersion: number;
+	engineAssets: EngineAssets;
+	nodes: number;
+	results: EvaluateResult[];
+}
+
+/** One position handed to a worker: its index, plus how the worker should treat it. */
+interface ReviewWorkItem {
+	index: number;
+	/** Searched only to warm the TT for the rest of the chunk; its result isn't reported. */
+	warmup?: true;
+	/** Starts a fresh chunk: the worker clears its engine state first. */
+	newChunk?: true;
+}
+
+/** A pooled engine worker and every piece of state scoped to its lifetime. */
+interface ReviewWorker {
+	/** The supervised worker: its readiness, stop flag and fault classification. */
+	engine: AnalysisWorker;
+	/** Remaining work held back for this worker, so adjacent positions share its warm TT. */
+	chunk: ReviewWorkItem[];
+	/** The work item it is currently evaluating; undefined = idle. */
+	assignment?: ReviewWorkItem;
+	/**
+	 * The deepest depth its current search has streamed. THE source of the position's score —
+	 * the worker's own final message can't be, since a wedged worker never sends one.
+	 */
+	lastInfo?: AnalysisInfo;
+	/** Stall watchdog over its in-flight search, re-armed on every completed depth. */
+	watchdog?: ReturnType<typeof setTimeout>;
+	/** Whether its stalled search has already been asked to stop, and ignoring that is fatal. */
+	aborting?: true;
+}
+
+// Constants -------------------------------------------------------------------
+
+/** Classification thresholds on win-probability loss [0,1]. */
+const THRESHOLDS: { max: number; key: ClassificationKey }[] = [
+	// 'best' is deliberately absent: it means the played move
+	// WAS the engine's best, never merely that it lost nothing.
+	{ max: 0.02, key: 'excellent' },
+	{ max: 0.05, key: 'good' },
+	{ max: 0.1, key: 'inaccuracy' },
+	{ max: 0.2, key: 'mistake' },
+	{ max: 1, key: 'blunder' },
+];
+
+/** Glyph per classification. Colors live in CSS. */
+const CLASSIFICATION_SYMBOLS: Record<ClassificationKey, string> = {
+	best: '★',
+	excellent: '!',
+	good: '',
+	inaccuracy: '?!',
+	mistake: '?',
+	blunder: '??',
+	forced: '⇒',
+};
+
+/** The classifications counted as "lapses" — the mistakes a review calls out. */
+const LAPSE_KEYS = ['inaccuracy', 'mistake', 'blunder'] as const satisfies readonly ClassificationKey[]; // prettier-ignore
+export type LapseKey = (typeof LAPSE_KEYS)[number];
+
+/** Whether a classification is a lapse. */
+function isLapseKey(key: string): key is LapseKey {
+	return (LAPSE_KEYS as readonly string[]).includes(key);
+}
+
+/** Cp values are clamped to this for average-centipawn-loss, mirroring lichess. */
+const ACPL_CLAMP = 1000;
+/** How many plies of a position's best line the review keeps, mirroring lichess. */
+const MAX_PV_PLIES = 12;
+/** How many times a crashed worker's position is retried before being skipped. */
+const MAX_POSITION_ATTEMPTS = 2;
+/** How long a worker may search without completing a depth before we cut it short. */
+const SEARCH_STALL_TIMEOUT_MS = 15_000;
+/**
+ * How long a stalled search gets to honor its stop flag before the worker is killed instead.
+ * The flag is polled every node batch, so a search that can see it at all stops in milliseconds.
+ */
+const ABORT_GRACE_MS = 2_000;
+
+/** Fishnet-style chunk size: reported positions sharing one overlapping TT warmup. */
+const MAX_POSITIONS_PER_CHUNK = 5;
+/** Chunk size floor, keeping each warmup amortized. The trailing chunk may still be shorter. */
+const MIN_POSITIONS_PER_CHUNK = 2;
+
+/** Nodes a whole review shares out across its positions, taking about 36s on a 12-thread desktop. */
+const REVIEW_TOTAL_NODES = 15_000_000;
+/** Node budget range per position: games past 100 plies get the floor, under 50 plies the ceiling. */
+const MIN_POSITION_NODES = 150_000;
+const MAX_POSITION_NODES = 300_000;
+/** Transposition-table size handed to each review worker. */
+const REVIEW_HASH_MB = 16;
+/**
+ * Force-invalidates all persisted reviews. Bump when the stored shape changes in a way
+ * zod can't reject (same shape, new meaning), NOT for interpretation changes — the cache
+ * holds only raw engine results, and classifications are recomputed on restore.
+ */
+const REVIEW_CACHE_SCHEMA_VERSION = 3;
+const REVIEW_CACHE_KEY_PREFIX = 'game-review-';
+/** How long a persisted review survives LocalStorage. */
+const REVIEW_CACHE_EXPIRY_MS = timeutil.toMillis(1, 'years');
+
+// Schemas ---------------------------------------------------------------------
+
+/** Validates a persisted review's shape (see {@link CachedGameReview}). */
+const CachedGameReviewSchema = z.strictObject({
+	schemaVersion: z.literal(REVIEW_CACHE_SCHEMA_VERSION),
+	engineAssets: z.strictObject({ workerUrl: z.string(), engineUrl: z.string() }),
+	nodes: z.int(),
+	results: z.array(EvaluateResultSchema),
+});
+
+// State -----------------------------------------------------------------------
+
+let status: ReviewStatus = 'idle';
+/** The live worker pool. Dropping an entry disposes everything that worker owned. */
+let workers: ReviewWorker[] = [];
+
+/** Reverse-analysis chunks waiting for an engine worker. */
+let chunkQueue: ReviewWorkItem[][] = [];
+/** Attempts already spent per position index (for crash retries). */
+const positionAttempts = new Map<number, number>();
+
+/** The mainline nodes captured when the review started (moves[i] = nodes[i].move). */
+let mainlineNodes: AnalysisMoveNode[] = [];
+/** The game serialized once at review start; `.moves` is re-sliced per position. */
+let longformIn: LongFormatIn | undefined;
+/** Turn order captured at review start, for mover resolution. */
+let turnOrder: Player[] = [];
+let division: ReviewDivision = {};
+
+/** Per-position engine results, indexed 0 (start position) … N (final position). */
+let results: (EvaluateResult | undefined)[] = [];
+/** Effective white-POV cp per position (forced positions carry the previous one's). */
+let effectiveWhiteCp: (number | undefined)[] = [];
+let evaluatedCount = 0;
+const classifiedMoves = new Set<number>();
+
+/** Reviews by mainline ply, and by node id for the move-tree renderer. */
+let reviews: (MoveReview | undefined)[] = [];
+const reviewsByNodeId = new Map<number, MoveReview>();
+/** Each position's ICN, cached at dispatch (also the ceval position-cache key). */
+let icnByPosition: (string | undefined)[] = [];
+const listeners: { [K in keyof ReviewListeners]: Set<ReviewListeners[K]> } = {
+	progress: new Set(),
+	classified: new Set(),
+	finished: new Set(),
+};
+
+// Events ----------------------------------------------------------------------
+
+/**
+ * Discards the review on game unload, so the next game can be reviewed afresh. Move-tree node
+ * ids restart at 1 per game, so the node-keyed reviews MUST be dropped or they'd resurface as
+ * another game's glyphs. It also releases the serialized game, which is the module's largest hold.
+ */
+GameBus.addEventListener('game-unloaded', resetState);
+
+// Win probability & accuracy (lichess formulas) -------------------------------
+
+/** Lichess per-move accuracy% from the win probabilities before/after the move. */
+function moveAccuracyPercent(wpBefore: number, wpAfter: number): number {
+	const wpLossPct = (wpBefore - wpAfter) * 100;
+	if (wpLossPct <= 0) return 100;
+	// The +1 is lichess's uncertainty bonus, for the imperfect analysis.
+	return math.clamp(103.1668 * Math.exp(-0.04354 * wpLossPct) - 3.1669 + 1, 0, 100);
+}
+
+/**
+ * A move's weight in the game accuracy (lichess): the spread of white's win% over the window of
+ * positions ending just after it, so moves in volatile stretches count for more. Unlike lichess,
+ * unevaluated window positions are skipped rather than dropping the move.
+ */
+function volatilityWeight(ply: number): number {
+	const size = math.clamp(Math.floor(mainlineNodes.length / 10), 2, 8);
+	const start = Math.max(0, ply + 2 - size);
+	// Never empty: a classified move's own two endpoints are always evaluated.
+	let count = 0;
+	let sum = 0;
+	let sumOfSquares = 0;
+	for (let i = start; i < start + size; i++) {
+		const cp = effectiveWhiteCp[i];
+		if (cp === undefined) continue;
+		const winPct = winchance.cpToWinProbability(cp) * 100;
+		count++;
+		sum += winPct;
+		sumOfSquares += winPct * winPct;
+	}
+	const mean = sum / count;
+	const variance = Math.max(0, sumOfSquares / count - mean * mean); // Rounding can dip it below 0.
+	return math.clamp(Math.sqrt(variance), 0.5, 12);
+}
+
+/** Lichess game accuracy: the mean of a volatility-weighted mean and a harmonic mean floored at 1%. */
+function gameAccuracy(moves: WeightedAccuracy[]): number {
+	if (moves.length === 0) return 0;
+	let harmonicSum = 0;
+	let weightedSum = 0;
+	let weightSum = 0;
+	for (const { accuracy, weight } of moves) {
+		harmonicSum += 1 / Math.max(accuracy, 1);
+		weightedSum += accuracy * weight;
+		weightSum += weight;
+	}
+	return (moves.length / harmonicSum + weightedSum / weightSum) / 2;
+}
+
+// Node budget -----------------------------------------------------------------
+
+/** Nodes searched per position, like lichess's fishnet, but more for shorter games. */
+function getPositionNodes(): number {
+	const totalPositions = mainlineNodes.length + 1;
+	return math.clamp(Math.round(REVIEW_TOTAL_NODES / totalPositions), MIN_POSITION_NODES, MAX_POSITION_NODES); // prettier-ignore
+}
+
+// Chunking --------------------------------------------------------------------
+
+/**
+ * Fishnet-style chunks: within each, positions run from later to earlier. Each chunk
+ * begins by searching its immediate child without reporting it, then keeps that warm
+ * TT while evaluating its real positions. Chunks shrink when the review is too short
+ * to fill every thread, so idle workers take positions instead of one worker taking all.
+ * The chunks queue from the game's start, so its opening is reviewed first.
+ */
+function buildReverseChunks(totalPositions: number, threads: number): ReviewWorkItem[][] {
+	const chunkSize = math.clamp(
+		Math.ceil(totalPositions / threads),
+		MIN_POSITIONS_PER_CHUNK,
+		MAX_POSITIONS_PER_CHUNK,
+	);
+	const reversed = Array.from({ length: totalPositions }, (_, i) => totalPositions - 1 - i);
+	const groups: number[][] = [];
+	for (let i = 0; i < reversed.length; i += chunkSize)
+		groups.push(reversed.slice(i, i + chunkSize));
+
+	// The reverse changes no result, as each chunk starts from a cleared engine.
+	return groups
+		.map((group, index): ReviewWorkItem[] => {
+			const warmupIndex = index === 0 ? group[0]! : groups[index - 1]!.at(-1)!;
+			return [
+				{ index: warmupIndex, warmup: true, newChunk: true },
+				...group.map((positionIndex) => ({ index: positionIndex })),
+			];
+		})
+		.reverse();
+}
+
+// Mainline capture ------------------------------------------------------------
+
+/** The move tree's mainline nodes, without the root. */
+function captureMainline(): AnalysisMoveNode[] {
+	return movetree.getMainLine().slice(1);
+}
+
+// Lifecycle -------------------------------------------------------------------
+
+/**
+ * Whether a review can start: an idle, engine-supported
+ * game with at least one mainline move.
+ */
+function canStart(): boolean {
+	if (status !== 'idle') return false;
+	const gamefile = gameslot.getGamefile();
+	if (gamefile === undefined || captureMainline().length === 0) return false;
+	return apeironcard.isGameReviewSupported(gamefile).supported;
+}
+
+/** Where the review stands. */
+function getStatus(): ReviewStatus {
+	return status;
+}
+
+/**
+ * Clears all review state, returning the controller to idle. The only route back to 'idle'
+ * (which {@link canStart} requires), so {@link start} never inherits leftovers — it only sizes
+ * its own arrays. `listeners` is exempt: registered once at init, they outlive every game.
+ */
+function resetState(): void {
+	terminateWorkers();
+	status = 'idle';
+	chunkQueue = [];
+	positionAttempts.clear();
+	mainlineNodes = [];
+	longformIn = undefined;
+	turnOrder = [];
+	division = {};
+	results = [];
+	effectiveWhiteCp = [];
+	evaluatedCount = 0;
+	classifiedMoves.clear();
+	reviews = [];
+	reviewsByNodeId.clear();
+	icnByPosition = [];
+}
+
+/** Starts reviewing the loaded game's mainline. No-op unless idle with moves to review. */
+function start(): void {
+	if (!canStart()) return;
+	const gamefile: GameFile = gameslot.getGamefile()!;
+
+	mainlineNodes = captureMainline();
+	turnOrder = [...gamefile.gameRules.turnOrder];
+
+	// Serialize the game once; each position re-slices the move list.
+	longformIn = gamecompressor.compressGamefile(gamefile);
+	engineicn.prepareForEngine(longformIn);
+	division = reviewdivision.determine(
+		longformIn.position,
+		mainlineNodes.map((node) => node.move!),
+	);
+
+	const totalPositions = mainlineNodes.length + 1;
+	// All but one hardware thread, leaving the UI responsive.
+	const threads = Math.max(1, (navigator.hardwareConcurrency || 4) - 1);
+	chunkQueue = buildReverseChunks(totalPositions, threads);
+	// One worker per thread, never more than there are chunks to hand out.
+	const workerCount = math.clamp(threads, 1, chunkQueue.length);
+
+	results = new Array(totalPositions).fill(undefined);
+	effectiveWhiteCp = new Array(totalPositions).fill(undefined);
+	reviews = new Array(mainlineNodes.length).fill(undefined);
+	icnByPosition = new Array(totalPositions).fill(undefined);
+	status = 'running';
+
+	notifyProgress();
+	if (restoreCachedReview()) return;
+	spawnWorkers(workerCount);
+}
+
+/** The loaded game's review cache key, if the game has an id. */
+function reviewCacheKey(): string | undefined {
+	const gameId = window.analysisPageData.gameId;
+	return gameId === null ? undefined : `${REVIEW_CACHE_KEY_PREFIX}${gameId}`;
+}
+
+/** Restores a complete compatible review, returning false when there's none and the engine must run. */
+function restoreCachedReview(): boolean {
+	const key = reviewCacheKey();
+	if (!key) return false;
+
+	const raw: unknown = LocalStorage.loadItem(key);
+	const cached = parseCompatibleCache(raw);
+	if (!cached) {
+		if (raw !== undefined) LocalStorage.deleteItem(key);
+		return false;
+	}
+
+	results = cached.results;
+	evaluatedCount = results.length;
+	for (let index = 0; index < results.length; index++) {
+		icnByPosition[index] = serializePosition(index);
+		cachePositionEvaluation(index, results[index]!);
+	}
+	classifyReadyMoves();
+	status = 'done';
+	notifyProgress();
+	for (const listener of listeners.finished) listener('done');
+	return true;
+}
+
+/**
+ * Validates a persisted review and confirms it's compatible with the current engine —
+ * same engine/worker URLs, a big enough node budget, and one result per position of the current
+ * mainline. Returns undefined when unusable.
+ */
+function parseCompatibleCache(raw: unknown): CachedGameReview | undefined {
+	if (raw === undefined) return undefined;
+	const parsed = CachedGameReviewSchema.safeParse(raw);
+	if (!parsed.success) {
+		const codes = [...new Set(parsed.error.issues.map((issue) => issue.code))].join(', ');
+		console.warn(`[game review] Discarding a local review cache in a stale format (${codes}).`); // prettier-ignore
+		return undefined;
+	}
+	const cached = parsed.data;
+
+	if (
+		cached.engineAssets.engineUrl !== window.analysisPageData.engineAssets.engineUrl ||
+		cached.engineAssets.workerUrl !== window.analysisPageData.engineAssets.workerUrl ||
+		cached.nodes < getPositionNodes() ||
+		// Load-bearing despite the game id key implying it: a mismatch desyncs `results` from
+		// the other per-position arrays, which every consumer indexes as parallel.
+		cached.results.length !== mainlineNodes.length + 1
+	) {
+		console.warn('[game review] Local review cache is incompatible with the current game or engine.'); // prettier-ignore
+		return undefined;
+	}
+
+	return cached;
+}
+
+/** Persists the finished review's raw engine results. */
+function persistCompletedReview(): void {
+	const key = reviewCacheKey();
+	if (!key || results.some((result) => result === undefined)) return;
+	const cached: CachedGameReview = {
+		schemaVersion: REVIEW_CACHE_SCHEMA_VERSION,
+		engineAssets: window.analysisPageData.engineAssets,
+		nodes: getPositionNodes(),
+		results: results as EvaluateResult[],
+	};
+	try {
+		LocalStorage.saveItem(key, cached, REVIEW_CACHE_EXPIRY_MS);
+	} catch (error) {
+		console.warn('[game review] Could not save the local review cache:', error);
+	}
+}
+
+// Worker pool -----------------------------------------------------------------
+
+/** Spawns `count` pool workers. */
+function spawnWorkers(count: number): void {
+	for (let i = 0; i < count; i++) spawnWorker();
+}
+
+/** Spawns one pool worker. */
+function spawnWorker(): void {
+	// Pool invariant: once the review leaves 'running', no worker is spawned or dispatched to.
+	// A caller's own receiveEvaluation() can finish the review synchronously before reaching here.
+	if (status !== 'running') return;
+
+	const entry: ReviewWorker = {
+		// No `threads`: review workers search single-threaded — parallelism is across positions.
+		engine: analysisworker.spawn({
+			hashMb: REVIEW_HASH_MB,
+			onMessage: (msg) => handleWorkerMessage(entry, msg),
+			onFault: (fault, reason) => handleWorkerFault(entry, fault, reason),
+		}),
+		chunk: [],
+	};
+	workers.push(entry);
+}
+
+/** Terminates and drops every pool worker. */
+function terminateWorkers(): void {
+	for (const entry of workers) {
+		clearStallWatchdog(entry);
+		analysisworker.terminate(entry.engine);
+	}
+	workers = [];
+}
+
+/** Routes a message from a pool worker. */
+function handleWorkerMessage(entry: ReviewWorker, msg: AnalysisResponse): void {
+	if (status !== 'running') return;
+	switch (msg.type) {
+		case 'ready':
+			dispatchNext(entry);
+			break;
+		case 'info':
+			entry.lastInfo = msg.info;
+			armStallWatchdog(entry); // The search completed a depth: it's making progress.
+			break;
+		case 'evaluated':
+			clearStallWatchdog(entry);
+			delete entry.assignment;
+			if (!msg.warmup) {
+				// `type` and `warmup` tag the message; the rest IS the evaluation we store. Both
+				// must be dropped — the spread below would smuggle them past the parameter type.
+				const { type: _type, warmup: _warmup, ...evaluation } = msg;
+				receiveEvaluation('refused' in evaluation ? evaluation : { ...evaluation, ...scoreFromInfo(entry.lastInfo) }); // prettier-ignore
+			}
+			dispatchNext(entry);
+			break;
+	}
+}
+
+/**
+ * Handles a dead worker: aborts the whole review when the engine never loaded, else requeues its
+ * position (skipping it after {@link MAX_POSITION_ATTEMPTS}) and respawns a replacement with
+ * fresh wasm. Also the exit for a stalled worker we kill ourselves ({@link abortStalledSearch}).
+ */
+function handleWorkerFault(entry: ReviewWorker, fault: AnalysisWorkerFault, reason: string): void {
+	console.error(`[game review] Worker ${fault}: ${reason}`);
+	const { assignment, chunk, lastInfo } = entry;
+	clearStallWatchdog(entry);
+	// The entry owns nothing from here on, so a second fault from
+	// the same dying worker can't re-queue its work a second time.
+	delete entry.assignment;
+	entry.chunk = [];
+	analysisworker.terminate(entry.engine);
+	workers = workers.filter((w) => w !== entry);
+	if (status !== 'running') return;
+
+	// The engine glue itself can't load, so this worker was never dispatched to and holds no work.
+	// Every worker pulls the same URL, so respawning only loops on the same failure — nothing here
+	// consumes a position's attempts, since none was ever attempted.
+	if (fault === 'unloadable') return failReview('unavailable');
+
+	// A warmup's result is never reported, so it's pure TT optimization: drop it and let the chunk
+	// run cold. Retrying it would loop forever, since warmups consume no position attempts.
+	if (assignment === undefined || assignment.warmup) requeueChunk(chunk);
+	else if (
+		lastInfo === undefined &&
+		(positionAttempts.get(assignment.index) ?? 0) < MAX_POSITION_ATTEMPTS
+	) {
+		// The search died having completed nothing: retry the position on a fresh worker.
+		chunkQueue.unshift([{ ...assignment, newChunk: true }, ...chunk]);
+	} else {
+		// Settle for the depths it did complete, so the review continues. With none, the
+		// evaluation is empty, leaving a gap in the eval graph.
+		requeueChunk(chunk);
+		receiveEvaluation({ requestId: assignment.index, legalMoveCount: 2, depth: 0, ...scoreFromInfo(lastInfo) }); // prettier-ignore
+	}
+
+	if (chunkQueue.length > 0) {
+		// Positions still remain: replace the dead worker to keep the pool full — repeated
+		// faults burn through the per-position attempts, so this always terminates.
+		spawnWorker();
+	} else if (workers.length === 0 && evaluatedCount < results.length) failReview('failed');
+}
+
+/**
+ * Ends the review without completing it. Returns straight to 'idle' (disposing the pool) rather
+ * than parking in a failed state, so the user can start a fresh one — the listeners are told why
+ * it ended by argument, not by reading the status back.
+ */
+function failReview(outcome: 'failed' | 'unavailable'): void {
+	resetState();
+	for (const listener of listeners.finished) listener(outcome);
+}
+
+/** Returns a partly-worked chunk to the queue, so whichever worker takes it re-warms its own TT. */
+function requeueChunk(chunk: ReviewWorkItem[]): void {
+	if (chunk.length === 0) return;
+	chunkQueue.unshift([{ ...chunk[0]!, newChunk: true }, ...chunk.slice(1)]);
+}
+
+/** Hands the worker the next queued position, building its ICN on demand. */
+function dispatchNext(entry: ReviewWorker): void {
+	if (status !== 'running') return; // Pool invariant — see spawnWorker.
+
+	for (;;) {
+		if (entry.chunk.length === 0) {
+			const nextChunk = chunkQueue.shift();
+			if (!nextChunk) return;
+			entry.chunk = nextChunk;
+		}
+		const work = entry.chunk.shift()!;
+		const index = work.index;
+
+		// The game's own rules ended it here: its result scores it, so there's nothing to search.
+		if (terminalVictorAt(index) !== undefined) {
+			if (!work.warmup) {
+				icnByPosition[index] = serializePosition(index);
+				receiveEvaluation({ requestId: index, legalMoveCount: 0, depth: 0 });
+			}
+			if (status !== 'running') return;
+			continue;
+		}
+
+		entry.assignment = work;
+		delete entry.lastInfo;
+		if (!work.warmup) positionAttempts.set(index, (positionAttempts.get(index) ?? 0) + 1);
+
+		const icn = serializePosition(index);
+		icnByPosition[index] = icn;
+
+		entry.engine.worker.postMessage({
+			cmd: 'evaluate',
+			requestId: index, // The position index doubles as the request id.
+			icn,
+			maxNodes: getPositionNodes(),
+			mover: moverAtPly(index),
+			newChunk: work.newChunk,
+			warmup: work.warmup,
+		} satisfies AnalysisCommand);
+		armStallWatchdog(entry);
+		return;
+	}
+}
+
+/**
+ * The winner (or null for a draw) when the game's rules ended it at position `index`, which only
+ * the final mainline position can be. Undefined when the game goes on, or ended off the board.
+ */
+function terminalVictorAt(index: number): Player | null | undefined {
+	if (index !== mainlineNodes.length) return undefined;
+	const conclusion = mainlineNodes.at(-1)?.gameConclusion;
+	if (!conclusion || !winconutil.isConclusionMoveTriggered(conclusion.condition))
+		return undefined;
+	return conclusion.victor ?? null;
+}
+
+/** Canonical ICN for the position after `index` mainline plies. */
+function serializePosition(index: number): string {
+	longformIn!.moves = mainlineNodes.slice(0, index).map((node) => node.move!);
+	return engineicn.serialize(longformIn!);
+}
+
+/** The player to move at position `index` (= the mover of mainline move `index`). */
+function moverAtPly(index: number): Player {
+	return turnOrder[index % turnOrder.length]!;
+}
+
+// Stall watchdog --------------------------------------------------------------
+
+/** (Re)arms the stall watchdog over a worker's in-flight search. */
+function armStallWatchdog(entry: ReviewWorker): void {
+	clearStallWatchdog(entry);
+	entry.watchdog = setTimeout(() => abortStalledSearch(entry), SEARCH_STALL_TIMEOUT_MS);
+}
+
+/** Disarms a worker's stall watchdog, along with any abort it had begun. */
+function clearStallWatchdog(entry: ReviewWorker): void {
+	if (entry.watchdog !== undefined) clearTimeout(entry.watchdog);
+	delete entry.watchdog;
+	delete entry.aborting;
+}
+
+/**
+ * Cuts short a search that hasn't completed a depth in {@link SEARCH_STALL_TIMEOUT_MS}: first by
+ * writing the shared stop flag, which lets the worker finish in place and keep its warm TT for the
+ * rest of its chunk. A search wedged past the engine's poll point never sees that flag, so ignoring
+ * it for {@link ABORT_GRACE_MS} escalates to killing the worker — its position keeps whatever
+ * depths it streamed either way.
+ */
+function abortStalledSearch(entry: ReviewWorker): void {
+	delete entry.watchdog;
+	const index = entry.assignment?.index;
+	if (entry.aborting) return handleWorkerFault(entry, 'crashed', `search at position ${index} ignored its stop flag`); // prettier-ignore
+	// A single-threaded build shares no memory to write, so killing it is the only way out.
+	if (!analysisworker.interrupt(entry.engine))
+		return handleWorkerFault(entry, 'crashed', `search at position ${index} stalled with no shared stop flag`); // prettier-ignore
+	entry.aborting = true;
+	entry.watchdog = setTimeout(() => abortStalledSearch(entry), ABORT_GRACE_MS);
+}
+
+// Result processing -----------------------------------------------------------
+
+/**
+ * A searched position's score, taken from the deepest depth its worker streamed.
+ * Empty when the search completed none, which leaves the position unevaluated.
+ */
+function scoreFromInfo(info: AnalysisInfo | undefined): Partial<SearchedResult> {
+	const line = info?.lines[0];
+	if (!info || !line) return {};
+	return {
+		depth: info.depth,
+		pv: line.moves.slice(0, MAX_PV_PLIES),
+		cp: line.cp,
+		mate: line.mate,
+	};
+}
+
+/** Records a position's evaluation, classifies whatever it unblocks, and finishes the review on the last. */
+function receiveEvaluation(result: EvaluateResult): void {
+	const index = result.requestId;
+	if (results[index] !== undefined) return; // Duplicate (e.g. a retry raced its original).
+	results[index] = result;
+	evaluatedCount++;
+	cachePositionEvaluation(index, result);
+
+	classifyReadyMoves();
+	notifyProgress();
+
+	if (evaluatedCount >= results.length) finishReview();
+}
+
+/** Stores a review eval for move-list display and seeds ceval's position cache. */
+function cachePositionEvaluation(index: number, result: EvaluateResult): void {
+	const icn = icnByPosition[index];
+	if (!icn || 'refused' in result) return;
+
+	const mover = moverAtPly(index);
+	const sign = mover === p.WHITE ? 1 : -1;
+	let label: MoveEvalLabel | undefined;
+	if (result.legalMoveCount === 0) {
+		const victor = terminalVictorAt(index);
+		label = victor
+			? { mate: victor === p.WHITE ? 1 : -1, depth: result.depth }
+			: { cp: 0, depth: result.depth };
+	} else if (result.mate !== undefined) {
+		label = { mate: sign * result.mate, depth: result.depth };
+	} else if (result.cp !== undefined) {
+		label = { cp: sign * result.cp, depth: result.depth };
+	}
+	if (!label) return;
+
+	if (index > 0) {
+		const node = mainlineNodes[index - 1];
+		if (node) moveevals.store(node.id, label);
+	}
+
+	ceval.seedPositionCache({
+		icn,
+		depth: result.depth,
+		moveIndex: index - 1,
+		moves: result.pv ?? [],
+		cp: label.cp,
+		mate: label.mate,
+	});
+}
+
+/**
+ * Classifies every move whose surrounding positions are now evaluated, strictly in
+ * ply order — forced positions carry the previous position's eval, so
+ * the left-to-right pass keeps the effective evals consistent.
+ */
+function classifyReadyMoves(): void {
+	for (let index = 0; index < results.length; index++) resolveWhiteCp(index);
+
+	for (let i = 0; i < mainlineNodes.length; i++) {
+		if (classifiedMoves.has(i)) continue;
+		const before = results[i];
+		// The first two checks only narrow `before`'s type: its effective cp being set implies them.
+		if (
+			before === undefined ||
+			'refused' in before ||
+			effectiveWhiteCp[i] === undefined ||
+			effectiveWhiteCp[i + 1] === undefined
+		)
+			continue;
+		cacheForcedPositionEvaluation(i);
+		cacheForcedPositionEvaluation(i + 1);
+
+		const review = classifyMove(i, before);
+		reviews[i] = review;
+		reviewsByNodeId.set(review.nodeId, review);
+		classifiedMoves.add(i);
+		for (const listener of listeners.classified) listener(review);
+	}
+}
+
+/** The position's white-POV effective cp; forced and terminal positions derive it. */
+function resolveWhiteCp(index: number): number | undefined {
+	if (effectiveWhiteCp[index] !== undefined) return effectiveWhiteCp[index];
+	const result = results[index];
+	if (!result || 'refused' in result) return undefined;
+
+	if (result.legalMoveCount === 0) {
+		// Terminal: the game's result scores it, a win as a mate.
+		const victor = terminalVictorAt(index);
+		effectiveWhiteCp[index] = victor ? (victor === p.WHITE ? 1 : -1) * winchance.MATE_CP : 0;
+		return effectiveWhiteCp[index];
+	}
+
+	if (result.legalMoveCount === 1) {
+		const source = carrySourceIndex(index);
+		effectiveWhiteCp[index] = source === -1 ? 0 : resolveWhiteCp(source);
+		return effectiveWhiteCp[index];
+	}
+
+	// Searched to no depth, it stays undefined like a refused one: the eval graph breaks there
+	// rather than carrying a neighbor's eval across it, and the moves into and out of it stay
+	// unclassified.
+	const cp = stmCp(result);
+	if (cp === undefined) return undefined;
+	effectiveWhiteCp[index] = moverAtPly(index) === p.WHITE ? cp : -cp;
+	return effectiveWhiteCp[index];
+}
+
+/** The result's score from the side-to-move's perspective, as an effective cp. */
+function stmCp(result: SearchedResult): number | undefined {
+	if (result.mate !== undefined) return result.mate > 0 ? winchance.MATE_CP : -winchance.MATE_CP;
+	return result.cp;
+}
+
+/**
+ * The position a carried eval comes from: the nearest earlier one not carrying,
+ * or -1 for the start position's default.
+ */
+function carrySourceIndex(index: number): number {
+	for (let i = index - 1; i >= 0; i--) {
+		const result = results[i];
+		if (!result || 'refused' in result || result.legalMoveCount !== 1) return i;
+	}
+	return -1;
+}
+
+/** Gives a one-legal-move position its carried eval once the in-order pass resolves it. */
+function cacheForcedPositionEvaluation(index: number): void {
+	const result = results[index];
+	const icn = icnByPosition[index];
+	if (!result || 'refused' in result || result.legalMoveCount !== 1 || !icn) return;
+	const sourceIndex = carrySourceIndex(index);
+	const source = sourceIndex === -1 ? undefined : results[sourceIndex];
+	const cp = effectiveWhiteCp[index]!;
+	const label: MoveEvalLabel = {
+		cp,
+		depth: source && !('refused' in source) ? source.depth : 0,
+	};
+	if (index > 0) {
+		const node = mainlineNodes[index - 1];
+		if (node) moveevals.store(node.id, label);
+	}
+	ceval.seedPositionCache({
+		icn,
+		depth: label.depth,
+		moveIndex: index - 1,
+		moves: result.pv ?? [],
+		cp,
+	});
+}
+
+/** Classifies mainline move `i` from the effective evals either side of it. */
+function classifyMove(i: number, before: SearchedResult): MoveReview {
+	const node = mainlineNodes[i]!;
+	const mover = moverAtPly(i);
+
+	// Starts as forced, the only legal move: no credit, no blame.
+	const review: MoveReview = {
+		nodeId: node.id,
+		ply: i,
+		color: mover,
+		classification: 'forced',
+		wpLoss: 0,
+		accuracy: 100,
+		bestMove: before.pv?.[0],
+		pv: before.pv ? before.pv.slice(0, MAX_PV_PLIES) : undefined,
+		isBestMove: true,
+	};
+	if (before.legalMoveCount === 1) return review;
+
+	// Win probabilities from the mover's perspective, before and after their move.
+	const moverSign = mover === p.WHITE ? 1 : -1;
+	const wpBefore = winchance.cpToWinProbability(moverSign * effectiveWhiteCp[i]!);
+	const wpAfter = winchance.cpToWinProbability(moverSign * effectiveWhiteCp[i + 1]!);
+	review.wpLoss = Math.max(0, wpBefore - wpAfter);
+	review.accuracy = moveAccuracyPercent(wpBefore, wpAfter);
+
+	// The engine's best move matches by coordinates (promotion piece ignored).
+	const playedCoords = node.move!.token.split('=')[0]!;
+	review.isBestMove =
+		review.bestMove !== undefined && review.bestMove.split('=')[0] === playedCoords;
+
+	if (review.isBestMove) review.classification = 'best';
+	else review.classification = THRESHOLDS.find((t) => review.wpLoss <= t.max)!.key;
+
+	return review;
+}
+
+/** Ends a completed review: disposes the pool and persists the results. */
+function finishReview(): void {
+	terminateWorkers();
+	status = 'done';
+	notifyProgress();
+	for (const listener of listeners.finished) listener('done');
+	persistCompletedReview();
+}
+
+// Summaries -------------------------------------------------------------------
+
+/** Builds the live review standing from the classifications so far. */
+function getSummary(): ReviewSummary {
+	const accuracies: PlayerGroup<WeightedAccuracy[]> = { [p.WHITE]: [], [p.BLACK]: [] };
+	const cpLosses: PlayerGroup<number[]> = { [p.WHITE]: [], [p.BLACK]: [] };
+	const summaries: PlayerGroup<PlayerReviewSummary> = {};
+
+	for (const color of [p.WHITE, p.BLACK]) {
+		summaries[color] = {
+			counts: { best: 0, excellent: 0, good: 0, inaccuracy: 0, mistake: 0, blunder: 0, forced: 0 }, // prettier-ignore
+			accuracy: 0,
+			acpl: 0,
+		};
+	}
+
+	for (const review of reviews) {
+		if (!review) continue;
+		const summary = summaries[review.color];
+		if (!summary) continue; // A color outside white/black (multiplayer variants).
+		summary.counts[review.classification]++;
+		if (review.classification === 'forced') continue; // Excluded from accuracy/acpl.
+
+		accuracies[review.color]!.push({ accuracy: review.accuracy, weight: volatilityWeight(review.ply) }); // prettier-ignore
+		const moverSign = review.color === p.WHITE ? 1 : -1;
+		const cpBefore = math.clamp(moverSign * effectiveWhiteCp[review.ply]!, -ACPL_CLAMP, ACPL_CLAMP); // prettier-ignore
+		const cpAfter = math.clamp(moverSign * effectiveWhiteCp[review.ply + 1]!, -ACPL_CLAMP, ACPL_CLAMP); // prettier-ignore
+		cpLosses[review.color]!.push(Math.max(0, cpBefore - cpAfter));
+	}
+
+	for (const color of [p.WHITE, p.BLACK]) {
+		const losses = cpLosses[color]!;
+		summaries[color]!.accuracy = gameAccuracy(accuracies[color]!);
+		summaries[color]!.acpl =
+			losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / losses.length : 0;
+	}
+
+	return { summaries, evaluated: evaluatedCount, total: results.length };
+}
+
+// Queries for the renderers ---------------------------------------------------
+
+/** The review of the move at the given move-tree node, if classified. */
+function getReviewForNode(nodeId: number): MoveReview | undefined {
+	return reviewsByNodeId.get(nodeId);
+}
+
+/** All classifications so far, in ply order. */
+function getReviews(): MoveReview[] {
+	return reviews.filter((review): review is MoveReview => review !== undefined);
+}
+
+/** The mainline nodes the review runs over (for graph click-to-jump). */
+function getMainlineNodes(): AnalysisMoveNode[] {
+	return mainlineNodes;
+}
+
+/** The game's phase boundaries, for the eval graph's markers. */
+function getDivision(): ReviewDivision {
+	return division;
+}
+
+/** White-POV effective cp of position `index` (after `index` plies), if resolved. */
+function getWhiteCpAt(index: number): number | undefined {
+	return effectiveWhiteCp[index];
+}
+
+/**
+ * Whether position `index` is settled without an eval: refused, searched to no depth, or forced
+ * after such a position. False while it, or the position a forced one carries, is still pending.
+ */
+function isUnevaluatedAt(index: number): boolean {
+	const result = results[index];
+	if (!result) return false;
+	if ('refused' in result) return true;
+	if (result.legalMoveCount === 1) {
+		const source = carrySourceIndex(index);
+		return source !== -1 && isUnevaluatedAt(source);
+	}
+	return result.legalMoveCount > 1 && stmCp(result) === undefined;
+}
+
+/** Why the engine refused position `index`, if it did. */
+function getRefusalAt(index: number): EngineRefusal | undefined {
+	const result = results[index];
+	return result && 'refused' in result ? result.refused : undefined;
+}
+
+// Subscriptions ---------------------------------------------------------------
+
+/** Fires every progress listener. */
+function notifyProgress(): void {
+	for (const listener of listeners.progress) listener();
+}
+
+/** Subscribes to progress and status changes. */
+function onProgress(listener: ReviewListeners['progress']): void {
+	listeners.progress.add(listener);
+}
+/** Subscribes to each move's classification. */
+function onClassified(listener: ReviewListeners['classified']): void {
+	listeners.classified.add(listener);
+}
+/** Subscribes to the review ending. */
+function onFinished(listener: ReviewListeners['finished']): void {
+	listeners.finished.add(listener);
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	// Constants
+	CLASSIFICATION_SYMBOLS,
+	isLapseKey,
+	// Lifecycle
+	canStart,
+	getStatus,
+	start,
+	// Summaries
+	getSummary,
+	// Queries for the renderers
+	getReviewForNode,
+	getReviews,
+	getMainlineNodes,
+	getDivision,
+	getWhiteCpAt,
+	isUnevaluatedAt,
+	getRefusalAt,
+	// Subscriptions
+	onProgress,
+	onClassified,
+	onFinished,
+};

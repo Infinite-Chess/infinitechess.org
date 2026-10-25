@@ -43,7 +43,7 @@ range, to prevent visual artifacts.
 
 ### Converting Between Spaces
 
-[`space.ts`](/src/client/scripts/esm/board/rendering/space.ts) provides key conversion functions for
+[`space.ts`](/src/client/scripts/board/rendering/space.ts) provides key conversion functions for
 converting from one coordinate space to the other.
 
 - `convertCoordToWorldSpace(coords, position, scale)` — Grid → World, given a board's position and
@@ -53,8 +53,8 @@ converting from one coordinate space to the other.
 - `convertWorldSpaceToCoords_Rounded(boardpos, worldCoords)` — World → Grid, returning the integer
   tile coordinates the world space position is over.
 
-[`mouse.ts`](/src/client/scripts/esm/game/mouse.ts) can be used to locate the mouse position in
-either coordinate space.
+[`mouse.ts`](/src/client/scripts/game/mouse.ts) can be used to locate the mouse position in either
+coordinate space.
 
 - `getMouseWorld()` — Mouse position in world space.
 - `getTileMouseOver_Integer()` — Mouse position in grid space, returning the integer tile
@@ -80,13 +80,13 @@ object with, and whether you're using instanced rendering. More info below.
 
 ### Primitives
 
-[`primitives.ts`](/src/client/scripts/esm/board/rendering/primitives.ts) provides many helpers for
+[`primitives.ts`](/src/client/scripts/board/rendering/primitives.ts) provides many helpers for
 calculating the vertex data of various shapes: squares, rectangles, circles, etc. from just their
 dimensions and color.
 
 ### Instanced Shape Data
 
-[`instancedshapes.ts`](/src/client/scripts/esm/board/rendering/instancedshapes.ts), if you're using
+[`instancedshapes.ts`](/src/client/scripts/board/rendering/instancedshapes.ts), if you're using
 instanced rendering (which is a lot simpler to create vertex & instance data for, if you're
 rendering many copies of the same shape), provides helpers for obtaining the vertex data of the
 shape you want to render: legal move square, dot, special rights plus sign, etc.
@@ -94,13 +94,13 @@ shape you want to render: legal move square, dot, special rights plus sign, etc.
 If you use instanced rendering, you bypass the need to calculate instance-specific vertex data,
 often only needing to specify the position offset of each of your objects in the instance data. This
 is used by piece rendering inside
-[`piecemodels.ts`](/src/client/scripts/esm/board/rendering/piecemodels.ts) (that example renders
+[`piecemodels.ts`](/src/client/scripts/board/rendering/piecemodels.ts) (that example renders
 textures), and by legal move model generation inside
-[`legalmovemodel.ts`](/src/client/scripts/esm/game/rendering/highlights/legalmovemodel.ts).
+[`legalmovemodel.ts`](/src/client/scripts/game/rendering/highlights/legalmovemodel.ts).
 
 ### Mesh Helpers
 
-[`meshes.ts`](/src/client/scripts/esm/board/rendering/meshes.ts) provides higher-level helpers for
+[`meshes.ts`](/src/client/scripts/board/rendering/meshes.ts) provides higher-level helpers for
 automatically generating the vertex data for you if all you have is the integer coordinate and color
 of the square you want vertex data for. It can also convert a grid space bounding box into world
 space for you.
@@ -108,16 +108,16 @@ space for you.
 ### Square Highlights
 
 For the common task of highlighting squares on the board,
-[`squarerendering.genModel()`](/src/client/scripts/esm/board/rendering/squarerendering.ts) is
-high-level helper that internally handles the vertex data and instance data creation for you from
-just a list of integer coordinates and a color, returning a ready-to-render object.
+[`squarerendering.genModel()`](/src/client/scripts/board/rendering/squarerendering.ts) is high-level
+helper that internally handles the vertex data and instance data creation for you from just a list
+of integer coordinates and a color, returning a ready-to-render object.
 
 ## Rendering Vertex Data
 
 Once you have vertex data, pass it to
-[`createRenderable()`](/src/client/scripts/esm/game/rendering/gamerenderable.ts) or
-[`createRenderable_Instanced()`](/src/client/scripts/esm/game/rendering/gamerenderable.ts) to create
-an object that can instantly be rendered.
+[`createRenderable()`](/src/client/scripts/game/rendering/gamerenderable.ts) or
+[`createRenderable_Instanced()`](/src/client/scripts/game/rendering/gamerenderable.ts) to create an
+object that can instantly be rendered.
 
 They accept arguments for vertex data, instance data (if using instanced rendering), information on
 how you packed your vertex data with the position & color attributes, the drawing mode to use
@@ -135,8 +135,8 @@ A `Renderable` is meant to be rendered the frame it's built; it reuses the conte
 than creating new ones. A model kept across frames uses the matching `createPersistentRenderable*()`
 instead, which takes the same arguments and returns a `PersistentRenderable` owning its GPU buffers:
 update its vertex or instance data in place instead of rebuilding it, as
-[`piecemodels.ts`](/src/client/scripts/esm/board/rendering/piecemodels.ts) does for the piece
-sprites, and call its `dispose()` before replacing or dropping it.
+[`piecemodels.ts`](/src/client/scripts/board/rendering/piecemodels.ts) does for the piece sprites,
+and call its `dispose()` before replacing or dropping it.
 
 ## Shader Picking
 
@@ -156,15 +156,15 @@ Other shaders can allow for more unique properties for each instance, such as `'
 indicator arrows rendering, which allows a unique position, color (for opacity), and rotation, per
 arrow instance, or `'starfield'` which allows a unique position, color, and size, for each animated
 star. For a full list of available shaders, see
-[`ProgramManager.ts`](/src/client/scripts/esm/webgl/ProgramManager.ts); each declares its vertex
-data packing in its GLSL.
+[`ProgramManager.ts`](/src/client/scripts/webgl/ProgramManager.ts); each declares its vertex data
+packing in its GLSL.
 
 ## Integrating Into the Render Loop
 
-The frame is driven by [`gameloop.ts`](/src/client/scripts/esm/game/gameloop.ts), which updates
-every game module in order and then calls the scene. The drawing itself lives in
-[`gamescene.ts`](/src/client/scripts/esm/game/rendering/gamescene.ts), whose `renderScene()`
-function renders all items in the order:
+The frame is driven by [`gameloop.ts`](/src/client/scripts/game/gameloop.ts), which updates every
+game module in order and then calls the scene. The drawing itself lives in
+[`gamescene.ts`](/src/client/scripts/game/rendering/gamescene.ts), whose `renderScene()` function
+renders all items in the order:
 
 1. **Background** — Starfield / void rendering (uses masking)
 2. **Board** — Infinite tile grid, promotion lines
@@ -174,37 +174,36 @@ function renders all items in the order:
 
 Call your script's render method in the appropriate section. A visual only one page draws goes in
 that page's own overlays module instead (e.g.
-[`analysisoverlays.ts`](/src/client/scripts/esm/views/analysis/rendering/analysisoverlays.ts)),
-which draws through `GameBus`'s `render-below-pieces` / `render-above-pieces` hooks.
+[`analysisoverlays.ts`](/src/client/scripts/views/analysis/rendering/analysisoverlays.ts)), which
+draws through `GameBus`'s `render-below-pieces` / `render-above-pieces` hooks.
 
 ## Rendering Architecture: Render Contexts
 
 The game can draw independent boards at the same time: the interactive game, static previews (the
 small board inside the variant-preview hover tooltip
-([`variantpreviewtooltip.ts`](/src/client/scripts/esm/board/variantselector/variantpreviewtooltip.ts))
+([`variantpreviewtooltip.ts`](/src/client/scripts/board/variantselector/variantpreviewtooltip.ts))
 and the challenge page's board
-([`challengepreview.ts`](/src/client/scripts/esm/views/challenge/challengepreview.ts))), and the
-home page's featured live games
-([`featuredboard.ts`](/src/client/scripts/esm/views/index/featured/featuredboard.ts)). Each lives on
-its own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs,
-textures, buffers/VAOs) can **never** be shared across contexts.
+([`challengepreview.ts`](/src/client/scripts/views/challenge/challengepreview.ts))), and the home
+page's featured live games
+([`featuredboard.ts`](/src/client/scripts/views/index/featured/featuredboard.ts)). Each lives on its
+own `<canvas>`, so each needs its own WebGL context — and WebGL objects (shader programs, textures,
+buffers/VAOs) can **never** be shared across contexts.
 
-A [`RenderContext`](/src/client/scripts/esm/board/rendering/RenderContext.ts) bundles everything
-bound to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale),
-piece `textures`, stencil `maskedDraw`, `frames` tracker (whether it needs a redraw), tile renderer
+A [`RenderContext`](/src/client/scripts/board/rendering/RenderContext.ts) bundles everything bound
+to one canvas: its `gl` context, `ProgramManager`, `camera`, `boardpos` (position/scale), piece
+`textures`, stencil `maskedDraw`, `frames` tracker (whether it needs a redraw), tile renderer
 (`boardtiles`), and a `renderable` factory for creating models in that context. Every board outside
 the interactive game assembles its parts with
-[`standaloneboard.ts`](/src/client/scripts/esm/board/rendering/standaloneboard.ts), which also draws
-the layers they share. Shared drawing code is handed a `RenderContext` and draws for whichever board
+[`standaloneboard.ts`](/src/client/scripts/board/rendering/standaloneboard.ts), which also draws the
+layers they share. Shared drawing code is handed a `RenderContext` and draws for whichever board
 it's told, instead of reaching for a process-wide singleton. A board that comes and goes calls
 `dispose()`, as browsers cap how many WebGL contexts stay alive.
 
-A board that plays a game out is a
-[`LiveBoard`](/src/client/scripts/esm/board/rendering/LiveBoard.ts): a `RenderContext` that also
-holds its piece animations, arrow indicators, water ripples, and post-processing pipeline. The
-interactive game builds one in `gamescene.init()`, and the home page one per featured game.
-Live-board modules (animation, arrows, ripples, move effects) hold no state of their own and take
-the board they act on.
+A board that plays a game out is a [`LiveBoard`](/src/client/scripts/board/rendering/LiveBoard.ts):
+a `RenderContext` that also holds its piece animations, arrow indicators, water ripples, and
+post-processing pipeline. The interactive game builds one in `gamescene.init()`, and the home page
+one per featured game. Live-board modules (animation, arrows, ripples, move effects) hold no state
+of their own and take the board they act on.
 
 ### Choosing a shape for a new render module
 
@@ -229,9 +228,9 @@ Wiring notes for the factory pattern:
   `RenderContext` to take, while `RenderContext` builds the renderable factory for
   `gamerenderable.init()` to take.
 - The generic `createRenderableFactory` and the model types live in
-  [`webgl/Renderable.ts`](/src/client/scripts/esm/webgl/Renderable.ts); the game's free
-  create-functions live in
-  [`game/rendering/gamerenderable.ts`](/src/client/scripts/esm/game/rendering/gamerenderable.ts).
+  [`webgl/Renderable.ts`](/src/client/scripts/webgl/Renderable.ts); the game's free create-functions
+  live in
+  [`game/rendering/gamerenderable.ts`](/src/client/scripts/game/rendering/gamerenderable.ts).
 
 Rule of thumb: **only make something a factory if two boards genuinely need two of it.** Otherwise
 leave it a singleton reading the game's context, or thread `ctx` if the preview must share the exact

@@ -1,9 +1,9 @@
 // scripts/modules/srcgraph.ts
 
 /**
- * Source-graph primitives the scripts/modules tools share: walking src/ for scripts,
- * resolving relative specifiers, telling runtime imports from type-only ones, bundling
- * entries as the real client build does, and the short paths every report prints.
+ * Source-graph primitives the scripts/modules tools share: the client build's script entries,
+ * walking and resolving src/ scripts, telling runtime imports from type-only ones, bundling as
+ * the real client build does, and the short paths every report prints.
  */
 
 import fs from 'node:fs';
@@ -11,18 +11,21 @@ import ts from 'typescript';
 import path from 'node:path';
 import esbuild from 'esbuild';
 
-import { RESOLVE_OPTIONS } from '../../build/client.js';
+import { ENTRY_POINTS, RESOLVE_OPTIONS } from '../../build/client.js';
 
 // Constants -------------------------------------------------------------------
 
 /** The three src/ roots, each a side of the client/server/shared split. */
 const SRC_ROOTS = ['src/shared', 'src/client', 'src/server'];
 
+/** The client build's script entry points, its stylesheet entries left out. */
+const SCRIPT_ENTRIES = ENTRY_POINTS.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
+
 // Paths -----------------------------------------------------------------------
 
 /** Trims the noisy common prefix so paths read cleanly. */
 function short(file: string): string {
-	return file.replace(/^src\/client\/scripts\/esm\//, '').replace(/^src\//, '');
+	return file.replace(/^src\/client\/scripts\//, '').replace(/^src\//, '');
 }
 
 /** Every .ts/.js file across all three src/ roots. */
@@ -128,6 +131,8 @@ function bundle(
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	SCRIPT_ENTRIES,
 	// Paths
 	short,
 	walkSrc,

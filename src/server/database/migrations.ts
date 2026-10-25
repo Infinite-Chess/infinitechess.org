@@ -9,8 +9,8 @@
  * has run in production.
  */
 
-import type { RatingData } from '../utility/ratingCalculation.js';
 import type { Player } from '../../shared/chess/util/typeutil.js';
+import type { RatingData } from '../utility/ratingCalculation.js';
 import type { VariantCode } from '../../shared/chess/util/variantcodes.js';
 import type { OutSeekVariant } from '../../shared/chess/util/variantselection.js';
 import type { PlayerGamesRecord } from './playerGamesManager.js';

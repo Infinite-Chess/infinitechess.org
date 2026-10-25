@@ -1,0 +1,105 @@
+// src/client/scripts/views/game/tabnameflash.ts
+
+/**
+ * Flashes the tab name "YOUR MOVE" while it is your turn and you're in another tab,
+ * and plays a reminder sound if you stay away.
+ */
+
+import moveutil from '../../../../shared/chess/logic/moveutil.js';
+import timeutil from '../../../../shared/util/timeutil.js';
+
+import gameslot from '../../game/chess/gameslot.js';
+import gamesound from '../../board/gamesound.js';
+import { GameBus } from '../../board/GameBus.js';
+import gamesession from '../../game/chess/gamesession.js';
+
+// Constants -------------------------------------------------------------------
+
+/** Number of millis to wait before reminding us a 2nd time it's our move by playing a sound effect. */
+const MOVE_SOUND_REMINDER_MS: number = timeutil.toMillis(20, 'seconds');
+
+/** The original tab title, restored after flashing it. */
+const ORIGINAL_TITLE: string = document.title;
+
+/** How rapidly the tab title should flash "YOUR MOVE" */
+const FLASH_INTERVAL_MS = 1500;
+
+// State -----------------------------------------------------------------------
+
+/** The ID of the timeout that can be used to cancel the timer that flips the tab title between "YOUR MOVE" and the default title. */
+let timeoutID: ReturnType<typeof setTimeout> | undefined;
+
+/** The ID of the timeout that can be used to cancel the timer that will play a move sound effect to help you realize it's your move. Typically about 20 seconds. */
+let moveSound_timeoutID: ReturnType<typeof setTimeout> | undefined;
+
+// Listeners -------------------------------------------------------------------
+
+GameBus.addEventListener('game-loaded', () =>
+	gamesession.isItOurTurn() ? onOurTurn() : onOpponentsTurn(),
+);
+GameBus.addEventListener('game-concluded', () => {
+	cancelFlashTabTimer();
+	cancelMoveSound();
+});
+GameBus.addEventListener('user-move-played', () => onOpponentsTurn());
+GameBus.addEventListener('opponent-move-played', () => onOurTurn());
+// Returning to the tab clears any active alert: restore the title and cancel the pending reminder sound.
+document.addEventListener('visibilitychange', () => {
+	if (document.hidden) return;
+	cancelFlashTabTimer();
+	cancelMoveSound();
+});
+
+// Functions -------------------------------------------------------------------
+
+/** It's now our turn: flash the tab name and schedule a reminder sound. */
+function onOurTurn(): void {
+	flashTabNameYOUR_MOVE(true);
+	scheduleMoveSound_timeoutID();
+}
+
+/** It's now the opponent's turn: stop flashing the tab name. */
+function onOpponentsTurn(): void {
+	cancelFlashTabTimer();
+}
+
+/**
+ * Toggles the document title showing "YOUR MOVE",
+ * and sets a timer for the next toggle.
+ * @param parity - If true, the tab name becomes "YOUR MOVE", otherwise it reverts to the original title
+ */
+function flashTabNameYOUR_MOVE(parity: boolean): void {
+	if (!document.hidden) {
+		// The page is no longer hidden, restore the tab's original title,
+		// and stop flashing "YOUR MOVE"
+		document.title = ORIGINAL_TITLE;
+		return;
+	}
+
+	document.title = parity ? t.game.your_move : ORIGINAL_TITLE;
+	// Set a timer for the next toggle
+	timeoutID = setTimeout(() => flashTabNameYOUR_MOVE(!parity), FLASH_INTERVAL_MS);
+}
+
+/** Stops flashing, restoring the original tab title. */
+function cancelFlashTabTimer(): void {
+	document.title = ORIGINAL_TITLE;
+	clearTimeout(timeoutID);
+	timeoutID = undefined;
+}
+
+/** Schedules the reminder sound, if the page is hidden and the game is resignable. */
+function scheduleMoveSound_timeoutID(): void {
+	if (!document.hidden) return; // Don't schedule it if the page is already visible
+	if (!moveutil.isGameResignable(gameslot.getGamefile()!)) return;
+	moveSound_timeoutID = setTimeout(
+		() => gamesound.playSoundEffect('move'),
+		MOVE_SOUND_REMINDER_MS,
+	);
+}
+
+/** Cancels the pending reminder sound. */
+function cancelMoveSound(): void {
+	clearTimeout(moveSound_timeoutID);
+	moveSound_timeoutID = undefined;
+}

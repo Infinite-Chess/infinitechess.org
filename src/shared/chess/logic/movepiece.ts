@@ -396,8 +396,7 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 			}
 		}
 
-		const move: MoveFull = calculateMoveFromPacket(boardsim, shortmove);
-		makeMove(boardsim, move);
+		calculateAndMakeMove(boardsim, shortmove);
 
 		// Also if validateMoves flag is true, any move that comes AFTER
 		// when the game should have ended already is considered illegal!
@@ -408,6 +407,17 @@ function makeAllMovesInGame(boardsim: Board, moves: MovePacket[], validateMoves?
 				throw new IllegalMoveError(`Moves cannot come after game ends. ${moveutil.describePly(i)} should have concluded game by ${JSON.stringify(conclusion)}.`); // prettier-ignore
 		}
 	}
+}
+
+/**
+ * Constructs a full MoveFull from a compact move, then immediately applies it to the boardsim.
+ * Does NOT check its legality.
+ * @throws If we're not viewing the latest move, the token is malformed, or no piece stands on its start square.
+ */
+function calculateAndMakeMove(boardsim: Board, movePacket: MovePacket): MoveFull {
+	const move = calculateMoveFromPacket(boardsim, movePacket);
+	makeMove(boardsim, move);
+	return move;
 }
 
 /**
@@ -566,6 +576,7 @@ export default {
 	applyMove,
 	applyEdit,
 	makeAllMovesInGame,
+	calculateAndMakeMove,
 	// Rewinding
 	rewindMove,
 	// Dynamic

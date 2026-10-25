@@ -41,13 +41,18 @@ function getEngineVersion(): string {
 	return version;
 }
 
+/** Returns the engine glue's hashed web path, e.g. `/engine/1a2b3c4d/apeiron.js`. */
+function getEngineUrl(): string {
+	const engineUrl = get()['engine'];
+	if (!engineUrl) throw new Error('Engine missing from asset manifest.');
+	return engineUrl;
+}
+
 /** Returns the hashed URLs a client needs to run the engine inside the given worker script. */
 function getEngineAssets(workerSource: string): EngineAssets {
-	const assets = get();
-	const workerUrl = assets[workerSource];
-	const engineUrl = assets['engine'];
-	if (!workerUrl || !engineUrl) throw new Error('Engine assets missing from asset manifest.');
-	return { workerUrl, engineUrl };
+	const workerUrl = get()[workerSource];
+	if (!workerUrl) throw new Error('Engine worker missing from asset manifest.');
+	return { workerUrl, engineUrl: getEngineUrl() };
 }
 
 // Exports ---------------------------------------------------------------------
@@ -58,5 +63,6 @@ export default {
 	// Functions
 	load,
 	getEngineVersion,
+	getEngineUrl,
 	getEngineAssets,
 };

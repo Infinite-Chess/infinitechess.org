@@ -36,10 +36,10 @@ const AUTH_INPUT_MAX_LENGTHS = {
 };
 
 /** The checkmate-practice engine's worker script, as keyed in the asset manifest. */
-const PRACTICE_WORKER_SOURCE = 'scripts/esm/game/chess/engines/enginecheckmatepractice.worker.ts';
+const PRACTICE_WORKER_SOURCE = 'scripts/game/chess/engines/enginecheckmatepractice.worker.ts';
 
 /** The ICN validator's worker script, as keyed in the asset manifest. */
-const ICN_VALIDATOR_WORKER_SOURCE = 'scripts/esm/views/icnvalidator/icnvalidator.worker.ts';
+const ICN_VALIDATOR_WORKER_SOURCE = 'scripts/views/icnvalidator/icnvalidator.worker.ts';
 
 // Helpers ---------------------------------------------------------------------
 

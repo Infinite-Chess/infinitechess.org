@@ -1,0 +1,385 @@
+// src/client/scripts/views/editor/actions/eactions.ts
+
+/**
+ * Editor Actions
+ *
+ * Contains handlers for the one-time action buttons on the Board Editor UI, such as:
+ *
+ * * Reset position
+ * * Clear position
+ * * Saved positions
+ * * Copy notation
+ * * Paste notation
+ * * Game rules
+ * * Start local game from position
+ */
+
+import type { Edit } from '../../../../../shared/chess/logic/movepiece.js';
+import type { Board } from '../../../../../shared/chess/logic/boardinit.js';
+import type { MovePacket } from '../../../../../shared/chess/util/typeschemas.js';
+import type { MoveParsed } from '../../../../../shared/chess/logic/icn/icnmoves.js';
+import type { ActivePosition } from '../editor.js';
+import type { GlobalGameState } from '../../../../../shared/chess/logic/state.js';
+import type { EditorSaveState, StorageType } from '../../../savedpositions/storetypes.js';
+
+import typeutil from '../../../../../shared/chess/util/typeutil.js';
+import movepiece from '../../../../../shared/chess/logic/movepiece.js';
+import icnimport from '../../../../../shared/chess/logic/icn/icnimport.js';
+import metadatautil from '../../../../../shared/chess/util/metadatautil.js';
+import variantcache from '../../../../../shared/chess/variants/variantcache.js';
+import variantrules from '../../../../../shared/chess/logic/variantrules.js';
+import { validatePosition } from '../../../../../shared/chess/logic/positionlegality.js';
+import boardutil, { Piece } from '../../../../../shared/chess/logic/boardutil.js';
+import coordutil, { CoordsKey } from '../../../../../shared/util/coordutil.js';
+import organizedpieces, {
+	OrganizedPieces,
+} from '../../../../../shared/chess/logic/organizedpieces.js';
+import icnconverter, {
+	LongFormatIn,
+	LongFormatOut,
+} from '../../../../../shared/chess/logic/icn/icnconverter.js';
+import gamefile, {
+	Additional,
+	GameFile,
+	LoadedVariant,
+	VariantOptions,
+} from '../../../../../shared/chess/logic/gamefile.js';
+
+import toast from '../../../components/toast.js';
+import editor from '../editor.js';
+import docutil from '../../../util/docutil.js';
+import gameslot from '../../../game/chess/gameslot.js';
+import egamerules from '../egamerules.js';
+import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
+import edithistory from '../edithistory.js';
+import editorloader from '../editorloader.js';
+import validatorama from '../../../util/validatorama.js';
+import selectiontool from '../tools/selection/selectiontool.js';
+import gamecompressor from '../../../chess/gamecompressor.js';
+import guiboardcontrols from '../../../game/gui/guiboardcontrols.js';
+import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
+import clientmetadatautil from '../../../chess/clientmetadatautil.js';
+
+// Constants -------------------------------------------------------------------
+
+/**
+ * If a position with less pieces than this is pasted, the position dependent
+ * game rules (pawnDoublePush, castling) are accurately updated,
+ * else they are set to undetermined.
+ */
+const PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS = 2_000_000;
+
+/** Shown to the user when the browser denies clipboard access. */
+const CLIPBOARD_DENIED = 'Clipboard permission denied. This might be your browser.';
+
+// Actions ---------------------------------------------------------------------
+
+/** Resets the board editor position to the Classical position. */
+async function reset(): Promise<void> {
+	// Load default board editor position
+	await editorloader.loadClassical();
+	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
+	editor.clearActivePosition();
+}
+
+/** Clears the entire board editor position. */
+async function clearAll(): Promise<void> {
+	// Initialize board editor with empty position and bare minimum game rules
+	const gameRules = variantrules.getBareMinimumGameRules();
+	const position: Map<CoordsKey, number> = new Map();
+	const specialRights: Set<CoordsKey> = new Set();
+	const state_global: GlobalGameState = { specialRights };
+	const variantOptions: VariantOptions = {
+		fullMove: 1,
+		gameRules,
+		position,
+		state_global,
+	};
+
+	await editorloader.loadVariantOptions(
+		variantOptions,
+		true, // Dirty position (unsaved changes)
+		false,
+	);
+	// AFTER the load: clearing flushes the autosave, which serializes the live gamefile.
+	editor.clearActivePosition();
+}
+
+/** Loads a position from a savestate. */
+async function load(editorSaveState: EditorSaveState, storage_type: StorageType): Promise<void> {
+	// prettier-ignore
+	const new_active_position: ActivePosition =
+		storage_type === 'cloud'
+			? { name: editorSaveState.position_name, storage_type: 'cloud', owner: validatorama.getOurUsername()! }
+			: { name: editorSaveState.position_name, storage_type: 'local' };
+
+	await editorloader.loadVariantOptions(
+		editorSaveState.variantOptions,
+		false, // Clean position (no unsaved changes) since we're loading one that was already saved
+		editorSaveState.pawnDoublePush,
+		editorSaveState.castling,
+	);
+	// AFTER the load: setting flushes the autosave, which serializes the live gamefile.
+	editor.setActivePosition(new_active_position);
+	toast.show(translations.editor.position_loaded);
+}
+
+/**
+ * Copies the position as game notation. Serializes the pieces on the
+ * board, since the editor has no move list to derive a position from.
+ */
+async function copy(): Promise<void> {
+	const variantOptions = getCurrentPositionInformation(false);
+	const LongFormatIn: LongFormatIn = {
+		metadata: {}, // Empty metadata, in order to make copied codes easier to share
+		...variantOptions,
+	};
+	const shortFormatOut = icnconverter.LongToShort_Format(
+		LongFormatIn,
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
+	if (await docutil.copyToClipboard(shortFormatOut)) {
+		toast.show(translations.copypaste.copied_position);
+	} else {
+		toast.show(CLIPBOARD_DENIED, { error: true });
+	}
+}
+
+/** Loads the position from the clipboard. */
+async function paste(): Promise<void> {
+	let longformOut: LongFormatOut;
+
+	// Do we have clipboard permission?
+	const clipboard = await docutil.readFromClipboard();
+	if (clipboard === undefined) {
+		toast.show(CLIPBOARD_DENIED, { error: true });
+		return;
+	}
+
+	// Convert clipboard text to longformat
+	try {
+		longformOut = icnconverter.ShortToLong_Format(clipboard);
+	} catch (e) {
+		console.error(e);
+		toast.show('Clipboard is not in valid ICN notation.', { error: true });
+		return;
+	}
+
+	await loadFromLongformat(longformOut);
+	selectiontool.resetState(); // Clear current selection
+	toast.show(translations.copypaste.loaded_position_from_clipboard);
+}
+
+/** Hands the validated position off to the lobby's computer-game setup and navigates there. */
+async function startEngineGame(): Promise<void> {
+	const variantOptions = getValidatedPosition();
+	if (variantOptions === null) return;
+	const icn = icnconverter.LongToShort_Format(
+		{ metadata: {}, ...variantOptions },
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
+	await gamesetuphandoff.save({ icn, mode: 'computer' });
+	window.location.assign('/');
+}
+
+// Helpers ---------------------------------------------------------------------
+
+/**
+ * Gets and validates the current board editor position.
+ * Shows a toast and returns null if the position is illegal.
+ */
+function getValidatedPosition(): VariantOptions | null {
+	const variantOptions = getCurrentPositionInformation(true);
+	const icnString = icnconverter.LongToShort_Format(
+		{ metadata: {}, ...variantOptions },
+		icnconverter.COMPACT_FORMAT_OPTIONS,
+	);
+	const illegalReason = validatePosition(variantOptions, icnString);
+	if (illegalReason !== null) {
+		// The position is illegal
+		toast.show(t.shared.position_errors[illegalReason], { error: true });
+		return null;
+	}
+	return variantOptions;
+}
+
+/** Queues the removal of all pieces from the position. */
+function queueRemovalOfAllPieces(gamefile: GameFile, edit: Edit, pieces: OrganizedPieces): void {
+	for (const idx of pieces.coords.values()) {
+		const pieceToDelete: Piece = boardutil.getDefinedPieceFromIdx(pieces, idx)!;
+		edithistory.queueRemovePiece(gamefile, edit, pieceToDelete);
+	}
+}
+
+/**
+ * Reconstructs the current VariantOptions object (including position, gameRules and state_global) from the current board editor position
+ * @param revokeRedundantRights - If true, special rights of pieces that no longer have a valid castling partner are revoked.
+ */
+function getCurrentPositionInformation(revokeRedundantRights: boolean): VariantOptions {
+	// Get current game rules and state
+	const { gameRules, moveRuleState, enpassant } = egamerules.getCurrentGamerulesAndState();
+
+	// Construct position
+	const gamefile = gameslot.getGamefile()!;
+	const position = organizedpieces.generatePositionFromPieces(gamefile.pieces);
+
+	// Construct state_global
+
+	const specialRights = new Set(gamefile.state.global.specialRights); // Makes a copy so we don't modify the original belonging to the current gamefile
+	if (revokeRedundantRights) revokeRedundantSpecialRights(gamefile, specialRights);
+
+	const state_global: GlobalGameState = {
+		specialRights,
+		moveRuleState,
+		enpassant,
+	};
+
+	// Construct VariantOptions
+	const variantOptions: VariantOptions = {
+		fullMove: 1,
+		gameRules,
+		position,
+		state_global,
+	};
+
+	return variantOptions;
+}
+
+/**
+ * Revokes special rights from pieces that no longer have a valid castling partner.
+ * MUTATES the input specialRights set.
+ * @param specialRights - MUST be a copy of the gamefile's specialRights set! This will be mutated, NOT the gamefile's internal one.
+ */
+function revokeRedundantSpecialRights(boardsim: Board, specialRights: Set<CoordsKey>): void {
+	// Iterate through each piece with special rights, and remove them if they don't have a valid castling partner
+	for (const coordsKey of specialRights) {
+		const candidate = boardutil.getPieceFromCoordsKey(boardsim.pieces, coordsKey)!; // Guaranteed defined because it wouldn't be in specialRights otherwise
+
+		const rawType = typeutil.getRawType(candidate.type);
+		if (egamerules.PAWN_DOUBLE_PUSH_TYPES.includes(rawType)) continue; // Pawns can't castle
+
+		const hasValidCastlingPartner = movepiece.hasCastlingPartner(boardsim, candidate);
+		if (!hasValidCastlingPartner) specialRights.delete(coordsKey);
+	}
+}
+
+/** Loads a parsed ICN's final position onto the board as one undoable edit. */
+async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
+	// Resolve variant code from the ICN metadata, normalizing it to the English display name.
+	const resolvedVariantCode = clientmetadatautil.resolveAndNormalizeVariantFromMetadata(
+		longformOut.metadata,
+	);
+	const timestamp = metadatautil.resolveTimestampFromMetadata(
+		longformOut.metadata.UTCDate,
+		longformOut.metadata.UTCTime,
+	);
+
+	// Preload the variant module up front: getPositionAndSpecialRights reads the position
+	// off it when the ICN omits one, and initGameFile below requires it too.
+	let variant: LoadedVariant | undefined;
+	if (resolvedVariantCode !== undefined) {
+		await variantcache.ensureVariantLoaded(resolvedVariantCode);
+		variant = {
+			code: resolvedVariantCode,
+			dateTimestamp: timestamp,
+			mod: variantcache.getModule(resolvedVariantCode),
+		};
+	}
+	let { position, specialRights } = icnimport.getPositionAndSpecialRightsFromLongFormat(longformOut, variant); // prettier-ignore
+	let stateGlobal = longformOut.state_global;
+
+	// If longformat contains moves, then we construct a GameFile object and use it to fast forward to the final position
+	// If it contains no moves, then we skip all that, thus saving time
+	if (longformOut.moves && longformOut.moves.length !== 0) {
+		const variantOptions = icnimport.variantOptionsFromLongFormat(longformOut, {
+			position,
+			specialRights,
+		});
+		const additional: Additional = {
+			variantOptions,
+			moves: longformOut.moves.map((m: MoveParsed) => {
+				const move: MovePacket = { token: m.token };
+				return move;
+			}),
+		};
+		const loadedGamefile = gamefile.initGameFile(
+			longformOut.metadata.TimeControl ?? '-',
+			timestamp,
+			variant,
+			additional,
+		);
+		const new_gamestate = gamecompressor.gameToPosition(
+			variantOptions,
+			loadedGamefile.moves,
+			loadedGamefile.moves.length,
+		);
+		position = new_gamestate.position;
+		specialRights = new_gamestate.state_global.specialRights!;
+		stateGlobal = new_gamestate.state_global;
+	}
+
+	const thisGamefile = gameslot.getGamefile()!;
+	const mesh = gameslot.getMesh()!;
+	const pieces = thisGamefile.pieces;
+	const edit: Edit = { changes: [], state: [] };
+
+	// Remove all current pieces from position
+	queueRemovalOfAllPieces(thisGamefile, edit, pieces);
+
+	const keepTrackOfGlobalSpecialRights =
+		position.size < PIECE_LIMIT_KEEP_TRACK_OF_GLOBAL_SPECIAL_RIGHTS;
+	let pawnDoublePush: boolean | undefined = undefined;
+	let castling: boolean | undefined = undefined;
+
+	// Add all new pieces as dictated by the pasted position
+	let all_pawns_have_double_push = true;
+	let at_least_one_pawn_has_double_push = false;
+	let all_pieces_obey_normal_castling = true;
+	let at_least_one_piece_obeys_normal_castling = false;
+	for (const [coordKey, pieceType] of position.entries()) {
+		const coords = coordutil.getCoordsFromKey(coordKey);
+		const hasSpecialRights = specialRights.has(coordKey);
+		edithistory.queueAddPiece(thisGamefile, edit, coords, pieceType, hasSpecialRights);
+
+		if (!keepTrackOfGlobalSpecialRights) continue; // One if statement cost is very tiny per iteration
+
+		const rawtype = typeutil.getRawType(pieceType);
+		if (egamerules.PAWN_DOUBLE_PUSH_TYPES.includes(rawtype)) {
+			if (hasSpecialRights) at_least_one_pawn_has_double_push = true;
+			else all_pawns_have_double_push = false;
+		} else if (egamerules.CASTLING_TYPES.includes(rawtype)) {
+			if (hasSpecialRights) at_least_one_piece_obeys_normal_castling = true;
+			else all_pieces_obey_normal_castling = false;
+		} else if (hasSpecialRights) {
+			at_least_one_piece_obeys_normal_castling = true;
+			all_pieces_obey_normal_castling = false;
+		}
+	}
+
+	if (keepTrackOfGlobalSpecialRights) {
+		// prettier-ignore
+		pawnDoublePush = at_least_one_pawn_has_double_push ? (all_pawns_have_double_push ? true : undefined) : false;
+		// prettier-ignore
+		castling = at_least_one_piece_obeys_normal_castling ? (all_pieces_obey_normal_castling ? true : undefined) : false;
+	}
+
+	egamerules.setGamerulesGUIinfo(longformOut.gameRules, stateGlobal, pawnDoublePush, castling); // Set gamerules object according to pasted game
+
+	edithistory.runEdit(thisGamefile, mesh, edit, true);
+	edithistory.addEditToHistory(edit);
+	annotations.resetState(); // Clear all annotations
+
+	guiboardcontrols.callback_Expand(); // Virtually press the "Expand to fit all" button after position is loaded
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default {
+	reset,
+	clearAll,
+	load,
+	copy,
+	paste,
+	startEngineGame,
+	getCurrentPositionInformation,
+};

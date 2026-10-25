@@ -112,7 +112,7 @@ function collectScriptEntries(templates: string[]): string[] {
 	const entries = new Set<string>();
 	for (const name of templates) {
 		const src = fs.readFileSync(path.join(VIEWS_DIR, name), 'utf8');
-		for (const m of src.matchAll(/manifest\['(scripts\/esm\/[^']+\.ts)'\]/g)) {
+		for (const m of src.matchAll(/manifest\['(scripts\/[^']+\.ts)'\]/g)) {
 			entries.add(`src/client/${m[1]!}`);
 		}
 	}

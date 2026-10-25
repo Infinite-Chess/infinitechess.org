@@ -1,0 +1,75 @@
+// src/client/scripts/views/login.ts
+
+/**
+ * Client-side logic for the login page (/login).
+ *
+ * Submits the credentials to the /auth endpoint. On success it navigates to the
+ * home page. Failures are surfaced inline beneath the form.
+ */
+
+import accountform from '../components/accountform.js';
+import { serverfetch } from '../util/serverfetch.js';
+
+import '../components/passwordtoggle.js';
+
+// Elements --------------------------------------------------------------------
+
+const form = document.querySelector<HTMLFormElement>('#login-form')!;
+const usernameInput = document.querySelector<HTMLInputElement>('#username')!;
+const passwordInput = document.querySelector<HTMLInputElement>('#password')!;
+const keepLoggedInInput = document.querySelector<HTMLInputElement>('#keep-logged-in')!;
+const submitButton = document.querySelector<HTMLButtonElement>('#login-submit')!;
+const errorElement = document.querySelector<HTMLParagraphElement>('#login-error')!;
+
+// Functions -------------------------------------------------------------------
+
+/** Displays an error beneath the form, or clears it when called with no message. */
+function setError(message?: string): void {
+	accountform.setFieldError(errorElement, message);
+}
+
+/** Submits the login form to the server. */
+async function submitLogin(): Promise<void> {
+	const username = usernameInput.value.trim();
+	const password = passwordInput.value;
+	if (!username || !password) return; // Backup for whitespace-only input (native `required` blocks truly-empty submits).
+
+	setError();
+	submitButton.disabled = true;
+
+	try {
+		const response = await serverfetch('/api/auth', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password, keepLoggedIn: keepLoggedInInput.checked }),
+		});
+
+		const result = (await response.json()) as { message: string };
+
+		if (!response.ok) {
+			setError(result.message);
+			submitButton.disabled = false;
+			return;
+		}
+
+		// Success — the session cookie is now set; navigate away.
+		window.location.assign('/');
+	} catch (e: unknown) {
+		console.error('Login request failed:', e);
+		setError(t.shared.errors.network);
+		submitButton.disabled = false;
+	}
+}
+
+// Event Listeners -------------------------------------------------------------
+
+form.addEventListener('submit', (event: SubmitEvent): void => {
+	event.preventDefault();
+	submitLogin();
+});
+
+// Clear a stale error as soon as the user edits their credentials.
+usernameInput.addEventListener('input', () => setError());
+passwordInput.addEventListener('input', () => setError());
+
+usernameInput.focus();

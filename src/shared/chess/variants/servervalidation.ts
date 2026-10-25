@@ -2,7 +2,7 @@
 
 /**
  * This script defines which variants support server-side move legality validation,
- * and which games that leaves open to cheat reports.
+ * and which games that leaves open to illegal-move reports.
  *
  * Variants with a position string length <= gamelimits's MAX_SERVER_VALIDATABLE_POSITION_LENGTH are
  * considered supported. Variants with large position strings (like Omega Squared and above) or
@@ -32,7 +32,7 @@ function doesVariantSupportServerValidation(variant: LoadedVariant | undefined):
 
 /**
  * Returns `true` if the server validates every move of the game against its own board,
- * making cheating impossible.
+ * making illegal moves impossible.
  * @param variant - What the game is played with.
  * @param loaded - The loaded variant its board was built from. Read only for a preset game:
  *   a custom game's source variant says nothing about the size of the position it was lifted from.
@@ -45,8 +45,8 @@ function isGameValidated(variant: GameStateVariant, loaded: LoadedVariant | unde
 }
 
 /**
- * Whether the game's result can be overturned by a cheat report. An engine game's never can:
- * its one human plays both sides. Unreportable games are finalized the instant they conclude.
+ * Whether the game's result can be overturned by an illegal-move report. An engine game's never
+ * can: its one human plays both sides. Unreportable games are finalized the instant they conclude.
  * @param validated - Whether the server validates its moves. The server passes its stored flag,
  *   not {@link isGameValidated}, so a game keeps the mode it began under.
  */

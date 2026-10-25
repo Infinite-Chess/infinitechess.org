@@ -1,0 +1,67 @@
+// src/client/scripts/board/frameprofiler.ts
+
+/**
+ * This script keeps track of our runTime, deltaTime, FPS, and estimated monitor refresh rate.
+ */
+
+import jsutil from '../../../shared/util/jsutil.js';
+
+import deltatime from './deltatime.js';
+
+// Constants -------------------------------------------------------------------
+
+/** Milliseconds to average the fps over */
+const FPS_WINDOW_MS = 1000;
+
+// State -----------------------------------------------------------------------
+
+/** In millis since the start of the program (updated at the beginning of each frame). */
+let runTime: number;
+
+/** Contains an ordered array of the timestamps of all frames over the last second */
+const frames: number[] = [];
+let fps = 0;
+/** Estimation of the monitor's refresh rate. */
+let monitorRefreshRate = 0;
+
+// Functions -------------------------------------------------------------------
+
+/** Records a new frame from its timestamp (ms). Call at the start of every frame. */
+function update(runtime: number): void {
+	runTime = runtime;
+	deltatime.update(runtime);
+
+	frames.push(runTime);
+	trimFrames();
+
+	updateFPS();
+
+	updateMonitorRefreshRate();
+}
+
+/** Deletes frame timestamps from our list over 1 second ago. */
+function trimFrames(): void {
+	// What time was it 1 second ago
+	const splitPoint = runTime - FPS_WINDOW_MS;
+
+	// Use binary search to find the split point.
+	const indexToSplit = jsutil.findIndexOfPointInOrganizedArray(frames, splitPoint);
+
+	// This will not delete a timestamp if it falls exactly on the split point.
+	frames.splice(0, indexToSplit);
+}
+
+/** Recomputes the fps from the frames within the window. */
+function updateFPS(): void {
+	fps = (frames.length * 1000) / FPS_WINDOW_MS;
+}
+
+/** Raises our recorded monitor refresh rate, since our highest-ever fps can't exceed it. */
+function updateMonitorRefreshRate(): void {
+	if (fps <= monitorRefreshRate) return;
+	monitorRefreshRate = fps;
+}
+
+// Exports ---------------------------------------------------------------------
+
+export default { update };

@@ -126,8 +126,8 @@ export interface MatchInfo {
 	 */
 	freed: boolean;
 	/**
-	 * Whether the game is finalized: its result is permanent and locked in — cheat reports no
-	 * longer accepted, and it can never change. The game is logged to the database at conclusion
+	 * Whether the game is finalized: its result is permanent and locked in — illegal-move reports
+	 * no longer accepted, and it can never change. The game is logged to the database at conclusion
 	 * (when it's freed), independent of this; finalizing just locks the already-logged result.
 	 * Finalized !== evicted: it may linger in memory to host rematch handshake.
 	 */
@@ -141,7 +141,7 @@ export interface MatchInfo {
 
 	/**
 	 * The ID of the timer that finalizes (locks in) the game's result after it ends. Only used by
-	 * cheat-reportable games, to give a cushion for cheat reports to overturn the result first.
+	 * reportable games, to give a cushion for illegal-move reports to overturn the result first.
 	 * Can be cancelled if the game is finalized/evicted early.
 	 */
 	finalizeTimeoutID?: NodeJS.Timeout;

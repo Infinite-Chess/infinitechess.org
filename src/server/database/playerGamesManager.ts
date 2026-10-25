@@ -145,7 +145,7 @@ function insert(record: PlayerGamesRecord): void {
 
 /**
  * Updates specific columns of a single player's row for a game.
- * Used when a cheat report overturns an already-logged game.
+ * Used when an illegal-move report overturns an already-logged game.
  * @param game_id - The game the row belongs to.
  * @param player_number - Which player's row to update.
  * @param updates - Only the columns to change and their new values. Keys of the primary key are not updatable.

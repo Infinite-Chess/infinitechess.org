@@ -11,7 +11,7 @@
  * page-reach.ts, pkg-cost.ts — answer placement questions, and move-module.ts performs the
  * move.
  *
- * All paths are "short form": "src/client/scripts/esm/" or "src/" chopped off the front,
+ * All paths are "short form": "src/client/scripts/" or "src/" chopped off the front,
  * giving views/index/index.ts and shared/chess/util/typeutil.ts.
  */
 
@@ -21,7 +21,6 @@ import fs from 'node:fs';
 import ts from 'typescript';
 
 import srcgraph from './srcgraph.js';
-import { ENTRY_POINTS } from '../../build/client.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -107,7 +106,7 @@ const FLOOR_PURPOSE = 'any page';
  */
 const LADDERS: Record<RootName, Ladder> = {
 	client: {
-		root: 'src/client/scripts/esm/',
+		root: 'src/client/scripts/',
 		prefix: '',
 		ranks: [
 			{ units: ['util/', 'webgl/'], purpose: FLOOR_PURPOSE },
@@ -252,9 +251,6 @@ const GATES: Gate[] = [
 		allowedImporters: ['shared/chess/variants/variantregistry.ts'],
 	},
 ];
-
-/** Only script entry points — the bundled CSS entries are skipped. */
-const ENTRIES = ENTRY_POINTS.filter((e) => e.endsWith('.ts') || e.endsWith('.js'));
 
 // Helper Functions ------------------------------------------------------------
 
@@ -542,7 +538,9 @@ async function checkReachability(): Promise<CheckResult> {
 	// Build each entry's graph once, then evaluate all rules against it.
 	const graphByEntry = new Map<string, Metafile['inputs']>();
 	await Promise.all(
-		ENTRIES.map(async (entry) => graphByEntry.set(entry, await bundleGraph(entry))),
+		srcgraph.SCRIPT_ENTRIES.map(async (entry) =>
+			graphByEntry.set(entry, await bundleGraph(entry)),
+		),
 	);
 
 	const lines: string[] = [];
@@ -552,7 +550,7 @@ async function checkReachability(): Promise<CheckResult> {
 		const matches = (moduleShort: string): boolean => matchesPath(rule.target, moduleShort);
 
 		const findings: string[] = [];
-		for (const entry of ENTRIES) {
+		for (const entry of srcgraph.SCRIPT_ENTRIES) {
 			const entryShort = srcgraph.short(entry);
 			// A bundle rooted inside the target cannot avoid containing it.
 			if (matches(entryShort)) continue;

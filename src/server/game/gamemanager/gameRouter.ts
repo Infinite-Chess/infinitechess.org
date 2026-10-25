@@ -14,11 +14,11 @@ import onRematch from './onRematch.js';
 import logEvents from '../../utility/logEvents.js';
 import onOfferDraw from './onOfferDraw.js';
 import activeGames from './activeGames.js';
-import cheatReport from './cheatReport.js';
 import onSubscribe from './onSubscribe.js';
 import moveSubmission from './moveSubmission.js';
 import claimDisconnect from './claimDisconnect.js';
 import abortResignGame from './abortResignGame.js';
+import illegalMoveReport from './illegalMoveReport.js';
 import onSubscribeRematch from './onSubscribeRematch.js';
 
 /**
@@ -94,7 +94,7 @@ function route(ws: CustomWebSocket, contents: ServerboundGameMessage): void {
 			chat.submitMessage(servergame, color, contents.value);
 			break;
 		case 'report':
-			cheatReport.onReport(servergame, color, contents.value);
+			illegalMoveReport.onReport(servergame, color, contents.value);
 			break;
 		default:
 			console.error('UNKNOWN web socket action received in game route!', contents satisfies never); // prettier-ignore

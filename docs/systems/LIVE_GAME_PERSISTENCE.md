@@ -152,6 +152,6 @@ are stored separately from human players.
 
 The moment a game concludes it is **logged to the permanent `games`/`player_games` tables**, and its
 `live_games` row (plus cascaded participant rows) is **deleted**. The game **lingers in memory** to
-host the rematch handshake and cheat-report window, and is evicted once that window closes — both
-players left it, a rematch was agreed, or one of them joined a different game. Rematch offers, the
-`finalized` flag, and post-game reconnection cushions are all ephemeral (never persisted).
+host the rematch handshake and illegal-move report window, and is evicted once that window closes —
+both players left it, a rematch was agreed, or one of them joined a different game. Rematch offers,
+the `finalized` flag, and post-game reconnection cushions are all ephemeral (never persisted).

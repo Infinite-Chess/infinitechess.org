@@ -5,7 +5,7 @@
  * it joins the game — format, turn, move number and distance cap, then either full
  * server-side validation or the client's own reported conclusion.
  *
- * Which of the two applies is the game's `validateMoves` flag. As in `cheatReport.ts`, a
+ * Which of the two applies is the game's `validateMoves` flag. As in `illegalMoveReport.ts`, a
  * move-triggered conclusion is broadcast from here rather than through `gameLifecycle.ts`.
  */
 
