@@ -121,12 +121,17 @@ function analysePosition(engine: AnalysisWasmEngine, gamefile: GameFile): Positi
 }
 
 /**
- * A streamed line as an {@link EngineLine}, with whether its first move lands on a piece.
+ * A streamed line as an {@link EngineLine}, with whether its first move captures or checks.
  * @throws If the line is unscored: the engine's protocol changed.
  */
 function toLine(line: AnalysisLine, gamefile: GameFile): EngineLine {
 	const move = line.moves[0]!;
-	return { move, score: toScore(line), captures: gameReplay.isCapture(gamefile, move) };
+	return {
+		move,
+		score: toScore(line),
+		captures: gameReplay.isCapture(gamefile, move),
+		checks: gameReplay.givesCheck(gamefile, move),
+	};
 }
 
 /**

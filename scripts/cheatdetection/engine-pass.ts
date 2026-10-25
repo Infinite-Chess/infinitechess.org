@@ -110,7 +110,7 @@ async function offlinePass(output: string, mine: (id: number) => boolean): Promi
 			const searched = session.search(icn, settings.SEARCH.multiPv, settings.SEARCH.positionNodes); // prettier-ignore
 			// Only what judging a move outside the lines reads: legal moves, check, and the top line's score.
 			const position: PositionAnalysis = searched
-				? { legal: searched.legal, inCheck: searched.inCheck, repeated: false, lines: searched.lines.slice(0, 1).map((l) => ({ ...l, captures: false })), topByDepth: [] } // prettier-ignore
+				? { legal: searched.legal, inCheck: searched.inCheck, repeated: false, lines: searched.lines.slice(0, 1).map((l) => ({ ...l, captures: false, checks: false })), topByDepth: [] } // prettier-ignore
 				: { refused: true };
 			corpus.append(output, {
 				key: corpus.afterKey(gameId, ply, move),

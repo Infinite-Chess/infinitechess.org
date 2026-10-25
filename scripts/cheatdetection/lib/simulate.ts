@@ -11,6 +11,7 @@
  */
 
 import type { MoveEvidence } from '../../../src/server/game/cheatdetection/moveEvidence.js';
+import type { PositionAnalysis } from '../../../src/server/game/cheatdetection/cheatDetectionTypes.js';
 import type { AfterPositions, GameData } from './corpus.js';
 
 import moveEvidence from '../../../src/server/game/cheatdetection/moveEvidence.js';
@@ -84,13 +85,13 @@ function cheat(
 ): CheatedGame {
 	if (style === 'alternating' && gameIndex % 2 === 1) return { evidence: honest, missing: [] };
 	const moves = [...game.moves];
-	const positions = [...game.positions];
+	const afters = new Map<number, PositionAnalysis>();
 	const missing: CheatedGame['missing'] = [];
 	const random = rng(game.gameId * 7 + gameIndex);
 	for (const { ply, engine } of choose(game, parity, style, honest, random)) {
 		if (moveEvidence.sameMove(engine, game.moves[ply]!)) continue;
 		moves[ply] = engine;
-		const before = positions[ply]!;
+		const before = game.positions[ply]!;
 		// Judged by its own line.
 		if (
 			!before.refused &&
@@ -98,13 +99,19 @@ function cheat(
 		)
 			continue;
 		const analysed = after.get(corpus.afterKey(game.gameId, ply, engine));
-		if (analysed) positions[ply + 1] = analysed;
+		if (analysed) afters.set(ply, analysed);
 		else missing.push({ gameId: game.gameId, ply, move: engine });
 	}
-	return {
-		evidence: missing.length ? [] : moveEvidence.gather(positions, moves, parity),
-		missing,
-	};
+	if (missing.length) return { evidence: [], missing };
+	// Judged in the real game's positions, only the one after a swap replaced, so how much each
+	// opponent move threw away is the real game's.
+	const { positions } = game;
+	const evidence: MoveEvidence[] = [];
+	for (let ply = parity; ply < moves.length; ply += 2) {
+		const judged = moveEvidence.judge(positions[ply - 1], positions[ply]!, afters.get(ply) ?? positions[ply + 1]!, moves[ply]!); // prettier-ignore
+		if (judged) evidence.push({ ply, ...judged });
+	}
+	return { evidence, missing };
 }
 
 /** The moves a style replaces, and what with. */

@@ -42,8 +42,8 @@ export interface BetModel {
 
 // Constants -------------------------------------------------------------------
 
-/** The natural log of the score that opens a case: measured on prod, about 99% of its cases are real. */
-const CASE_LOG_SCORE = Math.log(1000);
+/** The natural log of the score that opens a case: measured on prod, about 99.9% of its cases are real. */
+const CASE_LOG_SCORE = Math.log(1500);
 /** Games older than this no longer count as evidence. */
 const MAX_EVIDENCE_AGE_MS = timeutil.toMillis(6, 'months');
 
@@ -52,13 +52,19 @@ const MAX_EVIDENCE_AGE_MS = timeutil.toMillis(6, 'months');
  * 2026-10-20), the engine model on how this detector judges another Apeiron search's picks.
  */
 const MODEL: BetModel = {
-	skillCeiling: { base: 0.03, perRating: 0.22, margin: 0.55 },
+	skillCeiling: { base: 0.03, perRating: 0.22, margin: 0.49 },
 	cheatFractions: [0.1, 0.25, 0.5, 1],
-	honestGoodWeights: [0.712, -1.488, -0.959, -0.845, -0.731, -0.499, 1.251, 1.319],
+	honestGoodWeights: [
+		0.507, -1.359, -0.933, -0.854, -0.603, -0.42, 0.849, 0.718, 1.475, -1.279, 0.262,
+	],
 	honestTopRates: [1, 0.598, 0.435, 0.329, 0.152],
 	honestTopMargin: 0.05,
-	engineGoodWeights: [3.615, -1.535, -1.195, -0.822, -0.868, -1.147, 0.798, 1.031],
-	engineTopWeights: [0.432, 4.378, 1.232, 0.892, 0.175, -1.487, 0.494, 0.191],
+	engineGoodWeights: [
+		3.152, -1.586, -1.254, -0.84, -0.737, -1.059, 0.433, 0.49, 1.093, -0.142, 0.932,
+	],
+	engineTopWeights: [
+		0.311, 4.412, 1.254, 0.91, 0.207, -1.459, 0.471, 0.008, 0.158, -0.183, 0.283,
+	],
 };
 
 // Model -----------------------------------------------------------------------
@@ -73,7 +79,10 @@ function features(d: Difficulty): number[] {
 		d.shallowFinds ? 0 : 1,
 		d.deepFind ? 1 : 0,
 		d.bestCaptures ? 1 : 0,
+		d.forcingGoodMove ? 1 : 0,
 		d.inCheck ? 1 : 0,
+		Math.sqrt(d.opponentBlunder),
+		d.imbalance,
 	];
 }
 
@@ -135,11 +144,15 @@ function bestRunLogScore(games: number[][]): number {
 	const sums = games[0]?.map(() => 0) ?? [];
 	for (let start = games.length - 1; start >= 0; start--) {
 		games[start]!.forEach((r, i) => (sums[i]! += r));
-		const max = Math.max(...sums);
-		const logScore = max + Math.log(sums.reduce((total, s) => total + Math.exp(s - max), 0) / sums.length); // prettier-ignore
-		best = Math.max(best, logScore);
+		best = Math.max(best, averageLogRatio(sums));
 	}
 	return best;
+}
+
+/** The natural log of the bets' average ratio, given each bet's log ratio. */
+function averageLogRatio(logRatios: number[]): number {
+	const max = Math.max(...logRatios);
+	return max + Math.log(logRatios.reduce((total, r) => total + Math.exp(r - max), 0) / logRatios.length); // prettier-ignore
 }
 
 // Exports ---------------------------------------------------------------------
@@ -156,4 +169,5 @@ export default {
 	// Scoring
 	gameLogRatios,
 	bestRunLogScore,
+	averageLogRatio,
 };

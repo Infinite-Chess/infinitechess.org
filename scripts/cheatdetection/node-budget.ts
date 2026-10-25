@@ -69,7 +69,7 @@ function analyse(game: GameAtStart, moves: string[], nodes: number): PositionAna
 	const searched = session.search(icn, settings.SEARCH.multiPv, nodes);
 	session.free();
 	if (!searched) return { refused: true };
-	return { ...searched, repeated: false, lines: searched.lines.map((line) => ({ ...line, captures: false })), topByDepth: [] }; // prettier-ignore
+	return { ...searched, repeated: false, lines: searched.lines.map((line) => ({ ...line, captures: false, checks: false })), topByDepth: [] }; // prettier-ignore
 }
 
 /** A move's outcome judged at `nodes`, the position after it searched only when production would. */

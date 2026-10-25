@@ -3,7 +3,7 @@
 /**
  * Builds a stored game's board at its start position, so each position's board facts can be
  * read at the front of the game, where they are defined, as the game is played forward:
- * whether the side to move is in check, and whether a move captures. Also writes each
+ * whether the side to move is in check, and whether a move captures or checks. Also writes each
  * position as the ICN the engine is handed, and says which plies each player moves at.
  */
 
@@ -14,6 +14,7 @@ import type { LongFormatIn, LongFormatOut } from '../../../shared/chess/logic/ic
 
 import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
 import boardutil from '../../../shared/chess/logic/boardutil.js';
+import movepiece from '../../../shared/chess/logic/movepiece.js';
 import engineicn from '../../../shared/chess/logic/icn/engineicn.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
 import gameformulator from '../../../shared/chess/game/gameformulator.js';
@@ -64,6 +65,14 @@ function isCapture(gamefile: GameFile, token: string): boolean {
 	return boardutil.isPieceOnCoords(gamefile.pieces, endCoords);
 }
 
+/** Whether a move from the current position checks the opponent. */
+function givesCheck(gamefile: GameFile, token: string): boolean {
+	movepiece.calculateAndMakeMove(gamefile, { token });
+	const check = isInCheck(gamefile);
+	movepiece.rewindMove(gamefile);
+	return check;
+}
+
 /** Whether player number `player` moves at a stored game's even plies (0) or odd (1), by its turn order. */
 function parityOf(icn: string, player: number): 0 | 1 {
 	const { turnOrder } = icnconverter.ShortToLong_Format(icn).gameRules;
@@ -77,5 +86,6 @@ export default {
 	engineIcn,
 	isInCheck,
 	isCapture,
+	givesCheck,
 	parityOf,
 };

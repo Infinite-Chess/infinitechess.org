@@ -33,7 +33,7 @@ interface Row {
 // Constants -------------------------------------------------------------------
 
 /** The model's inputs after the bias, in {@link bettingScore.features} order. */
-const INPUTS = ['good moves = 1', 'good moves = 2', 'good moves = 3–4', 'no shallow find', 'deep find', 'best move captures', 'in check']; // prettier-ignore
+const INPUTS = ['good moves = 1', 'good moves = 2', 'good moves = 3–4', 'no shallow find', 'deep find', 'best move captures', 'forcing good move', 'in check', 'opponent blunder', 'imbalance']; // prettier-ignore
 const CANDIDATES = ['rating', 'time control', 'top-two gap', 'few legal moves (≤ 8)', 'recapture available']; // prettier-ignore
 
 // Rows ------------------------------------------------------------------------

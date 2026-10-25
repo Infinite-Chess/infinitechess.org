@@ -22,6 +22,8 @@ export interface ScoredMove {
 export interface EngineLine extends ScoredMove {
 	/** Whether its first move lands on a piece. */
 	captures: boolean;
+	/** Whether its first move checks the opponent. */
+	checks: boolean;
 }
 
 /** A position the engine searched, with the board facts read beside it. */

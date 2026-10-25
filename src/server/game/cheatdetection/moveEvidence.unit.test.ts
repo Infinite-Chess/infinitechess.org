@@ -10,9 +10,9 @@ import { describe, it, expect } from 'vitest';
 
 import moveEvidence from './moveEvidence.js';
 
-/** A line scored in centipawns for the side to move. */
-function line(move: string, cp: number): EngineLine {
-	return { move, score: { cp }, captures: false };
+/** A line scored in centipawns for the side to move, a quiet move unless `overrides` say otherwise. */
+function line(move: string, cp: number, overrides: Partial<EngineLine> = {}): EngineLine {
+	return { move, score: { cp }, captures: false, checks: false, ...overrides };
 }
 
 /** A searched position with the given lines, whose best move settled at depth 1. */
@@ -74,8 +74,31 @@ describe('moveEvidence.gather', () => {
 	it("reads a position's difficulty from its lines and how the search settled", () => {
 		// A miss on top until the last depth, so it reads as a late, unshallow find at any plausible depth settings.
 		const settledLate = position(LINES, { topByDepth: [...Array(11).fill('1,1>1,5'), '1,1>1,2'], inCheck: true }); // prettier-ignore
-		expect(judge(settledLate, '1,1>1,2')[0]!.difficulty).toEqual({ goodMoves: 2, shallowFinds: false, deepFind: true, bestCaptures: false, inCheck: true }); // prettier-ignore
-		expect(judge(position(LINES), '1,1>1,2')[0]!.difficulty).toEqual({ goodMoves: 2, shallowFinds: true, deepFind: false, bestCaptures: false, inCheck: false }); // prettier-ignore
+		const imbalance = 2 * moveEvidence.winProbability({ cp: 50 }) - 1;
+		expect(judge(settledLate, '1,1>1,2')[0]!.difficulty).toEqual({ goodMoves: 2, shallowFinds: false, deepFind: true, bestCaptures: false, forcingGoodMove: false, inCheck: true, opponentBlunder: 0, imbalance }); // prettier-ignore
+		expect(judge(position(LINES), '1,1>1,2')[0]!.difficulty).toEqual({ goodMoves: 2, shallowFinds: true, deepFind: false, bestCaptures: false, forcingGoodMove: false, inCheck: false, opponentBlunder: 0, imbalance }); // prettier-ignore
+	});
+
+	it('reads a good move as forcing when it captures or checks, but not a forcing miss', () => {
+		const forcing = (overrides: Partial<EngineLine>, rank: number): boolean => {
+			const lines = LINES.map((l, i) => (i === rank ? { ...l, ...overrides } : l));
+			return judge(position(lines), '1,1>1,2')[0]!.difficulty.forcingGoodMove;
+		};
+		expect(forcing({ checks: true }, 1)).toBe(true);
+		expect(forcing({ captures: true }, 0)).toBe(true);
+		expect(forcing({ captures: true, checks: true }, 2)).toBe(false);
+	});
+
+	it("reads how much the opponent's move into the position threw away, from the position before it", () => {
+		const blunder = (previousCp: number, nowCp: number): number => {
+			const positions = [position([line('9,9>9,8', previousCp)]), position([line('1,1>1,2', nowCp), line('1,1>1,3', nowCp - 5)])]; // prettier-ignore
+			return moveEvidence.gather([...positions, position([line('9,9>9,8', 0)])], ['9,9>9,8', '1,1>1,2'], 1)[0]!.difficulty.opponentBlunder; // prettier-ignore
+		};
+		// The opponent stood even, and now the mover stands +300: they threw that away.
+		expect(blunder(0, 300)).toBeCloseTo(moveEvidence.winProbability({ cp: 300 }) - 0.5);
+		// The opponent's move improved on what they had: nothing was thrown away.
+		expect(blunder(0, -300)).toBe(0);
+		expect(moveEvidence.gather([{ refused: true }, position(LINES), position([line('9,9>9,8', 0)])], ['9,9>9,8', '1,1>1,2'], 1)[0]!.difficulty.opponentBlunder).toBe(0); // prettier-ignore
 	});
 
 	it("judges only the requested player's moves", () => {

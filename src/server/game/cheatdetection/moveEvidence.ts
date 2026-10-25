@@ -24,7 +24,13 @@ export interface Difficulty {
 	/** Whether the best move only settled at depth {@link DEEP_FIND_DEPTH} or deeper. */
 	deepFind: boolean;
 	bestCaptures: boolean;
+	/** Whether a good move captures or checks. */
+	forcingGoodMove: boolean;
 	inCheck: boolean;
+	/** Win probability the opponent's move into the position threw away, 0 when unknown. */
+	opponentBlunder: number;
+	/** How far the best line is from even, 0 (even) to 1 (won or lost). */
+	imbalance: number;
 }
 
 /** A move's outcome, and how hard its position was. */
@@ -62,14 +68,23 @@ const DEEP_FIND_DEPTH = 7;
 function gather(positions: PositionAnalysis[], moves: string[], parity: 0 | 1): MoveEvidence[] {
 	const evidence: MoveEvidence[] = [];
 	for (let ply = parity; ply < moves.length; ply += 2) {
-		const outcome = judge(positions[ply]!, positions[ply + 1]!, moves[ply]!);
+		const outcome = judge(
+			positions[ply - 1],
+			positions[ply]!,
+			positions[ply + 1]!,
+			moves[ply]!,
+		);
 		if (outcome) evidence.push({ ply, ...outcome });
 	}
 	return evidence;
 }
 
-/** Judges the move played from `before` to `after`, or undefined when it says nothing. */
+/**
+ * Judges the move played from `before` to `after`, or undefined when it says nothing.
+ * @param previous - The position before the opponent's move into `before`, if any.
+ */
 function judge(
+	previous: PositionAnalysis | undefined,
 	before: PositionAnalysis,
 	after: PositionAnalysis,
 	move: string,
@@ -84,7 +99,7 @@ function judge(
 	if (value === undefined) return undefined;
 
 	const outcome: MoveOutcome = best - value > GOOD_LOSS ? 'miss' : rank === 0 ? 'top' : 'good';
-	return { outcome, difficulty: difficultyOf(before, lineValues) };
+	return { outcome, difficulty: difficultyOf(previous, before, lineValues) };
 }
 
 /**
@@ -97,22 +112,38 @@ function valueOutsideLines(after: PositionAnalysis, lineValues: number[]): numbe
 	return Math.min(1 - winProbability(after.lines[0]!.score), lineValues.at(-1)!);
 }
 
-/** How hard a searched position was, given each line's win probability. */
-function difficultyOf(position: AnalysedPosition, lineValues: number[]): Difficulty {
+/**
+ * How hard a searched position was, given each line's win probability.
+ * @param previous - The position before the opponent's move into this one, if any.
+ */
+function difficultyOf(
+	previous: PositionAnalysis | undefined,
+	position: AnalysedPosition,
+	lineValues: number[],
+): Difficulty {
 	const best = position.lines[0]!.move;
-	const isGood = (move: string): boolean => {
-		const rank = position.lines.findIndex((line) => line.move === move);
-		return rank >= 0 && lineValues[0]! - lineValues[rank]! <= GOOD_LOSS;
-	};
+	const goodLines = position.lines.filter((_, rank) => lineValues[0]! - lineValues[rank]! <= GOOD_LOSS); // prettier-ignore
 	const shallowTop = position.topByDepth[Math.min(SHALLOW_DEPTH, position.topByDepth.length) - 1];
 	const lastWrongDepth = position.topByDepth.findLastIndex((move) => move !== best) + 1;
 	return {
-		goodMoves: lineValues.filter((value) => lineValues[0]! - value <= GOOD_LOSS).length,
-		shallowFinds: shallowTop !== undefined && isGood(shallowTop),
+		goodMoves: goodLines.length,
+		shallowFinds: goodLines.some((line) => line.move === shallowTop),
 		deepFind: lastWrongDepth + 1 >= DEEP_FIND_DEPTH,
 		bestCaptures: position.lines[0]!.captures,
+		forcingGoodMove: goodLines.some((line) => line.captures || line.checks),
 		inCheck: position.inCheck,
+		opponentBlunder: opponentBlunder(previous, lineValues[0]!),
+		imbalance: Math.abs(2 * lineValues[0]! - 1),
 	};
+}
+
+/**
+ * {@link Difficulty.opponentBlunder}: the opponent's best line before their move, less what
+ * `best` leaves them.
+ */
+function opponentBlunder(previous: PositionAnalysis | undefined, best: number): number {
+	if (!previous || previous.refused || previous.lines.length === 0) return 0;
+	return Math.max(0, winProbability(previous.lines[0]!.score) - (1 - best));
 }
 
 /** A score as a win probability for its side, a forced mate as the strongest win. */
@@ -130,6 +161,7 @@ function sameMove(a: string, b: string): boolean {
 
 export default {
 	gather,
+	judge,
 	winProbability,
 	sameMove,
 };
