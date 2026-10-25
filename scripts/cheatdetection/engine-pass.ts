@@ -134,7 +134,7 @@ else {
 	const mine = (id: number): boolean => id % count === shard;
 	const output = `${pass}-${shard}.jsonl`;
 	const done = new Set(corpus.readRecords<{ gameId: number }>(`${pass}-`).map((r) => r.gameId));
-	if (pass !== 'detector') await researchengine.load(16); // The detector pass's worker loads its own.
+	if (pass !== 'detector') await researchengine.load(settings.SEARCH.hashMb); // The detector pass's worker loads its own.
 	if (pass === 'detector') await detectorPass(output, done, mine);
 	else if (pass === 'offline') await offlinePass(output, mine);
 	else await picksPass(pass, output, done, mine);
