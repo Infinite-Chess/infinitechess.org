@@ -43,7 +43,7 @@ export interface BetModel {
 // Constants -------------------------------------------------------------------
 
 /** The natural log of the score that opens a case: measured on prod, about 99.9% of its cases are real. */
-const CASE_LOG_SCORE = Math.log(1500);
+const CASE_LOG_SCORE = Math.log(1000);
 /** Games older than this no longer count as evidence. */
 const MAX_EVIDENCE_AGE_MS = timeutil.toMillis(6, 'months');
 
@@ -52,18 +52,18 @@ const MAX_EVIDENCE_AGE_MS = timeutil.toMillis(6, 'months');
  * 2026-10-20), the engine model on how this detector judges another Apeiron search's picks.
  */
 const MODEL: BetModel = {
-	skillCeiling: { base: 0.03, perRating: 0.22, margin: 0.49 },
+	skillCeiling: { base: 0.03, perRating: 0.22, margin: 0.52 },
 	cheatFractions: [0.1, 0.25, 0.5, 1],
 	honestGoodWeights: [
-		0.507, -1.359, -0.933, -0.854, -0.603, -0.42, 0.849, 0.718, 1.475, -1.279, 0.262,
+		0.506, -1.361, -0.936, -0.854, -0.605, -0.419, 0.848, 0.72, 1.478, -1.277, 0.261,
 	],
-	honestTopRates: [1, 0.598, 0.435, 0.329, 0.152],
+	honestTopRates: [1, 0.598, 0.435, 0.327, 0.152],
 	honestTopMargin: 0.05,
 	engineGoodWeights: [
-		3.152, -1.586, -1.254, -0.84, -0.737, -1.059, 0.433, 0.49, 1.093, -0.142, 0.932,
+		3.156, -1.586, -1.256, -0.839, -0.74, -1.06, 0.426, 0.49, 1.093, -0.147, 0.929,
 	],
 	engineTopWeights: [
-		0.311, 4.412, 1.254, 0.91, 0.207, -1.459, 0.471, 0.008, 0.158, -0.183, 0.283,
+		0.319, 4.419, 1.259, 0.912, 0.203, -1.465, 0.439, 0.006, 0.156, -0.197, 0.281,
 	],
 };
 

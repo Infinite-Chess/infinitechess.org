@@ -12,7 +12,7 @@ position of the game. Each move a player made becomes a piece of **evidence**: h
 was, and whether they found a good move and the engine's own choice. Each player's evidence feeds a
 running **betting score**: how many times likelier their recent moves are if they use an engine than
 if they are an honest player as strong as their rating plausibly allows. When that score reaches
-**1,500**, a case opens. Measured on prod's honest players, about 99.9% of cases should be real.
+**1,000**, a case opens. Measured on prod's honest players, about 99.9% of cases should be real.
 
 ## Constraints
 
@@ -39,7 +39,7 @@ gameLifecycle.finalize ─▶ cheatDetection.onFinalized ─▶ queue (one game 
              moveEvidence.gather ─▶ cheat_assessments (one row per player per game)
                          │
                          ▼
-   bettingScore.bestRunLogScore over the player's last 6 months ─▶ ≥ ln(1500)? ─▶ cheat_cases
+   bettingScore.bestRunLogScore over the player's last 6 months ─▶ ≥ ln(1000)? ─▶ cheat_cases
 ```
 
 | File (src/server/game/cheatdetection/) | Role                                                                                                               |
@@ -81,10 +81,11 @@ threefold-repetition walk with a limit of one.
 
 A move is judged against the lines searched in the position **before** it:
 
-- **Outcome:** `top` if it is the first line; `good` if it is within **2% win probability** of the
-  best line; else `miss`. Win probability uses the same curve as Game Review (`winchance.ts`, mate =
-  1800 cp). A move outside the five lines is valued from the search of the position **after** it,
-  capped below the last line (the search ranked it below all of them).
+- **Outcome** (moves compared exactly, promotion piece included): `top` if it is the first line;
+  `good` if it is within **2% win probability** of the best line; else `miss`. Win probability uses
+  the same curve as Game Review (`winchance.ts`, mate = 1800 cp). A move outside the five lines is
+  valued from the search of the position **after** it, capped below the last line (the search ranked
+  it below all of them).
 - **Difficulty**, the inputs to both models:
     - `goodMoves`: how many of the five lines are good (1, 2, 3–4, 5).
     - `shallowFinds`: whether the depth-3 search's top move was already good.
@@ -120,15 +121,15 @@ honest player at or below the ceiling; `bettingScore.unit.test.ts` checks every 
    honest players do; otherwise just good vs miss is judged.
 
 **The skill ceiling** is per game, from the rating and deviation the player held **going into that
-game**: `0.03 + 0.22 × (rating + 2·RD − 1500) / 300 + 0.49`, in logits added to the honest model.
+game**: `0.03 + 0.22 × (rating + 2·RD − 1500) / 300 + 0.52`, in logits added to the honest model.
 Rating + 2·RD is the top of the rating's plausible range, so a provisional account gets the benefit
-of the doubt and an established one is held to its rating. The margin (0.49) covers the largest
+of the doubt and an established one is held to its rating. The margin (0.52) covers the largest
 amount any honest regular out-played their rating's prediction (see Calibration).
 
 **The score now** is the best over every run of the player's games that ends with their latest,
 assessed in the last **6 months**, in the order they were assessed (`bestRunLogScore`). Earlier
 honest games can't drag it down (a player who switches to an engine is scored from when they
-switched), and slow evidence keeps building over long runs. A case opens when it reaches **1,500**
+switched), and slow evidence keeps building over long runs. A case opens when it reaches **1,000**
 (`CASE_LOG_SCORE`), unless one is already open. It has no guaranteed false-case bound; the rate is
 measured (see the case line).
 
@@ -279,7 +280,7 @@ MultiPV 3; the detector 300,000 nodes, MultiPV 5. Of the cheater's moves the det
 good but only ~50% its own first line. Infinite chess often has several near-equal moves whose order
 reshuffles with depth, so "plays the engine's top move" rarely looks unmistakable. Most of a game is
 easy (a strong human finds good moves too) or decided; the tells are the few hard positions per
-game. A full-engine game multiplies the score by about 15× (geometric mean over 1,038 games).
+game. A full-engine game multiplies the score by about 13× (geometric mean over 1,038 games).
 
 ### Four bets, not one
 
@@ -298,7 +299,7 @@ four at 95%.
   at line 500.
 - Rating does carry skill (+0.22 logit per 300 rating, measured against the ratings regulars played
   at), with honest players scattering ±0.28 around that line; the most any regular out-played it was
-  +0.39 ± 0.09. Following it is both safer than a flat ceiling (highest honest score 11.8) and
+  +0.39 ± 0.12. Following it is both safer than a flat ceiling (highest honest score 10.4) and
   faster on weaker cheaters (see the catch rates by account).
 - It follows the rating **going into each game**, not the player's current or oldest rating: an
   improving honest player is judged against their improvement, and a cheated game played before the
@@ -306,9 +307,9 @@ four at 95%.
 - The 0.05 top-rate margin covers the most any regular favoured the first line (+0.051 ± 0.029; the
   spread matches noise). 0.08 slowed catches by 2–7 points for no real precision gain.
 - Past the ceiling, false cases climb fast. Simulated honest players rated 1500 ± 100, playing above
-  their ceiling by 0 / 0.1 / 0.2 logit, reach the line within 40 games 0.2% / 1.4% / 10% of the
-  time, within 100 games 0.6% / 6% / 45%. The strongest regular sits ~0.18 logit below theirs (about
-  250 rating points of skill), and Glicko moves an established rating only ~5 points a game.
+  their ceiling by 0 / 0.1 / 0.2 logit, reach the line within 40 games 0.3% / 1.9% / 12% of the
+  time, within 100 games 0.9% / 8% / 49%. The strongest regular sits ~0.2 logit below theirs (about
+  290 rating points of skill), and Glicko moves an established rating only ~5 points a game.
 
 ### Scoring over a window
 
@@ -316,7 +317,7 @@ A fixed window summing the last 40 games let an honest history drag the score: a
 after one was caught within 10 cheated games only 23% of the time. A 10-game window caught 100% but
 let no slow evidence build. The best run did both (100%; partial 40% within 20 games, 23% vs 15%),
 with honest peaks unchanged (measured at an earlier line of 2,500 on 4–19 players per scenario: the
-direction is the result). At line 1,500, a full-engine cheater after an honest first half is caught
+direction is the result). At line 1,000, a full-engine cheater after an honest first half is caught
 within 3 / 5 / 10 cheated games 63% / 94% / 100% of the time (16 players).
 
 Capping how far back a run may start (40 or 100 games) changes nothing: honest false cases come from
@@ -324,47 +325,47 @@ short lucky streaks (median 5 games), not long runs. The 6-month cap follows Lic
 
 ### The case line
 
-Honest players' highest scores fall off as score^-1.74 (score^-1.51 for the 21 players with 10+
-games); the highest honest score was 11.8. Two measures of false cases:
+Honest players' highest scores fall off as score^-1.92 (score^-1.65 for the 21 players with 10+
+games); the highest honest score was 10.4. Two measures of false cases:
 
 - **Estimated precision**, assuming 1% of players cheat and counting cheaters the detector
   eventually catches. It extrapolates the tail of players with 10+ games past the highest honest
-  score (the fitted 0.04%-per-player line is ~24 over all players, 90% interval 6–104), and that
-  tail rests on few players: one at its threshold moves the rate ~4×.
+  score (the fitted 0.04%-per-player line is ~19 over all players, 90% interval 5–76), and that tail
+  rests on few players: one at its threshold moves the rate ~4×.
 - **The worst case:** simulated honest players rated 1500 ± 100 playing exactly at their ceiling,
   reaching the line within 40 / 100 games.
 
 | Line      | Estimated precision | Worst case        | Full engine by 1 / 3 / 5 / 10 games | Every other game by 5 / 20 |
 | --------- | ------------------- | ----------------- | ----------------------------------- | -------------------------- |
-| 500       | 99.33%              | 0.63% / 1.81%     | 6% / 60% / 93% / 100%               | 50% / 93%                  |
-| 750       | 99.63%              | 0.41% / 1.25%     | 5% / 56% / 88% / 100%               | 45% / 93%                  |
-| 1,000     | 99.76%              | 0.29% / 0.92%     | 5% / 52% / 88% / 100%               | 40% / 86%                  |
-| 1,250     | 99.83%              | 0.24% / 0.73%     | 4% / 52% / 85% / 100%               | 35% / 86%                  |
-| **1,500** | **99.87%**          | **0.21% / 0.60%** | **4% / 49% / 83% / 100%**           | **35% / 86%**              |
-| 2,000     | 99.92%              | 0.15% / 0.45%     | 4% / 49% / 83% / 100%               | 35% / 71%                  |
-| 2,500     | 99.94%              | 0.11% / 0.37%     | 3% / 48% / 80% / 100%               | 30% / 64%                  |
+| 500       | 99.68%              | 0.65% / 1.92%     | 5% / 59% / 90% / 100%               | 45% / 93%                  |
+| 750       | 99.83%              | 0.40% / 1.20%     | 5% / 52% / 88% / 100%               | 38% / 86%                  |
+| **1,000** | **99.90%**          | **0.29% / 0.88%** | **4% / 51% / 83% / 100%**           | **35% / 86%**              |
+| 1,250     | 99.93%              | 0.21% / 0.66%     | 4% / 49% / 83% / 100%               | 35% / 71%                  |
+| 1,500     | 99.95%              | 0.18% / 0.56%     | 4% / 49% / 83% / 100%               | 35% / 64%                  |
+| 2,000     | 99.97%              | 0.13% / 0.43%     | 3% / 47% / 80% / 100%               | 33% / 57%                  |
+| 2,500     | 99.98%              | 0.10% / 0.34%     | 3% / 43% / 78% / 100%               | 30% / 57%                  |
 
-1,500 is the lowest round line whose worst case stays within 0.22% by 40 games and 0.74% by 100.
-Lower lines catch faster for a higher worst case. It is one constant to move if dismissed cases show
-it wrong.
+1,000 keeps estimated precision about ten times inside the 99% target, a margin its thin tail needs.
+The worst case is a stress test, not a target: no regular plays at their ceiling. It is one constant
+to move if dismissed cases show it wrong.
 
-There is no guaranteed bound beneath it. A score counted from one fixed game would reach 1,500 with
-chance at most 1/1,500 for an honest player at their ceiling, but the best run adds a starting point
+There is no guaranteed bound beneath it. A score counted from one fixed game would reach 1,000 with
+chance at most 1/1,000 for an honest player at their ceiling, but the best run adds a starting point
 each game, so the worst case grows with games played. Real honest players sit below their ceiling,
 but the snapshot has none with more than ~40 rated games, so heavy players are where the estimate is
 least certain. Weighting each start by 1/(j(j+1)) would restore the bound, but was rejected: it cuts
 how often a full-engine cheater after an honest history is caught within 3 cheated games by about
 three-quarters.
 
-### Catch rates (line 1,500)
+### Catch rates (line 1,000)
 
 Simulated on the real players' rated games, share caught within N games (players simulated):
 
 | Style                                                      | 1        | 3        | 5        | 10        | 20        |
 | ---------------------------------------------------------- | -------- | -------- | -------- | --------- | --------- |
-| Full engine                                                | 4% (275) | 49% (75) | 83% (40) | 100% (21) | 100% (14) |
+| Full engine                                                | 4% (275) | 51% (75) | 83% (40) | 100% (21) | 100% (14) |
 | Full engine every other game, honest in between            | 4%       | 15%      | 35%      | 52%       | 86%       |
-| Rescue (engine only where about to blunder, half the time) | 0%       | 0%       | 0%       | 0%        | 36%       |
+| Rescue (engine only where about to blunder, half the time) | 0%       | 0%       | 0%       | 0%        | 29%       |
 | Level-6 bot every move                                     | 0%       | 0%       | 0%       | 14%       | 21%       |
 | Two critical moves per game                                | 0%       | 0%       | 0%       | 0%        | 7%        |
 | Partial 20–40% / 2nd–3rd choice                            | 0%       | 0%       | 0%       | 0%        | 0%        |
@@ -375,11 +376,11 @@ their rating evolved by the site's Glicko code (`account-odds.ts`, 4,000 cheater
 
 | Account               | 3   | 5   | 7   | 10   | 15   | 20   |
 | --------------------- | --- | --- | --- | ---- | ---- | ---- |
-| New (1500 ± 350)      | 48% | 83% | 95% | 99%  | 100% | 100% |
-| Established 1700 ± 60 | 70% | 95% | 99% | 100% | 100% | 100% |
+| New (1500 ± 350)      | 49% | 83% | 95% | 99%  | 100% | 100% |
+| Established 1700 ± 60 | 71% | 95% | 99% | 100% | 100% | 100% |
 | Established 2200 ± 60 | 40% | 77% | 93% | 99%  | 100% | 100% |
-| Established 2500 ± 60 | 21% | 54% | 78% | 94%  | 100% | 100% |
-| Established 2800 ± 60 | 9%  | 29% | 53% | 80%  | 95%  | 99%  |
+| Established 2500 ± 60 | 22% | 54% | 78% | 94%  | 99%  | 100% |
+| Established 2800 ± 60 | 9%  | 28% | 52% | 80%  | 95%  | 99%  |
 | Established 3100 ± 60 | 3%  | 12% | 28% | 52%  | 81%  | 93%  |
 
 A higher rating's ceiling leaves less room above it; above ~2000 these rows are extrapolated (see

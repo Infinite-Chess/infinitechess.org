@@ -9,7 +9,7 @@
  *   --ceiling=base,perRating,margin   the skill ceiling (default: the shipped model's)
  *   --fractions=0.1,0.25,0.5,1        the cheat fractions bet on (default: the shipped model's)
  *   --top-margin=0.05                 the honest top-rate margin (default: the shipped model's)
- *   --case-line=1500                  the score that opens a case (default: the shipped line)
+ *   --case-line=1000                 the score that opens a case (default: the shipped line)
  *   --multipv=5                       the lines the detector searches, 1–5 (default: production's)
  */
 
