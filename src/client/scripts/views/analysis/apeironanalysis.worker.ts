@@ -42,6 +42,7 @@ import type {
 
 import jsutil from '../../../../shared/util/jsutil.js';
 import engineglue from '../../../../shared/chess/util/engineglue.js';
+import enginemoves from '../../../../shared/chess/logic/icn/enginemoves.js';
 
 import enginewasm from '../../chess/enginewasm.js';
 
@@ -376,11 +377,7 @@ function evaluate(
 
 	if (legalMoves.length === 1) {
 		// Forced move: don't search; the review carries the eval over from its neighbors.
-		const move = legalMoves[0]!;
-		const promotion = move.promotion
-			? `=${enginewasm.getPromotionAbbr(move.promotion, msg.mover)}`
-			: '';
-		result.pv = [`${move.from}>${move.to}${promotion}`];
+		result.pv = [enginemoves.toToken(legalMoves[0]!, msg.mover)];
 	} else if (legalMoves.length > 1) {
 		// The same search call the analysis loop uses. Its return value is deliberately
 		// discarded: the page scores the position from the deepest depth streamed here, so a

@@ -30,6 +30,7 @@ import type {
 
 import jsutil from '../../../../../shared/util/jsutil.js';
 import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
+import enginemoves from '../../../../../shared/chess/logic/icn/enginemoves.js';
 
 import enginewasm from '../../../chess/enginewasm.js';
 
@@ -110,14 +111,7 @@ function respondToMoveRequest(data: ApeironMoveRequest): void {
 			return;
 		}
 
-		// Format: "x,y>x,y" or "x,y>x,y=Q" (promotion)
-		const from = bestMoveResult.from;
-		const to = bestMoveResult.to;
-		let moveString = `${from}>${to}`;
-		if (bestMoveResult.promotion) {
-			moveString += `=${enginewasm.getPromotionAbbr(bestMoveResult.promotion, engineColor)}`;
-		}
-
+		const moveString = enginemoves.toToken(bestMoveResult, engineColor);
 		postMessage({ type: 'move', data: moveString } satisfies EngineResponse);
 	} catch (error) {
 		console.error(`[Engine] Error finding best move:`, error);

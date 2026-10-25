@@ -1,19 +1,15 @@
 // src/client/scripts/chess/enginewasm.ts
 
 /**
- * Loads an engine's wasm glue and shared-memory thread pool, and adapts the
- * engine's own piece codes to the site's ICN abbreviations.
+ * Loads an engine's wasm glue and shared-memory thread pool.
  */
 
-import type { Player, RawType } from '../../../shared/chess/util/typeutil.js';
 import type {
 	EngineWasmInitOutput,
 	EngineWasmModule,
 } from '../../../shared/chess/util/engineglue.js';
 
 import math from '../../../shared/util/math/math.js';
-import icnposition from '../../../shared/chess/logic/icn/icnposition.js';
-import typeutil, { rawTypes as r } from '../../../shared/chess/util/typeutil.js';
 
 // Wasm Loading ----------------------------------------------------------------
 
@@ -68,40 +64,10 @@ function maxThreads(reserve: number = 0): number {
 	return math.clamp((navigator.hardwareConcurrency || 2) - reserve, 1, MAX_THREAD_CAP);
 }
 
-// Piece Codes -----------------------------------------------------------------
-
-/**
- * Apeiron's own single-letter piece codes (its `PieceType::to_str()`, src/board.rs), which
- * it uses for the `promotion` field of the moves it hands back. They are arbitrary engine
- * identifiers — not derivable from the site's abbreviations — so the mapping lives here,
- * while the abbreviations themselves stay owned by icnconverter's `PIECE_CODES`.
- */
-const ENGINE_PROMOTION_RAWTYPES: Record<string, RawType> = {
-	k: r.KING, p: r.PAWN, n: r.KNIGHT, b: r.BISHOP,
-	r: r.ROOK, q: r.QUEEN, m: r.AMAZON, h: r.HAWK,
-	c: r.CHANCELLOR, a: r.ARCHBISHOP, g: r.GUARD, l: r.CAMEL,
-	i: r.GIRAFFE, z: r.ZEBRA, e: r.CENTAUR, y: r.ROYALQUEEN,
-	d: r.ROYALCENTAUR, s: r.KNIGHTRIDER, u: r.HUYGEN, o: r.ROSE,
-}; // prettier-ignore
-
-/**
- * Translates one of the engine's promotion codes into the site's ICN piece abbreviation, cased for `mover`.
- * @throws On an unknown code, which means {@link ENGINE_PROMOTION_RAWTYPES} has drifted
- * from the engine's piece list.
- */
-function getPromotionAbbr(engineCode: string, mover: Player): string {
-	const rawType = ENGINE_PROMOTION_RAWTYPES[engineCode.toLowerCase()];
-	if (rawType === undefined) throw Error(`Unknown engine promotion code: (${engineCode})`);
-	return icnposition.getAbbrFromType(typeutil.buildType(rawType, mover));
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Wasm Loading
 	load,
 	defaultThreads,
 	maxThreads,
-	// Piece Codes
-	getPromotionAbbr,
 };

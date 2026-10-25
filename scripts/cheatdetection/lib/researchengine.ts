@@ -6,6 +6,7 @@
  * at a time for off-line valuation. Single-threaded: the build's thread pool is never started.
  */
 
+import type { Player } from '../../../src/shared/chess/util/typeutil.js';
 import type {
 	EngineScore,
 	ScoredMove,
@@ -23,6 +24,7 @@ import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 import engineglue from '../../../src/shared/chess/util/engineglue.js';
+import enginemoves from '../../../src/shared/chess/logic/icn/enginemoves.js';
 
 import settings from './settings.js';
 
@@ -112,8 +114,8 @@ class Session {
 	}
 }
 
-/** The site's strength-limited bot's move at `level` given `ms` to think, or undefined when refused. */
-function levelMove(icn: string, level: number, ms: number): string | undefined {
+/** The site's bot's move for `mover` at strength `level` in `ms`, or undefined when refused. */
+function levelMove(icn: string, mover: Player, level: number, ms: number): string | undefined {
 	let engine: ResearchWasmEngine;
 	try {
 		engine = glue!.Engine.from_icn(icn, { strength_level: level });
@@ -123,7 +125,7 @@ function levelMove(icn: string, level: number, ms: number): string | undefined {
 	}
 	try {
 		const best = engine.get_best_move_with_time(ms, true);
-		return best ? `${best.from}>${best.to}` : undefined;
+		return best ? enginemoves.toToken(best, mover) : undefined;
 	} finally {
 		engine.free();
 	}

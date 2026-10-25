@@ -73,10 +73,11 @@ async function picksPass(
 	for (const row of snapshot.corpus().filter((r) => mine(r.game_id) && !done.has(r.game_id))) {
 		const game = await gameReplay.loadAtStart(row.icn);
 		const moves = game.longformat.moves ?? [];
+		const { turnOrder } = game.longformat.gameRules;
 		const session = new researchengine.Session();
 		const plies: PicksRecord['plies'] = moves.map((_, ply) => {
 			const icn = gameReplay.engineIcn(game, moves.slice(0, ply));
-			if (pass === 'level6') return researchengine.levelMove(icn, LEVEL, LEVEL_MS) ?? null;
+			if (pass === 'level6') return researchengine.levelMove(icn, turnOrder[ply % turnOrder.length]!, LEVEL, LEVEL_MS) ?? null; // prettier-ignore
 			return session.search(icn, CHEATER_SEARCH.multiPv, CHEATER_SEARCH.nodes)?.lines ?? null;
 		});
 		session.free();
