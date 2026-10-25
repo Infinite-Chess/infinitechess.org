@@ -8,8 +8,10 @@
  *     score, so the bootstrap interval is the part to trust.
  *   - the worst case: simulated honest players exactly at their skill ceiling, scored after every
  *     game as production does, so the line's margin over real players' scores isn't taken on trust.
+ *     `--above=<logits>` has them play that far above it instead: honest players improving faster
+ *     than their rating.
  *
- * Usage: npx tsx scripts/cheatdetection/false-case-rate.ts [--ceiling=…] [--fractions=…]
+ * Usage: npx tsx scripts/cheatdetection/false-case-rate.ts [--ceiling=…] [--fractions=…] [--above=…]
  */
 
 import type { BetModel } from '../../src/server/game/cheatdetection/bettingScore.js';
@@ -43,6 +45,8 @@ const WORST_CASE_RD = 100;
 const WORST_CASE_PLAYERS = 20000;
 /** The game counts the worst case reports its false-case rate by. */
 const WORST_CASE_GAMES = [40, 100];
+/** Logits above their ceiling the worst case's players play at. */
+const ABOVE_CEILING = Number(settings.flag('above') ?? 0);
 
 // Fitting ---------------------------------------------------------------------
 
@@ -72,8 +76,8 @@ function quantile(xs: number[], p: number): number {
 // Worst Case ------------------------------------------------------------------
 
 /**
- * The share of honest players exactly at their ceiling whose score, checked after every game,
- * reaches the case line by each of {@link WORST_CASE_GAMES}.
+ * The share of honest players playing {@link ABOVE_CEILING} above their ceiling whose score, checked
+ * after every game, reaches the case line by each of {@link WORST_CASE_GAMES}.
  */
 function worstCaseRates(playerGames: PlayerGame[], model: BetModel): number[] {
 	const rating = ratingCalculation.DEFAULT_LEADERBOARD_ELO;
@@ -85,7 +89,7 @@ function worstCaseRates(playerGames: PlayerGame[], model: BetModel): number[] {
 		let peak = -Infinity;
 		for (let game = 1; game <= WORST_CASE_GAMES.at(-1)!; game++) {
 			const positions = playerGames[Math.floor(random() * playerGames.length)]!.evidence;
-			const played = ceilingPlay(positions, model, ceiling, random);
+			const played = ceilingPlay(positions, model, ceiling + ABOVE_CEILING, random);
 			const ratios = bettingScore.gameLogRatios(played, model, ceiling);
 			history.push(ratios);
 			const score = bettingScore.bestRunLogScore(history);
@@ -140,4 +144,4 @@ for (const minGames of [10, 20]) {
 	console.log(`  players with ${minGames}+ games (${regulars.length}): tail score^-${regularFit.rate.toFixed(2)}, rate at ${Math.round(line)}: ${(100 * rateAt(regularFit, line)).toExponential(1)}%`); // prettier-ignore
 }
 const worst = worstCaseRates(playerGames, full).map((rate, i) => `by game ${WORST_CASE_GAMES[i]} ${(100 * rate).toFixed(2)}%`); // prettier-ignore
-console.log(`  worst case, ${WORST_CASE_PLAYERS} honest players exactly at their ceiling (rated ${ratingCalculation.DEFAULT_LEADERBOARD_ELO} ± ${WORST_CASE_RD}): reaches ${Math.round(line)} ${worst.join(', ')}`); // prettier-ignore
+console.log(`  worst case, ${WORST_CASE_PLAYERS} honest players ${ABOVE_CEILING ? `${ABOVE_CEILING} logit above` : 'exactly at'} their ceiling (rated ${ratingCalculation.DEFAULT_LEADERBOARD_ELO} ± ${WORST_CASE_RD}): reaches ${Math.round(line)} ${worst.join(', ')}`); // prettier-ignore
