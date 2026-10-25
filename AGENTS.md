@@ -152,7 +152,8 @@ followed, tell me.
     discriminated union or object, so illegal combinations can't be typed.
 
 24. Judge hot-path code (per frame, move or piece) on cost, not just correctness. Optimize where we
-    can.
+    can. Unit tests too: one feature's may add at most 100 ms to the run on this machine; past that,
+    optimize them or drop the tests entirely.
 
 ### Comments
 
@@ -235,7 +236,7 @@ followed, tell me.
 34. After making changes, search for any JSDoc or comment they made false; make sure they aren't
     stale. Make sure touched files' description headers have not become stale. Then go back over all
     documentation and comments you touched or added, _look for the signs_ of AI bloat listed in rule
-    24, and _fix_ them.
+    25, and _fix_ them.
 
 35. After finishing changes that modified at least one script, run `npm run check --silent` —
     format, types, lint, import rules, and tests — and get it passing. Repeat after every subsequent
