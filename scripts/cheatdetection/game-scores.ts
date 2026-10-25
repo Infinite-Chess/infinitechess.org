@@ -33,7 +33,8 @@ interface GameScores {
 
 // Constants -------------------------------------------------------------------
 
-const STYLES = ['full', 'alternating', 'rescue', 'level6', 'partial40'] as const;
+/** Styles a single game shows: ones that alternate across games can't appear in one game's score. */
+const STYLES = ['full', 'rescue', 'level6', 'partial40'] as const;
 /** The real game, then each simulated style. */
 const KINDS = ['honest', ...STYLES];
 const BOOTSTRAP_RUNS = 1000;
