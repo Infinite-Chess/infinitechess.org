@@ -13,6 +13,8 @@ import settings from './settings.js';
 
 // Types -----------------------------------------------------------------------
 
+// Prod's schema, which can lag the database managers' records: not derived from them.
+
 /** The columns of a games row the research reads. */
 export interface GameRow {
 	game_id: number;
