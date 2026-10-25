@@ -18,7 +18,7 @@ import type {
 import gameformulator from '../../../../shared/chess/game/gameformulator.js';
 import engineregistry from '../../../../shared/chess/util/engineregistry.js';
 import servervalidation from '../../../../shared/chess/variants/servervalidation.js';
-import { players as p } from '../../../../shared/chess/util/typeutil.js';
+import typeutil, { players as p } from '../../../../shared/chess/util/typeutil.js';
 
 import guichat from './gui/guichat.js';
 import gameslot from '../../game/chess/gameslot.js';
@@ -165,6 +165,30 @@ function loadGameFromState(state: GameStateFull, dead: boolean, longformat?: Lon
 
 				if (engineGame && ourRole !== undefined && !state.gameConclusion)
 					startEngineGame(engineGame, ourRole);
+
+				// TEMP AUTOPILOT: `sessionStorage.autopilot = 8` in a tab's console plays its side.
+				const autopilot = Number(sessionStorage.getItem('autopilot'));
+				const { autopilotAssets } = window.gamePageData;
+				if (
+					autopilot &&
+					autopilotAssets &&
+					ourRole !== undefined &&
+					!state.gameConclusion
+				) {
+					console.log(`[AUTOPILOT] Level ${autopilot} engine is playing our side.`);
+					enginegame.initEngineGame({
+						youAreColor: typeutil.invertPlayer(ourRole),
+						engine: {
+							name: 'apeiron',
+							config: {
+								engineTimeLimitPerMoveMillis:
+									engineregistry.REGISTRY.apeiron.defaultTimeLimitPerMoveMillis,
+								strengthLevel: autopilot,
+							},
+						},
+						engineAssets: autopilotAssets,
+					});
+				}
 			},
 			concludeIfOver: true,
 			// The gamestate arrived but never became a game — we don't hold it after all.

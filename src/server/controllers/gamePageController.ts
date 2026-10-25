@@ -128,6 +128,11 @@ function getPageState(req: Request): GamePageState | undefined {
 			viewColor,
 			playerNames,
 			engineGame,
+			// TEMP AUTOPILOT
+			autopilotAssets:
+				game && !engineGame && role !== undefined
+					? manifest.getEngineAssets('scripts/game/chess/engines/apeiron.worker.ts')
+					: undefined,
 		},
 		analysisUrl: gameurl.getAnalysisUrl(id, viewColor),
 		meta: buildGameMetaViewModel(state, resolved.icn, ratingChanges, role, viewColor, moveCount, req), // prettier-ignore

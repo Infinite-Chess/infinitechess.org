@@ -29,6 +29,7 @@ import type {
 } from './engineprotocol.js';
 
 import jsutil from '../../../../../shared/util/jsutil.js';
+import winchance from '../../../../../shared/chess/util/winchance.js';
 import engineicn from '../../../../../shared/chess/logic/icn/engineicn.js';
 import enginemoves from '../../../../../shared/chess/logic/icn/enginemoves.js';
 
@@ -105,6 +106,13 @@ function respondToMoveRequest(data: ApeironMoveRequest): void {
 
 		const timeLimit = data.engineConfig.engineTimeLimitPerMoveMillis;
 		const bestMoveResult = engine.get_best_move_with_time(timeLimit, true);
+
+		// TEMP AUTOPILOT: the eval, from the engine's side.
+		if (bestMoveResult) {
+			const { eval: cp, completed_depth } = bestMoveResult as unknown as { eval: number; completed_depth: number }; // prettier-ignore
+			const score = Math.abs(cp) > 800_000 ? `mate in ${Math.ceil((900_000 - Math.abs(cp)) / 2)}${cp < 0 ? ' (against us)' : ''}` : `${cp > 0 ? '+' : ''}${(cp / 100).toFixed(2)}, win ${(winchance.cpToWinProbability(cp) * 100).toFixed(1)}%`; // prettier-ignore
+			console.log(`[AUTOPILOT] ${engineColor === 1 ? 'White' : 'Black'} plays ${bestMoveResult.from}>${bestMoveResult.to} · ${score} · depth ${completed_depth}`); // prettier-ignore
+		}
 
 		if (!bestMoveResult) {
 			console.error('[Engine] No best move result returned from WASM');

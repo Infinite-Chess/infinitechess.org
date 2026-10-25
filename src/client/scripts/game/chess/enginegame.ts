@@ -51,6 +51,7 @@ let engine: ({ worker: Worker; ready: boolean; color: Player } & EngineAndConfig
 // Events ----------------------------------------------------------------------
 
 GameBus.addEventListener('user-move-played', () => onMovePlayed());
+GameBus.addEventListener('opponent-move-played', () => onMovePlayed()); // TEMP AUTOPILOT
 GameBus.addEventListener('game-concluded', () => terminate());
 GameBus.addEventListener('game-unloaded', () => terminate());
 
@@ -221,7 +222,8 @@ function makeEngineMove(tokenMove: string | null): void {
 	}
 
 	// Can rarely happen if the server forced us to resync, undoing our move.
-	if (gamesession.getRole() === gamefile.whosTurn) {
+	if (engine!.color !== gamefile.whosTurn) {
+		// TEMP AUTOPILOT: was `gamesession.getRole() === gamefile.whosTurn`
 		console.error(`Engine returned a move when it was our turn. Ignoring it: ${tokenMove}`);
 		return;
 	}

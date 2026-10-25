@@ -145,6 +145,7 @@ export interface GamePageData extends StaticGameSetup {
 	 */
 	playerNames: PlayerGroup<string>;
 	engineGame?: EngineGamePageInfo;
+	autopilotAssets?: EngineAssets; // TEMP AUTOPILOT
 }
 
 /** SSR→client channel info marking the game page's game as an engine game. */

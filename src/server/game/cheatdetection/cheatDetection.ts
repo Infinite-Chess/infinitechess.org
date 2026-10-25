@@ -117,7 +117,9 @@ async function assessGame(game_id: number): Promise<void> {
 	const game = gamesManager.getData(game_id, ['icn', 'move_count']);
 	if (!game) return; // Deleted while queued: its rows went with it.
 	const players = playerGamesManager.getOfGame(game_id, ['user_id', 'player_number']);
+	console.log(`[CHEAT] Assessing game ${game_id} (${game.move_count} plies)...`); // TEMP
 	const reply = await engineAnalysis.analyse({ gameId: game_id, icn: game.icn }, game.move_count);
+	console.log(`[CHEAT] Game ${game_id} assessed: ${reply.outcome}`); // TEMP
 
 	const updated_at = Date.now();
 	const records: CheatAssessmentsRecord[] = players.map(({ user_id, player_number }) => {
@@ -143,7 +145,8 @@ async function assessGame(game_id: number): Promise<void> {
  * @throws If a database error occurs, or the score isn't a finite number.
  */
 function reviewPlayer(user_id: number): void {
-	if (cheatCasesManager.isOpen(user_id)) return;
+	if (cheatCasesManager.isOpen(user_id))
+		return console.log(`[CHEAT] User ${user_id} already has an open case.`); // TEMP
 	const since = Date.now() - bettingScore.MAX_EVIDENCE_AGE_MS;
 	const games = cheatAssessmentsManager.getRecentEvidence(user_id, since).map((row) => {
 		const evidence: MoveEvidence[] = row.evidence === null ? [] : JSON.parse(row.evidence);
@@ -156,7 +159,13 @@ function reviewPlayer(user_id: number): void {
 	const logScore = bettingScore.bestRunLogScore(games);
 	// Load-bearing: a NaN score compares false against the line, so the player could never be flagged.
 	if (!Number.isFinite(logScore)) throw Error(`User ${user_id}'s score is ${logScore}`);
-	if (logScore >= bettingScore.CASE_LOG_SCORE) cheatCasesManager.open(user_id, Date.now());
+	console.log(
+		`[CHEAT] User ${user_id}: score ${Math.exp(logScore).toFixed(2)} over ${games.length} games (case line 1000)`,
+	); // TEMP
+	if (logScore >= bettingScore.CASE_LOG_SCORE) {
+		cheatCasesManager.open(user_id, Date.now());
+		console.log(`\n[CHEAT] ========== CASE OPENED on user ${user_id} ==========\n`); // TEMP
+	}
 }
 
 // Exports ---------------------------------------------------------------------
