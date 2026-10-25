@@ -3,7 +3,8 @@
 /**
  * Turns a game's position analyses into one piece of evidence per move a player made: how
  * hard the position was, and whether they found a good move and the engine's own choice.
- * Moves that say nothing about engine use (forced, already decided, repeated) are left out.
+ * Moves that say nothing about engine use (opening, forced, already decided, repeated) are
+ * left out.
  */
 
 import type { AnalysedPosition, EngineScore, PositionAnalysis } from './cheatDetectionTypes.js';
@@ -49,6 +50,8 @@ export interface MoveEvidence extends Judgement {
 
 // Constants -------------------------------------------------------------------
 
+/** Each game's first plies are left out: players repeat memorized openings, the engine's included. */
+const OPENING_PLIES = 4;
 /** Win-probability loss within which a move counts as good. */
 const GOOD_LOSS = 0.02;
 /** Positions this one-sided are left out: nearly every move keeps them so. */
@@ -69,6 +72,7 @@ function gather(positions: PositionAnalysis[], moves: string[], parity: 0 | 1): 
 	const evidence: MoveEvidence[] = [];
 	for (let ply = parity; ply < moves.length; ply += 2) {
 		const outcome = judge(
+			ply,
 			positions[ply - 1],
 			positions[ply]!,
 			positions[ply + 1]!,
@@ -80,15 +84,17 @@ function gather(positions: PositionAnalysis[], moves: string[], parity: 0 | 1): 
 }
 
 /**
- * Judges the move played from `before` to `after`, or undefined when it says nothing.
+ * Judges the move played at `ply` from `before` to `after`, or undefined when it says nothing.
  * @param previous - The position before the opponent's move into `before`, if any.
  */
 function judge(
+	ply: number,
 	previous: PositionAnalysis | undefined,
 	before: PositionAnalysis,
 	after: PositionAnalysis,
 	move: string,
 ): Judgement | undefined {
+	if (ply < OPENING_PLIES) return undefined;
 	if (before.refused || before.legal <= 1 || before.repeated || before.lines.length === 0) return undefined; // prettier-ignore
 	const lineValues = before.lines.map((line) => winProbability(line.score));
 	const best = lineValues[0]!;
@@ -155,6 +161,9 @@ function winProbability(score: EngineScore): number {
 // Exports ---------------------------------------------------------------------
 
 export default {
+	// Constants
+	OPENING_PLIES,
+	// Evidence
 	gather,
 	judge,
 	winProbability,

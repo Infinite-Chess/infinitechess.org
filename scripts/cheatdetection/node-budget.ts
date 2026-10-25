@@ -82,7 +82,7 @@ function judge(
 ): MoveOutcome | undefined {
 	const inLines = !before.refused && before.lines.some((line) => line.move === move); // prettier-ignore
 	const after = inLines ? before : analyse(game, [...played, move], nodes);
-	return moveEvidence.gather([before, after], [move], 0)[0]?.outcome;
+	return moveEvidence.judge(played.length, undefined, before, after, move)?.outcome;
 }
 
 /** Both moves' outcomes in a sampled position at each budget. */

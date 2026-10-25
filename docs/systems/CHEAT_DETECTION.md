@@ -12,7 +12,7 @@ position of the game. Each move a player made becomes a piece of **evidence**: h
 was, and whether they found a good move and the engine's own choice. Each player's evidence feeds a
 running **betting score**: how many times likelier their recent moves are if they use an engine than
 if they are an honest player as strong as their rating plausibly allows. When that score reaches
-**1,000**, a case opens. Measured on prod's honest players, about 99.9% of cases should be real.
+**1,000**, a case opens. Measured on prod's honest players, about 99.95% of cases should be real.
 
 ## Constraints
 
@@ -59,11 +59,12 @@ threefold-repetition walk with a limit of one.
 
 ## How a game is analysed
 
-- **Which games:** rated, finalized, logged, and not aborted (`onFinalized`). Each is queued as a
-  `queued` row per player, so the queue survives restarts: startup re-queues those rows in the order
-  their games finished, and a game cut off mid-analysis is redone. Games from before detection
-  shipped never queue. A game whose assessment throws is marked `failed` and not retried, unless the
-  engine can't load at all: then assessment pauses and every game stays queued for the next start.
+- **Which games:** rated, finalized, logged, and not aborted (`onFinalized`), whatever their length.
+  Each is queued as a `queued` row per player, so the queue survives restarts: startup re-queues
+  those rows in the order their games finished, and a game cut off mid-analysis is redone. Games
+  from before detection shipped never queue. A game whose assessment throws is marked `failed` and
+  not retried, unless the engine can't load at all: then assessment pauses and every game stays
+  queued for the next start.
 - **The search:** every position, MultiPV 5, 300,000 nodes, single thread, transposition table kept
   warm across the game and reset between games. About 1.3 s per position, ~1–2 minutes per game.
   Re-scoring a player afterwards runs on the main thread, linear in their recent games (500 games ≈
@@ -96,8 +97,9 @@ A move is judged against the lines searched in the position **before** it:
     - `opponentBlunder`: the win probability the opponent's last move threw away, by the searches
       either side of it (its square root is the model input).
     - `imbalance`: how far the best line is from even, 0 to 1.
-- **Left out:** forced moves (one legal move), repeated positions, positions already decided (best
-  line above 97% for either side), refused positions, and moves whose position-after can't be read.
+- **Left out:** each game's first 4 plies (`OPENING_PLIES`: memorized openings, see Calibration),
+  forced moves (one legal move), repeated positions, positions already decided (best line above 97%
+  for either side), refused positions, and moves whose position-after can't be read.
 
 ## The betting score (`bettingScore.ts`)
 
@@ -121,9 +123,9 @@ honest player at or below the ceiling; `bettingScore.unit.test.ts` checks every 
    honest players do; otherwise just good vs miss is judged.
 
 **The skill ceiling** is per game, from the rating and deviation the player held **going into that
-game**: `0.03 + 0.22 × (rating + 2·RD − 1500) / 300 + 0.52`, in logits added to the honest model.
+game**: `0.01 + 0.22 × (rating + 2·RD − 1500) / 300 + 0.51`, in logits added to the honest model.
 Rating + 2·RD is the top of the rating's plausible range, so a provisional account gets the benefit
-of the doubt and an established one is held to its rating. The margin (0.52) covers the largest
+of the doubt and an established one is held to its rating. The margin (0.51) covers the largest
 amount any honest regular out-played their rating's prediction (see Calibration).
 
 **The score now** is the best over every run of the player's games that ends with their latest,
@@ -164,8 +166,9 @@ almost surely reopens it.
 
 ## Calibration
 
-All measured on a prod snapshot of 2026-10-20 (718 rated games; 519 unaborted and 16+ plies, of
-which 517 the engine supports) with the scripts in `scripts/cheatdetection/` (see Reproducing).
+All measured on a prod snapshot of 2026-10-20 with the scripts in `scripts/cheatdetection/` (see
+Reproducing): its 692 unaborted rated games of any length, the kind production scores (all
+engine-supported), less rating abusers' (575).
 
 ### The honest baseline
 
@@ -174,6 +177,10 @@ which 517 the engine supports) with the scripts in `scripts/cheatdetection/` (se
   only make the detector more conservative, never cause false cases. The top honest scorers were
   inspected by hand; all looked like strong honest players (high good-move rates, but no hard-move
   or engine-choice signature).
+- **Rating abusers' games are dropped:** every game of an account deleted for rating abuse. A farmed
+  rating corrupts the skill ceiling, whose margin covers a single player: a feeder's pushed-down
+  rating makes their real games look far stronger than it predicts. The whole account goes, clean
+  history included, so no case needs judgement; a long clean history can be recovered by hand.
 - **Unrated games are excluded.** Unrated play was 0.18 logit weaker than rated (0.07 for the 29
   players with both, within noise), so mixing it in could make honest rated play look strong and
   inflate false cases. The detector only judges rated games.
@@ -188,6 +195,7 @@ the detector's lines is valued from an off-line search of the position after it,
 applies. Consequences:
 
 - Positions after a swap are still the real game's, so no simulated game is one legal whole game.
+- Game lengths are the real ones: a player who resigned early leaves a short cheated game.
 - Ratings stay honest; a real cheater's would climb, weakening their later games slightly.
 - Think times are the players' real ones.
 - Only these styles, this engine and these settings were simulated. A cheater using the engine in a
@@ -195,13 +203,14 @@ applies. Consequences:
 
 ### The detector's node budget
 
-Lichess's detection searches 300,000 nodes per position (`autoHunter` in lila's fishnet). On 592
+Lichess's detection searches 300,000 nodes per position (`autoHunter` in lila's fishnet). On 590
 positions, each move judged at 300k, 1M and 2.5M nodes, the information separating a cheater
 engine's picks from honest moves (KL divergence of their top/good/miss outcomes: how fast a
-cheater's score grows) was 0.35, 0.42 and 0.38 nats per move. Both gains are within noise (+0.06,
-90% interval −0.01 to +0.13; +0.03, −0.04 to +0.10), and the deepest budget isn't the best. Caveat:
-measured against an 800k-node cheater engine; re-test if real cheaters prove to use much stronger
-setups.
+cheater's score grows) is 0.33, 0.41 and 0.45 nats per move: gains of +0.08 (90% interval +0.02 to
++0.15) and +0.12 (+0.05 to +0.19). Samples of ~600 positions vary: another put the 2.5M gain at
++0.03. A bigger budget is untested end to end (fresh passes and a refit); 1M takes ~3× the time per
+position. Caveat: measured against an 800k-node cheater engine; re-test if real cheaters prove to
+use much stronger setups.
 
 ### Lines searched
 
@@ -211,39 +220,49 @@ Four and six lines lose too: at the lines matching five lines' worst case (~1,00
 engine by 5 games 70% and under 73% vs 83%, though the good-move grouping was designed at five
 lines: four folds "all good" into 3–4, six merges 5 with 6.
 
+### The opening
+
+Each game's first 4 plies are left out. The engine analyses an opening position the same way every
+game, and players repeat their openings, the engine's choices included, so those moves aren't the
+independent draws the bet assumes: a memorized engine-approved opening gains the same evidence every
+game. Early moves also inflated the skill ceiling's margin (0.64 vs 0.51), so leaving them out is
+both safer and faster (full engine by 3 games 36% vs 29%). Four plies covers where repeats are (a
+player's moves in a position they reached before: 34% at plies 0–1, 7% at 2–3, 2% at 4–5); 2, 6, 8
+and 10 each leave a heavier honest tail. Rejected: a minimum game length (misses games decided
+early), and leaving out only positions a player reached before (misses a repeated plan).
+
 ### The other constants
 
 Each was compared by refitting the skill ceiling, then holding both false-case measures
 (`false-case-rate.ts`) no higher than the shipped line's.
 
-- `GOOD_LOSS`: 1.5% thins the honest players' tail, but at the line matching its worst case it
-  catches fewer: full engine by 3 games 31% vs 41%. 2.5% needs a line of 1,500 for its worst case,
-  and catches 37%.
-- `SHALLOW_DEPTH` 2 / 3 / 4, `DEEP_FIND_DEPTH` 5–9, `DECIDED_WIN_PROBABILITY` 95% / 97% / 99%, and
-  forced mates not counted as decided: none catches more at equal safety. By per-game score (below),
-  with every input in, every alternative depth scores lower.
+- `GOOD_LOSS` 1.5% or 2.5%: a full-engine game scores 0.3 nats lower, for no clear gain in safety.
+- `SHALLOW_DEPTH` 2 / 4, `DEEP_FIND_DEPTH` 5, 6, 8, 9, `DECIDED_WIN_PROBABILITY` 95% / 99%, and
+  forced mates not counted as decided: none catches more at equal safety. `SHALLOW_DEPTH` 2 and
+  `DEEP_FIND_DEPTH` 8–9 score a full-engine game higher but thicken the honest tail more.
 
 ### The difficulty inputs
 
 An input earns its place by speeding catches at equal safety, not by predicting honest play:
 `imbalance` barely helps predict honest moves, yet separates. Each candidate was measured with
 `game-scores.ts`, with the skill ceiling refitted for it: the change in each game's log score,
-paired game by game, against a full-engine game's 2.28 nats (about ×10) without the three.
+paired game by game, against a full-engine game's 1.65 nats (about ×5) without the three.
 
 | Added              | Full-engine game                | Honest game |
 | ------------------ | ------------------------------- | ----------- |
-| `forcingGoodMove`  | +0.17                           | −0.01       |
-| √`opponentBlunder` | +0.12                           | 0.00        |
-| `imbalance`        | +0.05                           | 0.00        |
-| **all three**      | **+0.44 (95%: +0.38 to +0.50)** | −0.01       |
+| `forcingGoodMove`  | +0.40                           | −0.01       |
+| √`opponentBlunder` | +0.07                           | 0.00        |
+| `imbalance`        | +0.16                           | −0.01       |
+| **all three**      | **+0.52 (95%: +0.43 to +0.59)** | −0.02       |
 
-The gain holds in every random half of the players (+0.40 to +0.48) and every variant family
-(Classical +0.31, the rest +0.54 to +0.67), and vanishes when the inputs are shuffled across
+The gain holds in every random half of the players (+0.42 to +0.60) and every variant family
+(Classical +0.38, CoaIP +0.59, the rest +0.78), and vanishes when the inputs are shuffled across
 positions. From the fitted weights: a forcing good move helps honest players more than the engine;
 after the opponent's blunder honest players often miss the refutation, the engine doesn't; the
 engine converts lopsided positions more reliably. With all inputs in, `deepFind` carries the most
-(without it the gain is +0.11), though honest likelihood rates it least; without `shallowFinds`
-catch speed ties, but the honest regulars' tail grows 4.6×; without `bestCaptures`, +0.27.
+(without it, −0.19), though honest likelihood rates it least. Without `shallowFinds` or
+`bestCaptures` a full-engine game scores +0.04 higher, but the honest tail thickens more: at equal
+precision both catch slower.
 
 By honest held-out likelihood (`feature-ablation.ts`), rating, top-two gap, recapture available, few
 legal moves and time control each add ≤ +0.003: not used. Of all 16 ways to group the good-move
@@ -267,49 +286,51 @@ checks being easy finds). Tried and not used, by per-game score:
 - **Top-two gap, legal-move count, nearness to the enemy royal**, interactions with the only-move
   case: not worth an input.
 
-Two rules exist because honest players scored high without them. A king shuffling under checks
-scored 68 in one game (each repetition a fresh hard find) until repeated positions were left out and
-"in check" added. A weak honest player scored 720 until the betting score's first validity rule: in
-easy positions their misses counted as engine evidence, since the detector judges ~20% of real
+Two rules guard against honest players scoring high. Without leaving out repeated positions and the
+"in check" input, a king shuffling under checks makes each repetition a fresh hard find: estimated
+precision falls to 99.02%. The betting score's first validity rule fires on only 0.2% of honest
+moves, but without it some positions let an honest player at their ceiling expect ×1.87 per move: in
+easy positions their misses would count as engine evidence, since the detector judges ~17% of real
 engine moves as misses too.
 
 ### The engine model, and why catching takes several games
 
 A cheater's engine is not the detector's engine. The simulated cheater searches 800,000 nodes,
-MultiPV 3; the detector 300,000 nodes, MultiPV 5. Of the cheater's moves the detector rates ~80%
-good but only ~50% its own first line. Infinite chess often has several near-equal moves whose order
+MultiPV 3; the detector 300,000 nodes, MultiPV 5. Of the cheater's moves the detector rates ~83%
+good but only ~54% its own first line. Infinite chess often has several near-equal moves whose order
 reshuffles with depth, so "plays the engine's top move" rarely looks unmistakable. Most of a game is
 easy (a strong human finds good moves too) or decided; the tells are the few hard positions per
-game. A full-engine game multiplies the score by about 13× (geometric mean over 1,038 games).
+game. A full-engine game multiplies the score by about 9× (geometric mean over 1,150 games).
 
 ### Four bets, not one
 
-Measured at line 500. One bet on full engine use alone catches fastest (full engine by 3 games 61%
-vs 48%), but honest scores swing with it: the tail of players with 10+ games falls only as
-score^-0.91, for ~80% estimated precision against the four bets' 98%. At the line matching their
-precision (~8,500) it catches less (37% by 3 games; every other game, 50% by 20 vs 64%). Bets on
-{0.5, 1} reach 87%; twenty evenly spaced fractions, close to a continuous mixture, catch the same as
-four at 95%.
+Measured at line 1,000. One bet on full engine use alone catches fastest (full engine by 3 games 43%
+vs 36%), but honest scores swing with it: the tail of players with 10+ games falls only as
+score^-1.01, for 91.5% estimated precision against the four bets' 99.95%. Even at 30,000 it reaches
+only 99.70%, and catches 26%. Bets on {0.5, 1} reach 98.1%; twenty evenly spaced fractions, close to
+a continuous mixture, reach 99.90% and catch 32%.
 
 ### The skill ceiling
 
-- A flat ceiling must cover the strongest honest player: the strongest regular was 0.75 ± 0.09 logit
-  above the population. With a flat 0.5, an honest regular reached 1,174 (the tail of players with
-  10+ games fell only as score^-0.40); with a flat 0.9, one reached 53, for ~87% estimated precision
-  at line 500.
+- A flat ceiling must cover the strongest honest player: the strongest regular is 0.70 ± 0.10 logit
+  above the population. With a flat 0.5, an honest regular reaches 105 (the tail of players with 10+
+  games falls only as score^-0.54); with a flat 0.9, one reaches 8.1, for 98.1% estimated precision.
 - Rating does carry skill (+0.22 logit per 300 rating, measured against the ratings regulars played
-  at), with honest players scattering ±0.28 around that line; the most any regular out-played it was
-  +0.39 ± 0.12. Following it is both safer than a flat ceiling (highest honest score 10.4) and
-  faster on weaker cheaters (see the catch rates by account).
+  at), with honest players scattering ±0.26 around that line; the most any regular out-plays it is
+  +0.38 ± 0.12. Following it is safer than a flat ceiling (highest honest score 5.8) and catches
+  established accounts at ordinary ratings faster (1700 ± 60: 57% vs 49% within 3 games), though a
+  new account's generous ceiling makes it slower there (39% vs 49%).
 - It follows the rating **going into each game**, not the player's current or oldest rating: an
   improving honest player is judged against their improvement, and a cheated game played before the
   rating inflated keeps its full weight.
-- The 0.05 top-rate margin covers the most any regular favoured the first line (+0.051 ± 0.029; the
-  spread matches noise). 0.08 slowed catches by 2–7 points for no real precision gain.
+- The 0.05 top-rate margin covers the most any regular favours the first line (+0.040 ± 0.031; the
+  spread matches noise). 0.08 is safer still (99.99%) but slows catches (full engine by 3 games
+  34%).
 - Past the ceiling, false cases climb fast. Simulated honest players rated 1500 ± 100, playing above
-  their ceiling by 0 / 0.1 / 0.2 logit, reach the line within 40 games 0.3% / 1.9% / 12% of the
-  time, within 100 games 0.9% / 8% / 49%. The strongest regular sits ~0.2 logit below theirs (about
-  290 rating points of skill), and Glicko moves an established rating only ~5 points a game.
+  their ceiling by 0 / 0.1 / 0.2 logit, reach the line within 40 games 0.27% / 1.6% / 8.5% of the
+  time, within 100 games 0.76% / 6.1% / 38%. The regular closest to their ceiling sits 0.39 logit
+  below it (about 530 rating points of skill), and Glicko moves an established rating only ~5 points
+  a game.
 
 ### Scoring over a window
 
@@ -318,44 +339,44 @@ after one was caught within 10 cheated games only 23% of the time. A 10-game win
 let no slow evidence build. The best run did both (100%; partial 40% within 20 games, 23% vs 15%),
 with honest peaks unchanged (measured at an earlier line of 2,500 on 4–19 players per scenario: the
 direction is the result). At line 1,000, a full-engine cheater after an honest first half is caught
-within 3 / 5 / 10 cheated games 63% / 94% / 100% of the time (16 players).
+within 3 / 5 / 10 cheated games 56% / 88% / 100% of the time (16 players).
 
 Capping how far back a run may start (40 or 100 games) changes nothing: honest false cases come from
 short lucky streaks (median 5 games), not long runs. The 6-month cap follows Lichess.
 
 ### The case line
 
-Honest players' highest scores fall off as score^-1.92 (score^-1.65 for the 21 players with 10+
-games); the highest honest score was 10.4. Two measures of false cases:
+Honest players' highest scores fall off as score^-1.94 (score^-1.82 for the 22 players with 10+
+games); the highest honest score is 5.8. Two measures of false cases:
 
 - **Estimated precision**, assuming 1% of players cheat and counting cheaters the detector
   eventually catches. It extrapolates the tail of players with 10+ games past the highest honest
-  score (the fitted 0.04%-per-player line is ~19 over all players, 90% interval 5–76), and that tail
+  score (the fitted 0.04%-per-player line is ~19 over all players, 90% interval 9–40), and that tail
   rests on few players: one at its threshold moves the rate ~4×.
 - **The worst case:** simulated honest players rated 1500 ± 100 playing exactly at their ceiling,
   reaching the line within 40 / 100 games.
 
 | Line      | Estimated precision | Worst case        | Full engine by 1 / 3 / 5 / 10 games | Every other game by 5 / 20 |
 | --------- | ------------------- | ----------------- | ----------------------------------- | -------------------------- |
-| 500       | 99.68%              | 0.65% / 1.92%     | 5% / 59% / 90% / 100%               | 45% / 93%                  |
-| 750       | 99.83%              | 0.40% / 1.20%     | 5% / 52% / 88% / 100%               | 38% / 86%                  |
-| **1,000** | **99.90%**          | **0.29% / 0.88%** | **4% / 51% / 83% / 100%**           | **35% / 86%**              |
-| 1,250     | 99.93%              | 0.21% / 0.66%     | 4% / 49% / 83% / 100%               | 35% / 71%                  |
-| 1,500     | 99.95%              | 0.18% / 0.56%     | 4% / 49% / 83% / 100%               | 35% / 64%                  |
-| 2,000     | 99.97%              | 0.13% / 0.43%     | 3% / 47% / 80% / 100%               | 33% / 57%                  |
-| 2,500     | 99.98%              | 0.10% / 0.34%     | 3% / 43% / 78% / 100%               | 30% / 57%                  |
+| 500       | 99.82%              | 0.57% / 1.57%     | 4% / 39% / 69% / 100%               | 26% / 79%                  |
+| 750       | 99.92%              | 0.38% / 1.03%     | 3% / 38% / 69% / 100%               | 21% / 79%                  |
+| **1,000** | **99.95%**          | **0.27% / 0.76%** | **3% / 36% / 69% / 100%**           | **21% / 79%**              |
+| 1,250     | 99.97%              | 0.22% / 0.59%     | 3% / 32% / 69% / 100%               | 19% / 71%                  |
+| 1,500     | 99.98%              | 0.21% / 0.50%     | 3% / 32% / 69% / 100%               | 19% / 64%                  |
+| 2,000     | 99.99%              | 0.16% / 0.39%     | 2% / 31% / 69% / 100%               | 17% / 50%                  |
+| 2,500     | 99.99%              | 0.13% / 0.31%     | 2% / 26% / 69% / 95%                | 17% / 50%                  |
 
-1,000 keeps estimated precision about ten times inside the 99% target, a margin its thin tail needs.
-The worst case is a stress test, not a target: no regular plays at their ceiling. It is one constant
-to move if dismissed cases show it wrong.
+1,000 keeps estimated precision about twenty times inside the 99% target, a margin its thin tail
+needs. The worst case is a stress test, not a target: no regular plays at their ceiling. It is one
+constant to move if dismissed cases show it wrong.
 
 There is no guaranteed bound beneath it. A score counted from one fixed game would reach 1,000 with
 chance at most 1/1,000 for an honest player at their ceiling, but the best run adds a starting point
 each game, so the worst case grows with games played. Real honest players sit below their ceiling,
-but the snapshot has none with more than ~40 rated games, so heavy players are where the estimate is
-least certain. Weighting each start by 1/(j(j+1)) would restore the bound, but was rejected: it cuts
-how often a full-engine cheater after an honest history is caught within 3 cheated games by about
-three-quarters.
+but the snapshot has few with more than ~40 rated games (the most, 79), so heavy players are where
+the estimate is least certain. Weighting each start by 1/(j(j+1)) would restore the bound, but was
+rejected: it cuts how often a full-engine cheater after an honest history is caught within 3 cheated
+games by about three-quarters.
 
 ### Catch rates (line 1,000)
 
@@ -363,12 +384,12 @@ Simulated on the real players' rated games, share caught within N games (players
 
 | Style                                                      | 1        | 3        | 5        | 10        | 20        |
 | ---------------------------------------------------------- | -------- | -------- | -------- | --------- | --------- |
-| Full engine                                                | 4% (275) | 51% (75) | 83% (40) | 100% (21) | 100% (14) |
-| Full engine every other game, honest in between            | 4%       | 15%      | 35%      | 52%       | 86%       |
-| Rescue (engine only where about to blunder, half the time) | 0%       | 0%       | 0%       | 0%        | 29%       |
-| Level-6 bot every move                                     | 0%       | 0%       | 0%       | 14%       | 21%       |
-| Two critical moves per game                                | 0%       | 0%       | 0%       | 0%        | 7%        |
-| Partial 20–40% / 2nd–3rd choice                            | 0%       | 0%       | 0%       | 0%        | 0%        |
+| Full engine                                                | 3% (315) | 36% (77) | 69% (42) | 100% (22) | 100% (14) |
+| Full engine every other game, honest in between            | 3%       | 10%      | 21%      | 41%       | 79%       |
+| Rescue (engine only where about to blunder, half the time) | 0%       | 0%       | 0%       | 14%       | 36%       |
+| Level-6 bot every move                                     | 0%       | 0%       | 0%       | 9%        | 29%       |
+| Partial 40%                                                | 0%       | 0%       | 0%       | 0%        | 7%        |
+| Two critical moves per game / partial 20% / 2nd–3rd choice | 0%       | 0%       | 0%       | 0%        | 0%        |
 
 These count from a player's first rated games, played at the default rating with a wide deviation.
 By account, a full-engine cheater winning every game against opponents of their own rating (RD 80),
@@ -376,17 +397,17 @@ their rating evolved by the site's Glicko code (`account-odds.ts`, 4,000 cheater
 
 | Account               | 3   | 5   | 7   | 10   | 15   | 20   |
 | --------------------- | --- | --- | --- | ---- | ---- | ---- |
-| New (1500 ± 350)      | 49% | 83% | 95% | 99%  | 100% | 100% |
-| Established 1700 ± 60 | 71% | 95% | 99% | 100% | 100% | 100% |
-| Established 2200 ± 60 | 40% | 77% | 93% | 99%  | 100% | 100% |
-| Established 2500 ± 60 | 22% | 54% | 78% | 94%  | 99%  | 100% |
-| Established 2800 ± 60 | 9%  | 28% | 52% | 80%  | 95%  | 99%  |
-| Established 3100 ± 60 | 3%  | 12% | 28% | 52%  | 81%  | 93%  |
+| New (1500 ± 350)      | 39% | 71% | 87% | 97%  | 100% | 100% |
+| Established 1700 ± 60 | 57% | 87% | 96% | 100% | 100% | 100% |
+| Established 2200 ± 60 | 32% | 64% | 84% | 96%  | 100% | 100% |
+| Established 2500 ± 60 | 18% | 43% | 67% | 87%  | 98%  | 100% |
+| Established 2800 ± 60 | 8%  | 24% | 44% | 69%  | 92%  | 98%  |
+| Established 3100 ± 60 | 3%  | 10% | 22% | 44%  | 74%  | 90%  |
 
 A higher rating's ceiling leaves less room above it; above ~2000 these rows are extrapolated (see
 Known holes). Prod's highest rating is 2406; winning every game against 2000-rated opponents takes
 28 games to reach 2500 and 645 to reach 2800. Honest games between cheated ones slow a case (10
-cheated games among 20: 86%, against 100% for 10 in a row), since a run must span both. Partial
+cheated games among 20: 79%, against 100% for 10 in a row), since a run must span both. Partial
 engine use is largely invisible to move analysis alone: a 20–40% engine user looks like a stronger
 honest player. Catching them is the job of interaction data (below).
 
@@ -402,18 +423,18 @@ probability (past the 2% good-move line), and favours moves a shallow search alr
   games here (decided positions make every move look accurate); "no fast moves" holds for 94%. Not
   used.
 - **Think times:** honest games trip Lichess's flat-time flag ~1% of the time, never twice for one
-  player; but under an assumed cheater timing only steady full-engine users trip it (81–100% at a
-  spread of ≤ 0.25, ~0% for partial users), and their moves already catch them fastest. Revisit with
-  real cases. A fast move is no proof of honesty: a cheater can play the engine's predicted reply
-  instantly. As an honest-model input, think time slows catches.
-- **Time control:** adds nothing measurable to the honest model, but two-thirds of rated games are
+  player; but under an assumed cheater timing only steady full-engine users trip it (78–100% at a
+  spread of ≤ 0.25, under 7% for partial users), and their moves already catch them fastest. Revisit
+  with real cases. A fast move is no proof of honesty: a cheater can play the engine's predicted
+  reply instantly. As an honest-model input, think time slows catches.
+- **Time control:** adds nothing measurable to the honest model, but three-fifths of rated games are
   10+6, so this is untested for very fast or slow games.
 
 ## Known holes and assumptions
 
 - **Partial engine use** (under ~40% of moves) mostly goes uncaught by move analysis alone.
 - **Very active players:** an honest player's chance of a false case grows with games played, and
-  the snapshot has none past ~40 rated games (see the case line). Watch dismissed cases for them.
+  the snapshot has few past ~40 rated games (see the case line). Watch dismissed cases for them.
 - **New accounts** get a generous ceiling (rating + 2·RD at 1500 ± 350 ≈ 2200), so a new account
   cheating from its first game is caught more slowly. This is honest uncertainty, not an artifact.
 - **High ratings:** the ceiling follows the rating-to-skill line with no cap, extrapolated past the

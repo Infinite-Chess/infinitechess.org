@@ -104,7 +104,7 @@ function cheat(
 	const { positions } = game;
 	const evidence: MoveEvidence[] = [];
 	for (let ply = parity; ply < moves.length; ply += 2) {
-		const judged = moveEvidence.judge(positions[ply - 1], positions[ply]!, afters.get(ply) ?? positions[ply + 1]!, moves[ply]!); // prettier-ignore
+		const judged = moveEvidence.judge(ply, positions[ply - 1], positions[ply]!, afters.get(ply) ?? positions[ply + 1]!, moves[ply]!); // prettier-ignore
 		if (judged) evidence.push({ ply, ...judged });
 	}
 	return { evidence, missing };

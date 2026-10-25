@@ -25,13 +25,19 @@ function position(
 
 const LINES = [line('1,1>1,2', 50), line('1,1>1,3', 45), line('1,1>1,4', -100), line('1,1>1,5', -150), line('1,1>1,6', -200)]; // prettier-ignore
 
-/** The evidence of a single white move from `before`, with `after` the position it led to. */
+/** The opening's positions, refused so that none bears on the move after them. */
+const OPENING: PositionAnalysis[] = Array(moveEvidence.OPENING_PLIES).fill({ refused: true });
+
+/**
+ * The evidence of a single white move from `before`, just past the opening, with `after` the
+ * position it led to.
+ */
 function judge(
 	before: PositionAnalysis,
 	move: string,
 	after: PositionAnalysis = position([line('9,9>9,8', 0)]),
 ): ReturnType<typeof moveEvidence.gather> {
-	return moveEvidence.gather([before, after], [move], 0);
+	return moveEvidence.gather([...OPENING, before, after], [...OPENING.map(() => '9,9>9,8'), move], 0); // prettier-ignore
 }
 
 describe('moveEvidence.gather', () => {
@@ -93,21 +99,22 @@ describe('moveEvidence.gather', () => {
 	});
 
 	it("reads how much the opponent's move into the position threw away, from the position before it", () => {
-		const blunder = (previousCp: number, nowCp: number): number => {
-			const positions = [position([line('9,9>9,8', previousCp)]), position([line('1,1>1,2', nowCp), line('1,1>1,3', nowCp - 5)])]; // prettier-ignore
-			return moveEvidence.gather([...positions, position([line('9,9>9,8', 0)])], ['9,9>9,8', '1,1>1,2'], 1)[0]!.difficulty.opponentBlunder; // prettier-ignore
+		const blunder = (previous: PositionAnalysis, nowCp: number): number => {
+			const before = position([line('1,1>1,2', nowCp), line('1,1>1,3', nowCp - 5)]);
+			return moveEvidence.judge(moveEvidence.OPENING_PLIES, previous, before, position([line('9,9>9,8', 0)]), '1,1>1,2')!.difficulty.opponentBlunder; // prettier-ignore
 		};
 		// The opponent stood even, and now the mover stands +300: they threw that away.
-		expect(blunder(0, 300)).toBeCloseTo(moveEvidence.winProbability({ cp: 300 }) - 0.5);
+		expect(blunder(position([line('9,9>9,8', 0)]), 300)).toBeCloseTo(moveEvidence.winProbability({ cp: 300 }) - 0.5); // prettier-ignore
 		// The opponent's move improved on what they had: nothing was thrown away.
-		expect(blunder(0, -300)).toBe(0);
-		expect(moveEvidence.gather([{ refused: true }, position(LINES), position([line('9,9>9,8', 0)])], ['9,9>9,8', '1,1>1,2'], 1)[0]!.difficulty.opponentBlunder).toBe(0); // prettier-ignore
+		expect(blunder(position([line('9,9>9,8', 0)]), -300)).toBe(0);
+		expect(blunder({ refused: true }, 300)).toBe(0);
 	});
 
-	it("judges only the requested player's moves", () => {
-		const positions = [position(LINES), position(LINES), position(LINES)];
-		expect(moveEvidence.gather(positions, ['1,1>1,2', '1,1>1,4'], 1).map((e) => e.ply)).toEqual(
-			[1],
-		);
+	it("judges only the requested player's moves, and none in the opening", () => {
+		const plies = moveEvidence.OPENING_PLIES + 2;
+		const positions = Array.from({ length: plies + 1 }, () => position(LINES));
+		const moves = Array(plies).fill('1,1>1,2');
+		expect(moveEvidence.gather(positions, moves, 0).map((e) => e.ply)).toEqual([plies - 2]);
+		expect(moveEvidence.gather(positions, moves, 1).map((e) => e.ply)).toEqual([plies - 1]);
 	});
 });

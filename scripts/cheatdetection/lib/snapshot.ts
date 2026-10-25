@@ -2,7 +2,7 @@
 
 /**
  * Read-only access to a copy of prod's database: the games the research analyses, and their
- * players. Reads only the games and player_games tables, never any member data.
+ * players. Of member data it reads only which accounts were deleted for rating abuse.
  */
 
 import type { Player } from '../../../src/shared/chess/util/typeutil.js';
@@ -51,12 +51,15 @@ function open(): Database.Database {
 	return db;
 }
 
-/** The research corpus: rated, unaborted games of 16+ plies, in id order. */
+/** The research corpus: the games production assesses, less rating abusers', in id order. */
 function corpus(): GameRow[] {
 	return open()
 		.prepare<[], GameRow>(
-			`SELECT ${GAME_COLUMNS} FROM games WHERE rated = 1 AND termination != 'aborted' AND move_count >= 16
-			ORDER BY game_id`,
+			`SELECT ${GAME_COLUMNS} FROM games WHERE rated = 1 AND termination != 'aborted'
+			AND game_id NOT IN (
+				SELECT game_id FROM player_games JOIN deleted_members USING (user_id)
+				WHERE reason_deleted = 'rating abuse'
+			) ORDER BY game_id`,
 		)
 		.all();
 }

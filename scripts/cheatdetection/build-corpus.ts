@@ -1,12 +1,13 @@
 // scripts/cheatdetection/build-corpus.ts
 
 /**
- * Joins the engine passes with the snapshot into corpus.jsonl, one record per analysed game: the
- * production worker's positions, the players with the rating and deviation they held going into
- * it (rd.json, from reconstruct-rd.ts), think times from the clock stamps, and the cheater and
- * level-6 passes' choices. Then lists in pending.jsonl the simulated moves whose position-after the
- * offline pass still has to analyse: the cheater engine's top choice and the level-6 move, or with
- * --all-lines also its 2nd and 3rd choices (the "second" style). No engine runs here.
+ * Joins the engine passes with the snapshot into corpus.jsonl, one record per analysed corpus
+ * game: the production worker's positions, the players with the rating and deviation they held
+ * going into it (rd.json, from reconstruct-rd.ts), think times from the clock stamps, and the
+ * cheater and level-6 passes' choices. Then lists in pending.jsonl the simulated moves whose
+ * position-after the offline pass still has to analyse: the cheater engine's top choice and the
+ * level-6 move, or with --all-lines also its 2nd and 3rd choices (the "second" style). No engine
+ * runs here.
  *
  * Usage: npx tsx scripts/cheatdetection/build-corpus.ts --snapshot=<path> [--all-lines]
  */
@@ -106,9 +107,11 @@ const byGame = (prefix: string): Map<number, PicksRecord> => new Map(corpus.read
 const cheaters = byGame('cheater-');
 const level6s = byGame('level6-');
 const rds: Record<string, number> = JSON.parse(readFileSync(corpus.file('rd.json'), 'utf8'));
+const corpusIds = new Set(snapshot.corpus().map((row) => row.game_id));
 
 const games = corpus
 	.readRecords<DetectorRecord>('detector-')
+	.filter((d) => corpusIds.has(d.gameId))
 	.map((d) => buildGame(d, cheaters.get(d.gameId), level6s.get(d.gameId), rds))
 	.filter((g): g is GameData => g !== undefined)
 	.sort((a, b) => a.gameId - b.gameId);
