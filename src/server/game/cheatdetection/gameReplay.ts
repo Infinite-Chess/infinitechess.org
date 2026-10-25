@@ -12,8 +12,6 @@ import type { MoveParsed } from '../../../shared/chess/logic/icn/icnmoves.js';
 import type { GameConstructionOptions } from '../../../shared/chess/game/gameformulator.js';
 import type { LongFormatIn, LongFormatOut } from '../../../shared/chess/logic/icn/icnconverter.js';
 
-import icnmoves from '../../../shared/chess/logic/icn/icnmoves.js';
-import boardutil from '../../../shared/chess/logic/boardutil.js';
 import movepiece from '../../../shared/chess/logic/movepiece.js';
 import engineicn from '../../../shared/chess/logic/icn/engineicn.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
@@ -30,7 +28,10 @@ export interface GameAtStart {
 
 // Functions -------------------------------------------------------------------
 
-/** Parses a stored game's ICN and builds its board at the start position. */
+/**
+ * Parses a stored game's ICN and builds its board at the start position. The ICN carries no game
+ * modifiers, which only stored columns hold: fine while rated games can't have any.
+ */
 async function loadAtStart(icn: string): Promise<GameAtStart> {
 	const longformat = icnconverter.ShortToLong_Format(icn);
 	const options = await gameformulator.resolveConstructionOptions(longformat);
@@ -59,18 +60,11 @@ function isInCheck(gamefile: GameFile): boolean {
 	return gamefile.state.local.inCheck !== false;
 }
 
-/** Whether a move from the current position lands on a piece. */
-function isCapture(gamefile: GameFile, token: string): boolean {
-	const { endCoords } = icnmoves.parseTokenMove(token);
-	return boardutil.isPieceOnCoords(gamefile.pieces, endCoords);
-}
-
-/** Whether a move from the current position checks the opponent. */
-function givesCheck(gamefile: GameFile, token: string): boolean {
-	movepiece.calculateAndMakeMove(gamefile, { token });
-	const check = isInCheck(gamefile);
+/** Whether a move from the current position captures (en passant included) and whether it checks. */
+function moveFacts(gamefile: GameFile, token: string): { captures: boolean; checks: boolean } {
+	const move = movepiece.calculateAndMakeMove(gamefile, { token });
 	movepiece.rewindMove(gamefile);
-	return check;
+	return { captures: move.flags.capture, checks: move.flags.check };
 }
 
 /** Whether player number `player` moves at a stored game's even plies (0) or odd (1), by its turn order. */
@@ -85,7 +79,6 @@ export default {
 	loadAtStart,
 	engineIcn,
 	isInCheck,
-	isCapture,
-	givesCheck,
+	moveFacts,
 	parityOf,
 };

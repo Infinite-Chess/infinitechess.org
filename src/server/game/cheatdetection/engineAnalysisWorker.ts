@@ -126,12 +126,7 @@ function analysePosition(engine: AnalysisWasmEngine, gamefile: GameFile): Positi
  */
 function toLine(line: AnalysisLine, gamefile: GameFile): EngineLine {
 	const move = line.moves[0]!;
-	return {
-		move,
-		score: toScore(line),
-		captures: gameReplay.isCapture(gamefile, move),
-		checks: gameReplay.givesCheck(gamefile, move),
-	};
+	return { move, score: toScore(line), ...gameReplay.moveFacts(gamefile, move) };
 }
 
 /**
