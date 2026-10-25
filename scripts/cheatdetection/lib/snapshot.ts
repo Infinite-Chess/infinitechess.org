@@ -51,12 +51,11 @@ function open(): Database.Database {
 	return db;
 }
 
-/** The research corpus: rated, timed, human-vs-human, unaborted games of 16+ plies, in id order. */
+/** The research corpus: rated, unaborted games of 16+ plies, in id order. */
 function corpus(): GameRow[] {
 	return open()
 		.prepare<[], GameRow>(
-			`SELECT ${GAME_COLUMNS} FROM games g WHERE rated = 1 AND base_time_seconds IS NOT NULL AND termination != 'aborted'
-			AND move_count >= 16 AND (SELECT COUNT(*) FROM player_games p WHERE p.game_id = g.game_id) = 2
+			`SELECT ${GAME_COLUMNS} FROM games WHERE rated = 1 AND termination != 'aborted' AND move_count >= 16
 			ORDER BY game_id`,
 		)
 		.all();

@@ -164,8 +164,8 @@ almost surely reopens it.
 
 ## Calibration
 
-All measured on a prod snapshot of 2026-10-20 (718 rated games; 519 timed, unaborted and 16+ plies,
-of which 517 the engine supports) with the scripts in `scripts/cheatdetection/` (see Reproducing).
+All measured on a prod snapshot of 2026-10-20 (718 rated games; 519 unaborted and 16+ plies, of
+which 517 the engine supports) with the scripts in `scripts/cheatdetection/` (see Reproducing).
 
 ### The honest baseline
 
