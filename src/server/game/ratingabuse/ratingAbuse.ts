@@ -138,7 +138,7 @@ function buildGameInfoList(
 function gatherIdentityEvidence(user_id: number, gameIds: number[]): IdentityEvidence {
 	// Get a list of the user_ids of the previous opponents of the player
 	const opponentPlayerGamesEntries = playerGamesManager.getOpponentsOfUser(user_id, gameIds, ['game_id', 'user_id']); // prettier-ignore
-	const opponentIdByGame = Object.fromEntries(opponentPlayerGamesEntries.map((entry) => [entry.game_id, entry.user_id!])); // prettier-ignore
+	const opponentIdByGame = Object.fromEntries(opponentPlayerGamesEntries.map((entry) => [entry.game_id, entry.user_id])); // prettier-ignore
 	const unique_user_id_list = [...new Set(Object.values(opponentIdByGame))];
 
 	// How many of the games each opponent accounts for
