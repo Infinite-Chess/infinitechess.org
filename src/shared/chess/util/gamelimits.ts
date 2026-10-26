@@ -42,6 +42,11 @@ const TELEPORT_LIMIT = 10n ** 30n; // 10^30 squares
  */
 const MAX_SERVER_VALIDATABLE_POSITION_LENGTH = 2500;
 
+// Analysis Reports ------------------------------------------------------------
+
+/** The most display episodes one analysis-page report to engine-assistance detection carries. */
+const MAX_REPORTED_EPISODES = 500;
+
 // Board Editor Saves ----------------------------------------------------------
 
 /** Maximum length for a saved position's name. */
@@ -58,6 +63,8 @@ export default {
 	TELEPORT_LIMIT,
 	// Positions
 	MAX_SERVER_VALIDATABLE_POSITION_LENGTH,
+	// Analysis Reports
+	MAX_REPORTED_EPISODES,
 	// Board Editor Saves
 	MAX_POSITION_NAME_LENGTH,
 	MAX_ICN_LENGTH,

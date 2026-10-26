@@ -21,6 +21,7 @@ import type { AuthMemberInfo } from '../../types.js';
 import type { CustomWebSocket } from '../../socket/socketTypes.js';
 import type { ChatHistoryEntry } from '../../../shared/util/chatlimits.js';
 import type { Player, PlayerGroup } from '../../../shared/chess/util/typeutil.js';
+import type { Interaction, WatchedPosition } from '../cheatdetection/cheatDetectionTypes.js';
 import type { Game, LoadedVariant, VariantOptions } from '../../../shared/chess/logic/gamefile.js';
 
 // Types -----------------------------------------------------------------------
@@ -71,6 +72,8 @@ export interface PlayerData {
 	disconnect: PlayerDisconnect;
 	/** Their last few chat messages, which `chatlimits` checks each new one against. */
 	chatHistory: ChatHistoryEntry[];
+	/** Their interaction data so far, for engine-assistance detection. Collected only in rated games. */
+	interaction: Interaction;
 }
 
 /** Identifies the engine a human is playing against. */
@@ -170,6 +173,11 @@ export type ServerGame = Game & {
 	ratings: PlayerGroup<MemberRating>;
 	/** Preset square and ray overrides. Custom games only — a preset's come off its variant module. */
 	presetAnnotes?: PresetAnnotes;
+	/**
+	 * Each position the game has stood at, oldest first, from its start or the restart it was restored
+	 * at: what engine-assistance detection matches analysis reports against. Rated games only.
+	 */
+	watchedPositions?: WatchedPosition[];
 } & ValidationDependant;
 
 /** The servergame variables that depend on whether the server is performing legal move validation. */

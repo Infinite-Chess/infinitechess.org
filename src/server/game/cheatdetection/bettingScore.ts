@@ -1,17 +1,20 @@
 // src/server/game/cheatdetection/bettingScore.ts
 
 /**
- * Scores a player's moves as a running bet that they use an engine. Each move multiplies the
+ * Scores a player's games as a running bet that they use an engine. Each move multiplies the
  * score by how much likelier its outcome is for a player using an engine on some fraction of
  * their moves than for an honest player as strong as their skill ceiling: the strongest an honest
- * player of their rating plausibly is. Several fractions are bet on at once, and the score is
- * their average.
+ * player of their rating plausibly is. Several fractions are bet on at once, averaged. Each game's
+ * analysis matches multiply in beside its moves, only ever raising the score: by the player's
+ * account or browser, weighted by ply; by their network alone, by how densely they recur across
+ * the run. Away times aren't scored yet.
  *
  * For any honest player no stronger than their ceiling, each move's expected ratio is at most 1.
  * The best run scored here still has no 1/X bound, since each game adds a starting point: its
  * false-case rate is measured instead (the system doc's case line).
  */
 
+import type { Interaction } from './cheatDetectionTypes.js';
 import type { Difficulty, MoveEvidence } from './moveEvidence.js';
 
 import timeutil from '../../../shared/util/timeutil.js';
@@ -40,12 +43,42 @@ export interface BetModel {
 	engineTopWeights: number[];
 }
 
+/** One game as the score reads it. */
+export interface GameScore {
+	/** Its moves' log likelihood ratios, per cheat fraction ({@link gameLogRatios}). */
+	moves: number[];
+	/** The log weight of its strongest analysis match by the player's account or browser, else 0. */
+	matchLogWeight: number;
+	/**
+	 * Whether it has a network-only match, not shared with the opponent, that would open a case by
+	 * its weight alone.
+	 */
+	networkMatched: boolean;
+}
+
 // Constants -------------------------------------------------------------------
 
 /** The natural log of the score that opens a case: measured on prod, about 99.95% of its cases are real. */
 const CASE_LOG_SCORE = Math.log(1000);
 /** Games older than this no longer count as evidence. */
 const MAX_EVIDENCE_AGE_MS = timeutil.toMillis(6, 'months');
+
+/**
+ * An analysis match's weight at ply p: e^(decay × p), the inverse of a line over how often a
+ * player's own earlier games pass through their position at that ply (prod's games, 2026-10-20),
+ * from 100% at the start, which proves nothing, up to the rarest repeat that sample can back (none
+ * in ~59,000 late positions).
+ */
+const MATCH_WEIGHT = { decay: 0.37, cap: 20_000 };
+/**
+ * The assumed share of games with a network-only match, for a cheater analysing on another device
+ * and for an honest player whose household analyses their game. Guesses, the honest one deliberately
+ * high: refit both from the collected matches.
+ */
+const NETWORK_MATCH_RATES = { cheater: 0.5, honest: 0.1 };
+
+/** No interaction data: what research scores games collected before it with. */
+const EMPTY_INTERACTION: Interaction = { away: [], matches: [] };
 
 /**
  * The model detection runs on: the honest model fitted on prod's rated games (snapshot of
@@ -135,19 +168,53 @@ function gameLogRatios(evidence: MoveEvidence[], model: BetModel, ceiling: numbe
 	return sums;
 }
 
+/** A game's {@link GameScore}, from its moves' {@link gameLogRatios} and its interaction data. */
+function gameScore(moves: number[], interaction: Interaction): GameScore {
+	let matchLogWeight = 0;
+	let networkMatched = false;
+	for (const match of interaction.matches) {
+		const logWeight = Math.log(matchWeight(match.ply));
+		if (match.link !== 'network') matchLogWeight = Math.max(matchLogWeight, logWeight);
+		else if (!match.sharedWithOpponent && logWeight >= CASE_LOG_SCORE) networkMatched = true;
+	}
+	return { moves, matchLogWeight, networkMatched };
+}
+
+/** How many times likelier an analysis match on a position at `ply` is for a cheater. Never below 1. */
+function matchWeight(ply: number): number {
+	const { decay, cap } = MATCH_WEIGHT;
+	return Math.min(cap, Math.exp(decay * ply));
+}
+
 /**
  * A player's score now: the best over every run of their recent games that ends with the latest,
  * so honest games before an engine user switched on can't drag it down (change detection, as in
- * CUSUM). Takes each game's {@link gameLogRatios}, oldest first, and returns the score's natural log.
+ * CUSUM). Takes each game's {@link GameScore}, oldest first, and returns the score's natural log.
  */
-function bestRunLogScore(games: number[][]): number {
+function bestRunLogScore(games: GameScore[]): number {
 	let best = 0;
-	const sums = games[0]?.map(() => 0) ?? [];
+	const sums = games[0]?.moves.map(() => 0) ?? [];
+	let matchLogWeights = 0;
+	let networkMatched = 0;
 	for (let start = games.length - 1; start >= 0; start--) {
-		games[start]!.forEach((r, i) => (sums[i]! += r));
-		best = Math.max(best, averageLogRatio(sums));
+		const game = games[start]!;
+		game.moves.forEach((r, i) => (sums[i]! += r));
+		matchLogWeights += game.matchLogWeight;
+		if (game.networkMatched) networkMatched++;
+		const network = networkLogRatio(networkMatched, games.length - start);
+		best = Math.max(best, averageLogRatio(sums) + matchLogWeights + network);
 	}
 	return best;
+}
+
+/**
+ * The log ratio of `matched` network-matched games among a run of `games`: the binomial odds of
+ * that density for a cheater over an honest household, floored at 0 so it never lowers a score.
+ */
+function networkLogRatio(matched: number, games: number): number {
+	const { cheater, honest } = NETWORK_MATCH_RATES;
+	const logRatio = matched * Math.log(cheater / honest) + (games - matched) * Math.log((1 - cheater) / (1 - honest)); // prettier-ignore
+	return Math.max(0, logRatio);
 }
 
 /** The natural log of the bets' average ratio, given each bet's log ratio. */
@@ -163,12 +230,15 @@ export default {
 	CASE_LOG_SCORE,
 	MAX_EVIDENCE_AGE_MS,
 	MODEL,
+	EMPTY_INTERACTION,
 	// Model
 	features,
 	logistic,
 	skillCeiling,
 	// Scoring
 	gameLogRatios,
+	gameScore,
+	matchWeight,
 	bestRunLogScore,
 	averageLogRatio,
 };

@@ -32,6 +32,7 @@ import clock from '../../../shared/chess/logic/clock.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
 import timeutil from '../../../shared/util/timeutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
+import gamerules from '../../../shared/chess/util/gamerules.js';
 import boardinit from '../../../shared/chess/logic/boardinit.js';
 import variantcache from '../../../shared/chess/variants/variantcache.js';
 import icnconverter from '../../../shared/chess/logic/icn/icnconverter.js';
@@ -120,6 +121,7 @@ function initMatch(
 			identifier,
 			disconnect: {},
 			chatHistory: [],
+			interaction: { away: [], matches: [] },
 		};
 	}
 
@@ -171,7 +173,7 @@ function initServerGame(
 			...game,
 			...common,
 			gameRules,
-			whosTurn: gameRules.turnOrder[moves.length % gameRules.turnOrder.length]!,
+			whosTurn: gamerules.getWhosTurnAtMoveIndex(gameRules, moves.length - 1),
 			moves,
 			validateMoves: false,
 		};

@@ -11,8 +11,11 @@ After every rated game, one background worker thread runs the Apeiron WASM engin
 position of the game. Each move a player made becomes a piece of **evidence**: how hard the position
 was, and whether they found a good move and the engine's own choice. Each player's evidence feeds a
 running **betting score**: how many times likelier their recent moves are if they use an engine than
-if they are an honest player as strong as their rating plausibly allows. When that score reaches
-**1,000**, a case opens. Measured on prod's honest players, about 99.95% of cases should be real.
+if they are an honest player as strong as their rating plausibly allows, multiplied by their
+**analysis matches**: the analysis page displaying their live position, tied to their login, browser
+or network. When that score reaches **1,000**, a case opens. Matches open most cases in fewer games;
+move analysis catches the cheater who leaves none, and measured on prod's honest players, about
+99.95% of its cases should be real.
 
 ## Constraints
 
@@ -24,13 +27,22 @@ The owner's standing requirements; any change must keep them.
 - **Precision:** at least 95% of cases real, 99% preferred unless it costs considerably more missed
   cheaters. Prevalence is assumed 1%; revise it from real cases.
 - **Compute:** one thread, the WASM build (a native binary measured only ~1.2× faster), within 400
-  rated games a day (real volume is dozens). Argue for more only if it would catch moderately more
-  cheaters.
+  rated games a day (real volume is dozens), at a cost per game that doesn't grow with the player's
+  game count. Argue for more only if it would catch moderately more cheaters.
+- **Interaction data only ever raises a score**, never lowers it: a cheater controls their client,
+  so normal-looking or absent data clears nobody. A method counts toward cases only once its honest
+  rate is measured, except where honest players by definition never do it (analysing their own live
+  position), and network-only matches, on a deliberately high guess; the rest is collected until the
+  refit. Interaction methods must never retune the move analysis, which is calibrated for the
+  cheater who leaves no interaction data.
 
 ## The pipeline
 
 ```
-gameLifecycle.finalize ─▶ cheatDetection.onFinalized ─▶ queue (one game at a time)
+during the game:  moveSubmission (each move's away time)  ┐
+                  analysisMatcher (analysis-page reports) ┴▶ PlayerData.interaction
+                                                             (live_player_games.interaction)
+gameLifecycle.finalize ─▶ cheatDetection.onFinalized ─▶ cheat_interactions + queue (one game at a time)
                                                           │
                      engineAnalysis.analyse ◀─────────────┘
                          │  worker thread: engineAnalysisWorker.ts
@@ -49,13 +61,18 @@ gameLifecycle.finalize ─▶ cheatDetection.onFinalized ─▶ queue (one game 
 | `engineAnalysisWorker.ts`              | The worker: loads the WASM build from `dist/`, analyses every position of a game.                                  |
 | `gameReplay.ts`                        | Builds a stored game's board at its start for board facts per position, and each position's engine ICN.            |
 | `moveEvidence.ts`                      | Positions → one piece of evidence per scored move. Pure.                                                           |
+| `analysisMatcher.ts`                   | Records each live rated game's positions; turns analysis-page reports into matches.                                |
 | `bettingScore.ts`                      | Evidence → likelihood ratios → a player's score; holds the fitted model, the case line and the evidence age. Pure. |
-| `cheatDetectionTypes.ts`               | Shared shapes: position analyses, worker messages, search settings.                                                |
+| `cheatDetectionTypes.ts`               | Shared shapes: position analyses, worker messages, search settings, interaction data.                              |
 
-Database: `cheatAssessmentsManager.ts` (`cheat_assessments`) and `cheatCasesManager.ts`
-(`cheat_cases`). `shared/chess/util/winchance.ts` holds the cp → win-probability curve shared with
-the client's eval gauge and Game Review. `shared/chess/logic/repetition.ts`'s `isRepeated` is the
-threefold-repetition walk with a limit of one.
+Database: `cheatAssessmentsManager.ts` (`cheat_assessments`), `cheatInteractionsManager.ts`
+(`cheat_interactions`) and `cheatCasesManager.ts` (`cheat_cases`). Interaction data is reported by
+the client's `views/game/awaytime.ts` (sent with each move, `serverbound.ts`) and
+`views/analysis/analysisreporter.ts` (`POST /api/analysis-report`, `api/analysisReportAPI.ts`); both
+sides key positions with `shared/chess/logic/positionkey.ts`. `shared/chess/util/winchance.ts` holds
+the cp → win-probability curve shared with the client's eval gauge and Game Review.
+`shared/chess/logic/repetition.ts`'s `isRepeated` is the threefold-repetition walk with a limit of
+one.
 
 ## How a game is analysed
 
@@ -101,6 +118,48 @@ A move is judged against the lines searched in the position **before** it:
   forced moves (one legal move), repeated positions, positions already decided (best line above 97%
   for either side), refused positions, and moves whose position-after can't be read.
 
+## Interaction evidence
+
+Collected in rated games only, the only ones judged. Every player is a signed-in member.
+
+### Analysis matches
+
+- **Reported:** the analysis page reports each **display episode**: an unbroken stretch of its
+  engine panel's lines showing for one position (freshly computed, cached, or seeded by Game
+  Review), ended by viewing another position, the lines clearing, the engine switching off, or the
+  page being hidden or going away. A position is named by its **key**: a 64-bit hash of the side to
+  move and each piece's type and square, nothing else (no special rights, move history or
+  gamerules), so an editor-built copy matches. An episode is sent as it starts, still open, and
+  again once it ends, in batches at most every 2 s, each as how long ago it began and ended (client
+  clocks are never trusted, only differences). Positions too large to be any rated game aren't
+  keyed.
+- **Matched:** every live rated game records each position's key and when it was reached. An episode
+  matches if it was on screen at any moment the game stood at that position, on either player's
+  turn, however early it began: a position set up a move ahead counts once the game gets there. One
+  over before the game arrived, or begun after it left, counts for nothing.
+- **Tied to a player** by the analysing request: their **account** (logged in), else their
+  **browser** (browser-id), else their **network**: any of their sessions' last IPs (IPv4 exact,
+  IPv6 /64). A network match is **shared** if the opponent's sessions are on that network too: then
+  it may have been them. Reports tied to neither player are ignored: both players know every
+  position, and strangers analyse popular games.
+- **Scored:** an account or browser match multiplies its game by its ply's weight, the inverse of
+  how often a player's own earlier games pass through their position at that ply (×1 at ply 0, ×40
+  at 10, ×1,130 at 19, capped at ×20,000 from 27; see Analysis-match weights). Only a game's
+  strongest counts. A late one opens a case by itself, even through a game played like a human.
+  Network-only matches count only on a position that would open a case by weight, and only by their
+  **density** across the scoring run: ×5 per matched game, ×0.56 per unmatched one, floored at ×1
+  per run. About five in a row open a case; sparse ones count nothing. Shared ones are stored, not
+  counted.
+
+### Away time
+
+Every move carries how long the game page was unfocused or hidden since the player's previous move,
+during the opponent's turn and then their own, and how long before the move they last came back
+(none if they moved while away, by premove). The tells to test: own-turn time away, an engine found
+the move; returning just before moving; opponent-turn time away, pondering the expected position.
+Stored raw by ply, and **not yet scored**: honest players look away too, especially while waiting,
+so its weight waits for the refit.
+
 ## The betting score (`bettingScore.ts`)
 
 Per scored move, the likelihood ratio of its outcome under two hypotheses:
@@ -135,6 +194,11 @@ switched), and slow evidence keeps building over long runs. A case opens when it
 (`CASE_LOG_SCORE`), unless one is already open. It has no guaranteed false-case bound; the rate is
 measured (see the case line).
 
+**Interaction terms** add to a game's log score beside its moves, outside the four bets: an account
+or browser match's log weight, and over the run, the network matches' density term. Both are at
+least 0, so interaction data never lowers a score. A game the engine couldn't analyse still counts
+its interaction data.
+
 ## Storage
 
 - **`cheat_assessments`** `(game_id, user_id)`: `outcome` (`queued`, `analysed`, `unsupported`,
@@ -143,26 +207,35 @@ measured (see the case line).
   player's window and the startup queue to range reads. Scores are never stored: they are derived
   from these rows whenever a player is reviewed, so retuning the model or the line re-scores
   everyone.
+- **`cheat_interactions`** `(game_id, user_id)`: the player's interaction data from the game, raw
+  (`Interaction`: away times by ply, every analysis match with its ply and link), written with its
+  assessment row in one transaction. Kept **permanently**: it can't be re-derived, and the refit
+  needs every season of it. At most about two-thirds the size of the game's ICN, for a player away
+  on every move.
+- **`live_player_games.interaction`**: the same while the game is live, so a restart keeps it.
 - **`cheat_cases`** `(user_id)`: one row per player with an open case, and when it opened. While it
   is open the player isn't re-scored, but their games are still analysed and stored, so the evidence
   keeps accumulating; a future review page should derive its view from those rows.
 
-Only the last 6 months of assessments ever count, but older rows are not pruned yet: the review
-page's session should decide how long a dismissed or closed case's evidence is kept.
+Only the last 6 months ever count, but nothing is pruned yet: the review page's session prunes move
+evidence past that, keeping a case's rows while it's open. The game's ICN re-derives it with the
+same engine build.
 
-Every input is server-side: the server's own record of validated moves and clocks. Nothing comes
-from the player's client, so there is no trust boundary to validate.
+Move evidence is server-side: the server's own record of validated moves and clocks. Interaction
+data crosses the trust boundary (validated in `serverbound.ts` and `analysisReportAPI.ts`) and is
+stored as reported; scoring derives everything from it.
 
 ## When a case opens
 
 Nothing notifies anyone, and no review page or dismissal exists yet: a case is its `cheat_cases`
-row. Its evidence is the player's `analysed` rows in `cheat_assessments` from the last 6 months,
+row. Its evidence is the player's assessed rows in `cheat_assessments` from the last 6 months,
 oldest first by `updated_at`. Each row's `evidence` lists their scored moves by `ply`, with the
 `outcome` and the position's `difficulty`; the tells are hard positions (one or two good moves, none
 forcing or found by a shallow search) and refutations of the opponent's blunders, answered `top` or
-`good`. The game's page is `/game/` + its id in base62 (`gameurl.ts`). Deleting the `cheat_cases`
-row does not dismiss the case: the player's next analysed game re-scores the same evidence, which
-almost surely reopens it.
+`good`. Its `cheat_interactions` rows show any analysis matches by ply: a case may stand on those
+alone, its moves looking human. The game's page is `/game/` + its id in base62 (`gameurl.ts`).
+Deleting the `cheat_cases` row does not dismiss the case: the player's next assessed game re-scores
+the same evidence, which almost surely reopens it.
 
 ## Calibration
 
@@ -409,7 +482,7 @@ Known holes). Prod's highest rating is 2406; winning every game against 2000-rat
 28 games to reach 2500 and 645 to reach 2800. Honest games between cheated ones slow a case (10
 cheated games among 20: 79%, against 100% for 10 in a row), since a run must span both. Partial
 engine use is largely invisible to move analysis alone: a 20–40% engine user looks like a stronger
-honest player. Catching them is the job of interaction data (below).
+honest player. Catching them is the job of interaction data.
 
 The site's limited bot levels (1–7; 8 is full strength) are built to play like humans of their
 level, so copying one looks the same; they aren't modelled, since their tuning changes. Level 6
@@ -417,18 +490,55 @@ plays its best move only about half the time, else one of 10 candidates at a mea
 probability (past the 2% good-move line), and favours moves a shallow search already likes
 (Apeiron's `search/skill.rs`, as tuned when measured).
 
+### Analysis-match weights
+
+A match's weight bounds how often an honest player's analysis coincides with their live position:
+reviewing an old game, or exploring, while their game passes through the same position. Replaying
+the 2026-10-20 snapshot (the 6,752 games of rated players, and all 60,895 games on the site), the
+share of rated positions already reached in the player's own earlier games:
+
+| Plies | 0–1 | 2–3 | 4–5 | 6–7 | 8–9  | 10–11 | 12–15 | 16–19 | 20+             |
+| ----- | --- | --- | --- | --- | ---- | ----- | ----- | ----- | --------------- |
+| Share | 62% | 22% | 6%  | 3%  | 1.9% | 0.7%  | 0.42% | 0.12% | none of ~59,000 |
+
+Own history dominates: players repeat their lines and review their own games, so a late position
+seen in 1–3 other games on the site is usually theirs. The weight is the inverse of e^(−0.37·ply), a
+line over these bins from 100% at the start position, where the analysis page opens, so a match
+there proves nothing; capped at the most the sample backs (3 in ~59,000, the rule of three). It
+assumes the honest player is always reviewing an old game at that moment, so it's pessimistic. 71%
+of rated games are still live past ply 19, 64% past 27. The 64-bit key collided nowhere in 2.53
+million positions of every site game; its 32-bit half collided at a random hash's rate.
+
+The network rates (a cheater's games 50%, an honest household's 10%) are guesses, the honest one
+deliberately high: too rare an event at our traffic to measure soon.
+
 ### Rejected or deferred
 
 - **Lichess's rule-based flags:** its accuracy flag (ACPL under 15–25) fires on 11.5% of honest
   games here (decided positions make every move look accurate); "no fast moves" holds for 94%. Not
   used.
-- **Think times:** honest games trip Lichess's flat-time flag ~1% of the time, never twice for one
-  player; but under an assumed cheater timing only steady full-engine users trip it (78–100% at a
-  spread of ≤ 0.25, under 7% for partial users), and their moves already catch them fastest. Revisit
-  with real cases. A fast move is no proof of honesty: a cheater can play the engine's predicted
-  reply instantly. As an honest-model input, think time slows catches.
+- **Think times (deferred):** honest games trip Lichess's flat-time flag ~1% of the time, never
+  twice for one player. Its cheater side is unmeasured, so whether it adds catches waits for
+  confirmed cheaters: a refit step. Nothing new to collect: clocks are stored. A fast move is no
+  proof of honesty: a cheater can play the engine's predicted reply instantly. As an honest-model
+  input, think time slows catches.
 - **Time control:** adds nothing measurable to the honest model, but three-fifths of rated games are
   10+6, so this is untested for very fast or slow games.
+- **Other interaction signals:** whether anyone else on the network watched the game (anyone in the
+  house can see the screen; density already judges a household); matches in engine games (a live
+  player can't start a second game as themselves); near-copies of a position (exact keys can't beat
+  a deliberate dodge; move analysis covers it); hold time (a bot tell); mouse movement (can't tell
+  thinking from looking at another device); disabling the engine during games, or delaying the
+  spectator feed (client-side or bypassable).
+
+## Compared with Lichess
+
+Lichess runs server-side Stockfish move analysis (accuracy flags, plus its Irwin and Kaladin
+models), one blur bit per move, move-time flags, and a same-browser check: the game tab reports an
+analysis tab showing its live position after ply 14 (`cevalSub.ts`). Ours replaces the flags and
+models with one betting score, matches analysis server-side across browsers and devices by login or
+network, weighted by ply, and records how long the page was away and when the player came back, not
+one bit.
 
 ## Known holes and assumptions
 
@@ -449,44 +559,47 @@ probability (past the 2% good-move line), and favours moves a shallow search alr
 - **Engine upgrades:** the engine model describes how this engine's picks look to this engine's
   analysis. Re-run the passes and refit after a meaningful strength change; any change to `SEARCH`
   invalidates the whole calibration. It ran on a local build of upstream `b928c46`.
-- **Client-side data** (future interaction signals) may only ever raise suspicion: a cheater
-  controls their client, so normal-looking or absent data never clears anyone.
+- **What interaction data can't see:** an engine on another device off the player's network, an
+  external engine, a modified client, or an analysis-page copy with an irrelevant change. Move
+  analysis alone catches those.
+- **Late reports:** a report arriving after the game left memory (both players left) is lost, and
+  one after it finalized is kept only in memory, so a position set up a move ahead and left on
+  screen, untouched, until then is missed. A restart forgets the positions before it, so analysis
+  shown while the server was down matches nothing.
 
 ## Future work
 
-- **Interaction data,** to catch partial cheaters and strengthen cases. Collection ships with the
-  redesign update, unscored; a few weeks later each signal enters the same score as extra likelihood
-  ratios. Their honest side must be measured from that data, never guessed (too low a guess flags
-  honest players); their cheater side may be an educated guess, which only sets catch speed.
-  Cheaters among the measured games only make it more cautious. Lichess never flags on accuracy
-  alone: its rule-based assessment always needs blurs or flat times too.
-    - The page hidden or blurred during the player's turn (Lichess flags games where over 90% of
-      moves, or 11 of any 12, were blurred), and how well they play on those moves against the rest.
-    - The analysis page's live-position matches (below).
-    - Submitted data that looks tampered.
-    - Hold time (piece held before moving) was rejected: a bot tell, not an engine-assistance one.
-- **Live-position matches:** the player's live position (side to move and pieces, translated so a
-  shifted copy still matches) analysed elsewhere: on the analysis page (client-reported, so it waits
-  with the interaction data) or in an engine game (server-side, ready with the redesign update). A
-  match adds no suspicion by itself: it makes the player's next move count as engine-consulted, so a
-  miss after it lowers their score. How innocent a match is depends on:
-    - **Ply:** the chance one unrelated analysis session coincides is about the share of games
-      passing through the position. For rated positions on the most common line, that is 9.6% at ply
-      2, 1.5% at 4, 0.1% at 6, 0.03% at 8, and under 0.002% from 12 (692 rated games against the
-      42,046 games of their variants), times the few sessions open at once: coincidence is
-      negligible from about ply 6.
-    - **Who:** the same login, else the same IP (households and schools share one), else nobody
-      related. An unrelated match is capped low, so one honest spectator never opens a case; several
-      across a run still add up.
-    - **Spectators:** with none subscribed, only the two players know the position.
-    - **Whose turn:** a match during the opponent's turn also counts toward the player's next move,
-      with less weight (pondering: the engine shows their best reply in advance), most when the
-      opponent played the move the engine expected.
-- **A case review page:** derive the evidence live from `cheat_assessments` (the run of games, the
-  most telling moves, the score at opening beside the score now, think times from the stored clock
-  stamps), with close and dismiss actions. Dismissing should stop that evidence counting toward
-  future cases.
+- **A case review page:** derive the evidence live from `cheat_assessments` and `cheat_interactions`
+  (the run of games, the most telling moves and matches, the score at opening beside the score now,
+  think times from the stored clock stamps), with close and dismiss actions. Dismissing should stop
+  that evidence counting toward future cases.
 - **Measure real precision** from your verdicts and retune the case line from them.
+
+## Refitting the interaction weights
+
+Collection ships with the redesign update. Once a few months of it are in, refit everything
+collected, in this order. Interaction data is permanent, so nothing forces the date, but move
+evidence is pruned past 6 months once the case-review page lands: replaying older games then needs
+theirs re-derived by the research passes.
+
+1. **Measure each method's honest side from the data, never guess it:** away time (how often honest
+   players are away, for how long, and how fast they move after returning, plus Lichess's test: how
+   well each player plays on away moves against their own focused ones, which needs no rating), the
+   network-match rate (replacing `NETWORK_MATCH_RATES.honest`), the match curve's repeat rates with
+   more games (its cap rises with the sample), and think times against confirmed cheaters. A cheater
+   side may be an educated guess: it only sets how fast cases open.
+2. **No weight stronger than the honest sample backs:** a rare behaviour needs many games before
+   honest players can be said to almost never do it (zero in N bounds the rate at about 3/N).
+3. **One-sided terms only:** every interaction term ≥ ×1, so clean or absent data never lowers a
+   score. Leave the move analysis's constants alone.
+4. **Refit in rounds, never assuming everyone without a case is honest:** cheaters hiding in the
+   honest sample make the most damning methods look honest. Fit, then re-score everyone by replaying
+   each player's history from the start of collection game by game, as production would have, which
+   opens the cases it would have opened. The owner judges them; confirmed cheaters leave the honest
+   sample; refit. Repeat until a round confirms none.
+5. **Keep false cases under 1% of cases,** measured as the Calibration section does.
+
+There may be no confirmed cheaters by then; the honest side alone keeps honest players safe.
 
 ## Reproducing and retuning
 
@@ -517,4 +630,5 @@ must print `identical` before offline-pass values are trusted. Every pass resume
 output. Experiments vary `--ceiling=base,perRating,margin`, `--fractions=…`, `--top-margin=…`,
 `--case-line=…` and `--multipv=…` (fresh detector and offline passes, in their own `--data`) without
 editing code. After changing any constant in `bettingScore.ts`, run `bettingScore.unit.test.ts`: it
-fails if any move could be expected to raise an honest player's score.
+fails if any move could be expected to raise an honest player's score, or interaction data could
+lower one.

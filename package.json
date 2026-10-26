@@ -26,6 +26,7 @@
     "express-rate-limit": "^8.5.2",
     "gl-matrix": "^3.4.4",
     "helmet": "^8.1.0",
+    "ipaddr.js": "^2.5.0",
     "jsonwebtoken": "^9.0.3",
     "marked": "^14.1.2",
     "node-email-verifier": "^2.0.0",

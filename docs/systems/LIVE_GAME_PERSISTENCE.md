@@ -95,6 +95,7 @@ One row per human player per live game.
 | `disconnect_cushion_end_time` | INTEGER          | Epoch ms when the 5-second reconnection cushion expires. NULL if no cushion is active.                                                      |
 | `disconnect_claim_time`       | INTEGER          | Epoch ms from which the opponent may claim victory/a draw against this player. NULL if no claim window is set.                              |
 | `disconnect_voluntary`        | BOOLEAN          | 1 = intentional disconnect (10s timer), 0 = network drop (60s timer). NULL if player was connected. CHECK (disconnect_voluntary IN (0, 1)). |
+| `interaction`                 | TEXT NOT NULL    | JSON interaction data so far, for engine-assistance detection: away times and analysis matches. Collected only in rated games.              |
 
 **Three-case disconnect restoration:**
 
@@ -132,7 +133,8 @@ are stored separately from human players.
 | Event                                                                            | `live_games` Columns Updated                                                     | Participant Tables Columns Updated                                                                  |
 | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **Game created**                                                                 | INSERT full row (all Group 1 columns, defaults for the rest)                     | INSERT human rows into `live_player_games` and any engine row into `live_engine_games`              |
-| **Move submitted**                                                               | `moves`, `color_ticking`, `clock_snapshot_time`                                  | `time_remaining_ms` for every participant                                                           |
+| **Move submitted**                                                               | `moves`, `color_ticking`, `clock_snapshot_time`                                  | `time_remaining_ms` for every participant; the mover's `interaction` (rated games)                  |
+| **Analysis match recorded**                                                      | —                                                                                | `interaction` (the matched player)                                                                  |
 | **Engine turn paused/resumed**                                                   | `color_ticking`, `clock_snapshot_time`                                           | — (pausing rewinds the engine's turn instead of charging it, so no time changes)                    |
 | **Draw offer extended**                                                          | `draw_offer_state`                                                               | `last_draw_offer_ply` (offering player)                                                             |
 | **Draw offer declined**                                                          | `draw_offer_state` → NULL                                                        | —                                                                                                   |

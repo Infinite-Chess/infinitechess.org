@@ -2,7 +2,8 @@
 
 /**
  * This script handles queries to the cheat_assessments table: the games engine-assistance
- * detection queued, and each player's move evidence from those it assessed.
+ * detection queued, and each player's move evidence from those it assessed, read back beside
+ * their cheat_interactions data.
  */
 
 import db from './database.js';
@@ -21,10 +22,13 @@ export type CheatAssessmentsRecord = {
 	updated_at: number;
 } & AssessmentOutcome;
 
-/** A player's evidence from one game, with the rating they held going into it. */
+/** A player's evidence from one assessed game, with the rating they held going into it. */
 interface RecentEvidence {
 	game_id: number;
-	evidence: string;
+	/** JSON MoveEvidence[], or null when the engine couldn't analyse the game. */
+	evidence: string | null;
+	/** JSON Interaction. */
+	interaction: string;
 	elo_at_game: number;
 	rating_deviation_at_game: number;
 }
@@ -93,10 +97,11 @@ function getRecentEvidence(user_id: number, since: number): RecentEvidence[] {
 	return db.call(
 		() =>
 			db.all<RecentEvidence>(
-				`SELECT a.game_id, a.evidence, p.elo_at_game, p.rating_deviation_at_game
+				`SELECT a.game_id, a.evidence, i.interaction, p.elo_at_game, p.rating_deviation_at_game
 				FROM cheat_assessments a
+				JOIN cheat_interactions i ON i.game_id = a.game_id AND i.user_id = a.user_id
 				JOIN player_games p ON p.game_id = a.game_id AND p.user_id = a.user_id
-				WHERE a.user_id = ? AND a.updated_at >= ? AND a.outcome = 'analysed'
+				WHERE a.user_id = ? AND a.updated_at >= ? AND a.outcome != 'queued'
 				ORDER BY a.updated_at`,
 				[user_id, since],
 			),

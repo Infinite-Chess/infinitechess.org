@@ -37,6 +37,7 @@ import gameUtility from './gameUtility.js';
 import featuredGames from '../featured/featuredGames.js';
 import gameLifecycle from './gameLifecycle.js';
 import liveGameValues from './liveGameValues.js';
+import analysisMatcher from '../cheatdetection/analysisMatcher.js';
 import gameStateBuilder from './gameStateBuilder.js';
 
 // Constants -------------------------------------------------------------------
@@ -123,10 +124,15 @@ function submitMove(
 	if (moveRecord === undefined) return; // The move was illegal, or the conclusion was invalid, and we've already sent the appropriate error message to the client, so just exit.
 	servergame.match.timeLastMove = Date.now();
 
+	// Kept raw, as reported: only ever evidence against the player, never for them.
+	if (servergame.match.rated && messageContents.away !== null) {
+		servergame.match.playerData[role]!.interaction.away.push([servergame.moves.length - 1, ...messageContents.away]); // prettier-ignore
+	}
+
 	onOfferDraw.decline(servergame, role); // Auto-decline any open draw offer on move submissions
 
 	// Persist the move and updated game state to the database.
-	liveGameValues.onMoveSubmitted(servergame);
+	liveGameValues.onMoveSubmitted(servergame, role);
 
 	broadcastMove(servergame, moveRecord, ws, role);
 }
@@ -191,6 +197,7 @@ function applyServerValidatedMove(
 
 	// Generate and make the move. makeMove pushes the resulting MoveFull onto servergame.moves.
 	const moveRecord = movepiece.generateAndMakeMove(servergame, validationResult.tagged);
+	analysisMatcher.onMove(servergame);
 
 	// Push the clock after the move has been added to servergame.moves.
 	const clockStamp = gameManager.pushClock(servergame);

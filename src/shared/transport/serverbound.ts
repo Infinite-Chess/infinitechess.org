@@ -117,6 +117,13 @@ const SubmitMoveMessageSchema = z.strictObject({
 	move: z.string(),
 	moveNumber: z.int(),
 	gameConclusion: typeschemas.GameConclusionSchema.optional(),
+	/**
+	 * How the page lost the mover since their previous move: ms it was unfocused or hidden during
+	 * the opponent's turn, then during their own, and ms before the move they last returned (null
+	 * if they moved while away, by premove). Null if the page never lost them, or the move isn't
+	 * theirs (an engine's).
+	 */
+	away: z.tuple([z.int().min(0), z.int().min(0), z.int().min(0).nullable()]).nullable(),
 });
 
 /** Every message the client may send on the 'game' route. */

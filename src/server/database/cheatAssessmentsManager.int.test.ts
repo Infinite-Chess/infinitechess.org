@@ -3,8 +3,11 @@
 /**
  * Pins cheatAssessmentsManager's queries in the in-memory database: queued games read back in the
  * order they were queued whatever their random ids, assessed games leave the queue, and a player's
- * evidence reads back within its window, oldest first.
+ * evidence reads back with their interaction data within its window, oldest first, unanalysed
+ * games included.
  */
+
+import type { CheatAssessmentsRecord } from './cheatAssessmentsManager.js';
 
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 
@@ -12,9 +15,12 @@ import db from './database.js';
 import databaseInit from './databaseInit.js';
 import databaseTables from './databaseTables.js';
 import cheatAssessmentsManager from './cheatAssessmentsManager.js';
+import cheatInteractionsManager from './cheatInteractionsManager.js';
 
 /** The user ids of every game's two players, white first. */
 const USER_IDS = [1, 2];
+/** Every player's interaction data: any JSON, as the table stores it as given. */
+const INTERACTION = '{"stored":"as given"}';
 
 /** Logs a rated game between the two players, as the games and player_games tables hold it. */
 function addGame(game_id: number): void {
@@ -24,7 +30,8 @@ function addGame(game_id: number): void {
 
 /** Records a game as analysed for both players at `updated_at`. */
 function recordAnalysed(game_id: number, updated_at: number): void {
-	cheatAssessmentsManager.recordGame(USER_IDS.map((user_id) => ({ game_id, user_id, updated_at, outcome: 'analysed', evidence: '[]' }))); // prettier-ignore
+	const records: CheatAssessmentsRecord[] = USER_IDS.map((user_id) => ({ game_id, user_id, updated_at, outcome: 'analysed', evidence: '[]' })); // prettier-ignore
+	cheatAssessmentsManager.recordGame(records);
 }
 
 describe('cheatAssessmentsManager', () => {
@@ -42,6 +49,8 @@ describe('cheatAssessmentsManager', () => {
 		] as const) {
 			addGame(game_id);
 			cheatAssessmentsManager.queueGame(game_id, USER_IDS, queued_at);
+			const interactions = USER_IDS.map((user_id) => ({ game_id, user_id, interaction: INTERACTION })); // prettier-ignore
+			cheatInteractionsManager.recordGame(interactions);
 		}
 	});
 
@@ -61,7 +70,13 @@ describe('cheatAssessmentsManager', () => {
 		expect(cheatAssessmentsManager.getRecentEvidence(1, 0).map((row) => row.game_id)).toEqual([9000]); // prettier-ignore
 	});
 
-	it("reads a player's analysed games within the window, oldest first", () => {
+	it('reads a failed game back with its interaction data, but no evidence', () => {
+		cheatAssessmentsManager.markFailed(42, 5000);
+		const [row] = cheatAssessmentsManager.getRecentEvidence(1, 0);
+		expect(row).toMatchObject({ game_id: 42, evidence: null, interaction: INTERACTION }); // prettier-ignore
+	});
+
+	it("reads a player's assessed games within the window, oldest first", () => {
 		recordAnalysed(500, 4000);
 		recordAnalysed(9000, 6000);
 		const gameIds = (since: number): number[] => cheatAssessmentsManager.getRecentEvidence(1, since).map((row) => row.game_id); // prettier-ignore

@@ -23,6 +23,8 @@ interface LivePlayerData extends LivePlayerDisconnectData {
 	browser_id: string;
 	last_draw_offer_ply: number | null;
 	time_remaining_ms: number | null;
+	/** JSON Interaction: the player's interaction data so far. Collected only in rated games. */
+	interaction: string;
 }
 
 /** Disconnect-state columns shared by live_player_games rows. */
@@ -46,8 +48,8 @@ function insert(record: LivePlayerGamesRecord): void {
 		INSERT INTO live_player_games (
 			game_id, player_number, user_id, browser_id,
 			last_draw_offer_ply, time_remaining_ms,
-			disconnect_cushion_end_time, disconnect_claim_time, disconnect_voluntary
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			disconnect_cushion_end_time, disconnect_claim_time, disconnect_voluntary, interaction
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 	db.call(
 		() =>
@@ -61,6 +63,7 @@ function insert(record: LivePlayerGamesRecord): void {
 				record.disconnect_cushion_end_time,
 				record.disconnect_claim_time,
 				record.disconnect_voluntary,
+				record.interaction,
 			]),
 		`Error inserting live player game (game_id=${record.game_id}, player=${record.player_number})`,
 	);

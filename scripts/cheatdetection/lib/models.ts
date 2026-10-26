@@ -182,11 +182,9 @@ function peakScore(
 	const ratios = history.map(({ pg, evidence }) => {
 		const model = modelFor(pg);
 		const player = pg.game.players.find((p) => p.userId === pg.userId)!;
-		return bettingScore.gameLogRatios(
-			evidence,
-			model,
-			bettingScore.skillCeiling(model, player.elo, player.rd),
-		);
+		const ceiling = bettingScore.skillCeiling(model, player.elo, player.rd);
+		const moves = bettingScore.gameLogRatios(evidence, model, ceiling);
+		return bettingScore.gameScore(moves, bettingScore.EMPTY_INTERACTION);
 	});
 	let best = -Infinity;
 	for (let end = Math.max(1, from + 1); end <= history.length; end++) {

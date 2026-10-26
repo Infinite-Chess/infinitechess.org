@@ -14,9 +14,9 @@
  * Usage: npx tsx scripts/cheatdetection/false-case-rate.ts [--ceiling=…] [--fractions=…] [--above=…]
  */
 
-import type { BetModel } from '../../src/server/game/cheatdetection/bettingScore.js';
 import type { PlayerGame } from './lib/models.js';
 import type { MoveEvidence } from '../../src/server/game/cheatdetection/moveEvidence.js';
+import type { BetModel, GameScore } from '../../src/server/game/cheatdetection/bettingScore.js';
 
 import bettingScore from '../../src/server/game/cheatdetection/bettingScore.js';
 import ratingCalculation from '../../src/server/utility/ratingCalculation.js';
@@ -85,13 +85,14 @@ function worstCaseRates(playerGames: PlayerGame[], model: BetModel): number[] {
 	const random = simulate.rng(3);
 	const hits = WORST_CASE_GAMES.map(() => 0);
 	for (let player = 0; player < WORST_CASE_PLAYERS; player++) {
-		const history: number[][] = [];
+		const history: GameScore[] = [];
 		let peak = -Infinity;
 		for (let game = 1; game <= WORST_CASE_GAMES.at(-1)!; game++) {
 			const positions = playerGames[Math.floor(random() * playerGames.length)]!.evidence;
 			const played = ceilingPlay(positions, model, ceiling + ABOVE_CEILING, random);
 			const ratios = bettingScore.gameLogRatios(played, model, ceiling);
-			history.push(ratios);
+			const gameScore = bettingScore.gameScore(ratios, bettingScore.EMPTY_INTERACTION);
+			history.push(gameScore);
 			const score = bettingScore.bestRunLogScore(history);
 			peak = Math.max(peak, score);
 			const mark = WORST_CASE_GAMES.indexOf(game);

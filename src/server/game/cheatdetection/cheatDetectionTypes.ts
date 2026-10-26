@@ -2,7 +2,8 @@
 
 /**
  * The shapes engine-assistance detection works in: what the engine worker reports per
- * position, and the messages between it and its host.
+ * position and the messages between it and its host, and the interaction data a rated game
+ * collects from its players.
  *
  * Pure vocabulary — no logic, no dependencies on sibling modules.
  */
@@ -82,3 +83,36 @@ export type EngineAnalysisReply = { gameId: number } & (
 	| { outcome: 'unsupported' }
 	| { outcome: 'failed'; reason: string }
 );
+
+// Interaction -----------------------------------------------------------------
+
+/** One move's `SubmitMoveMessage['away']` (`serverbound.ts`), raw as reported, after its ply. */
+type AwayRecord = [ply: number, opponentTurnMs: number, ownTurnMs: number, returnedMsBefore: number | null]; // prettier-ignore
+
+/**
+ * A position of the game the analysis page's engine displayed while the game stood at it, and how
+ * the analysing device was tied to the player: their login, their browser, or only their network.
+ * `sharedWithOpponent`: the opponent's sessions are on that network too, so it may have been them.
+ */
+export type AnalysisMatch = { ply: number } & (
+	| { link: 'account' | 'browser' }
+	| { link: 'network'; sharedWithOpponent: boolean }
+);
+
+/**
+ * A player's interaction data from one rated game. Stored as JSON in cheat_interactions and
+ * live_player_games: changes to it or the types inside it must keep old rows readable.
+ */
+export interface Interaction {
+	away: AwayRecord[];
+	matches: AnalysisMatch[];
+}
+
+/** A position a live rated game stood at, from when it was reached until the next one was. */
+export interface WatchedPosition {
+	ply: number;
+	/** Its `positionkey.ts` key. */
+	key: string;
+	/** When the game reached it, epoch ms. */
+	reachedAt: number;
+}

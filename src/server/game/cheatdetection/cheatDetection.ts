@@ -1,20 +1,23 @@
 // src/server/game/cheatdetection/cheatDetection.ts
 
 /**
- * Engine-assistance detection: assesses every finished rated game on the engine worker, one at
- * a time, then re-scores both players over their latest games, opening a case on any whose
- * score crosses the case line.
+ * Engine-assistance detection: stores every finished rated game's interaction data, assesses
+ * its moves on the engine worker, one game at a time, then re-scores both players over their
+ * latest games, opening a case on any whose score crosses the case line.
  *
- * The entry point and the queue. `moveEvidence.ts` judges each move, and `bettingScore.ts`
- * scores a player's moves.
+ * The entry point and the queue. `moveEvidence.ts` judges each move, `analysisMatcher.ts`
+ * collects analysis matches during the game, and `bettingScore.ts` scores a player's games.
  */
 
+import type { Player } from '../../../shared/chess/util/typeutil.js';
 import type { ServerGame } from '../gamemanager/serverGameTypes.js';
+import type { Interaction } from './cheatDetectionTypes.js';
 import type { MoveEvidence } from './moveEvidence.js';
 import type { CheatAssessmentsRecord } from '../../database/cheatAssessmentsManager.js';
 
 import jsutil from '../../../shared/util/jsutil.js';
 
+import db from '../../database/database.js';
 import logEvents from '../../utility/logEvents.js';
 import gameReplay from './gameReplay.js';
 import moveEvidence from './moveEvidence.js';
@@ -24,6 +27,7 @@ import engineAnalysis from './engineAnalysis.js';
 import cheatCasesManager from '../../database/cheatCasesManager.js';
 import playerGamesManager from '../../database/playerGamesManager.js';
 import cheatAssessmentsManager from '../../database/cheatAssessmentsManager.js';
+import cheatInteractionsManager from '../../database/cheatInteractionsManager.js';
 
 // State -----------------------------------------------------------------------
 
@@ -44,14 +48,26 @@ function start(): void {
 	void drain();
 }
 
-/** Queues a finalized game for assessment, if it's one detection judges: rated, played out and logged. */
+/**
+ * Stores a finalized game's interaction data and queues it for assessment, if it's one detection
+ * judges: rated, played out and logged.
+ */
 function onFinalized(servergame: ServerGame): void {
 	if (!servergame.match.rated || servergame.gameConclusion!.victor === undefined) return;
 	const game_id = servergame.match.id;
 	try {
 		if (!gamesManager.isLogged(game_id)) return; // Its logging failed, which the logger already reported.
-		const user_ids = playerGamesManager.getOfGame(game_id, ['user_id']).map((p) => p.user_id);
-		cheatAssessmentsManager.queueGame(game_id, user_ids, Date.now());
+		const players = playerGamesManager.getOfGame(game_id, ['user_id', 'player_number']);
+		const user_ids = players.map((p) => p.user_id);
+		const interactions = players.map(({ user_id, player_number }) => {
+			const interaction = JSON.stringify(servergame.match.playerData[player_number as Player]!.interaction); // prettier-ignore
+			return { game_id, user_id, interaction };
+		});
+		// Together, so every assessment has its interaction row to be read back with.
+		db.transaction(() => {
+			cheatAssessmentsManager.queueGame(game_id, user_ids, Date.now());
+			cheatInteractionsManager.recordGame(interactions);
+		})();
 	} catch {
 		return; // Already logged.
 	}
@@ -92,7 +108,8 @@ async function drain(): Promise<void> {
 // Assessment ------------------------------------------------------------------
 
 /**
- * Analyses a game, records each player's evidence from it, then re-scores both.
+ * Analyses a game, records each player's evidence from it, then re-scores both, even if the
+ * engine couldn't analyse it: its interaction data still counts.
  * @throws If a database error occurs, the engine worker can't load, dies or wedges,
  * or a score isn't a finite number.
  */
@@ -118,7 +135,7 @@ async function assessGame(game_id: number): Promise<void> {
 	if (reply.outcome === 'failed') void logEvents.addAndPrint(`Engine could not analyse game ${game_id}: ${reply.reason}`, 'errLog'); // prettier-ignore
 	cheatAssessmentsManager.recordGame(records);
 
-	if (reply.outcome === 'analysed') for (const { user_id } of players) reviewPlayer(user_id);
+	for (const { user_id } of players) reviewPlayer(user_id);
 }
 
 /**
@@ -129,10 +146,12 @@ function reviewPlayer(user_id: number): void {
 	if (cheatCasesManager.isOpen(user_id)) return;
 	const since = Date.now() - bettingScore.MAX_EVIDENCE_AGE_MS;
 	const games = cheatAssessmentsManager.getRecentEvidence(user_id, since).map((row) => {
-		const evidence: MoveEvidence[] = JSON.parse(row.evidence);
+		const evidence: MoveEvidence[] = row.evidence === null ? [] : JSON.parse(row.evidence);
+		const interaction: Interaction = JSON.parse(row.interaction);
 		// Each game is judged against the rating the player held going into it.
 		const ceiling = bettingScore.skillCeiling(bettingScore.MODEL, row.elo_at_game, row.rating_deviation_at_game); // prettier-ignore
-		return bettingScore.gameLogRatios(evidence, bettingScore.MODEL, ceiling);
+		const moves = bettingScore.gameLogRatios(evidence, bettingScore.MODEL, ceiling);
+		return bettingScore.gameScore(moves, interaction);
 	});
 	const logScore = bettingScore.bestRunLogScore(games);
 	// Load-bearing: a NaN score compares false against the line, so the player could never be flagged.

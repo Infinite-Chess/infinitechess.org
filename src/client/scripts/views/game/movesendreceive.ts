@@ -21,6 +21,7 @@ import servervalidation from '../../../../shared/chess/variants/servervalidation
 import gameslot from '../../game/chess/gameslot.js';
 import guiclock from '../../game/gui/guiclock.js';
 import premoves from '../../game/chess/premoves.js';
+import awaytime from './awaytime.js';
 import selection from '../../game/chess/selection.js';
 import onlinegame from './onlinegame.js';
 import socketsend from '../../socket/socketsend.js';
@@ -30,7 +31,10 @@ import movesequence from '../../game/chess/movesequence.js';
 
 // Events ----------------------------------------------------------------------
 
-GameBus.addEventListener('user-move-played', () => sendMove());
+GameBus.addEventListener('user-move-played', () => {
+	awaytime.recordMove(gameslot.getGamefile()!.moves.length - 1);
+	sendMove();
+});
 GameBus.addEventListener('engine-move-played', () => sendMove());
 
 // Functions -------------------------------------------------------------------
@@ -52,6 +56,7 @@ function submitMove(gamefile: GameFile, moveIndex: number): void {
 		moveNumber: moveIndex + 1,
 		// Only our latest move can have triggered the conclusion we detected locally.
 		gameConclusion: isLastMove ? gamefile.gameConclusion : undefined,
+		away: awaytime.getMove(moveIndex),
 	};
 
 	void socketsend.send('game', 'submitmove', data);

@@ -269,6 +269,16 @@ function generate(): void {
 	// The games waiting for assessment, in the order they finished, re-queued at startup
 	db.run(`CREATE INDEX IF NOT EXISTS idx_cheat_assessments_queued ON cheat_assessments (updated_at, game_id) WHERE outcome = 'queued';`); // prettier-ignore
 
+	// Cheat Interactions table — what each player of a rated game did beyond their moves, kept permanently
+	db.run(`
+		CREATE TABLE IF NOT EXISTS cheat_interactions (
+			game_id     INTEGER NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
+			user_id     INTEGER NOT NULL,
+			interaction TEXT NOT NULL, -- JSON Interaction: away times and analysis matches
+			PRIMARY KEY (game_id, user_id)
+		);
+	`);
+
 	// --- Live Games ---
 
 	// The live-game tables below are documented in docs/systems/LIVE_GAME_PERSISTENCE.md.
@@ -306,6 +316,7 @@ function generate(): void {
 			disconnect_cushion_end_time INTEGER,
 			disconnect_claim_time       INTEGER, -- Epoch ms from which the opponent may claim victory/draw. NULL if no claim window.
 			disconnect_voluntary        INTEGER CHECK (disconnect_voluntary IN (0, 1)),
+			interaction                 TEXT NOT NULL DEFAULT '{"away":[],"matches":[]}', -- JSON Interaction so far; collected only in rated games
 			PRIMARY KEY (game_id, player_number)
 		);
 	`);

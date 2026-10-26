@@ -35,6 +35,7 @@ import logEvents from '../../utility/logEvents.js';
 import gameUtility from './gameUtility.js';
 import memberManager from '../../database/memberManager.js';
 import modifierColumns from './modifierColumns.js';
+import analysisMatcher from '../cheatdetection/analysisMatcher.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
 import chatEntriesManager from '../../database/chatEntriesManager.js';
 import livePlayerGamesManager from '../../database/livePlayerGamesManager.js';
@@ -192,6 +193,7 @@ function restoreSingleGame(
 	const moves: MoveRecord[] = parseMoves(gameRow.moves);
 
 	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match, moves);
+	analysisMatcher.watch(servergame);
 
 	// 6. Compute pending timers
 	const pendingTimers = computePendingTimers(playerRows, servergame);
@@ -310,6 +312,7 @@ function reconstructMatchInfo(
 			// from `pendingTimers`, which carries the persisted deadlines.
 			disconnect: {},
 			chatHistory: [], // The chat limits deliberately reset on a restart.
+			interaction: JSON.parse(row.interaction),
 		};
 	}
 

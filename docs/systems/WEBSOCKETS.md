@@ -98,7 +98,7 @@ compile error rather than a silent no-op.
 | `lobby`     | `createenginegame`                         | variant, time, color, strengthLevel                                        |
 | `game`      | `subscribe`                                | game id — attach + get full state                                          |
 | `game`      | `subscriberematch`                         | game id — attach + get the lean state                                      |
-| `game`      | `submitmove`                               | `{ move, moveNumber, gameConclusion? }`                                    |
+| `game`      | `submitmove`                               | `{ move, moveNumber, gameConclusion?, away }`                              |
 | `game`      | `abort` / `resign` / `engineresign`        | —                                                                          |
 | `game`      | `claimvictory` / `claimdraw`               | —                                                                          |
 | `game`      | `offerdraw` / `acceptdraw` / `declinedraw` | —                                                                          |

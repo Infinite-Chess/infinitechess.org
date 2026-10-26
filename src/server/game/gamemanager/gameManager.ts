@@ -20,6 +20,7 @@ import jsutil from '../../../shared/util/jsutil.js';
 import moveutil from '../../../shared/chess/logic/moveutil.js';
 import typeutil from '../../../shared/chess/util/typeutil.js';
 import gamefile from '../../../shared/chess/logic/gamefile.js';
+import gamerules from '../../../shared/chess/util/gamerules.js';
 import gamefileutility from '../../../shared/chess/logic/gamefileutility.js';
 
 import chat from './chat.js';
@@ -38,6 +39,7 @@ import deadGameState from './deadGameState.js';
 import featuredGames from '../featured/featuredGames.js';
 import liveGameValues from './liveGameValues.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
+import analysisMatcher from '../cheatdetection/analysisMatcher.js';
 import lobbySubscribers from '../seeksmanager/lobbySubscribers.js';
 import gameStateBuilder from './gameStateBuilder.js';
 
@@ -87,6 +89,7 @@ function createGame(
 	const game = gamefile.initGame(setup.time, dateTimestamp, construction.gameRules);
 	const match = gameUtility.initMatch(setup, gameID, assignments);
 	const servergame: ServerGame = gameUtility.initServerGame(game, construction, match);
+	analysisMatcher.watch(servergame);
 
 	// Clear seeks here because every game creation path passes through here.
 	// After construction succeeds & before in-game notifs.
@@ -341,10 +344,8 @@ function unsubscribeSpectator(ws: CustomWebSocket): void {
  * @returns The new time (in ms) of the player that just moved after increment is added.
  */
 function pushClock(servergame: ServerGame): number | undefined {
-	servergame.whosTurn =
-		servergame.gameRules.turnOrder[
-			servergame.moves.length % servergame.gameRules.turnOrder.length
-		]!;
+	const lastMoveIndex = servergame.moves.length - 1;
+	servergame.whosTurn = gamerules.getWhosTurnAtMoveIndex(servergame.gameRules, lastMoveIndex);
 
 	if (servergame.untimed) return; // Don't adjust the times if the game isn't timed.
 

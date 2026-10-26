@@ -15,6 +15,7 @@ import authRouter from './auth.js';
 import gameRouter from './game.js';
 import newsRouter from './news.js';
 import adminRouter from './admin.js';
+import resolveAuth from '../middleware/resolveAuth.js';
 import contributors from '../api/contributors.js';
 import rateLimiters from '../middleware/rateLimiters.js';
 import membersRouter from './members.js';
@@ -22,6 +23,7 @@ import registerRouter from './register.js';
 import passwordRouter from './password.js';
 import seekPreviewAPI from '../api/seekPreviewAPI.js';
 import deployController from '../controllers/deployController.js';
+import analysisReportAPI from '../api/analysisReportAPI.js';
 import editorSavesRouter from './editorSaves.js';
 import preferencesRouter from './preferences.js';
 import leaderboardsRouter from './leaderboards.js';
@@ -47,6 +49,8 @@ router.get('/contributors', (_req: Request, res: Response) => {
 });
 
 router.get('/seek-preview/:id', rateLimiters.seekPreview, seekPreviewAPI.get);
+
+router.post('/analysis-report', resolveAuth.resolve, analysisReportAPI.post);
 
 // Endpoint called by the GitHub Actions deploy workflow before pm2 reload
 router.post('/prepare-restart', deployController.handlePrepareRestart);

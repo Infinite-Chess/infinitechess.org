@@ -15,6 +15,7 @@ import type { LegalMoves } from '../../../../shared/chess/logic/legalmoves.js';
 import type { CoordsTagged } from '../../../../shared/chess/logic/movepiece.js';
 import type { Coords, CoordsKey } from '../../../../shared/util/coordutil.js';
 
+import hash from '../../../../shared/util/hash.js';
 import vectors from '../../../../shared/util/math/vectors.js';
 import jsonutil from '../../../../shared/util/jsonutil.js';
 import moveutil from '../../../../shared/chess/logic/moveutil.js';
@@ -22,9 +23,6 @@ import coordutil from '../../../../shared/util/coordutil.js';
 import legalmoves from '../../../../shared/chess/logic/legalmoves.js';
 
 // Constants -------------------------------------------------------------------
-
-const FNV_OFFSET_BASIS = 0x811c9dc5;
-const FNV_PRIME = 0x01000193;
 
 /** How many squares along each slide, either side of its piece, are tested one by one. */
 const SLIDE_WINDOW = 16n;
@@ -39,7 +37,9 @@ function hashPosition(gamefile: GameFile, siteMoves: Map<CoordsKey, LegalMoves>)
 	let sum = 0;
 	for (const [from, legal] of siteMoves) {
 		for (const coords of legal.individual) {
-			sum += hash(`${from}>${coordutil.getKeyFromCoords(coords)} ${getTagsText(coords)}`);
+			sum += hash.fnv1a(
+				`${from}>${coordutil.getKeyFromCoords(coords)} ${getTagsText(coords)}`,
+			);
 		}
 		sum += hashSlides(gamefile, from, legal);
 	}
@@ -67,7 +67,7 @@ function hashSlides(gamefile: GameFile, from: CoordsKey, legal: LegalMoves): num
 	const start = coordutil.getCoordsFromKey(from);
 	let sum = 0;
 	for (const [direction, [low, high]] of Object.entries(legal.sliding)) {
-		sum += hash(`${from}|${direction}|${low}|${high}|${legal.brute === true}`);
+		sum += hash.fnv1a(`${from}|${direction}|${low}|${high}|${legal.brute === true}`);
 		if (!canExclude) continue;
 		const [dx, dy] = vectors.getVec2FromKey(direction as Vec2Key);
 		for (let step = -SLIDE_WINDOW; step <= SLIDE_WINDOW; step++) {
@@ -75,7 +75,7 @@ function hashSlides(gamefile: GameFile, from: CoordsKey, legal: LegalMoves): num
 				continue;
 			const end: Coords = [start[0] + dx * step, start[1] + dy * step];
 			if (!legalmoves.checkIfMoveLegal(gamefile, legal, start, end, gamefile.whosTurn))
-				sum += hash(`${from}|excluded ${coordutil.getKeyFromCoords(end)}`);
+				sum += hash.fnv1a(`${from}|excluded ${coordutil.getKeyFromCoords(end)}`);
 		}
 	}
 	return sum;
@@ -83,14 +83,7 @@ function hashSlides(gamefile: GameFile, from: CoordsKey, legal: LegalMoves): num
 
 /** The hash of a game's outcome: its conclusion, or the error it failed to load with. */
 function hashOutcome(gameIndex: number, outcome: string): number {
-	return hash(`${gameIndex} ${outcome}`);
-}
-
-/** The 32-bit FNV-1a hash of a string. */
-function hash(text: string): number {
-	let h = FNV_OFFSET_BASIS;
-	for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), FNV_PRIME);
-	return h >>> 0;
+	return hash.fnv1a(`${gameIndex} ${outcome}`);
 }
 
 // Exports ---------------------------------------------------------------------

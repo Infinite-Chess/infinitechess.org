@@ -72,9 +72,7 @@ function persistCurrentClockTimes(servergame: ServerGame): void {
 		});
 }
 
-/**
- * Builds a LivePlayerGamesRecord from player data.
- */
+/** Builds a LivePlayerGamesRecord from player data. */
 function buildPlayerRecord(
 	game_id: number,
 	player: Player,
@@ -93,6 +91,7 @@ function buildPlayerRecord(
 			? null
 			: (servergame.clocks.currentTime[player] ?? null),
 		...getDisconnectColumnData(disconnect),
+		interaction: JSON.stringify(playerData.interaction),
 	};
 }
 
@@ -159,9 +158,10 @@ function onGameCreated(servergame: ServerGame): void {
 
 /**
  * Called after a move is submitted and the game state is updated.
- * Updates the moves string, clock state, and per-player time.
+ * Updates the moves string, clock state, per-player time, and in a rated
+ * game the mover's interaction data, which their move may have added to.
  */
-function onMoveSubmitted(servergame: ServerGame): void {
+function onMoveSubmitted(servergame: ServerGame, mover: Player): void {
 	const gameUpdates: Partial<LiveGameData> = {
 		moves: getMovesString(servergame),
 	};
@@ -174,7 +174,19 @@ function onMoveSubmitted(servergame: ServerGame): void {
 	persist(() => {
 		liveGamesManager.update(servergame.match.id, gameUpdates);
 		persistCurrentClockTimes(servergame);
+		if (servergame.match.rated) persistInteraction(servergame, mover);
 	});
+}
+
+/** Called when a player's interaction data changed other than by their move: an analysis match. */
+function onInteractionChanged(servergame: ServerGame, player: Player): void {
+	persist(() => persistInteraction(servergame, player));
+}
+
+/** Updates a player's interaction column. */
+function persistInteraction(servergame: ServerGame, player: Player): void {
+	const interaction = JSON.stringify(servergame.match.playerData[player]!.interaction);
+	livePlayerGamesManager.update(servergame.match.id, player, { interaction });
 }
 
 /**
@@ -263,6 +275,7 @@ function onEngineClockChanged(servergame: ServerGame): void {
 export default {
 	onGameCreated,
 	onMoveSubmitted,
+	onInteractionChanged,
 	onDrawOfferExtended,
 	onDrawOfferDeclined,
 	onPlayerDisconnected,

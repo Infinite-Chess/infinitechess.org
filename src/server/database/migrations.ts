@@ -91,6 +91,7 @@ function run(): void {
 	dropRatingAbuseTableIfPresent();
 	makeLeaderboardsRdLastUpdateDateNotNullIfNeeded();
 	dropLivePlayerGamesGameIndexIfPresent();
+	addInteractionColumnToLivePlayerGamesIfNeeded();
 }
 
 // Individual migrations -------------------------------------------------------
@@ -494,6 +495,18 @@ function dropLivePlayerGamesGameIndexIfPresent(): void {
 	if (!db.get(`SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'idx_live_player_games_game'`)) return; // prettier-ignore
 	db.run('DROP INDEX idx_live_player_games_game');
 	console.log('Temporary DB migration: dropped the idx_live_player_games_game index.');
+}
+
+/**
+ * TEMPORARY MIGRATION: remove (and its call in run) after it has run in production.
+ *
+ * Adds the `interaction` column to `live_player_games` — each player's interaction data so far in
+ * a rated game, so a restart doesn't lose it. Fresh DBs get the column from `generate()`.
+ */
+function addInteractionColumnToLivePlayerGamesIfNeeded(): void {
+	if (db.columnExists('live_player_games', 'interaction')) return; // Already migrated.
+	db.run(`ALTER TABLE live_player_games ADD COLUMN interaction TEXT NOT NULL DEFAULT '{"away":[],"matches":[]}'`); // prettier-ignore
+	console.log('Temporary DB migration: added live_player_games.interaction column.');
 }
 
 // Exports ---------------------------------------------------------------------

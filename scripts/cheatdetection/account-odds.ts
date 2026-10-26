@@ -10,9 +10,9 @@
  * Usage: npx tsx scripts/cheatdetection/account-odds.ts [--ceiling=…] [--fractions=…] [--case-line=…]
  */
 
-import type { BetModel } from '../../src/server/game/cheatdetection/bettingScore.js';
 import type { RatingData } from '../../src/server/utility/ratingCalculation.js';
 import type { MoveEvidence } from '../../src/server/game/cheatdetection/moveEvidence.js';
+import type { BetModel, GameScore } from '../../src/server/game/cheatdetection/bettingScore.js';
 
 import { players as p } from '../../src/shared/chess/util/typeutil.js';
 
@@ -53,11 +53,13 @@ const CHEATERS = 4000;
 
 /** The game, from 1, at which a cheater starting at `elo` ± `rd` is caught, or Infinity if never. */
 function caughtAt(pool: EngineGame[], elo: number, rd: number, random: () => number): number {
-	const history: number[][] = [];
+	const history: GameScore[] = [];
 	let [rating, deviation] = [elo, rd];
 	for (let game = 1; game <= GAME_COUNTS.at(-1)!; game++) {
 		const { evidence, model } = pool[Math.floor(random() * pool.length)]!;
-		history.push(bettingScore.gameLogRatios(evidence, model, bettingScore.skillCeiling(model, rating, deviation))); // prettier-ignore
+		const ceiling = bettingScore.skillCeiling(model, rating, deviation);
+		const ratios = bettingScore.gameLogRatios(evidence, model, ceiling);
+		history.push(bettingScore.gameScore(ratios, bettingScore.EMPTY_INTERACTION));
 		if (bettingScore.bestRunLogScore(history) >= settings.CASE_LOG_SCORE) return game;
 		// A null last update leaves the deviation undecayed: games are back to back.
 		const ratings: RatingData = {
