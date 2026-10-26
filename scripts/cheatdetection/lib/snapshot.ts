@@ -36,6 +36,16 @@ interface PlayerRow {
 	elo_change_from_game: number | null;
 }
 
+/** One player's seat in one game, with the game's columns. */
+interface SeatRow {
+	user_id: number;
+	game_id: number;
+	date: string;
+	rated: number;
+	termination: string;
+	icn: string;
+}
+
 // Constants -------------------------------------------------------------------
 
 /** The games columns of a {@link GameRow}. */
@@ -88,6 +98,17 @@ function players(game_id: number): PlayerRow[] {
 		.all(game_id);
 }
 
+/** Every seat of every member who has played a rated game, in any of their games. */
+function ratedPlayersSeats(): SeatRow[] {
+	return open()
+		.prepare<[], SeatRow>(
+			`SELECT pg.user_id, g.game_id, g.date, g.rated, g.termination, g.icn
+			FROM player_games pg JOIN games g USING (game_id)
+			WHERE pg.user_id IN (SELECT user_id FROM player_games JOIN games USING (game_id) WHERE rated = 1)`,
+		)
+		.all();
+}
+
 // Exports ---------------------------------------------------------------------
 
 export default {
@@ -95,4 +116,5 @@ export default {
 	game,
 	ratedGames,
 	players,
+	ratedPlayersSeats,
 };

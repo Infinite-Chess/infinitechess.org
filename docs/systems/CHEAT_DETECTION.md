@@ -494,8 +494,8 @@ probability (past the 2% good-move line), and favours moves a shallow search alr
 
 A match's weight bounds how often an honest player's analysis coincides with their live position:
 reviewing an old game, or exploring, while their game passes through the same position. Replaying
-the 2026-10-20 snapshot (the 6,752 games of rated players, and all 60,895 games on the site), the
-share of rated positions already reached in the player's own earlier games:
+the 2026-10-20 snapshot (`match-weights.ts`: the 6,752 games of rated players), the share of rated
+positions already reached in the player's own earlier games:
 
 | Plies | 0–1 | 2–3 | 4–5 | 6–7 | 8–9  | 10–11 | 12–15 | 16–19 | 20+             |
 | ----- | --- | --- | --- | --- | ---- | ----- | ----- | ----- | --------------- |
@@ -507,7 +507,7 @@ line over these bins from 100% at the start position, where the analysis page op
 there proves nothing; capped at the most the sample backs (3 in ~59,000, the rule of three). It
 assumes the honest player is always reviewing an old game at that moment, so it's pessimistic. 71%
 of rated games are still live past ply 19, 64% past 27. The 64-bit key collided nowhere in 2.53
-million positions of every site game; its 32-bit half collided at a random hash's rate.
+million positions of all 60,895 site games; its 32-bit half collided at a random hash's rate.
 
 The network rates (a cheater's games 50%, an honest household's 10%) are guesses, the honest one
 deliberately high: too rare an event at our traffic to measure soon.
@@ -622,7 +622,8 @@ npx tsx scripts/cheatdetection/fit-model.ts                                     
 
 The Calibration section's other figures: `feature-ablation.ts` (honest likelihood per input),
 `account-odds.ts` (catch rates by account), `false-case-rate.ts --above=0.1` (honest players past
-their ceiling), `node-budget.ts` (~1 h with `--shards=11`), `think-times.ts`, and
+their ceiling), `node-budget.ts` (~1 h with `--shards=11`), `think-times.ts`, `match-weights.ts` (~2
+min; the analysis-match curve against the measured shares, and the cap they back), and
 `inspect-player.ts <userId>` to vet an outlier. Judge a change to the inputs or scoring with
 `game-scores.ts`: save each version's per-game scores (refit the ceiling for each first), then
 compare them; catch-rate tables move in whole players and hide smaller gains. `worker-parity.ts`
