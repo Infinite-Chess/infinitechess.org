@@ -110,7 +110,9 @@ followed, tell me.
 ### Writing code
 
 13. Before adding _any_ new mechanism, helper, etc., go looking for the existing one — search by
-    concept, not by name. Extend it, or note to me why it can't be extended.
+    concept, not by name, in the codebase and then among established packages. Extend it, or note to
+    me why it can't be extended. A package must be the genuine one, verified to be exactly the logic
+    needed.
 
 14. Avoid redundancy like the plague. After every change, ask what is now redundant with it or with
     the rest of the code.
@@ -153,7 +155,8 @@ followed, tell me.
 
 24. Judge hot-path code (per frame, move or piece) on cost, not just correctness. Optimize where we
     can. Unit tests too: one feature's may add at most 100 ms to the run on this machine; past that,
-    optimize them or drop the tests entirely.
+    optimize them or drop the tests entirely. Tests check behavior, never exact tuned values, so
+    some retuning can't break them.
 
 ### Comments
 
@@ -211,10 +214,11 @@ followed, tell me.
 ### Issues outside the work
 
 30. If, while we're working on changes, you notice an unrelated issue or bug somewhere else, do
-    **not** distract me from the current work. Park it, and bring it up only after the current work
-    has been committed; do not mention it before then. An issue with changes you made this session
-    _should not be parked_: if you created the issue, you need to resolve it too, _before_ we
-    commit.
+    **not** distract me from the current work. Verify it's real first; never park an assumption. If
+    the fix is small and obvious, just make it. Otherwise park it, and bring it up only after the
+    current work has been committed; do not mention it before then. An issue with changes you made
+    this session _should not be parked_: if you created the issue, you need to resolve it too,
+    _before_ we commit.
 
 31. Park issues by appending them to a scratch file outside the repo. It has to be a written file,
     never a mental note: your reasoning from earlier turns isn't retained. Re-read that file every
@@ -264,10 +268,11 @@ followed, tell me.
     doesn't mean your edits vanished.
 
 40. When I _do_ ask you to commit, split unrelated changes into their own commits (unless they are
-    all tiny), then `git push` immediately after. Commit names must be concise. On a branch whose
-    name won't match its remote's (`pr/<author>/<number>`, from `gh pr checkout` of a fork PR), bare
-    `git push` aborts — read the remote and branch from `branch.<current>.remote` and
-    `branch.<current>.merge` in `git config`, then push explicitly:
+    all tiny), then `git push` immediately after. If a change I ask for would need its own commit,
+    say so before making it, and recommend committing the current work first. Commit names must be
+    concise. On a branch whose name won't match its remote's (`pr/<author>/<number>`, from
+    `gh pr checkout` of a fork PR), bare `git push` aborts — read the remote and branch from
+    `branch.<current>.remote` and `branch.<current>.merge` in `git config`, then push explicitly:
     `git push <remote> HEAD:<branch>`.
 
 41. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these
@@ -365,6 +370,7 @@ disagree, study more siblings before trusting either.
   `/** Like this. */` — never three.
 - Omit @param for self-evident args (req/res/next/ws). Explanations _about_ an argument belong on
   its @param line, not in the description body.
+- Say what something is before why it's that way.
 
 ### Names
 
