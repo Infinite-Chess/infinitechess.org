@@ -124,8 +124,7 @@ function hashResetToken(token: string): string {
 function getPageState(req: Request): { state: 'valid' | 'invalid' } {
 	const token = req.params['token']!;
 	const hashedToken = hashResetToken(token);
-	const match = passwordResetTokensManager.findUnexpired(hashedToken);
-	return { state: match ? 'valid' : 'invalid' };
+	return { state: passwordResetTokensManager.isUnexpired(hashedToken) ? 'valid' : 'invalid' };
 }
 
 /**
@@ -147,7 +146,7 @@ async function handleReset(req: Request, res: Response): Promise<void> {
 	try {
 		// Fast pre-check: reject clearly invalid/expired tokens before expensive bcrypt work.
 		// The authoritative one-time guarantee is still enforced in the transaction below.
-		if (!passwordResetTokensManager.findUnexpired(hashedToken)) {
+		if (!passwordResetTokensManager.isUnexpired(hashedToken)) {
 			logEvents.add(`Invalid or expired password reset token presented.`, 'loginAttempts');
 			// The tokenInvalid flag tells the client to reload (re-SSRing the expired-link card).
 			res.status(400).json({ tokenInvalid: true });

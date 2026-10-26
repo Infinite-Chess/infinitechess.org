@@ -57,19 +57,21 @@ function add(userId: number, hashedToken: string): void {
 // Lookups ---------------------------------------------------------------------
 
 /**
- * Finds the unexpired token row matching the given hash, WITHOUT consuming it.
- * @returns The row's user_id, or undefined if no live row matches.
+ * Checks whether an unexpired token matches the given hash, WITHOUT consuming it.
  * @throws If a database error occurs.
  */
-function findUnexpired(hashedToken: string): Pick<PasswordResetTokenRecord, 'user_id'> | undefined {
+function isUnexpired(hashedToken: string): boolean {
 	const query = `
-		SELECT user_id FROM password_reset_tokens
-		WHERE hashed_token = ? AND expires_at > ?
+		SELECT EXISTS(
+			SELECT 1 FROM password_reset_tokens
+			WHERE hashed_token = ? AND expires_at > ?
+		) AS found
 	`;
-	return db.call(
-		() => db.get<Pick<PasswordResetTokenRecord, 'user_id'>>(query, [hashedToken, Date.now()]),
-		'Database error while finding unexpired password reset token',
+	const row = db.call(
+		() => db.get<{ found: 0 | 1 }>(query, [hashedToken, Date.now()]),
+		'Database error while checking for unexpired password reset token',
 	);
+	return Boolean(row?.found);
 }
 
 // Deleting --------------------------------------------------------------------
@@ -124,7 +126,7 @@ export default {
 	// Create
 	add,
 	// Lookups
-	findUnexpired,
+	isUnexpired,
 	// Deleting
 	consume,
 	removeAllForUser,

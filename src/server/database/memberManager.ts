@@ -276,9 +276,7 @@ function remove(user_id: number, reason_deleted: DeleteReason): void {
 		const insertQuery = 'INSERT INTO deleted_members (user_id, reason_deleted) VALUES (?, ?)';
 		db.run(insertQuery, [id, reason]);
 
-		// Remove the promoted pending registration that created
-		// this member, if it hasn't been cleaned up yet.
-		db.run('DELETE FROM pending_registrations WHERE member_user_id = ?', [id]);
+		pendingRegistrationManager.removeForMember(id);
 	});
 
 	db.call(
@@ -355,10 +353,11 @@ function isUsernameTakenOrPending(username: string): boolean {
  * Checks if an email is taken by either a `members`
  * row OR a non-expired `pending_registrations` row.
  * @param email - The email to check. Case-insensitive.
+ * @param excludeClaimToken - The claim_token of a pending row to ignore.
  * @throws If a database error occurs.
  */
-function isEmailTakenOrPending(email: string): boolean {
-	return isEmailTaken(email) || pendingRegistrationManager.isEmailTaken(email);
+function isEmailTakenOrPending(email: string, excludeClaimToken?: string): boolean {
+	return isEmailTaken(email) || pendingRegistrationManager.isEmailTaken(email, excludeClaimToken);
 }
 
 // Internal Helpers ------------------------------------------------------------
@@ -421,7 +420,6 @@ export default {
 	remove,
 	// Existence & Availability Checks
 	isUsernameTaken,
-	isEmailTaken,
 	isUsernameTakenOrPending,
 	isEmailTakenOrPending,
 };

@@ -261,11 +261,7 @@ async function changePendingEmail(req: Request, res: Response): Promise<void> {
 	try {
 		// Availability: reject a real member's email or another party's pending email. The caller's
 		// own row is excluded, so re-submitting the same address is allowed (it just re-sends).
-		const emailTaken =
-			memberManager.isEmailTaken(email) ||
-			pendingRegistrationManager.isEmailTakenByOther(email, pending.claim_token);
-
-		if (emailTaken) {
+		if (memberManager.isEmailTakenOrPending(email, pending.claim_token)) {
 			res.status(409).json({
 				message: req.t.responses.account.email_in_use,
 			});

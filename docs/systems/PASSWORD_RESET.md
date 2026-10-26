@@ -86,7 +86,7 @@ spent when the user submits a new password.
 1. `verifyBodyHasResetPasswordData` — both non-empty strings; `token` ≤ 100 chars (a valid token is
    43 chars — rejects obviously invalid values before hashing).
 2. `doPasswordFormatChecks` — server-side strength re-check (client checks are UX only).
-3. Fast pre-check (`passwordResetTokensManager.findUnexpired`) — no match →
+3. Fast pre-check (`passwordResetTokensManager.isUnexpired`) — no match →
    `400 { tokenInvalid: true }`. **This flag tells the client to reload**, re-SSRing the
    expired-link card. This avoids doing bcrypt work for obviously invalid/expired tokens.
 4. bcrypt-hash the new password.

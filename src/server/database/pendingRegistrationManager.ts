@@ -139,42 +139,25 @@ function isUsernameTaken(username: string): boolean {
 /**
  * Checks whether an email is held by a non-expired pending registration.
  * @param email - The email to check. Case-insensitive.
+ * @param excludeClaimToken - The claim_token of a row to ignore.
  * @returns True if a non-expired pending row holds this email.
  * @throws If a database error occurs.
  */
-function isEmailTaken(email: string): boolean {
+function isEmailTaken(email: string, excludeClaimToken?: string): boolean {
 	const query = `
 		SELECT EXISTS(
 			SELECT 1 FROM pending_registrations
-			WHERE email = ? AND expires_at > ?
+			WHERE email = ? AND expires_at > ? AND claim_token IS NOT ?
 		) AS found
 	`;
 	const row = db.call(
-		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase(), Date.now()]), // Lowercased to match the stored (lowercase) rows
+		() =>
+			db.get<{ found: 0 | 1 }>(query, [
+				email.toLowerCase(), // Lowercased to match the stored (lowercase) rows
+				Date.now(),
+				excludeClaimToken ?? null,
+			]),
 		`Database error while checking pending email "${email}"`,
-	);
-	return Boolean(row?.found);
-}
-
-/**
- * Checks whether an email is held by a non-expired pending registration
- * whose `claim_token` is NOT `excludeClaimToken`. Used to distinguish a
- * re-submitter's own row from a genuine third-party collision.
- * @param email - The email to check. Case-insensitive.
- * @param excludeClaimToken - The claim_token of the row to exclude.
- * @returns True if another non-expired pending row holds this email.
- * @throws If a database error occurs.
- */
-function isEmailTakenByOther(email: string, excludeClaimToken: string): boolean {
-	const query = `
-		SELECT EXISTS(
-			SELECT 1 FROM pending_registrations
-			WHERE email = ? AND expires_at > ? AND claim_token != ?
-		) AS found
-	`;
-	const row = db.call(
-		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase(), Date.now(), excludeClaimToken]), // Lowercased to match the stored (lowercase) rows
-		`Database error while checking pending email (by other) "${email}"`,
 	);
 	return Boolean(row?.found);
 }
@@ -184,8 +167,8 @@ function isEmailTakenByOther(email: string, excludeClaimToken: string): boolean 
 /**
  * Changes the email of a pending registration (identified by its claim_token), rotates its
  * verification_token, and refreshes expires_at.
- * Call {@link deleteExpiredPendingRegistrationsFor} first so any expired row holding the new
- * email doesn't violate the UNIQUE constraint.
+ * Call {@link removeExpiredFor} first so any expired row holding the new email doesn't violate
+ * the UNIQUE constraint.
  * @param claimToken - The claim_token identifying the row to update.
  * @param email - The new email. It will automatically be lowercased.
  * @param verificationToken - A freshly generated verification token.
@@ -221,6 +204,19 @@ function markVerified(claimToken: string, memberUserId: number): void {
 }
 
 // Deletion --------------------------------------------------------------------
+
+/**
+ * Deletes a member's promoted pending registration, which would otherwise
+ * hold their username and email until swept.
+ * @throws If a database error occurs.
+ */
+function removeForMember(userId: number): void {
+	const query = `DELETE FROM pending_registrations WHERE member_user_id = ?`;
+	db.call(
+		() => db.run(query, [userId]),
+		`Database error while deleting pending registration of userId ${userId}`,
+	);
+}
 
 /**
  * Deletes any expired pending rows holding the given username or email. Used before a fresh
@@ -266,11 +262,11 @@ export default {
 	// Availability checks (non-expired rows only)
 	isUsernameTaken,
 	isEmailTaken,
-	isEmailTakenByOther,
 	// Update
 	updateEmail,
 	markVerified,
 	// Deletion
+	removeForMember,
 	removeExpiredFor,
 	removeExpired,
 };
