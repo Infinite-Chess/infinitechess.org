@@ -29,13 +29,13 @@ type PlayerGamesColumn = keyof PlayerGamesRecord;
 // Methods ---------------------------------------------------------------------
 
 /**
- * Gets player_games entries for all opponents of a specific user for a list of specific games.
- * ALL GAMES MUST BE BETWEEN TWO PLAYER ONLY, not between guests.
+ * Gets the player_games rows of a user's opponents in the given games.
+ * Every game must have had an account as the opponent, since guests and engines have no row.
  * @param user_id - The user_id of the player
  * @param game_id_list - A list of game_ids
  * @param columns - The columns to retrieve (e.g., ['user_id', 'player_number'])
  * @returns An array of objects with the requested columns from player_games.
- * @throws If invalid arguments are provided, if fewer rows than expected are found, or if a database error occurs.
+ * @throws If invalid arguments are provided, if any game lacks an opponent row, or if a database error occurs.
  */
 function getOpponentsOfUser<K extends PlayerGamesColumn>(
 	user_id: number,
@@ -46,14 +46,13 @@ function getOpponentsOfUser<K extends PlayerGamesColumn>(
 		() => {
 			db.assertColumnsValid(columns, 'player_games');
 
-			// Move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
 			const query = `
-			SELECT ${columns.join(', ')}
-			FROM player_games
-			WHERE user_id != ?
-				AND game_id IN (${placeholders})
-		`;
+				SELECT ${columns.join(', ')}
+				FROM player_games
+				WHERE user_id != ?
+				  AND game_id IN (${placeholders})
+			`;
 			const rows = db.all<Pick<PlayerGamesRecord, K>>(query, [user_id, ...game_id_list]);
 
 			// Every requested game should have at least one opponent row.
@@ -102,7 +101,6 @@ function getRecentNRatedForUser<K extends PlayerGamesColumn>(
 	return db.call(() => {
 		db.assertColumnsValid(columns, 'player_games');
 
-		// Move on to the SQL query
 		const selectClause = columns.map((col) => `pg.${col}`).join(', ');
 		const query = `
 			SELECT ${selectClause}
@@ -121,7 +119,7 @@ function getRecentNRatedForUser<K extends PlayerGamesColumn>(
 
 // Writes ----------------------------------------------------------------------
 
-// These intentionally skip `dbCall`. gameLogger is their only caller, and it already logs the
+// These intentionally skip `db.call`. gameLogger is their only caller, and it already logs the
 // failure and rolls back the surrounding transaction — wrapping them would log the same error twice.
 
 /**

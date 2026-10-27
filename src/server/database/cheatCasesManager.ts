@@ -14,12 +14,12 @@ import db from './database.js';
  * @throws If a database error occurs.
  */
 function isOpen(user_id: number): boolean {
-	return db.call(
-		() =>
-			db.get<{ '1': 1 }>('SELECT 1 FROM cheat_cases WHERE user_id = ?', [user_id]) !==
-			undefined,
+	const query = 'SELECT EXISTS(SELECT 1 FROM cheat_cases WHERE user_id = ?) AS found';
+	const row = db.call(
+		() => db.get<{ found: 0 | 1 }>(query, [user_id]),
 		`Error checking for a cheat case of user ${user_id}`,
 	);
+	return Boolean(row?.found);
 }
 
 /**

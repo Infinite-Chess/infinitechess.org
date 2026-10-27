@@ -47,18 +47,13 @@ function remove(email: string): void {
 
 /**
  * Checks if an email is in the blacklist.
- * Returns true if blacklisted, false otherwise.
  * @param email - The email to check. Case-insensitive.
  * @throws If a database error occurs.
  */
 function isBlacklisted(email: string): boolean {
+	const query = 'SELECT EXISTS(SELECT 1 FROM email_blacklist WHERE email = ?) AS found';
 	const row = db.call(
-		() =>
-			// prettier-ignore
-			db.get<{ found: 0 | 1 }>(
-				`SELECT EXISTS(SELECT 1 FROM email_blacklist WHERE email = ?) AS found`, [
-					email.toLowerCase(), // Lowercased to match the stored (lowercase) rows
-				]),
+		() => db.get<{ found: 0 | 1 }>(query, [email.toLowerCase()]), // Lowercased to match the stored (lowercase) rows
 		`Database error when checking blacklist for email ${email}`,
 	);
 	return Boolean(row?.found);

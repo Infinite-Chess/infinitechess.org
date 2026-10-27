@@ -143,9 +143,9 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify raw DB values: -1 = indeterminate
-			const icnData = editorSavesManager.getICN('Tristate Position', user.user_id);
-			expect(icnData?.pawn_double_push).toBe(-1);
-			expect(icnData?.castling).toBe(-1);
+			const position = editorSavesManager.get(user.user_id, 'Tristate Position');
+			expect(position?.pawn_double_push).toBe(-1);
+			expect(position?.castling).toBe(-1);
 		});
 
 		it('should return 400 if name is missing', async () => {
@@ -336,10 +336,10 @@ describe('EditorSavesAPI Integration', () => {
 			]);
 
 			// Verify the ICN was also overwritten
-			const icnData = editorSavesManager.getICN('Duplicate Name', user.user_id);
-			expect(icnData?.icn).toBe('test-icn-2');
-			expect(icnData?.pawn_double_push).toBe(0);
-			expect(icnData?.castling).toBe(1);
+			const position = editorSavesManager.get(user.user_id, 'Duplicate Name');
+			expect(position?.icn).toBe('test-icn-2');
+			expect(position?.pawn_double_push).toBe(0);
+			expect(position?.castling).toBe(1);
 		});
 
 		it('should return 401 if user is not authenticated', async () => {
@@ -407,8 +407,8 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Omitted field should be stored as -1 (indeterminate)
-			const icnData = editorSavesManager.getICN('Test Position', user.user_id);
-			expect(icnData?.pawn_double_push).toBe(-1);
+			const position = editorSavesManager.get(user.user_id, 'Test Position');
+			expect(position?.pawn_double_push).toBe(-1);
 		});
 
 		it('should treat missing castling as indeterminate and save successfully', async () => {
@@ -428,8 +428,8 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Omitted field should be stored as -1 (indeterminate)
-			const icnData = editorSavesManager.getICN('Test Position', user.user_id);
-			expect(icnData?.castling).toBe(-1);
+			const position = editorSavesManager.get(user.user_id, 'Test Position');
+			expect(position?.castling).toBe(-1);
 		});
 	});
 
@@ -618,7 +618,7 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(201);
 
 			// Verify it was saved correctly
-			const save = editorSavesManager.getICN('Test', user.user_id);
+			const save = editorSavesManager.get(user.user_id, 'Test');
 			expect(save?.icn).toBe(maxLengthIcn);
 		});
 

@@ -90,7 +90,7 @@ function getUnabortedGameCount(user_id: number): number | undefined {
 
 /**
  * Applies one game's deltas to a member's counters, in whichever direction `sign` points.
- * A no-op for a deleted account, whose row cascaded away with its member — e.g. a cheat
+ * A no-op for a deleted account, whose row cascaded away with its member — e.g. an illegal-move
  * report overturning a game its opponent deleted their account during the finalize cushion.
  * @throws If a database error occurs.
  */
@@ -99,7 +99,7 @@ function applyGameDelta(user_id: number, delta: GameDelta): void {
 		const op = delta.sign === 1 ? '+' : '-'; // The arithmetic operator applied to every counter.
 
 		const setClauses: string[] = [`moves_played = moves_played ${op} ?`, `game_count = game_count ${op} 1`]; // prettier-ignore
-		const values: (number | string)[] = [delta.moves_played_increment];
+		const values: number[] = [delta.moves_played_increment];
 
 		if (delta.outcome === 'aborted') {
 			setClauses.push(`game_count_aborted = game_count_aborted ${op} 1`);

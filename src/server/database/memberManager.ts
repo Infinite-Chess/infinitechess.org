@@ -126,7 +126,7 @@ function promote(pending: PendingRegistrationRecord): number {
 		return user_id;
 	});
 	// Unlike add/remove, this transaction is NOT wrapped
-	// in dbCall: its steps each already log via their own dbCall.
+	// in db.call: its steps each already log via their own db.call.
 	return promoteTransaction(pending);
 }
 
@@ -157,7 +157,7 @@ function getDataByCriteria<K extends MembersColumn>(
 /**
  * Fetches specified columns of multiple members from the database based on a list of user_ids, usernames, or emails.
  * @param columns - The columns to retrieve (e.g., ['user_id', 'username', 'roles']).
- * @param searchKey - The search key to use (e.g., 'checkmates_beaten').
+ * @param searchKey - The search key to use (e.g., 'user_id').
  * @param searchValueList - The value to search for, can be a list of user IDs, usernames, or emails.
  * @returns An array of member records.
  * @throws If invalid parameters are provided, or if a database error occurs during the query.

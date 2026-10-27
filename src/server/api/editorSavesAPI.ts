@@ -64,7 +64,7 @@ const PositionNameParamSchema = z.strictObject({
 
 // API Endpoints ---------------------------------------------------------------
 
-/** `GET /api/editor-saves` — returns `{ saves }` (position_id, name, size) for the signed-in user. */
+/** `GET /api/editor-saves` — returns `{ saves }` (name, piece_count, timestamp) for the signed-in user. */
 function getSavedPositions(req: Request, res: Response): void {
 	const userId = getSignedInUserIdOrRespond(req, res);
 	if (userId === undefined) return; // Response already sent
@@ -87,7 +87,7 @@ function getSavedPositions(req: Request, res: Response): void {
 
 /**
  * `POST /api/editor-saves` — saves a position for the signed-in user (overwriting any of the
- * same name) and returns `{ saves }`. Body: `{ name, piece_count, timestamp, icn, pawn_double_push?, castling? }`.
+ * same name) and returns `{ saves }`. Body: `{ name, piece_count, timestamp, icn, compression, pawn_double_push?, castling? }`.
  */
 function savePosition(req: Request, res: Response): void {
 	const userId = getSignedInUserIdOrRespond(req, res);
@@ -148,8 +148,7 @@ function getPosition(req: Request, res: Response): void {
 	if (positionName === undefined) return; // Response already sent
 
 	try {
-		// Get the position from the database (filtered by user_id)
-		const position = editorSavesManager.getICN(positionName, userId);
+		const position = editorSavesManager.get(userId, positionName);
 
 		if (!position) {
 			res.status(404).json({
@@ -188,10 +187,7 @@ function deletePosition(req: Request, res: Response): void {
 	if (positionName === undefined) return; // Response already sent
 
 	try {
-		// Delete the position from the database (filtered by user_id)
-		const result = editorSavesManager.remove(positionName, userId);
-
-		if (result.changes === 0) {
+		if (!editorSavesManager.remove(userId, positionName)) {
 			res.status(404).json({
 				message: req.t.responses.editor_saves.position_not_found,
 			});

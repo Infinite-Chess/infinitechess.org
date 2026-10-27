@@ -55,12 +55,12 @@ export interface LiveGameData {
  */
 function insert(record: LiveGamesRecord): void {
 	const query = `
-			INSERT INTO live_games (
-				game_id, time_created, variant, position, clock, rated, private,
-				moves, color_ticking, clock_snapshot_time, draw_offer_state,
-				validate_moves, empty_since, mod_slide_limit
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`;
+		INSERT INTO live_games (
+			game_id, time_created, variant, position, clock, rated, private,
+			moves, color_ticking, clock_snapshot_time, draw_offer_state,
+			validate_moves, empty_since, mod_slide_limit
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`;
 	db.call(
 		() =>
 			db.run(query, [

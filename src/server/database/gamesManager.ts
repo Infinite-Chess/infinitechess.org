@@ -9,14 +9,6 @@ import jsonutil from '../../shared/util/jsonutil.js';
 
 import db from './database.js';
 
-// Constants -------------------------------------------------------------------
-
-/**
- * 62**4: Limit of unique game ids with 4-digit base-62 game ids! EXCLUSIVE.
- * Matches `memberManager`'s user-id cap, but nothing depends on the two being equal.
- */
-const GAME_ID_UPPER_CAP: number = 14_776_336;
-
 // Types -----------------------------------------------------------------------
 
 /** Structure of a complete games record. */
@@ -50,6 +42,14 @@ export interface GamesRecord {
 
 type GamesColumn = keyof GamesRecord;
 
+// Constants -------------------------------------------------------------------
+
+/**
+ * 62**4: Limit of unique game ids with 4-digit base-62 game ids! EXCLUSIVE.
+ * Matches `memberManager`'s user-id cap, but nothing depends on the two being equal.
+ */
+const GAME_ID_UPPER_CAP: number = 14_776_336;
+
 // Methods ---------------------------------------------------------------------
 
 /**
@@ -78,18 +78,9 @@ function decodeID(idStr: string): number | undefined {
 function genUniqueID(): number {
 	let id: number;
 	do {
-		id = generateRandomGameId();
+		id = Math.floor(Math.random() * GAME_ID_UPPER_CAP);
 	} while (isLogged(id));
 	return id;
-}
-
-/**
- * Generates a random game_id. DOES NOT test if it's taken already.
- * @returns - A random game_id.
- */
-function generateRandomGameId(): number {
-	// Generate a random number between 0 and GAME_ID_UPPER_CAP
-	return Math.floor(Math.random() * GAME_ID_UPPER_CAP);
 }
 
 /**
@@ -120,7 +111,6 @@ function getData<K extends GamesColumn>(
 	return db.call(() => {
 		db.assertColumnsValid(columns, 'games');
 
-		// Arguments are valid, move onto the SQL query
 		const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id = ?`;
 		return db.get<Pick<GamesRecord, K>>(query, [game_id]);
 	}, `Error when getting game data of game_id ${game_id}`);
@@ -131,7 +121,7 @@ function getData<K extends GamesColumn>(
  * @param game_id_list - A list of game_ids
  * @param columns - The columns to retrieve (e.g., ['game_id', 'date', 'rated']).
  * @returns An array of objects with the requested columns.
- * @throws If invalid arguments are provided, if no matches are found, or if a database error occurs.
+ * @throws If invalid arguments are provided, if any game is missing, or if a database error occurs.
  */
 function getMultipleData<K extends GamesColumn>(
 	game_id_list: number[],
@@ -141,7 +131,6 @@ function getMultipleData<K extends GamesColumn>(
 		() => {
 			db.assertColumnsValid(columns, 'games');
 
-			// Arguments are valid, move onto the SQL query
 			const placeholders = game_id_list.map(() => '?').join(', ');
 			const query = `SELECT ${columns.join(', ')} FROM games WHERE game_id IN (${placeholders})`;
 			const rows = db.all<Pick<GamesRecord, K>>(query, game_id_list);
@@ -155,7 +144,7 @@ function getMultipleData<K extends GamesColumn>(
 
 // Writes ----------------------------------------------------------------------
 
-// These intentionally skip `dbCall`. gameLogger is their only caller, and it already logs the
+// These intentionally skip `db.call`. gameLogger is their only caller, and it already logs the
 // failure and rolls back the surrounding transaction — wrapping them would log the same error twice.
 
 /**

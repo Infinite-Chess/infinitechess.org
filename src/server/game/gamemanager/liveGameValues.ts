@@ -99,7 +99,7 @@ function buildPlayerRecord(
 
 /**
  * Runs a best-effort live-game persistence write, swallowing any database error (already
- * logged by dbCall) so it can't abort the game lifecycle or crash a timer callback.
+ * logged by db.call) so it can't abort the game lifecycle or crash a timer callback.
  * Atomic: several events touch multiple tables, and a partial write would leave a live
  * game the restorer can't reconstruct.
  */
@@ -107,7 +107,7 @@ function persist(operation: () => void): void {
 	try {
 		db.transaction(operation)();
 	} catch {
-		// Already logged by dbCall. The in-memory game continues
+		// Already logged by db.call. The in-memory game continues
 		// uninterrupted, and the transaction rolled back.
 	}
 }

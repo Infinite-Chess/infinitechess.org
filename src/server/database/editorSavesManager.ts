@@ -4,22 +4,20 @@
  * This module manages saved positions in the editor_saves table.
  */
 
-import type { RunResult } from 'better-sqlite3';
-
 import db from './database.js';
 import logEvents from '../utility/logEvents.js';
 
 // Types -----------------------------------------------------------------------
 
-/** Represents a saved position list record (name, piece_count, timestamp). */
+/** A saved position's summary, as listed. */
 type EditorSavesListRecord = {
 	name: string;
 	piece_count: number;
 	timestamp: number;
 };
 
-/** Represents a saved position ICN record (icn, pawn_double_push, castling, compression). */
-type EditorSavesIcnRecord = {
+/** A saved position's contents, as loaded. */
+type EditorSavesPositionRecord = {
 	timestamp: number;
 	compression: string;
 	icn: string;
@@ -50,11 +48,10 @@ function getAllForUser(user_id: number): EditorSavesListRecord[] {
  */
 function getCount(user_id: number): number {
 	const query = `SELECT COUNT(*) AS count FROM editor_saves WHERE user_id = ?`;
-	const row = db.call(
-		() => db.get<{ count: number }>(query, [user_id]),
+	return db.call(
+		() => db.get<{ count: number }>(query, [user_id])!.count,
 		`Error counting saved positions for user_id ${user_id}`,
 	);
-	return row?.count ?? 0;
 }
 
 /**
@@ -102,9 +99,9 @@ function add(
 	castling?: boolean,
 ): void {
 	const insertQuery = `
-        INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+		INSERT OR REPLACE INTO editor_saves (user_id, name, piece_count, timestamp, icn, compression, pawn_double_push, castling)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`;
 	db.call(
 		() =>
 			db.run(insertQuery, [
@@ -122,36 +119,35 @@ function add(
 }
 
 /**
- * Retrieves the ICN notation, pawn_double_push, and castling for a specific saved position by name and user_id.
- * @param name - The position name
+ * Retrieves a user's saved position by name.
  * @param user_id - The user ID who owns the position
- * @returns The ICN record if found and owned by the user, otherwise undefined.
+ * @param name - The position name
+ * @returns The position, or undefined if not found.
  * @throws If a database error occurs.
  */
-function getICN(name: string, user_id: number): EditorSavesIcnRecord | undefined {
-	const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE name = ? AND user_id = ?`;
+function get(user_id: number, name: string): EditorSavesPositionRecord | undefined {
+	const query = `SELECT timestamp, icn, compression, pawn_double_push, castling FROM editor_saves WHERE user_id = ? AND name = ?`;
 	return db.call(
-		() => db.get<EditorSavesIcnRecord>(query, [name, user_id]),
-		`Error retrieving ICN for name "${logEvents.escapeLogNewlines(name)}" and user_id ${user_id}`,
+		() => db.get<EditorSavesPositionRecord>(query, [user_id, name]),
+		`Error retrieving position "${logEvents.escapeLogNewlines(name)}" for user_id ${user_id}`,
 	);
 }
 
 /**
- * Deletes a saved position by name and user_id.
- * Will fail to delete if the user_id doesn't match the position owner.
- * @param name - The position name
+ * Deletes a user's saved position by name.
  * @param user_id - The user ID who owns the position
- * @returns The RunResult containing the number of changes.
+ * @param name - The position name
+ * @returns Whether the user had a position of that name to delete.
  * @throws If a database error occurs.
  */
-function remove(name: string, user_id: number): RunResult {
-	const query = `DELETE FROM editor_saves WHERE name = ? AND user_id = ?`;
+function remove(user_id: number, name: string): boolean {
+	const query = `DELETE FROM editor_saves WHERE user_id = ? AND name = ?`;
 	return db.call(
-		() => db.run(query, [name, user_id]),
+		() => db.run(query, [user_id, name]).changes > 0,
 		`Error deleting position "${logEvents.escapeLogNewlines(name)}" for user_id ${user_id}`,
 	);
 }
 
 // Exports ---------------------------------------------------------------------
 
-export default { getAllForUser, getCount, doesExist, add, getICN, remove };
+export default { getAllForUser, getCount, doesExist, add, get, remove };
