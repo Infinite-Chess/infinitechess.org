@@ -1,19 +1,20 @@
 // src/server/api/adminPanel.ts
 
 /**
- * This script handles all incoming commands send from the admin console page
- * /admin
+ * The admin console's command interpreter: parses and runs every command sent from /admin.
  */
 
 import type { Request, Response } from 'express';
 
 import validators from '../../shared/util/validators.js';
+import socketutil from '../../shared/util/socketutil.js';
 
 import roles from '../controllers/roles.js';
 import logEvents from '../utility/logEvents.js';
 import activeGames from '../game/gamemanager/activeGames.js';
 import contributors from './contributors.js';
 import memberManager from '../database/memberManager.js';
+import socketRegistry from '../socket/socketRegistry.js';
 import blacklistManager from '../database/blacklistManager.js';
 import chatEntriesManager from '../database/chatEntriesManager.js';
 import refreshTokenManager from '../database/refreshTokenManager.js';
@@ -71,10 +72,10 @@ function processCommand(req: Request, res: Response): void {
 				usernameCommand(command, commandAndArgs, req, res);
 				return;
 			case 'logout':
-				logoutUser(command, commandAndArgs, req, res);
+				logoutCommand(command, commandAndArgs, req, res);
 				return;
 			case 'userinfo':
-				getUserInfo(command, commandAndArgs, req, res);
+				userInfoCommand(command, commandAndArgs, req, res);
 				return;
 			case 'deletechat':
 				deleteChatCommand(command, commandAndArgs, req, res);
@@ -139,6 +140,7 @@ function parseArgumentsFromCommand(command: string): string[] {
 
 // Account Commands ------------------------------------------------------------
 
+/** Blacklists an email address. */
 function banEmailCommand(
 	command: string,
 	commandAndArgs: string[],
@@ -152,6 +154,7 @@ function banEmailCommand(
 	sendAndLogResponse(res, 200, `Successfully banned ${email}.`);
 }
 
+/** Removes an email address from the blacklist. */
 function unbanEmailCommand(
 	command: string,
 	commandAndArgs: string[],
@@ -165,6 +168,7 @@ function unbanEmailCommand(
 	sendAndLogResponse(res, 200, `Successfully unbanned ${email}.`);
 }
 
+/** Deletes a member's account for the given reason, if they rank below the admin. */
 function deleteCommand(
 	command: string,
 	commandAndArgs: string[],
@@ -203,7 +207,13 @@ function deleteCommand(
 	sendAndLogResponse(res, 200, 'Successfully deleted user ' + record.username + '.');
 }
 
-function logoutUser(command: string, commandAndArgs: string[], req: Request, res: Response): void {
+/** Ends every session of a member: deletes their refresh tokens and closes their sockets. */
+function logoutCommand(
+	command: string,
+	commandAndArgs: string[],
+	req: Request,
+	res: Response,
+): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send(
 			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
@@ -223,13 +233,14 @@ function logoutUser(command: string, commandAndArgs: string[], req: Request, res
 		return;
 	}
 
-	// Effectively terminates all login sessions of the user
 	refreshTokenManager.removeAllForUser(record.user_id);
+	socketRegistry.closeAllOfMember(record.user_id, 1008, socketutil.CLOSURE_REASONS.LOGGED_OUT);
 	sendAndLogResponse(res, 200, 'User ' + record.username + ' successfully logged out.'); // Use their case-sensitive username
 }
 
 // Inspection Commands ---------------------------------------------------------
 
+/** Replies with the username of the given user id. */
 function usernameCommand(
 	command: string,
 	commandAndArgs: string[],
@@ -261,7 +272,13 @@ function usernameCommand(
 	}
 }
 
-function getUserInfo(command: string, commandAndArgs: string[], req: Request, res: Response): void {
+/** Replies with a member's profile record as JSON. */
+function userInfoCommand(
+	command: string,
+	commandAndArgs: string[],
+	req: Request,
+	res: Response,
+): void {
 	if (commandAndArgs.length < 2) {
 		res.status(422).send(
 			'Invalid number of arguments, expected 1, got ' + (commandAndArgs.length - 1) + '.',
@@ -327,12 +344,14 @@ function deleteChatCommand(
 
 // Maintenance Commands --------------------------------------------------------
 
+/** Refetches the contributors list from the GitHub API. */
 function updateContributorsCommand(command: string, req: Request, res: Response): void {
 	logCommand(command, req);
 	contributors.refresh();
 	sendAndLogResponse(res, 200, 'Contributors should now be updated!');
 }
 
+/** Lists the commands, or describes the syntax of one. */
 function helpCommand(commandAndArgs: string[], res: Response): void {
 	if (commandAndArgs.length === 1) {
 		res.status(200).send(
@@ -426,6 +445,7 @@ function parseIntegerArgument(argument: string): number | undefined {
 	return Number.isInteger(value) ? value : undefined;
 }
 
+/** Records the command and the admin who ran it to the adminCommands log. */
 function logCommand(command: string, req: Request): void {
 	if (req.memberInfo?.signedIn) {
 		logEvents.addAndPrint(
@@ -436,6 +456,7 @@ function logCommand(command: string, req: Request): void {
 	} else throw new Error('Admin SHOULD have been logged in by this point. DANGEROUS');
 }
 
+/** Sends the response, and records it to the adminCommands log. */
 function sendAndLogResponse(res: Response, code: number, message: string): void {
 	res.status(code).send(message);
 	// Also log the sent response

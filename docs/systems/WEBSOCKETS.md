@@ -256,9 +256,10 @@ Reasonless closures: `1009 ""` (over `MAX_PAYLOAD_BYTES`), `1006 ""` (network fa
 / a terminated socket), `1001 ""` (tab closed without cleanup), `1002` / `1007` (`ws` rejecting a
 malformed frame or bad UTF-8). **1006 is always involuntary.**
 
-`LOGGED_OUT` is pushed from outside the socket layer — logout, account deletion, and password reset.
-Logout splits its session, though: the tab that asked gets `LOGGED_OUT_SELF` and ignores it, because
-reloading would cancel the navigation its own form already started.
+`LOGGED_OUT` is pushed from outside the socket layer — logout (our own or an admin's), account
+deletion, and password reset. Our own logout splits its session, though: the tab that asked gets
+`LOGGED_OUT_SELF` and ignores it, because reloading would cancel the navigation its own form already
+started.
 
 ### Voluntary vs. involuntary — what it costs you
 
