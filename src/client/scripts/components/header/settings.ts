@@ -28,15 +28,6 @@ import './pingmeter.js'; // Only imported so its code runs
 const settings = document.getElementById('settings')!;
 const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
-/** The sub-dropdown panels the settings dropdown navigates into. */
-const allSettingsDropdownsExceptMainOne = [
-	document.querySelector('.language-dropdown')!,
-	document.querySelector('.appearance-dropdown')!,
-	document.querySelector('.perspective-dropdown')!,
-	document.querySelector('.gameplay-dropdown')!,
-	document.querySelector('.sound-dropdown')!,
-];
-const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
 const allBackButtons = document.querySelectorAll<Element>('.dropdown-title');
 
 // Each sub-dropdown's navigation item paired with its module, for listener registration
@@ -147,22 +138,15 @@ function closeSettingsListeners(): void {
 	allBackButtons.forEach((btn) => btn.removeEventListener('click', showMainSettingsPanel));
 }
 
-/** Closes every settings dropdown when a click or touch lands outside all of them. */
+/** Closes every settings dropdown when a click or touch lands outside `#settings`, their parent. */
 function closeSettingsDropdownIfClickedAway(event: MouseEvent | TouchEvent): void {
-	if (
-		event.target instanceof Node &&
-		!settings.contains(event.target) &&
-		!didEventClickAnyDropdown(event)
-	) {
+	if (event.target instanceof Node && !settings.contains(event.target))
 		closeAllSettingsDropdowns();
-	}
 }
 
-/** Whether the event landed inside any settings dropdown, main or sub. */
-function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
-	const target = event.target;
-	if (!(target instanceof Node)) return false;
-	return allSettingsDropdowns.some((dropdown) => dropdown.contains(target));
+/** Whether the click landed inside any settings dropdown, main or sub: each is a `.dropdown`. */
+function didEventClickAnyDropdown(event: MouseEvent): boolean {
+	return event.target instanceof Element && event.target.closest('.dropdown') !== null;
 }
 
 /** Matches --c-board-accent and --c-board-accent-bright to the current board theme. */
