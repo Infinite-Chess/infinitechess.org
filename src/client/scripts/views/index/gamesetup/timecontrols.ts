@@ -20,9 +20,9 @@ interface TimeControlsConfig {
 // Elements --------------------------------------------------------------------
 
 const element_timeSliders = document.getElementById('time-sliders')!;
-const element_sliderMinutes = document.getElementById('slider-minutes') as HTMLInputElement;
+const element_sliderMinutes = document.getElementById('slider-minutes')! as HTMLInputElement;
 const element_minutesDisplay = document.getElementById('minutes-display')!;
-const element_sliderIncrement = document.getElementById('slider-increment') as HTMLInputElement;
+const element_sliderIncrement = document.getElementById('slider-increment')! as HTMLInputElement;
 const element_incrementDisplay = document.getElementById('increment-display')!;
 const element_presetButtons = document.querySelectorAll<HTMLElement>('.preset-btn');
 

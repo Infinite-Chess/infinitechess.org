@@ -38,7 +38,7 @@ const element_modifierItems =
 const element_modifiersSection = document.getElementById('modifiers-section')!;
 const element_modifiersList = document.getElementById('modifiers-list')!;
 const element_slideLimitSection = document.getElementById('slide-limit-section')!;
-const element_slideLimitSlider = document.getElementById('slider-slide-limit') as HTMLInputElement;
+const element_slideLimitSlider = document.getElementById('slider-slide-limit')! as HTMLInputElement;
 const element_slideLimitDisplay = document.getElementById('slide-limit-display')!;
 
 // State -----------------------------------------------------------------------

@@ -22,7 +22,7 @@ import { GameBus } from '../../board/GameBus.js';
 
 // Elements --------------------------------------------------------------------
 
-const element_Started = document.getElementById('meta-started') as HTMLTimeElement;
+const element_Started = document.getElementById('meta-started')! as HTMLTimeElement;
 
 const element_ResultBanner = document.querySelector('.result-banner')!;
 const element_BannerScore = element_ResultBanner.querySelector('.result-score')!;

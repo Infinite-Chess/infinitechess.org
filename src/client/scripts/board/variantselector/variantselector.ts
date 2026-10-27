@@ -162,7 +162,7 @@ const element_variantListPanelByGroup = new Map<GroupType, HTMLElement>(
 );
 const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
-const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
+const element_icnInput = document.getElementById('icn-input')! as HTMLTextAreaElement;
 const element_icnInputWrap = document.querySelector<HTMLElement>('.icn-input-wrap')!;
 /** Stands in for the field while it holds an ICN too large to draw. */
 const element_icnHeld = document.getElementById('icn-held')!;

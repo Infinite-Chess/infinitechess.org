@@ -26,24 +26,24 @@ import gamesetuphandoff from '../../../handoffs/gamesetuphandoff.js';
 
 // Elements --------------------------------------------------------------------
 
-const element_ActionsButton = document.getElementById('btn-analysis-actions') as HTMLButtonElement;
+const element_ActionsButton = document.getElementById('btn-analysis-actions')! as HTMLButtonElement;
 const element_ActionsMenu = document.getElementById('analysis-actions-menu')!;
-const element_Flip = document.getElementById('btn-flip') as HTMLButtonElement;
-const element_EditCurrent = document.getElementById('btn-edit-current') as HTMLButtonElement;
+const element_Flip = document.getElementById('btn-flip')! as HTMLButtonElement;
+const element_EditCurrent = document.getElementById('btn-edit-current')! as HTMLButtonElement;
 const element_ContinueFromHere = document.getElementById(
 	'btn-continue-from-here',
-) as HTMLButtonElement;
+)! as HTMLButtonElement;
 const element_ContinueChoiceMenu = document.getElementById('continue-choice-menu')!;
 const element_ContinuePublicSeek = document.getElementById(
 	'continue-public-seek',
-) as HTMLButtonElement;
+)! as HTMLButtonElement;
 const element_ContinuePlayComputer = document.getElementById(
 	'continue-play-computer',
-) as HTMLButtonElement;
+)! as HTMLButtonElement;
 const element_ContinueChallengeFriend = document.getElementById(
 	'continue-challenge-friend',
-) as HTMLButtonElement;
-const element_ExportIcn = document.getElementById('btn-export-icn') as HTMLButtonElement;
+)! as HTMLButtonElement;
+const element_ExportIcn = document.getElementById('btn-export-icn')! as HTMLButtonElement;
 
 // The "More actions" menu -----------------------------------------------------
 

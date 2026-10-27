@@ -59,10 +59,10 @@ interface MovesListRenderer {
 
 // Elements --------------------------------------------------------------------
 
-const element_First = document.getElementById('btn-move-first') as HTMLButtonElement;
-const element_Prev = document.getElementById('btn-move-prev') as HTMLButtonElement;
-const element_Next = document.getElementById('btn-move-next') as HTMLButtonElement;
-const element_Last = document.getElementById('btn-move-last') as HTMLButtonElement;
+const element_First = document.getElementById('btn-move-first')! as HTMLButtonElement;
+const element_Prev = document.getElementById('btn-move-prev')! as HTMLButtonElement;
+const element_Next = document.getElementById('btn-move-next')! as HTMLButtonElement;
+const element_Last = document.getElementById('btn-move-last')! as HTMLButtonElement;
 
 const element_MovesTable = document.querySelector('.moves-table')!;
 const element_GameResult = document.querySelector('.game-result')!;

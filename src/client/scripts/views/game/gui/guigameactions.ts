@@ -51,7 +51,7 @@ const element_RejectDraw = document.getElementById('btn-reject-draw') as HTMLBut
 // a participant (not spectator) of an unevicted (live, in-memory) game.
 const element_Rematch = document.getElementById('btn-rematch') as HTMLButtonElement | null;
 // A link (SSR'd href), so it navigates natively and honors ctrl/cmd/middle-click.
-const element_Analysis = document.getElementById('btn-analysis') as HTMLAnchorElement;
+const element_Analysis = document.getElementById('btn-analysis')! as HTMLAnchorElement;
 
 // Buttons to briefly disable when their action block first appears.
 const elements_GraceButtons = new Map<Element, HTMLElement[]>();

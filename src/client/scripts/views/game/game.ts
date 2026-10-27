@@ -26,7 +26,7 @@ import '../../game/gui/guimoveslist.js';
 import '../../game/gui/guiboardcontrols.js';
 
 /** The game-page board canvas WebGL renders onto. */
-const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
+const canvas = document.getElementById('board-canvas')! as HTMLCanvasElement;
 
 /** Starts the game page. Runs once the page is loaded. */
 function start(): void {

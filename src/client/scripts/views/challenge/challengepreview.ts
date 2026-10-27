@@ -18,7 +18,7 @@ import standaloneboard from '../../board/rendering/standaloneboard.js';
 
 // Elements --------------------------------------------------------------------
 
-const element_preview = document.getElementById('challenge-preview') as HTMLCanvasElement;
+const element_preview = document.getElementById('challenge-preview')! as HTMLCanvasElement;
 
 // Init ------------------------------------------------------------------------
 

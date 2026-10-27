@@ -49,8 +49,8 @@ const element_Expand = document.getElementById('btn-board-expand')!;
 const element_Recenter = document.getElementById('btn-board-recenter')!;
 
 // Coordinate readout
-const element_CoordsX = document.getElementById('coord-x') as HTMLInputElement;
-const element_CoordsY = document.getElementById('coord-y') as HTMLInputElement;
+const element_CoordsX = document.getElementById('coord-x')! as HTMLInputElement;
+const element_CoordsY = document.getElementById('coord-y')! as HTMLInputElement;
 
 // Constants -------------------------------------------------------------------
 

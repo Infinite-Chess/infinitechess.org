@@ -32,11 +32,11 @@ import { listener_document } from '../../../game/listeners.js';
 
 // Elements --------------------------------------------------------------------
 
-const element_Toggle = document.getElementById('engine-toggle') as HTMLInputElement;
+const element_Toggle = document.getElementById('engine-toggle')! as HTMLInputElement;
 const element_Eval = document.getElementById('engine-eval')!;
 const element_Stats = document.getElementById('engine-stats')!;
-const element_GoDeeper = document.getElementById('btn-go-deeper') as HTMLButtonElement;
-const element_SettingsBtn = document.getElementById('btn-engine-settings') as HTMLButtonElement;
+const element_GoDeeper = document.getElementById('btn-go-deeper')! as HTMLButtonElement;
+const element_SettingsBtn = document.getElementById('btn-engine-settings')! as HTMLButtonElement;
 const element_Settings = document.getElementById('engine-settings')!;
 const element_Progress = document.getElementById('engine-progress')!;
 const element_ProgressFill = document.getElementById('engine-progress-fill')!;
@@ -44,13 +44,13 @@ const element_Lines = document.getElementById('engine-lines')!;
 const element_Gauge = document.getElementById('eval-gauge')!;
 const element_GaugeBlack = document.getElementById('gauge-black')!;
 
-const element_MultiPv = document.getElementById('setting-multipv') as HTMLInputElement;
+const element_MultiPv = document.getElementById('setting-multipv')! as HTMLInputElement;
 const element_MultiPvValue = document.getElementById('setting-multipv-value')!;
-const element_Threads = document.getElementById('setting-threads') as HTMLInputElement;
+const element_Threads = document.getElementById('setting-threads')! as HTMLInputElement;
 const element_ThreadsValue = document.getElementById('setting-threads-value')!;
-const element_Hash = document.getElementById('setting-hash') as HTMLInputElement;
+const element_Hash = document.getElementById('setting-hash')! as HTMLInputElement;
 const element_HashValue = document.getElementById('setting-hash-value')!;
-const element_Depth = document.getElementById('setting-depth') as HTMLInputElement;
+const element_Depth = document.getElementById('setting-depth')! as HTMLInputElement;
 const element_DepthValue = document.getElementById('setting-depth-value')!;
 
 // State -----------------------------------------------------------------------

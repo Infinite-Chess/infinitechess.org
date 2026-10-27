@@ -21,7 +21,7 @@ import '../../game/gui/guimaterial.js';
 import './rendering/analysisoverlays.js';
 
 /** The analysis-page board canvas WebGL renders onto. */
-const canvas = document.getElementById('board-canvas') as HTMLCanvasElement;
+const canvas = document.getElementById('board-canvas')! as HTMLCanvasElement;
 
 /** Starts the analysis page. Runs once the page is loaded. */
 function start(): void {

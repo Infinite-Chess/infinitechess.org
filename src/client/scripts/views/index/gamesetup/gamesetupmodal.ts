@@ -38,10 +38,10 @@ const SUBMIT_LABELS: Record<ModalMode, string> = {
 
 const element_modalOverlay = document.getElementById('modal-overlay')!;
 const element_modalClose = document.getElementById('modal-close')!;
-const element_modalSubmit = document.getElementById('modal-submit') as HTMLButtonElement;
-const element_btnCreateOnline = document.getElementById('btn-create-game') as HTMLButtonElement;
-const element_btnChallengeFriend = document.getElementById('btn-challenge-friend') as HTMLButtonElement; // prettier-ignore
-const element_btnPlayComputer = document.getElementById('btn-play-ai') as HTMLButtonElement;
+const element_modalSubmit = document.getElementById('modal-submit')! as HTMLButtonElement;
+const element_btnCreateOnline = document.getElementById('btn-create-game')! as HTMLButtonElement;
+const element_btnChallengeFriend = document.getElementById('btn-challenge-friend')! as HTMLButtonElement; // prettier-ignore
+const element_btnPlayComputer = document.getElementById('btn-play-ai')! as HTMLButtonElement;
 const element_rowGameMode = document.getElementById('row-game-mode')!;
 const element_ratedButton = document.querySelector<HTMLButtonElement>('[data-mode="rated"]')!;
 const element_casualButton = document.querySelector<HTMLButtonElement>('[data-mode="casual"]')!;
