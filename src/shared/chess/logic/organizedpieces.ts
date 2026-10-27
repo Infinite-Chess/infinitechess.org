@@ -139,30 +139,16 @@ function processInitialPosition(
 } {
 	// Organize the pieces by type
 
-	const piecesByType: Map<number, Coords[]> = new Map();
+	const piecesByType: Map<number, CoordsKey[]> = new Map();
 	const existingTypesSet = new Set<number>();
 	if (!(position instanceof Map)) throw Error(`Position is not a map! (${typeof position})`);
-	// Bounding box variables
-	let minX: bigint | undefined;
-	let maxX: bigint | undefined;
-	let minY: bigint | undefined;
-	let maxY: bigint | undefined;
-	// Iterate through the position
 	for (const [coordsKey, type] of position) {
 		if (typeof type !== 'number')
 			throw Error(`Type inside Position is not a number! ${type} ${coordsKey}`); // Bug catcher
-		const coords = coordutil.getCoordsFromKey(coordsKey as CoordsKey);
 		existingTypesSet.add(type);
 		if (!piecesByType.has(type)) piecesByType.set(type, []);
-		piecesByType.get(type)!.push(coords); // Push the coords
-		// Update bounding box
-		if (minX === undefined || coords[0] < minX) minX = coords[0];
-		if (maxX === undefined || coords[0] > maxX) maxX = coords[0];
-		if (minY === undefined || coords[1] < minY) minY = coords[1];
-		if (maxY === undefined || coords[1] > maxY) maxY = coords[1];
+		piecesByType.get(type)!.push(coordsKey);
 	}
-	const boundingBox: BoundingBox | undefined =
-		minX !== undefined ? { left: minX, right: maxX!, bottom: minY!, top: maxY! } : undefined;
 
 	// Calculate the possible types
 
@@ -188,33 +174,37 @@ function processInitialPosition(
 
 	// Fill the lists and construct the type ranges and coords!
 
-	const partialPieces = {
-		XPositions,
-		YPositions,
-		coords: new Map<CoordsKey, number>(),
-	};
+	const coords = new Map<CoordsKey, number>();
+	let minX: bigint | undefined;
+	let maxX: bigint | undefined;
+	let minY: bigint | undefined;
+	let maxY: bigint | undefined;
 
 	let start = 0; // The next range start
 	let pointer = 0; // The index within the XPositions, YPosition, and types, we are currently setting.
 	const ranges: TypeRanges = new Map();
 	for (const type of existingTypes) {
-		const pieces = piecesByType.get(type) ?? []; // It will be empty if there are no pieces of this type in the starting position. Those may be acquired via promotion / board editor.
+		const pieceKeys = piecesByType.get(type) ?? []; // Empty for types only promotion or the board editor can add
 
 		// Set the pieces X, Y, and type, and register in coords
-		for (let i = 0; i < pieces.length; i++) {
-			const coords: Coords = [pieces[i]![0], pieces[i]![1]];
-			XPositions[pointer] = coords[0];
-			YPositions[pointer] = coords[1];
-			types[pointer] = Number(type);
-			registerPieceInCoords(pointer, partialPieces, coords);
+		for (const coordsKey of pieceKeys) {
+			const [x, y] = coordutil.getCoordsFromKey(coordsKey);
+			XPositions[pointer] = x;
+			YPositions[pointer] = y;
+			types[pointer] = type;
+			coords.set(coordsKey, pointer);
 			pointer++;
+			if (minX === undefined || x < minX) minX = x;
+			if (maxX === undefined || x > maxX) maxX = x;
+			if (minY === undefined || y < minY) minY = y;
+			if (maxY === undefined || y > maxY) maxY = y;
 		}
 
 		// Create the undefineds list
 		const undefineds: number[] = [];
 		for (let i = 0; i < listExtrasByType[type]!; i++) {
 			// The XPositions and YPositions are pre-filled with 0, so we don't need to set them here.
-			types[pointer] = Number(type); // The undefined is still in the same type range, though, so we do need to set this.
+			types[pointer] = type; // The undefined is still in the same type range, though, so we do need to set this.
 			undefineds.push(pointer);
 			pointer++;
 		}
@@ -235,8 +225,11 @@ function processInitialPosition(
 		YPositions,
 		types,
 		typeRanges: ranges,
-		coords: partialPieces.coords,
+		coords,
 	};
+
+	const boundingBox: BoundingBox | undefined =
+		minX !== undefined ? { left: minX, right: maxX!, bottom: minY!, top: maxY! } : undefined;
 
 	return {
 		pieces,
