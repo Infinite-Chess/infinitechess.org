@@ -1,7 +1,8 @@
 // src/server/database/banned.ts
 
 /**
- * Legacy JSON-backed ban store for IPs and browser-ids, consulted at startup of each request.
+ * Legacy JSON-backed ban store for IPs and browser-ids, read once at startup and consulted on
+ * every request.
  *
  * Blacklisted EMAILS are handled separately in the email_blacklist database table
  * (see blacklistManager.ts).
@@ -20,14 +21,11 @@ const BANNED_PATH = path.resolve('database/banned.json');
 
 // State -----------------------------------------------------------------------
 
-/**
- * The banned IPs and browser-ids, as loaded from {@link BANNED_PATH}.
- * Each value is a free-form note on the ban; only the key's presence is ever tested.
- */
-let bannedJSON: {
-	IPs: Record<string, unknown>;
-	'browser-ids': Record<string, unknown>;
-};
+/** The banned IPs, as loaded from {@link BANNED_PATH}. */
+const bannedIPs = new Set<string>();
+
+/** The banned browser-ids, as loaded from {@link BANNED_PATH}. */
+const bannedBrowserIDs = new Set<string>();
 
 // Startup ---------------------------------------------------------------------
 
@@ -50,14 +48,16 @@ ensureBannedFileExists: {
 }
 
 try {
-	bannedJSON = JSON.parse(fs.readFileSync(BANNED_PATH, 'utf-8'));
+	/** Each value is a free-form note on the ban, never read. */
+	const bannedJSON: {
+		IPs: Record<string, unknown>;
+		'browser-ids': Record<string, unknown>;
+	} = JSON.parse(fs.readFileSync(BANNED_PATH, 'utf-8'));
+	for (const ip of Object.keys(bannedJSON.IPs)) bannedIPs.add(ip);
+	for (const browserID of Object.keys(bannedJSON['browser-ids'])) bannedBrowserIDs.add(browserID);
 } catch (error: unknown) {
 	if (env.NODE_ENV === 'test') {
-		console.warn('Mocking banned.json for test environment');
-		bannedJSON = {
-			IPs: {},
-			'browser-ids': {},
-		};
+		console.warn('Unable to read banned.json in the test environment; no bans apply');
 	} else {
 		const message = jsutil.getErrorMessage(error);
 		throw new Error('Unable to read banned.json on startup: ' + message);
@@ -68,13 +68,12 @@ try {
 
 /** Whether the IP address is banned. */
 function isIP(ip: string): boolean {
-	return bannedJSON.IPs[ip] !== undefined;
+	return bannedIPs.has(ip);
 }
 
 /** Whether the browser-id is banned. */
 function isBrowserID(browserID: string): boolean {
-	// A request can send any browser-id cookie, so an inherited name like "constructor" mustn't match.
-	return Object.hasOwn(bannedJSON['browser-ids'], browserID);
+	return bannedBrowserIDs.has(browserID);
 }
 
 // Exports ---------------------------------------------------------------------
