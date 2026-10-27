@@ -743,7 +743,7 @@ function shouldReplaceCachedUpdate(cached: CevalUpdate | undefined, update: Ceva
  * are heavily throttled — still display progress), else trail with a timer.
  */
 function scheduleEmit(): void {
-	const elapsed = Date.now() - scheduler.lastEmitMs;
+	const elapsed = performance.now() - scheduler.lastEmitMs;
 	if (elapsed >= THROTTLE_MS) return emitNow();
 	if (scheduler.timer === undefined)
 		scheduler.timer = setTimeout(() => emitNow(), THROTTLE_MS - elapsed);
@@ -755,7 +755,7 @@ function emitNow(): void {
 		clearTimeout(scheduler.timer);
 		scheduler.timer = undefined;
 	}
-	scheduler.lastEmitMs = Date.now();
+	scheduler.lastEmitMs = performance.now();
 	for (const listener of updateListeners) listener(latestUpdate);
 }
 

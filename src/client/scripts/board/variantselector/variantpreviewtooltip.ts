@@ -77,7 +77,7 @@ document.addEventListener(
 	() => {
 		if (element_tooltip.classList.contains('visibility-hidden')) return;
 		hide();
-		suppressSynthesizedEventsUntil = Date.now() + 200;
+		suppressSynthesizedEventsUntil = performance.now() + 200;
 	},
 	{ passive: true },
 );
@@ -85,7 +85,7 @@ document.addEventListener(
 // Prevent the imminent release of a finger that hides the tooltip from triggering a click on the items that we below it.
 document.addEventListener('click', eatSynthesizedEvent, { capture: true });
 function eatSynthesizedEvent(e: Event): void {
-	if (Date.now() < suppressSynthesizedEventsUntil) {
+	if (performance.now() < suppressSynthesizedEventsUntil) {
 		e.stopPropagation();
 		e.preventDefault();
 	}

@@ -125,7 +125,7 @@ let nextTransition: ZoomTransition | undefined;
 
 /** Precalculated total duration of the current transition. */
 let durationMillis: number;
-/** When the current transition started, from `Date.now()`. */
+/** When the current transition started, from `performance.now()`. */
 let startTime: number;
 /** Whether the current transition is a Zooming Transition, vs a Panning Transition. */
 let isZoom: boolean;
@@ -213,7 +213,7 @@ GameBus.addEventListener('game-unloaded', () => {
 /** Sets common variables between starting either a Zooming or Panning Transition. */
 function onTransitionStart(): void {
 	isTransitioning = true;
-	startTime = Date.now();
+	startTime = performance.now();
 	originCoords = boardpos.getBoardPos();
 	originScale = boardpos.getBoardScale();
 
@@ -561,7 +561,7 @@ function undoTransition(): void {
 function update(): void {
 	if (!isTransitioning) return; // Not transitioning
 
-	const elapsedTime = Date.now() - startTime;
+	const elapsedTime = performance.now() - startTime;
 	if (elapsedTime >= durationMillis) {
 		finishTransition();
 		return;

@@ -41,7 +41,7 @@ export class EchoRiftZone extends BaseZone {
 	// --- State ---
 
 	/** The next timestamp the voronoi distortion pass will update the time value, revealing a different pattern. */
-	private nextCrackTime: number = Date.now();
+	private nextCrackTime: number = performance.now();
 
 	private baseMillisBetweenCracks: number = 400;
 	private maxMillisBetweenCracks: number = 4000;
@@ -109,10 +109,10 @@ export class EchoRiftZone extends BaseZone {
 
 	public update(): void {
 		// Update cracking of the voronoi distortion effect.
-		if (Date.now() > this.nextCrackTime) {
+		if (performance.now() > this.nextCrackTime) {
 			this.voronoiDistortionPass.time = performance.now() / 10;
 			this.nextCrackTime =
-				Date.now() +
+				performance.now() +
 				this.baseMillisBetweenCracks +
 				Math.random() * this.maxMillisBetweenCracks;
 			if (preferences.getAmbienceEnabled()) gamesound.playGlassCrack();

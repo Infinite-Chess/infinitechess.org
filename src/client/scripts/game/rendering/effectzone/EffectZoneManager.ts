@@ -189,7 +189,7 @@ export class EffectZoneManager {
 	public update(distanceFromOrigin: bigint): void {
 		// --- 1. UPDATE TRANSITION STATE ---
 		if (this.transitionStartTime !== null && this.transitionTargetZone) {
-			const elapsedTime = Date.now() - this.transitionStartTime;
+			const elapsedTime = performance.now() - this.transitionStartTime;
 			if (elapsedTime >= this.transitionDuration) {
 				this.currentZone = this.transitionTargetZone;
 				this.transitionTargetZone = null;
@@ -206,7 +206,7 @@ export class EffectZoneManager {
 		) {
 			// A new transition needs to start.
 			this.transitionTargetZone = targetZoneForDistance;
-			this.transitionStartTime = Date.now();
+			this.transitionStartTime = performance.now();
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
 			if (preferences.getAmbienceEnabled()) {
 				this.currentZone.fadeOutAmbience(this.transitionDuration);
@@ -225,9 +225,9 @@ export class EffectZoneManager {
 			this.currentZone = oldTarget;
 
 			// 2. The timer is reversed.
-			const elapsedTime = Date.now() - this.transitionStartTime!;
+			const elapsedTime = performance.now() - this.transitionStartTime!;
 			const remainingTime = this.transitionDuration - elapsedTime;
-			this.transitionStartTime = Date.now() - remainingTime;
+			this.transitionStartTime = performance.now() - remainingTime;
 
 			// Fade out the current zone's ambience and fade in the transitionTargetZone's
 			if (preferences.getAmbienceEnabled()) {
@@ -240,7 +240,10 @@ export class EffectZoneManager {
 		// Recalculate alpha for this frame's render pass.
 		this.transitionProgress =
 			this.transitionStartTime && this.transitionTargetZone
-				? Math.min((Date.now() - this.transitionStartTime) / this.transitionDuration, 1.0)
+				? Math.min(
+						(performance.now() - this.transitionStartTime) / this.transitionDuration,
+						1.0,
+					)
 				: 0.0;
 
 		// Update individual zone states

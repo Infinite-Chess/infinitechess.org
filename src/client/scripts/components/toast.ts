@@ -64,7 +64,7 @@ function show(text: string, options: ToastOptions = {}): void {
 	toastEl.classList.remove('hidden');
 
 	currentDuration = duration;
-	shownAt = Date.now();
+	shownAt = performance.now();
 	pauseStart = undefined;
 	startTimer(duration);
 }
@@ -89,15 +89,15 @@ function dismiss(): void {
 
 toastEl.addEventListener('mouseenter', () => {
 	window.clearTimeout(timerId);
-	pauseStart = Date.now();
+	pauseStart = performance.now();
 });
 toastEl.addEventListener('mouseleave', () => {
 	if (pauseStart === undefined) return;
 	// Shift `shownAt` forward by the pause length so `elapsed` ignores paused time.
-	shownAt += Date.now() - pauseStart;
+	shownAt += performance.now() - pauseStart;
 	pauseStart = undefined;
 	if (toastEl.classList.contains('hidden') || toastEl.classList.contains('toast-leaving')) return;
-	const remaining = currentDuration - (Date.now() - shownAt);
+	const remaining = currentDuration - (performance.now() - shownAt);
 	if (remaining > 0) startTimer(remaining);
 	else dismiss();
 });

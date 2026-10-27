@@ -80,7 +80,7 @@ function pollIntervalForElapsed(elapsedMs: number): number {
 function startPolling(): void {
 	if (pollingActive) return;
 	pollingActive = true;
-	pollStartedAt = Date.now();
+	pollStartedAt = performance.now();
 	pollVerification(); // Check immediately — the link may already be verified.
 }
 
@@ -101,8 +101,8 @@ function pollNowOrScheduleNext(): void {
 	window.clearTimeout(pollTimerId);
 	pollTimerId = undefined;
 	if (document.visibilityState === 'hidden') return;
-	const interval = pollIntervalForElapsed(Date.now() - pollStartedAt);
-	const delay = lastPollAt + interval - Date.now();
+	const interval = pollIntervalForElapsed(performance.now() - pollStartedAt);
+	const delay = lastPollAt + interval - performance.now();
 	if (delay <= 0)
 		pollVerification(); // Due now — poll instantly.
 	else pollTimerId = window.setTimeout(() => pollVerification(), delay);
@@ -115,11 +115,11 @@ function pollNowOrScheduleNext(): void {
  * until the duration cap.
  */
 async function pollVerification(): Promise<void> {
-	if (Date.now() - pollStartedAt > POLL_MAX_DURATION_MS) {
+	if (performance.now() - pollStartedAt > POLL_MAX_DURATION_MS) {
 		stopPolling();
 		return;
 	}
-	lastPollAt = Date.now();
+	lastPollAt = performance.now();
 	try {
 		const response = await serverfetch('/api/register/awaiting/status');
 		// Only parse the body if OK: a non-OK status (e.g. a 429 from the rate limiter)

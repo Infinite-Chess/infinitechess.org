@@ -124,7 +124,10 @@ function addRipple(board: LiveBoard, sourceCoords: Coords): void {
 	}
 
 	// Create a new droplet
-	board.ripples.droplets.push({ center: [u, v], timeCreated: Date.now() + elapsedTimeOffset });
+	board.ripples.droplets.push({
+		center: [u, v],
+		timeCreated: performance.now() + elapsedTimeOffset,
+	});
 }
 
 /** Removes every droplet, ending the board's ripples at once. */
@@ -140,7 +143,7 @@ function clear(board: LiveBoard): void {
 function update(board: LiveBoard, suppressed: boolean): void {
 	const { droplets, pass } = board.ripples;
 	const lifetime = getLifetime(board.canvas);
-	const now = Date.now();
+	const now = performance.now();
 
 	// Filter out old droplets
 	for (let i = droplets.length - 1; i >= 0; i--) {

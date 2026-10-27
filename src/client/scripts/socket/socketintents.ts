@@ -42,7 +42,7 @@ type Intent = {
 	/** Bound at submission, while the message's route/action/value are still in hand. */
 	send: () => Promise<void>;
 	isStillValid: () => boolean;
-	/** Epoch ms past which the user has mentally moved on, and we silently drop it. */
+	/** The `performance.now()` past which the user has mentally moved on, and we silently drop it. */
 	expiresAt: number;
 	/**
 	 * The lock this intent holds. Once sent, its ack is what frees the lock;
@@ -138,7 +138,7 @@ function submit<R extends SubscribedRoute, A extends OutAction<R>, V extends Out
 			else outstanding.set(key, messageID);
 		},
 		isStillValid,
-		expiresAt: Date.now() + INTENT_LIFETIME_MS,
+		expiresAt: performance.now() + INTENT_LIFETIME_MS,
 		key,
 	};
 
@@ -201,7 +201,7 @@ function onRouteSynced(route: SubscribedRoute): void {
 	if (intents.length === 0) return;
 	held[route] = [];
 
-	const now = Date.now();
+	const now = performance.now();
 	for (const intent of intents) {
 		const stale = now > intent.expiresAt; // User has moved on.
 		if (stale || !intent.isStillValid()) {

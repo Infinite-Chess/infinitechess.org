@@ -124,7 +124,7 @@ function recordEntry(entry: ChatEntry, sentAt: number): void {
 
 /** When something arriving right now was sent, in OUR clock. Half the ping is its inbound transit. */
 function receiptInstant(): number {
-	return Date.now() - pingmanager.getHalfPing();
+	return performance.now() - pingmanager.getHalfPing();
 }
 
 // Sending ---------------------------------------------------------------------
@@ -141,7 +141,7 @@ function submit(): void {
 	// Refused if we are not connected and fully in sync.
 	if (!socketintents.isRouteReady('game')) return showError('disconnected');
 
-	const rejection = chatlimits.check(sentHistory, text, Date.now());
+	const rejection = chatlimits.check(sentHistory, text, performance.now());
 	if (rejection !== undefined) return showError(rejection);
 
 	// Bypasses socketintents.submit() deliberately: a held intent REPLACES the previous one and

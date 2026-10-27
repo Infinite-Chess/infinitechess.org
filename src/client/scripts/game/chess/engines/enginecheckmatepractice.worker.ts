@@ -65,7 +65,7 @@ self.onmessage = function (e: MessageEvent<CheckmatePracticeMoveRequest>): void 
 
 	if (!engineInitialized) initEvalWeightsAndSearchProperties(); // initialize the eval function weights and global search properties
 
-	engineStartTime = Date.now();
+	engineStartTime = performance.now();
 	enginePositionCounter = 0;
 	runEngine();
 };
@@ -1262,7 +1262,7 @@ function alphabeta(
 	// Empirically: The bot needs roughly 40ms to check 3000 positions, so check every 40ms if enough time has passed to terminate computation
 	if (
 		enginePositionCounter % 3000 === 0 &&
-		Date.now() - engineStartTime >= engineTimeLimitPerMoveMillis
+		performance.now() - engineStartTime >= engineTimeLimitPerMoveMillis
 	) {
 		return { score: NaN, bestVariation: {}, survivalPlies: NaN, terminate_now: true };
 		// If game over, return position evaluation
@@ -1883,7 +1883,7 @@ async function runEngine(): Promise<void> {
 			runIterativeDeepening(start_piecelist, start_coordlist, Infinity);
 
 		// submit engine move after enough time has passed
-		const time_now = Date.now();
+		const time_now = performance.now();
 		if (time_now - engineStartTime < engineTimeLimitPerMoveMillis) {
 			await new Promise((r) =>
 				setTimeout(r, engineTimeLimitPerMoveMillis - (time_now - engineStartTime)),

@@ -217,7 +217,7 @@ function armGracePeriods(
 	previousOurSeekId: number | undefined,
 	seeks: OutSeek[],
 ): void {
-	const now = Date.now();
+	const now = performance.now();
 	for (let row = 0; row < previousSeekIds.length; row++) {
 		if (previousSeekIds[row] !== seeks[row]?.id) rowVacatedTimes[row] = now;
 	}

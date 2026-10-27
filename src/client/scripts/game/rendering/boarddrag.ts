@@ -221,7 +221,7 @@ function initDoublePointerDrag(pointerId: string): void {
 function checkIfBoardDropped(): void {
 	if (!boardIsGrabbed) return; // Not grabbed
 
-	const now = Date.now();
+	const now = performance.now();
 
 	// All existing pointers that are either left mouse button, or a touch
 	const allPointers = getBoardDraggablePointers();
@@ -398,7 +398,7 @@ function dragBoard(): void {
  * History is only kept track of while dragging.
  */
 function addCurrentPositionToHistory(): void {
-	const now = Date.now();
+	const now = performance.now();
 	removeOldPositions(now);
 	positionHistory.push({
 		time: now,

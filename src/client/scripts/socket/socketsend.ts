@@ -76,7 +76,7 @@ function cancelTimerOfMessageID(ID: number): void {
 	}
 
 	// Update the Ping meter with the round-trip time
-	const timeTaken = Date.now() - echoTimer.timeSent;
+	const timeTaken = performance.now() - echoTimer.timeSent;
 	SocketBus.dispatch('ping', timeTaken);
 
 	clearTimeout(echoTimer.timeoutID);
@@ -174,7 +174,7 @@ async function send<R extends OutRoute, A extends OutAction<R>, V extends OutVal
 
 	// Set a timer to assume disconnection if echo not received
 	echoTimers[payload.id] = {
-		timeSent: Date.now(),
+		timeSent: performance.now(),
 		timeoutID: window.setTimeout(() => onEchoTimeout(), socketutil.ECHO_TIMEOUT_MS),
 	};
 

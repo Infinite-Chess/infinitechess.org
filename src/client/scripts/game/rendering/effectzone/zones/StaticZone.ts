@@ -80,7 +80,7 @@ export class StaticZone extends BaseZone {
 
 	public update(): void {
 		// Randomize the pixels every little bit.
-		const now = Date.now();
+		const now = performance.now();
 		if (now - this.lastUpdateTime > this.UPDATE_INTERVAL) {
 			this.lastUpdateTime = now;
 			// Generate a random offset, but snap it to the pixel grid.

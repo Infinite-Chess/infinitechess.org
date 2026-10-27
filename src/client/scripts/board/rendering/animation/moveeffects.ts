@@ -124,7 +124,7 @@ function playMove(
 /** Plays a piece move's sound effect: its capture or move sound, plus any ripple or bell sound. */
 function playSound(distanceMoved: BigDecimal, capture: boolean, premove: boolean): void {
 	// Update the time since the last move sound was played
-	const now = Date.now();
+	const now = performance.now();
 	const timeSinceLastMoveSoundPlayed = now - timeLastMoveOrCaptureSound;
 	timeLastMoveOrCaptureSound = now;
 

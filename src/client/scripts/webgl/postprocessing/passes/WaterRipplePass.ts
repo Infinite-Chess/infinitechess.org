@@ -65,7 +65,7 @@ export class WaterRipplePass implements PostProcessPass {
 
 	// prettier-ignore
 	render(gl: WebGL2RenderingContext, inputTexture: WebGLTexture): void {
-		const now = Date.now();
+		const now = performance.now();
 
 		// --- 1. Prepare uniform data ---
 		const dropletCount = this.activeDroplets.length;

@@ -43,7 +43,7 @@ function _updateEditButtons(): void {
 
 /** Whether enough time has passed since the last undo/redo for another. */
 function isItOkayToUndoEditOrRedoEdit(): boolean {
-	const timeSinceLastEdit = Date.now() - lastEdit;
+	const timeSinceLastEdit = performance.now() - lastEdit;
 	return timeSinceLastEdit >= MINIMUM_EDIT_INTERVAL_MS;
 }
 
@@ -74,14 +74,14 @@ function testIfRedoEdit(): void {
 /** Undoes one edit */
 function callback_UndoEdit(): void {
 	if (!isItOkayToUndoEditOrRedoEdit()) return;
-	lastEdit = Date.now();
+	lastEdit = performance.now();
 	edithistory.undo();
 }
 
 /** Redoes one edit. */
 function callback_RedoEdit(): void {
 	if (!isItOkayToUndoEditOrRedoEdit()) return;
-	lastEdit = Date.now();
+	lastEdit = performance.now();
 	edithistory.redo();
 }
 

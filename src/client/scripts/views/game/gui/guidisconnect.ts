@@ -42,7 +42,7 @@ const RECONNECTED_LINGER_MS = 2000;
 
 // State -----------------------------------------------------------------------
 
-/** The epoch-ms timestamp from which we may claim victory/draw. Undefined when the opponent is connected. */
+/** The `performance.now()` from which we may claim victory/draw. Undefined when the opponent is connected. */
 let claimableAt: number | undefined;
 /** Whether the opponent disconnected by choice (vs. lost connection). */
 let voluntary: boolean = false;
@@ -60,7 +60,7 @@ GameBus.addEventListener('game-concluded', () => onOpponentReturn());
 /** Called when our opponent disconnects (or on load if they're already disconnected). */
 function onOpponentDisconnect(info: DisconnectInfo): void {
 	if (!element_DisconnectStatus) return; // Concluded game: block absent.
-	claimableAt = Date.now() + info.millisUntilClaimable;
+	claimableAt = performance.now() + info.millisUntilClaimable;
 	voluntary = info.voluntary;
 	element_DisconnectStatus.classList.remove('hidden');
 	render();
@@ -91,7 +91,7 @@ function render(): void {
 	const gamefile = gameslot.getGamefile();
 
 	if (gamefile && moveutil.isGameResignable(gamefile)) {
-		const secsRemaining = Math.ceil((claimableAt - Date.now()) / 1000);
+		const secsRemaining = Math.ceil((claimableAt - performance.now()) / 1000);
 		if (secsRemaining > 0) {
 			const template = secsRemaining === 1 ? strings.claim_in_one : strings.claim_in_other;
 			element_DisconnectText.textContent = interpolate.interpolate(template, { lead, n: secsRemaining }); // prettier-ignore
@@ -119,7 +119,7 @@ function isClaimable(): boolean {
 	// Load-bearing: claimableAt is only cleared on 'game-concluded', which online games don't
 	// dispatch off our own locally-detected conclusion — so it outlives the game briefly.
 	if (!gameslot.isGameLive()) return false;
-	return claimableAt !== undefined && Date.now() >= claimableAt;
+	return claimableAt !== undefined && performance.now() >= claimableAt;
 }
 
 /** Claims victory against the disconnected opponent. Server validates the window is open. */

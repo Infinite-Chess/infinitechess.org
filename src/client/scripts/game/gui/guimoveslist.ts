@@ -137,7 +137,7 @@ function registerRenderer(r: MovesListRenderer): void {
 
 /** Whether enough time has passed since the last navigation to navigate again. */
 function isOkayToNavigate(): boolean {
-	return Date.now() - lastNav >= MIN_NAV_INTERVAL_MS;
+	return performance.now() - lastNav >= MIN_NAV_INTERVAL_MS;
 }
 
 /** Rewinds the game by 1 move, unselecting any piece. Cancels premoves first, instead of rewinding. */
@@ -201,14 +201,14 @@ function jumpToEnd(): void {
 /** Throttled rewind, for the hold-to-repeat previous button. */
 function callback_Prev(): void {
 	if (!isOkayToNavigate()) return;
-	lastNav = Date.now();
+	lastNav = performance.now();
 	rewind();
 }
 
 /** Throttled forward, for the hold-to-repeat next button. */
 function callback_Next(): void {
 	if (!isOkayToNavigate()) return;
-	lastNav = Date.now();
+	lastNav = performance.now();
 	forward();
 }
 

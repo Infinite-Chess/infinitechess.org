@@ -334,7 +334,7 @@ function createListener(
 	GameBus.addEventListener('reset-listener-events', () => {
 		// We can continuously hold a key without triggering more events, so held keys should still count as an input that frame.
 		atleastOneInputThisFrame = keyHelds.length > 0;
-		const now = Date.now();
+		const now = performance.now();
 		// For each mouse button, reset its state
 		for (const button of Object.values(clickInfo)) {
 			button.isDown = false;
@@ -425,7 +425,7 @@ function createListener(
 			targetButtonInfo.timeDownMillisHistory[
 				targetButtonInfo.timeDownMillisHistory.length - 1
 			];
-		const now = Date.now();
+		const now = performance.now();
 		targetButtonInfo.timeDownMillisHistory.push(now);
 		// Update double click draw ----------
 		const { doubleClickTimeMs } = getClickThresholds(e);
@@ -466,7 +466,7 @@ function createListener(
 
 		// Update click --------------
 		const mouseHistory = targetButtonInfo.timeDownMillisHistory;
-		const timePassed = Date.now() - (mouseHistory[mouseHistory.length - 1] ?? 0); // Since the latest click
+		const timePassed = performance.now() - (mouseHistory[mouseHistory.length - 1] ?? -Infinity); // Since the latest click
 		const { timeMs } = getClickThresholds(e);
 		if (timePassed < timeMs) {
 			if (isWithinClickTolerance(targetButtonInfo, relativeMousePos, e)) {
@@ -550,7 +550,7 @@ function createListener(
 			updateDeltaSinceDownForPointer(physicalPointer.id, physicalPointer.delta);
 
 			// Update velocity
-			const now = Date.now();
+			const now = performance.now();
 			physicalPointer.positionHistory.push({ pos: [...physicalPointer.position], time: now }); // Deep copy the mouse position to avoid modifying the original
 			recalcPointerVel(physicalPointer, now);
 		}) as EventListener);
@@ -606,7 +606,7 @@ function createListener(
 					id: physicalId,
 					position,
 					delta: [0, 0],
-					positionHistory: [{ pos: [...position], time: Date.now() }],
+					positionHistory: [{ pos: [...position], time: performance.now() }],
 					velocity: [0, 0],
 				};
 
@@ -638,7 +638,7 @@ function createListener(
 				updateDeltaSinceDownForPointer(physicalPointer.id, physicalPointer.delta);
 
 				// Update velocity
-				const now = Date.now();
+				const now = performance.now();
 				physicalPointer.positionHistory.push({
 					pos: [...physicalPointer.position],
 					time: now,
