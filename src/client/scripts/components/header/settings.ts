@@ -22,13 +22,13 @@ import perspectivedropdown from './dropdowns/perspectivedropdown.js';
 
 import './pingmeter.js'; // Only imported so its code runs
 
-// Document Elements -----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 // Main settings dropdown
 const settings = document.getElementById('settings')!;
 const settingsDropdown = document.querySelector('.settings-dropdown')!;
 
-/** The buttons in the settings dropdown that open the sub-dropdowns */
+/** The sub-dropdown panels the settings dropdown navigates into. */
 const allSettingsDropdownsExceptMainOne = [
 	document.querySelector('.language-dropdown')!,
 	document.querySelector('.appearance-dropdown')!,
@@ -36,6 +36,8 @@ const allSettingsDropdownsExceptMainOne = [
 	document.querySelector('.gameplay-dropdown')!,
 	document.querySelector('.sound-dropdown')!,
 ];
+const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
+const allBackButtons = document.querySelectorAll<Element>('.dropdown-title');
 
 // Each sub-dropdown's navigation item paired with its module, for listener registration
 const subDropdowns: { selection: Element; module: { open(): void; close(): void } }[] = [
@@ -58,17 +60,25 @@ const subDropdowns: { selection: Element; module: { open(): void; close(): void 
 	{ selection: document.getElementById('sound-settings-dropdown-item')!, module: sounddropdown },
 ];
 
-// Variables -------------------------------------------------------------------
+// Constants -------------------------------------------------------------------
 
-const allSettingsDropdowns = [...allSettingsDropdownsExceptMainOne, settingsDropdown];
-const allBackButtons = document.querySelectorAll<Element>('.dropdown-title');
-let settingsIsOpen = settings.classList.contains('open');
+/** How --c-board-accent-bright is derived from --c-board-accent, in HSL lightness. */
+const BRIGHT_ACCENT = {
+	/** How much lighter it is. */
+	lighten: 0.05,
+	/** The lightness it never drops below, so dark themes keep bright accents. */
+	minLightness: 0.6,
+};
 
 /** Pre-built handlers for opening each sub-dropdown and hiding the main settings panel. */
-const openHandlers = subDropdowns.map(({ module }) => () => {
+const OPEN_HANDLERS = subDropdowns.map(({ module }) => () => {
 	module.open();
 	hideMainSettingsPanel();
 });
+
+// State -----------------------------------------------------------------------
+
+let settingsIsOpen = settings.classList.contains('open');
 
 // Functions -------------------------------------------------------------------
 
@@ -78,7 +88,6 @@ const openHandlers = subDropdowns.map(({ module }) => () => {
 		toggleSettingsDropdown();
 	});
 
-	// Close the dropdown if clicking outside of it
 	document.addEventListener('click', closeSettingsDropdownIfClickedAway);
 	document.addEventListener('touchstart', closeSettingsDropdownIfClickedAway);
 
@@ -86,22 +95,25 @@ const openHandlers = subDropdowns.map(({ module }) => () => {
 	SettingsBus.addEventListener('theme-change', updateBoardAccent);
 })();
 
+/** Opens the settings dropdown, or closes it and every sub-dropdown if it's open. */
 function toggleSettingsDropdown(): void {
 	if (settingsIsOpen) closeAllSettingsDropdowns();
 	else openSettingsDropdown();
 }
+
+/** Opens the main settings dropdown. */
 function openSettingsDropdown(): void {
-	// Opens the initial settings dropdown
 	settings.classList.add('open');
-	settingsDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	settingsDropdown.classList.remove('hidden');
 	initSettingsListeners();
 	settingsIsOpen = true;
 }
+
+/** Closes the main settings dropdown and every sub-dropdown. */
 function closeAllSettingsDropdowns(): void {
-	// Closes all dropdowns that may be open
 	settings.classList.remove('open');
 
-	settingsDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	settingsDropdown.classList.add('hidden');
 	closeSettingsListeners();
 
 	subDropdowns.forEach(({ module }) => module.close());
@@ -109,28 +121,34 @@ function closeAllSettingsDropdowns(): void {
 	settingsIsOpen = false;
 }
 
+/** Hides the main panel, as a sub-dropdown opens in its place. */
 function hideMainSettingsPanel(): void {
 	settingsDropdown.classList.add('hidden');
 }
+
+/** Shows the main panel again, as a sub-dropdown's back button is clicked. */
 function showMainSettingsPanel(): void {
 	settingsDropdown.classList.remove('hidden');
 }
 
+/** Listens for the navigation items opening their sub-dropdowns, and the back buttons. */
 function initSettingsListeners(): void {
 	subDropdowns.forEach(({ selection }, i) =>
-		selection.addEventListener('click', openHandlers[i]!),
+		selection.addEventListener('click', OPEN_HANDLERS[i]!),
 	);
 	allBackButtons.forEach((btn) => btn.addEventListener('click', showMainSettingsPanel));
 }
+
+/** Removes the listeners {@link initSettingsListeners} added. */
 function closeSettingsListeners(): void {
 	subDropdowns.forEach(({ selection }, i) =>
-		selection.removeEventListener('click', openHandlers[i]!),
+		selection.removeEventListener('click', OPEN_HANDLERS[i]!),
 	);
 	allBackButtons.forEach((btn) => btn.removeEventListener('click', showMainSettingsPanel));
 }
 
+/** Closes every settings dropdown when a click or touch lands outside all of them. */
 function closeSettingsDropdownIfClickedAway(event: MouseEvent | TouchEvent): void {
-	// Check if it is actually a Node before using .contains
 	if (
 		event.target instanceof Node &&
 		!settings.contains(event.target) &&
@@ -139,6 +157,8 @@ function closeSettingsDropdownIfClickedAway(event: MouseEvent | TouchEvent): voi
 		closeAllSettingsDropdowns();
 	}
 }
+
+/** Whether the event landed inside any settings dropdown, main or sub. */
 function didEventClickAnyDropdown(event: MouseEvent | TouchEvent): boolean {
 	const target = event.target;
 	if (!(target instanceof Node)) return false;
@@ -161,25 +181,16 @@ function updateBoardAccent(): void {
 
 	const cssSwitch = colorutil.rgbToCssString(switchR, switchG, switchB);
 
-	// Also set the --c-board-accent-bright property, which is just a slightly brightened version!
-	// The board editor uses this for the background of selected tools.
-
-	// Convert to HSL Color
+	// The board editor uses the bright one for the background of selected tools.
 	const backgroundHSL = colorutil.rgbToHsl(switchR, switchG, switchB);
-
-	// Brighten by 5%
-	backgroundHSL.l += 0.05;
-	// Min lightness of 0.6 (Prevent dark themes from making accent colors too dark)
-	backgroundHSL.l = math.clamp(backgroundHSL.l, 0.6, 1);
-
-	// Create CSS string
+	backgroundHSL.l = math.clamp(
+		backgroundHSL.l + BRIGHT_ACCENT.lighten,
+		BRIGHT_ACCENT.minLightness,
+		1,
+	);
 	const cssBackground = colorutil.hslToCssString(backgroundHSL);
-
-	// Set CSS properties
 
 	const root = document.documentElement;
 	root.style.setProperty('--c-board-accent', cssSwitch);
 	root.style.setProperty('--c-board-accent-bright', cssBackground);
 }
-
-export default {};

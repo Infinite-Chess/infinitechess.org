@@ -163,13 +163,13 @@ const element_variantListPanelByGroup = new Map<GroupType, HTMLElement>(
 const element_variantGroupIcon = document.getElementById('variant-group-icon')!;
 const element_variantName = document.getElementById('variant-name')!;
 const element_icnInput = document.getElementById('icn-input') as HTMLTextAreaElement;
-const element_icnInputWrap = document.querySelector('.icn-input-wrap') as HTMLElement;
+const element_icnInputWrap = document.querySelector<HTMLElement>('.icn-input-wrap')!;
 /** Stands in for the field while it holds an ICN too large to draw. */
 const element_icnHeld = document.getElementById('icn-held')!;
 const element_icnHeldSize = document.getElementById('icn-held-size')!;
 const element_icnHeldCopy = document.getElementById('icn-held-copy')!;
 const element_icnHeldClear = document.getElementById('icn-held-clear')!;
-const element_icnErrorText = document.getElementById('icn-error-text') as HTMLElement;
+const element_icnErrorText = document.getElementById('icn-error-text')!;
 const element_customVariantContent = document.getElementById('variant-custom-content')!;
 const element_btnCustomCreate = document.getElementById('btn-custom-create')!;
 const element_btnCustomFromICN = document.getElementById('btn-custom-from-icn')!;

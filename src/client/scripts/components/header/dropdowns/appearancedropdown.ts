@@ -20,7 +20,7 @@ import checkerboardgenerator from '../../../chess/rendering/checkerboardgenerato
 /** The site's light/dark color scheme. */
 type Theme = 'dark' | 'light';
 
-// Document Elements -----------------------------------------------------------
+// Elements --------------------------------------------------------------------
 
 const appearanceDropdownTitle = document.querySelector('.appearance-dropdown .dropdown-title')!;
 const appearanceDropdown = document.querySelector('.appearance-dropdown')!;
@@ -60,6 +60,7 @@ const THEME_LIGHT: Theme = 'light';
 	initLegalMoveToggle();
 })();
 
+/** Shows the current light/dark theme, and switches it on click. */
 function initThemeToggle(): void {
 	const td = t.header.settings.appearance_dropdown;
 	themeIndicator.textContent = getCurrentTheme() === THEME_DARK ? td.theme_dark : td.theme_light;
@@ -73,6 +74,7 @@ function initThemeToggle(): void {
 	});
 }
 
+/** Shows the current legal-move shape, and switches it on click. */
 function initLegalMoveToggle(): void {
 	const td = t.header.settings.appearance_dropdown;
 	legalMoveIndicator.textContent =
@@ -82,6 +84,7 @@ function initLegalMoveToggle(): void {
 	legalMoveToggleContainer.addEventListener('click', toggleLegalMoveShape);
 }
 
+/** Switches legal moves between dots and squares. */
 function toggleLegalMoveShape(): void {
 	const td = t.header.settings.appearance_dropdown;
 	const next = preferences.getLegalMovesShape() === 'squares' ? 'dots' : 'squares';
@@ -91,11 +94,13 @@ function toggleLegalMoveShape(): void {
 	SettingsBus.dispatch('legalmove-shape-change');
 }
 
+/** The light/dark theme the page is shown in. */
 function getCurrentTheme(): Theme {
 	const attr = document.documentElement.getAttribute('data-theme');
 	return attr === THEME_LIGHT ? THEME_LIGHT : THEME_DARK;
 }
 
+/** Checks the boxes of the options currently enabled. */
 function showCheckmarkOnSelectedOptions(): void {
 	coordinatesCheckbox.checked = preferences.getCoordinatesEnabled();
 	starfieldCheckbox.checked = preferences.getStarfieldMode();
@@ -117,31 +122,31 @@ async function addSwatches(): Promise<void> {
 	highlightSelectedSwatch();
 }
 
+/** Opens the dropdown. */
 function open(): void {
-	appearanceDropdown.classList.remove('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	appearanceDropdown.classList.remove('hidden');
 	initListeners();
 }
+
+/** Closes the dropdown. */
 function close(): void {
-	appearanceDropdown.classList.add('hidden'); // The stylesheet adds a short delay animation to when it becomes hidden
+	appearanceDropdown.classList.add('hidden');
 	closeListeners();
 }
 
+/** Listens for a click on its title, which closes it, or on an option. */
 function initListeners(): void {
 	appearanceDropdownTitle.addEventListener('click', close);
-	// Coordinates toggle
 	coordinatesCheckbox.addEventListener('click', toggleCoordinates);
-	// Starfield toggle
 	starfieldCheckbox.addEventListener('click', toggleStarfield);
-	// Advanced Effects toggle
 	advancedEffectsCheckbox.addEventListener('click', toggleAdvancedEffects);
 }
+
+/** Removes the listeners {@link initListeners} added. */
 function closeListeners(): void {
 	appearanceDropdownTitle.removeEventListener('click', close);
-	// Coordinates toggle
 	coordinatesCheckbox.removeEventListener('click', toggleCoordinates);
-	// Starfield toggle
 	starfieldCheckbox.removeEventListener('click', toggleStarfield);
-	// Advanced Effects toggle
 	advancedEffectsCheckbox.removeEventListener('click', toggleAdvancedEffects);
 }
 
@@ -163,17 +168,22 @@ function highlightSelectedSwatch(): void {
 	}
 }
 
+/** Saves the coordinates option as its checkbox now reads. */
 function toggleCoordinates(): void {
 	preferences.setCoordinatesEnabled(coordinatesCheckbox.checked);
 }
 
+/** Saves the starfield option as its checkbox now reads. */
 function toggleStarfield(): void {
 	preferences.setStarfieldMode(starfieldCheckbox.checked);
 }
 
+/** Saves the advanced effects option as its checkbox now reads. */
 function toggleAdvancedEffects(): void {
 	preferences.setAdvancedEffectsMode(advancedEffectsCheckbox.checked);
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default {
 	open,
