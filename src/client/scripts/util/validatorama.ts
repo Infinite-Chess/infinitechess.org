@@ -19,7 +19,7 @@ type MemberInfoState = ({ signedIn: true } & MemberInfoCookie) | { signedIn: fal
 // State -----------------------------------------------------------------------
 
 /** Pings the browser's other tabs, prompting them to re-check who they're rendered for. */
-const identityChannel = new BroadcastChannel('identity');
+let identityChannel = openIdentityChannel();
 
 /** The timeout ID for the timer to check session expiry. */
 let sessionExpiryTimer: number | undefined;
@@ -38,9 +38,22 @@ let memberInfo: MemberInfoState = { signedIn: false };
 	identityChannel.postMessage(null);
 })();
 
+/** Re-checks our identity whenever the page is shown, and whenever another tab pings. */
 function initListeners(): void {
-	window.addEventListener('pageshow', resyncMemberInfo); // Fired on initial page load AND when hitting the back button to return.
-	identityChannel.addEventListener('message', resyncMemberInfo);
+	// Fired on initial page load AND when hitting the back button to return.
+	window.addEventListener('pageshow', (event) => {
+		if (event.persisted) identityChannel = openIdentityChannel();
+		resyncMemberInfo();
+	});
+	// A message reaching a page in the bfcache evicts it. 'pageshow' re-checks on return instead.
+	window.addEventListener('pagehide', () => identityChannel.close());
+}
+
+/** Opens the channel other tabs' pings arrive on. */
+function openIdentityChannel(): BroadcastChannel {
+	const channel = new BroadcastChannel('identity');
+	channel.addEventListener('message', resyncMemberInfo);
+	return channel;
 }
 
 // Identity --------------------------------------------------------------------
