@@ -61,7 +61,7 @@ function getVariantCode(variant: SeekVariant): VariantCode | null {
  * them with ({@link gameformulator.constructionOptionsFromLongFormat}), so the two can't disagree
  * on the board — which they must not, since every move is validated against ours.
  * @param dateTimestamp - The game's start time, pinning a PRESET variant's revision. A custom
- *   position pins its own with the source-variant tags in its ICN.
+ *   position pins its own with the source-variant tags in its ICN, else falls back to this too.
  * @param engineGame - Whether the engine is a participant. A preset carries no world border over
  *   the wire, so an engine game's is resolved here; a custom position's arrives in its ICN.
  */
@@ -86,7 +86,7 @@ function resolveGameConstruction(
 		// revision it's a position of. Parsing can't fail here — a position only becomes a
 		// game's after seek validation has already parsed it.
 		const longFormat = icnconverter.ShortToLong_Format(variant.position);
-		const resolved = gameformulator.constructionOptionsFromLongFormat(longFormat);
+		const resolved = gameformulator.constructionOptionsFromLongFormat(longFormat, dateTimestamp); // prettier-ignore
 		variantOptions = resolved.additional.variantOptions;
 		presetAnnotes = resolved.presetAnnotes;
 		loaded = resolved.variant && {

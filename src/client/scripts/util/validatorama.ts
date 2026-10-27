@@ -12,6 +12,7 @@ import timeutil from '../../../shared/util/timeutil.js';
 
 import docutil from './docutil.js';
 import navigate from './navigate.js';
+import servertime from './servertime.js';
 
 // Types -----------------------------------------------------------------------
 
@@ -95,7 +96,7 @@ function parseMemberInfoCookie(): MemberInfoCookie | undefined {
 function checkSessionExpiry(): void {
 	if (!memberInfo.signedIn) return;
 	const info = parseMemberInfoCookie();
-	if (info !== undefined && info.expires > Date.now()) return; // Still live, or since renewed
+	if (info !== undefined && info.expires > servertime.now()) return; // Still live, or since renewed
 	console.log('Detected session expired. Reloading.');
 	reloadAfterLogout();
 }

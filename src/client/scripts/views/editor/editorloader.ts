@@ -11,13 +11,14 @@ import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js'
 import jsutil from '../../../../shared/util/jsutil.js';
 
 import editor from './editor.js';
+import servertime from '../../util/servertime.js';
 import gamesession from '../../game/chess/gamesession.js';
 
 // Load Paths ------------------------------------------------------------------
 
 /** Loads a fresh Classical board, as a new unsaved position. */
 async function loadClassical(): Promise<void> {
-	const dateTimestamp = Date.now();
+	const dateTimestamp = servertime.now();
 	await gamesession.loadGame({
 		kind: 'construct',
 		timeControl: '-',
@@ -50,7 +51,7 @@ async function loadVariantOptions(
 		kind: 'construct',
 		timeControl: '-',
 		variant: undefined, // Custom position — no preset variant; variantOptions drives everything.
-		dateTimestamp: Date.now(),
+		dateTimestamp: servertime.now(),
 		viewWhitePerspective: true,
 		additional: { variantOptions, editor: true },
 	});

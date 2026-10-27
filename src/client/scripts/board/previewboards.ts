@@ -14,6 +14,8 @@ import variantrules from '../../../shared/chess/logic/variantrules.js';
 import apeironborder from '../../../shared/chess/logic/apeironborder.js';
 import boardpreviewer from '../../../shared/chess/logic/boardpreviewer.js';
 
+import servertime from '../util/servertime.js';
+
 // Functions -------------------------------------------------------------------
 
 /**
@@ -26,7 +28,7 @@ async function ofPreset(code: VariantCode, engineGame = false): Promise<BoardPre
 	const loadedVariant: LoadedVariant = {
 		code,
 		mod: variantcache.getModule(code),
-		dateTimestamp: Date.now(),
+		dateTimestamp: servertime.now(),
 	};
 	const gameRules = variantrules.getGameRulesOfVariant(loadedVariant);
 	if (engineGame && gameRules.worldBorder === undefined) {

@@ -27,6 +27,7 @@ import metadatautil, { RecordMetaData } from '../../../../shared/chess/util/meta
 
 import toast from '../../components/toast.js';
 import gameslot from '../../game/chess/gameslot.js';
+import servertime from '../../util/servertime.js';
 import gamesession from '../../game/chess/gamesession.js';
 import guianalysisview from './gui/guianalysisview.js';
 import clientmetadatautil from '../../chess/clientmetadatautil.js';
@@ -89,7 +90,7 @@ async function loadGameById(gameId: number): Promise<void> {
  */
 function loadVariant(variant: VariantCode, modifiers?: GameModifier[]): Promise<void> {
 	lastLoad = { replay: () => loadVariant(variant, modifiers), recordMetadata: {} };
-	const dateTimestamp = Date.now();
+	const dateTimestamp = servertime.now();
 	return gamesession.loadGame({
 		kind: 'construct',
 		timeControl: '-',
@@ -120,7 +121,7 @@ function loadVariantOptions(
 		kind: 'construct',
 		timeControl: '-',
 		variant: undefined, // Custom position — no preset variant; variantOptions drives everything.
-		dateTimestamp: Date.now(),
+		dateTimestamp: servertime.now(),
 		viewWhitePerspective: resolveViewPerspective(),
 		additional,
 	});
@@ -145,10 +146,11 @@ async function pasteGame(
 	modifiers?: GameModifier[],
 ): Promise<void> {
 	recordPaste(longFormat, gameConclusion, viewWhitePerspective, modifiers);
-	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
-		gameConclusion,
-		modifiers,
-	});
+	const constructionOptions = await gameformulator.resolveConstructionOptions(
+		longFormat,
+		servertime.now(),
+		{ gameConclusion, modifiers },
+	);
 
 	// Returned so callers can await the load (the gamefile only exists once it resolves).
 	return gamesession.loadGame({

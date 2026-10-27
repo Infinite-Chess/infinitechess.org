@@ -13,6 +13,7 @@ import editor from '../editor.js';
 import eactions from './eactions.js';
 import IndexedDB from '../../../util/IndexedDB.js';
 import egamerules from '../egamerules.js';
+import servertime from '../../../util/servertime.js';
 import storetypes from '../../../savedpositions/storetypes.js';
 import validatorama from '../../../util/validatorama.js';
 
@@ -91,7 +92,7 @@ async function autosaveCurrentPositionOnce(): Promise<void> {
 		await IndexedDB.saveItem(EDITOR_AUTOSAVE_NAME, {
 			active_position: editor.getActivePosition(),
 			dirty: editor.isPositionDirty(),
-			timestamp: Date.now(),
+			timestamp: servertime.now(),
 			piece_count: variantOptions.position.size,
 			variantOptions,
 			pawnDoublePush,

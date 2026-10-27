@@ -17,6 +17,7 @@ import gameresultutil from '../../../../shared/chess/util/gameresultutil.js';
 import { players as p } from '../../../../shared/chess/util/typeutil.js';
 
 import gameslot from '../chess/gameslot.js';
+import servertime from '../../util/servertime.js';
 import { GameBus } from '../../board/GameBus.js';
 
 // Elements --------------------------------------------------------------------
@@ -47,7 +48,7 @@ const lang = document.documentElement.lang;
 
 // SSR painted the first value; just keep it fresh from here on.
 setInterval(() => {
-	element_Started.textContent = timeutil.getRelativeTimeString(createdMs, lang);
+	element_Started.textContent = timeutil.getRelativeTimeString(createdMs, servertime.now(), lang);
 }, REFRESH_INTERVAL_MS);
 
 // Result Banner ---------------------------------------------------------------

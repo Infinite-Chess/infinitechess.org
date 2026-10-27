@@ -251,7 +251,7 @@ function buildGameMetaViewModel(
 		bars: { top, bottom: viewColor },
 		timed: !clockutil.isClockValueInfinite(setup.timeControl),
 		timeCreated: setup.timeCreated,
-		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, req.lang),
+		startedAgo: timeutil.getRelativeTimeString(setup.timeCreated, Date.now(), req.lang),
 		result: state.gameConclusion
 			? gameresultutil.getDisplay(state.gameConclusion, req.t.shared)
 			: undefined,

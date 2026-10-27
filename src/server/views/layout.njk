@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ lang | default('en-US') }}" dir="{{ dir | default('ltr') }}" data-theme="dark">
+<html lang="{{ lang | default('en-US') }}" dir="{{ dir | default('ltr') }}" data-theme="dark" data-server-time="{{ serverTime() }}">
 <head>
     {# Reads the saved UI color scheme from localStorage and applies it before CSS loads,
        preventing a flash of the wrong theme on initial page paint.

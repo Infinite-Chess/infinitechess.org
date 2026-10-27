@@ -34,6 +34,7 @@ import icnconverter, { LongFormatOut, PresetAnnotes } from '../../../../shared/c
 import docutil from '../../util/docutil.js';
 import savesapi from '../../savedpositions/savesapi.js';
 import savestore from '../../savedpositions/savestore.js';
+import servertime from '../../util/servertime.js';
 import cloudstore from '../../savedpositions/cloudstore.js';
 import validatorama from '../../util/validatorama.js';
 import gamecompressor from '../../chess/gamecompressor.js';
@@ -806,7 +807,7 @@ function validateSavedPosition(judged: SaveSelectionState, variantOptions: Varia
 	let rejection = positionRejection;
 	let gamefile: GameFile | undefined;
 	if (rejection === null) {
-		gamefile = gameformulator.constructPosition(played, undefined, selectedModifiers());
+		gamefile = gameformulator.constructPosition(played, servertime.now(), undefined, selectedModifiers()); // prettier-ignore
 		rejection = playabilityRejection(gamefile);
 	}
 
@@ -884,11 +885,11 @@ function withEngineBorder(options: VariantOptions): VariantOptions {
 	// An empty position has no box to space a border around; validation rejects it regardless.
 	if (declared === undefined && options.position.size === 0) return options;
 	let worldBorder: BoundingBox;
-	if (declared !== undefined) worldBorder = apeironborder.clampToCap(declared, Date.now());
+	if (declared !== undefined) worldBorder = apeironborder.clampToCap(declared, servertime.now());
 	else {
 		const coords = [...options.position.keys()].map((key) => coordutil.getCoordsFromKey(key));
 		const box = bounds.getBoxFromCoordsList(coords);
-		worldBorder = apeironborder.forBox(box, Date.now());
+		worldBorder = apeironborder.forBox(box, servertime.now());
 	}
 	return { ...options, gameRules: { ...options.gameRules, worldBorder } };
 }
@@ -960,9 +961,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 
 	// Resolved apart from building, so a result the user typed past is dropped before paying for the
 	// board. The modifiers ride along, as a slide limit rebuilds the movesets, changing judgement.
-	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, {
-		modifiers: selectedModifiers(),
-	});
+	const constructionOptions = await gameformulator.resolveConstructionOptions(longFormat, servertime.now(), { modifiers: selectedModifiers() }); // prettier-ignore
 	// Awaiting the variant module let the user keep typing, or pick something else — discard a
 	// result they've moved past.
 	if (selection !== judging || getIcnText() !== value) return;
@@ -993,7 +992,7 @@ async function validateIcnInput(revealErrors: boolean): Promise<void> {
 		// A seek starts a FRESH game from the flattened position, so it judges that board. Outside a
 		// seek the only check reads the board's front, so the moves-applied game analysis loads will do.
 		const judged = config.isSeekContext
-			? gameformulator.constructPosition(played, constructed.variant, selectedModifiers())
+			? gameformulator.constructPosition(played, servertime.now(), constructed.variant, selectedModifiers()) // prettier-ignore
 			: constructed;
 		rejection = playabilityRejection(judged);
 	}

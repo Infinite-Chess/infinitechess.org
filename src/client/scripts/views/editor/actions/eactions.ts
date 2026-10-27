@@ -50,6 +50,7 @@ import editor from '../editor.js';
 import docutil from '../../../util/docutil.js';
 import gameslot from '../../../game/chess/gameslot.js';
 import egamerules from '../egamerules.js';
+import servertime from '../../../util/servertime.js';
 import annotations from '../../../game/rendering/highlights/annotations/annotations.js';
 import edithistory from '../edithistory.js';
 import editorloader from '../editorloader.js';
@@ -269,10 +270,7 @@ async function loadFromLongformat(longformOut: LongFormatIn): Promise<void> {
 	const resolvedVariantCode = clientmetadatautil.resolveAndNormalizeVariantFromMetadata(
 		longformOut.metadata,
 	);
-	const timestamp = metadatautil.resolveTimestampFromMetadata(
-		longformOut.metadata.UTCDate,
-		longformOut.metadata.UTCTime,
-	);
+	const timestamp = metadatautil.resolveTimestampFromMetadata(longformOut.metadata, servertime.now()); // prettier-ignore
 
 	// Preload the variant module up front: getPositionAndSpecialRights reads the position
 	// off it when the ICN omits one, and initGameFile below requires it too.

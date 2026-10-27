@@ -32,7 +32,7 @@ const GAMERULE_MODIFICATIONS: Record<number, GameRuleModifications> = {
 	},
 };
 
-export function getPosition(timestamp: number = Date.now()): {
+export function getPosition(timestamp: number): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
@@ -40,11 +40,11 @@ export function getPosition(timestamp: number = Date.now()): {
 	return icnposition.parseShortFormPosition(positionString);
 }
 
-export function gameruleModifications(timestamp: number = Date.now()): GameRuleModifications {
+export function gameruleModifications(timestamp: number): GameRuleModifications {
 	return timeutil.resolveAtTimestamp(GAMERULE_MODIFICATIONS, timestamp);
 }
 
-export function getPositionStringLength(timestamp: number = Date.now()): number {
+export function getPositionStringLength(timestamp: number): number {
 	return timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }
 
@@ -54,6 +54,6 @@ const POSITION_BOXES: Record<number, BoundingBox> = {
 	0: { left: -9n, right: 17n, bottom: -14n, top: 15n },
 };
 
-export function getPositionBox(timestamp: number = Date.now()): BoundingBox {
+export function getPositionBox(timestamp: number): BoundingBox {
 	return timeutil.resolveAtTimestamp(POSITION_BOXES, timestamp);
 }

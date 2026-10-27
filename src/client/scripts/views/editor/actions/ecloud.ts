@@ -17,6 +17,7 @@ import eactions from './eactions.js';
 import savesapi from '../../../savedpositions/savesapi.js';
 import savestore from '../../../savedpositions/savestore.js';
 import egamerules from '../egamerules.js';
+import servertime from '../../../util/servertime.js';
 import validatorama from '../../../util/validatorama.js';
 import cloudstore, {
 	ICNConversionError,
@@ -52,7 +53,7 @@ async function saveCloud(position_name: string): Promise<void> {
 
 	const variantOptions = eactions.getCurrentPositionInformation(false);
 	const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-	const timestamp = Date.now();
+	const timestamp = servertime.now();
 	const piece_count = variantOptions.position.size;
 
 	const editorSaveState: EditorSaveState = {

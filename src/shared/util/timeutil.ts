@@ -114,11 +114,12 @@ function timestampToSqlite(timestamp: number): string {
 /**
  * Formats an epoch-ms timestamp as a localized relative "time ago" string (e.g. "2 minutes ago"),
  * or "now" under a minute.
- * @param timestampMs - Epoch milliseconds. One ahead of our clock reads "now".
+ * @param timestampMs - Epoch milliseconds. One ahead of `now` reads "now".
+ * @param now - The current time, in epoch milliseconds.
  * @param locale - A BCP 47 language tag, e.g. "en-US".
  */
-function getRelativeTimeString(timestampMs: number, locale: string): string {
-	const elapsed = Date.now() - timestampMs;
+function getRelativeTimeString(timestampMs: number, now: number, locale: string): string {
+	const elapsed = now - timestampMs;
 	for (const [unit, unitMs] of RELATIVE_UNITS) {
 		if (elapsed < unitMs) continue;
 		const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });

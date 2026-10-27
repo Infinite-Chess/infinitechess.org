@@ -44,6 +44,7 @@ function configure(app: Application): void {
 	setManifestGlobals(manifest.load());
 	nunjucksEnv.addGlobal('p', p); // Player-color constants, so templates reference WHITE/BLACK by name
 	nunjucksEnv.addGlobal('getMemberUrl', memberurl.getMemberUrl);
+	nunjucksEnv.addGlobal('serverTime', () => Date.now()); // Called per render, for the client's servertime.ts
 
 	// Serializes a value to JSON safe for inline <script> injection.
 	// Escapes <, > and & to Unicode escapes so no HTML tag sequence can form.

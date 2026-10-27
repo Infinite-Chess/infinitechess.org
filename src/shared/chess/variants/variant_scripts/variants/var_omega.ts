@@ -19,7 +19,7 @@ const POSITION_STRINGS: Record<number, string> = {
 	0: 'r-2,4|r2,4|r-2,2|r2,2|r-2,0|r0,0|r2,0|k0,-1|R1,-2|P-2,-3+|Q-1,-3|P2,-3+|K0,-4',
 };
 
-export function getPosition(timestamp: number = Date.now()): {
+export function getPosition(timestamp: number): {
 	position: Map<CoordsKey, number>;
 	specialRights: Set<CoordsKey>;
 } {
@@ -35,7 +35,7 @@ export function gameruleModifications(): GameRuleModifications {
 	};
 }
 
-export function getPositionStringLength(timestamp: number = Date.now()): number {
+export function getPositionStringLength(timestamp: number): number {
 	return timeutil.resolveAtTimestamp(POSITION_STRINGS, timestamp).length;
 }
 

@@ -112,13 +112,13 @@ function trimTo<K extends MetadataKey>(
 }
 
 /**
- * Resolves a timestamp (ms since epoch) from UTCDate and UTCTime metadata strings.
- * Falls back to the current time if UTCDate is not provided.
+ * Resolves a timestamp (ms since epoch) from the UTCDate and UTCTime metadata.
  * If UTCDate is provided but UTCTime is not, midnight (00:00:00) is assumed.
+ * @param fallbackTimestamp - The timestamp if UTCDate is not provided.
  */
-function resolveTimestampFromMetadata(UTCDate?: string, UTCTime?: string): number {
-	if (UTCDate !== undefined) return timeutil.convertUTCDateUTCTimeToTimeStamp(UTCDate, UTCTime);
-	return Date.now();
+function resolveTimestampFromMetadata(metadata: MetaData, fallbackTimestamp: number): number {
+	if (metadata.UTCDate === undefined) return fallbackTimestamp;
+	return timeutil.convertUTCDateUTCTimeToTimeStamp(metadata.UTCDate, metadata.UTCTime);
 }
 
 /**

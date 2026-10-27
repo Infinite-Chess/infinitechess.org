@@ -11,6 +11,7 @@ import editor from '../editor.js';
 import eactions from './eactions.js';
 import savestore from '../../../savedpositions/savestore.js';
 import egamerules from '../egamerules.js';
+import servertime from '../../../util/servertime.js';
 
 // State -----------------------------------------------------------------------
 
@@ -35,7 +36,7 @@ async function saveLocal(position_name: string): Promise<void> {
 	try {
 		const variantOptions = eactions.getCurrentPositionInformation(false);
 		const { pawnDoublePush, castling } = egamerules.getPositionDependentGameRules();
-		const timestamp = Date.now();
+		const timestamp = servertime.now();
 		const piece_count = variantOptions.position.size;
 
 		await savestore.saveState({

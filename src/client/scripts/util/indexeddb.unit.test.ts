@@ -5,10 +5,18 @@
  * Uses fake-indexeddb and the module's resetDBInstance() for isolation.
  */
 
+import type servertime from './servertime.js';
+
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import IndexedDB from './IndexedDB.js';
+
+// No page stamped the server's time here, so our own clock stands in for it.
+// Module-mocked, not spied: servertime reads `document` on import, which doesn't exist here.
+vi.mock('./servertime.js', () => ({
+	default: { now: () => Date.now() } satisfies typeof servertime,
+}));
 
 beforeEach(() => {
 	// Fresh fake IndexedDB and key range per test

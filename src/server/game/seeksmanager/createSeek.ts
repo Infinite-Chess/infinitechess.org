@@ -166,7 +166,7 @@ function validateIcnSeekContent(
 
 	// Legal, but the game still has to be playable from here. Built on the board the real game
 	// gets — the ICN's own world border, which an engine game must carry, and the modifiers — then discarded.
-	const constructed = gameformulator.constructPosition(variantOptions, undefined, modifiers);
+	const constructed = gameformulator.constructPosition(variantOptions, Date.now(), undefined, modifiers); // prettier-ignore
 	return playability.getRejection(constructed, { seek: true, engine: engineGame });
 }
 

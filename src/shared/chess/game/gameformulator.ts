@@ -72,21 +72,24 @@ interface ConstructionOverrides {
 /**
  * Constructs the gamefile a parsed ICN describes, sourcing the position
  * from the Variant metadata whenever the ICN omits an explicit one.
+ * @param fallbackTimestamp - The date of an ICN declaring none.
  * @param validateMoves - Throws an IllegalMoveError if any move played is illegal.
  * @throws Any other error if the game couldn't be constructed at all.
  */
 async function formulateGame(
 	longFormat: LongFormatOut,
+	fallbackTimestamp: number,
 	overrides?: ConstructionOverrides,
 	validateMoves?: true,
 ): Promise<GameFile> {
-	const constructionOptions = await resolveConstructionOptions(longFormat, overrides);
+	const constructionOptions = await resolveConstructionOptions(longFormat, fallbackTimestamp, overrides); // prettier-ignore
 	return constructGame(constructionOptions, validateMoves);
 }
 
 /**
  * Constructs the gamefile of a moveless position, purely so callers can
  * inspect the game it produces (its computed conclusion, its engine support).
+ * @param dateTimestamp - The game's start timestamp in milliseconds since epoch.
  * @param variant - The variant the position is of, when one is known — supplying its
  *   movesets, so the inspection sees how the pieces truly move. REQUIRES its module preloaded.
  * @param modifiers - The modifiers the game will be played with. A Slide Limit rebuilds the
@@ -94,13 +97,14 @@ async function formulateGame(
  */
 function constructPosition(
 	variantOptions: VariantOptions,
+	dateTimestamp: number,
 	variant?: DatedVariant,
 	modifiers?: GameModifier[],
 ): GameFile {
 	return constructGame({
 		timeControl: '-',
 		variant,
-		dateTimestamp: Date.now(),
+		dateTimestamp,
 		additional: { variantOptions, modifiers },
 	});
 }
@@ -113,12 +117,14 @@ function constructPosition(
  * the ICN omits an explicit one (e.g. server-stored games carrying only Variant + moves).
  * An ICN with neither resolves to an empty position, left for position validation to reject.
  * That fallback is the sole reason this is async — see {@link constructionOptionsFromLongFormat}.
+ * @param fallbackTimestamp - The date of an ICN declaring none.
  */
 async function resolveConstructionOptions(
 	longFormat: LongFormatOut,
+	fallbackTimestamp: number,
 	overrides?: ConstructionOverrides,
 ): Promise<GameConstructionOptions> {
-	const options = constructionOptionsFromLongFormat(longFormat, overrides);
+	const options = constructionOptionsFromLongFormat(longFormat, fallbackTimestamp, overrides);
 	if (options.variant === undefined) return options;
 
 	await variantcache.ensureVariantLoaded(options.variant.code);
@@ -133,13 +139,15 @@ async function resolveConstructionOptions(
  * The half of {@link resolveConstructionOptions} a parsed ICN determines on its own — everything
  * but the position fallback, which is the only part needing the variant module. Callers whose ICN
  * always carries an explicit position use this directly, and stay synchronous.
+ * @param fallbackTimestamp - The date of an ICN declaring none.
  */
 function constructionOptionsFromLongFormat(
 	longFormat: LongFormatOut,
+	fallbackTimestamp: number,
 	overrides?: ConstructionOverrides,
 ): PositionedConstructionOptions {
 	// The ICN's date is both the game's start and the variant revision it declares itself of.
-	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata.UTCDate, longFormat.metadata.UTCTime); // prettier-ignore
+	const dateTimestamp = metadatautil.resolveTimestampFromMetadata(longFormat.metadata, fallbackTimestamp); // prettier-ignore
 	const code = variantregistry.resolveCode(longFormat.metadata.Variant);
 
 	const additional: PositionedConstructionOptions['additional'] = {
@@ -196,7 +204,7 @@ function constructionOptionsFromSetup(
 		}
 		// The sync half suffices: a custom game's ICN always carries an explicit position,
 		// so the variant-module fallback the async resolver adds has nothing left to resolve.
-		const resolved = constructionOptionsFromLongFormat(startFormat);
+		const resolved = constructionOptionsFromLongFormat(startFormat, timeCreated);
 		datedVariant = resolved.variant;
 		presetAnnotes = resolved.presetAnnotes;
 		additional.variantOptions = resolved.additional.variantOptions;

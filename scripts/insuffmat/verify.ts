@@ -53,7 +53,8 @@ async function findProblems(mateIcn: string, priorIcn: string, move: string): Pr
 
 /** Builds the site's game from an ICN. */
 function build(icn: string): ReturnType<typeof gameformulator.formulateGame> {
-	return gameformulator.formulateGame(icnconverter.ShortToLong_Format(icn), undefined, true);
+	const longFormat = icnconverter.ShortToLong_Format(icn);
+	return gameformulator.formulateGame(longFormat, Date.now(), undefined, true);
 }
 
 /** The same ICN with the other side to move. */

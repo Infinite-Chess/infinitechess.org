@@ -25,7 +25,7 @@ import type { Player, PlayerGroup, RawType, RawTypeGroup } from '../util/typeuti
  */
 export interface VariantModule {
 	/** Returns the variant's position at the given timestamp. */
-	getPosition: (timestamp?: number) => {
+	getPosition: (timestamp: number) => {
 		position: Map<CoordsKey, number>;
 		/**
 		 * Provided for string-based variants, generator-based variants omit it
@@ -34,18 +34,18 @@ export interface VariantModule {
 		specialRights?: Set<CoordsKey>;
 	};
 	/** Returns the gamerule modifications for this variant at the given timestamp, if it has any. */
-	gameruleModifications?: (timestamp?: number) => GameRuleModifications;
+	gameruleModifications?: (timestamp: number) => GameRuleModifications;
 	/**
 	 * Returns the length of the raw ICN position string for this variant at the resolved timestamp.
 	 * Only present on string-based variants, generator-based variants omit this.
 	 */
-	getPositionStringLength?: (timestamp?: number) => number;
+	getPositionStringLength?: (timestamp: number) => number;
 	/**
 	 * Returns the bounding box of the starting position at the resolved timestamp. Declared so an
 	 * engine game's world border can be spaced evenly around the position without generating it.
 	 * Required of every variant the engine supports that declares no `worldBorder` of its own.
 	 */
-	getPositionBox?: (timestamp?: number) => BoundingBox;
+	getPositionBox?: (timestamp: number) => BoundingBox;
 	/**
 	 * Returns properties normally extracted from the position string ('+' notation)
 	 * but unavailable for generator-based variants that have no position string.

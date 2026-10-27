@@ -34,7 +34,7 @@ export interface GameAtStart {
  */
 async function loadAtStart(icn: string): Promise<GameAtStart> {
 	const longformat = icnconverter.ShortToLong_Format(icn);
-	const options = await gameformulator.resolveConstructionOptions(longformat);
+	const options = await gameformulator.resolveConstructionOptions(longformat, Date.now());
 	const gamefile = gameformulator.constructGame({ ...options, additional: { ...options.additional!, moves: undefined } }); // prettier-ignore
 	return { longformat, options, gamefile };
 }

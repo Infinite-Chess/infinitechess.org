@@ -156,16 +156,10 @@ function getCookieValue(cookieName: string): string | undefined {
  * Sets a cookie in the document
  * @param cookieName - The name of the cookie
  * @param value - The value of the cookie
- * @param days - How many days until the cookie should expire.
+ * @param expiryMillis - How long until the cookie should expire.
  */
-function updateCookie(cookieName: string, value: string, days: number): void {
-	let expires = '';
-	if (days) {
-		const date = new Date();
-		date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-		expires = '; expires=' + date.toUTCString();
-	}
-	document.cookie = cookieName + '=' + (value || '') + expires + '; path=/';
+function updateCookie(cookieName: string, value: string, expiryMillis: number): void {
+	document.cookie = `${cookieName}=${value}; Max-Age=${Math.floor(expiryMillis / 1000)}; path=/`;
 }
 
 /**

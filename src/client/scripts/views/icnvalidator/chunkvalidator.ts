@@ -99,7 +99,8 @@ async function validateGame(
 	// An IllegalMoveError means the game built fine but a move was illegal; anything else means it wouldn't build.
 	let game: GameFile;
 	try {
-		game = await gameformulator.formulateGame(longFormat, undefined, true);
+		// Our own clock: the browser worker and the CLI have no server time to read.
+		game = await gameformulator.formulateGame(longFormat, Date.now(), undefined, true);
 	} catch (error) {
 		const illegalMove = error instanceof movepiece.IllegalMoveError;
 		if (illegalMove) results.illegalMoveErrors++;

@@ -11,6 +11,8 @@
 
 import jsutil from '../../../shared/util/jsutil.js';
 
+import servertime from './servertime.js';
+
 // Types -----------------------------------------------------------------------
 
 /** An entry in IndexedDB storage */
@@ -161,7 +163,7 @@ async function withWrite<R>(op: (store: IDBObjectStore) => IDBRequest<R>): Promi
  * @throws If IndexedDB is unavailable, or the write fails.
  */
 async function saveItem<T>(key: string, value: T, expiryMillis?: number): Promise<void> {
-	const timeExpires = expiryMillis !== undefined ? Date.now() + expiryMillis : undefined;
+	const timeExpires = expiryMillis !== undefined ? servertime.now() + expiryMillis : undefined;
 	const save: Entry = { value, expires: timeExpires };
 	return withWrite((store) => store.put(save, key));
 }
@@ -207,7 +209,7 @@ function isEntry(save: unknown): save is Entry {
 
 /** Whether an entry is past its expiry. */
 function hasItemExpired(save: Entry): boolean {
-	return save.expires !== undefined && Date.now() >= save.expires;
+	return save.expires !== undefined && servertime.now() >= save.expires;
 }
 
 /**

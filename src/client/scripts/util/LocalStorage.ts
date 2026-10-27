@@ -12,6 +12,8 @@
 
 import jsonutil from '../../../shared/util/jsonutil.js';
 
+import servertime from './servertime.js';
+
 // Types -----------------------------------------------------------------------
 
 /** An entry in local storage */
@@ -43,7 +45,7 @@ eraseExpiredItems();
  */
 function saveItem(key: string, value: unknown, expiryMillis: number): void {
 	if (PRINT_CHANGES) console.log(`Saving key to local storage: ${key}`);
-	const timeExpires = Date.now() + expiryMillis;
+	const timeExpires = servertime.now() + expiryMillis;
 	const save: Entry = { value, expires: timeExpires };
 	const stringifiedSave = JSON.stringify(save, jsonutil.stringifyReplacer);
 	localStorage.setItem(key, stringifiedSave);
@@ -99,7 +101,7 @@ function isEntry(save: unknown): save is Entry {
 
 /** Whether an entry is past its expiry. */
 function hasItemExpired(save: Entry): boolean {
-	return Date.now() >= save.expires;
+	return servertime.now() >= save.expires;
 }
 
 /** Deletes every one of our entries that has expired. */
