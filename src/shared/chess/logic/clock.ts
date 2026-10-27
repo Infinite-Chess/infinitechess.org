@@ -12,7 +12,6 @@ import type { ClockDependant } from './gamefile.js';
 import type { Player, PlayerGroup } from '../util/typeutil.js';
 import type { ClockValues, TimeControl } from '../../chess/util/clockutil.js';
 
-import typeutil from '../util/typeutil.js';
 import moveutil from './moveutil.js';
 import timeutil from '../../util/timeutil.js';
 import gamerules from '../util/gamerules.js';
@@ -118,16 +117,16 @@ function push(gamefile: {
 }
 
 /**
- * Called every frame, updates values.
+ * Called every frame, counts down the ticking color's remaining time.
+ * Never concludes the game; only the server decides a flag.
  * @param basegame - The minimum properties needed from the gamefile to update the clocks. MUST PASS IN ACTUAL GAMEFILE, NOT A FAKE.
- * @returns undefined if clocks still have time, otherwise it's the color who won.
  */
 function update(
 	basegame: {
 		moves: MoveRecord[];
 		gameConclusion?: GameConclusion;
 	} & ClockDependant,
-): Player | undefined {
+): void {
 	if (
 		basegame.untimed ||
 		gamefileutility.isGameOver(basegame) ||
@@ -138,22 +137,11 @@ function update(
 	const clocks = basegame.clocks;
 	if (clocks.ticking === undefined) return;
 
-	// Update current values
 	const timePassedSinceTurnStart = Date.now() - clocks.ticking.startedAt;
-
-	clocks.currentTime[clocks.ticking.color] = Math.ceil(
-		clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart,
+	clocks.currentTime[clocks.ticking.color] = Math.max(
+		Math.ceil(clocks.ticking.timeRemainingAtStart - timePassedSinceTurnStart),
+		0,
 	);
-
-	for (const [playerStr, time] of Object.entries(clocks.currentTime)) {
-		const player: Player = Number(playerStr) as Player;
-		if ((time as number) <= 0) {
-			clocks.currentTime[player] = 0;
-			return typeutil.invertPlayer(player); // The color who won on time
-		}
-	}
-
-	return;
 }
 
 /**
