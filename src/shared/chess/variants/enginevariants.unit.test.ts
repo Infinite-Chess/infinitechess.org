@@ -10,6 +10,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import gamefile from '../logic/gamefile.js';
 import apeironcard from '../engines/apeironcard.js';
 import variantcache from './variantcache.js';
+import boardpreviewer from '../logic/boardpreviewer.js';
 import { VARIANT_CODES } from '../util/variantcodes.js';
 
 beforeAll(() => variantcache.loadAllVariants());
@@ -17,8 +18,8 @@ beforeAll(() => variantcache.loadAllVariants());
 describe('apeironcard.UNSUPPORTED_VARIANTS', () => {
 	it.each(VARIANT_CODES)('agrees with the card on %s', (code) => {
 		const variant = { code, dateTimestamp: Date.now(), mod: variantcache.getModule(code) };
-		const startPosition = gamefile.initGameFile('-', Date.now(), variant);
-		const result = apeironcard.isGameReviewSupported(startPosition);
+		const gameRules = gamefile.resolveGameRules(variant, {});
+		const result = apeironcard.isGameReviewSupported(boardpreviewer.init(gameRules, variant));
 		const message = result.supported
 			? `${code} is in UNSUPPORTED_VARIANTS, but the engine supports it. Remove it.`
 			: `${code} is missing from UNSUPPORTED_VARIANTS. The engine rejects it with '${result.reason}'. Add it.`; // prettier-ignore

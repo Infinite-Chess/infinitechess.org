@@ -8,6 +8,7 @@
 
 import type { GameFile } from '../logic/gamefile.js';
 import type { VariantCode } from '../util/variantcodes.js';
+import type { BoardPreview } from '../logic/boardpreviewer.js';
 import type { EngineRefusal } from '../util/engineglue.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
@@ -80,17 +81,17 @@ const MAX_PIECES = 10_000;
  * {@link isPlaySupported} these require no bounded board — the engine takes coordinates of any
  * size itself.
  */
-function checkGameRules(gamefile: GameFile): SupportedResult {
-	if (variantmodule.hasCustomMovement(gamefile.variant?.mod))
+function checkGameRules(board: BoardPreview): SupportedResult {
+	if (variantmodule.hasCustomMovement(board.variant?.mod))
 		return { supported: false, reason: 'unsupported_variant' };
 
-	const modifiersResult = checkModifiers(gamefile.gameRules);
+	const modifiersResult = checkModifiers(board.gameRules);
 	if (!modifiersResult.supported) return modifiersResult;
 
-	const turnOrderResult = checkTurnOrder(gamefile.gameRules);
+	const turnOrderResult = checkTurnOrder(board.gameRules);
 	if (!turnOrderResult.supported) return turnOrderResult;
 
-	return checkWinConditions(gamefile.gameRules);
+	return checkWinConditions(board.gameRules);
 }
 
 /** Only modifiers in {@link SUPPORTED_MODIFIERS}. */
@@ -184,16 +185,16 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
  * was unplayable (too many pieces / an unsupported piece) back into range, so we don't disqualify
  * a game for something at another ply. The engine may still refuse the position itself ({@link EngineRefusal}).
  */
-function isAnalysisSupported(gamefile: GameFile): SupportedResult {
-	const gameRulesResult = checkGameRules(gamefile);
+function isAnalysisSupported(board: BoardPreview): SupportedResult {
+	const gameRulesResult = checkGameRules(board);
 	if (!gameRulesResult.supported) return gameRulesResult;
 
-	const pieceCountResult = checkPieceCount(gamefile.pieces.coords.size);
+	const pieceCountResult = checkPieceCount(board.pieces.coords.size);
 	if (!pieceCountResult.supported) return pieceCountResult;
 
 	const allRawTypes = new Set<RawType>();
-	for (const idx of gamefile.pieces.coords.values()) {
-		const type = gamefile.pieces.types[idx]!;
+	for (const idx of board.pieces.coords.values()) {
+		const type = board.pieces.types[idx]!;
 		allRawTypes.add(typeutil.getRawType(type));
 	}
 	return checkPieceTypes(allRawTypes);
@@ -205,14 +206,14 @@ function isAnalysisSupported(gamefile: GameFile): SupportedResult {
  * every piece type that appears across the game (start pieces plus promotion targets).
  * A position the engine refuses ({@link EngineRefusal}) is left as a gap in the review.
  */
-function isGameReviewSupported(gamefile: GameFile): SupportedResult {
-	const gameRulesResult = checkGameRules(gamefile);
+function isGameReviewSupported(board: BoardPreview): SupportedResult {
+	const gameRulesResult = checkGameRules(board);
 	if (!gameRulesResult.supported) return gameRulesResult;
 
-	const pieceCountResult = checkPieceCount(gamefile.startSnapshot.position.size);
+	const pieceCountResult = checkPieceCount(board.startSnapshot.position.size);
 	if (!pieceCountResult.supported) return pieceCountResult;
 
-	return checkPieceTypes(gamefile.existingRawTypes);
+	return checkPieceTypes(board.existingRawTypes);
 }
 
 // Exports ---------------------------------------------------------------------

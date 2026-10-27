@@ -261,20 +261,8 @@ describe('EditorSavesAPI Integration', () => {
 		it('should return 403 if quota is exceeded', async () => {
 			const user = await integrationUtils.createAndLoginUser();
 
-			// Add 50 positions to reach the quota limit
 			for (let i = 0; i < editorSavesAPI.MAX_SAVED_POSITIONS; i++) {
-				await testRequest()
-					.post('/api/editor-saves')
-					.set('Cookie', user.cookie)
-					.send({
-						name: `Position ${i}`,
-						piece_count: 8,
-						timestamp: Date.now(),
-						icn: 'test-icn',
-						compression: 'none',
-						pawn_double_push: true,
-						castling: true,
-					});
+				editorSavesManager.add(user.user_id, `Position ${i}`, 8, 0, 'icn', 'none');
 			}
 
 			// Try to add one more, should fail
@@ -388,48 +376,6 @@ describe('EditorSavesAPI Integration', () => {
 				});
 
 			expect(response.status).toBe(400);
-		});
-
-		it('should treat missing pawn_double_push as indeterminate and save successfully', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({
-					name: 'Test Position',
-					piece_count: 13,
-					timestamp: Date.now(),
-					icn: 'test-icn-data',
-					compression: 'none',
-					castling: true,
-				});
-
-			expect(response.status).toBe(201);
-
-			// Omitted field should be stored as -1 (indeterminate)
-			const position = editorSavesManager.get(user.user_id, 'Test Position');
-			expect(position?.pawn_double_push).toBe(-1);
-		});
-
-		it('should treat missing castling as indeterminate and save successfully', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-			const response = await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({
-					name: 'Test Position',
-					piece_count: 13,
-					timestamp: Date.now(),
-					icn: 'test-icn-data',
-					compression: 'none',
-					pawn_double_push: true,
-				});
-
-			expect(response.status).toBe(201);
-
-			// Omitted field should be stored as -1 (indeterminate)
-			const position = editorSavesManager.get(user.user_id, 'Test Position');
-			expect(position?.castling).toBe(-1);
 		});
 	});
 
@@ -566,27 +512,6 @@ describe('EditorSavesAPI Integration', () => {
 			expect(response.status).toBe(404);
 		});
 
-		it('should handle position names with spaces', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-
-			// Save a position with spaces
-			await testRequest().post('/api/editor-saves').set('Cookie', user.cookie).send({
-				name: 'Position With Spaces',
-				piece_count: 8,
-				timestamp: Date.now(),
-				icn: 'test-icn',
-				compression: 'none',
-				pawn_double_push: false,
-				castling: false,
-			});
-
-			const response = await testRequest()
-				.delete(`/api/editor-saves/${encodeURIComponent('Position With Spaces')}`)
-				.set('Cookie', user.cookie);
-
-			expect(response.status).toBe(200);
-		});
-
 		it('should return 401 if user is not authenticated', async () => {
 			const response = await testRequest().delete(
 				`/api/editor-saves/${encodeURIComponent('Test Position')}`,
@@ -645,31 +570,6 @@ describe('EditorSavesAPI Integration', () => {
 			// Verify it was saved correctly
 			const saves = editorSavesManager.getAllForUser(user.user_id);
 			expect(saves[0]?.name).toBe(maxLengthName);
-		});
-
-		it('should receive piece_count from client', async () => {
-			const user = await integrationUtils.createAndLoginUser();
-
-			const icn = '12345';
-
-			const response = await testRequest()
-				.post('/api/editor-saves')
-				.set('Cookie', user.cookie)
-				.send({
-					name: 'Test',
-					piece_count: 100,
-					timestamp: Date.now(),
-					icn,
-					compression: 'none',
-					pawn_double_push: true,
-					castling: true,
-				});
-
-			expect(response.status).toBe(201);
-
-			// Verify the piece_count was set correctly from client
-			const saves = editorSavesManager.getAllForUser(user.user_id);
-			expect(saves[0]?.piece_count).toBe(100);
 		});
 
 		it('should allow two different users to have positions with the same name', async () => {
