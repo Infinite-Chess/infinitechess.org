@@ -36,14 +36,14 @@ async function handle(req: Request, res: Response): Promise<void> {
 	// This can happen when a user tries to log in while already logged in.
 	const oldRefreshToken = req.cookies['jwt'];
 	if (typeof oldRefreshToken === 'string' && oldRefreshToken) {
-		// string, and not empty
 		try {
 			refreshTokenManager.remove(oldRefreshToken);
 		} catch {
 			// DB error (already logged). Don't block the new login over this.
 		}
-		// Sockets open on the old session are intentionally NOT
-		// closed for UX. They expire & reconnect within ~15m anyway
+		// The old session's sockets are deliberately left to expire. Closing them reloads their
+		// tabs, and a reload racing ahead of the new cookie carries the dead token, whose
+		// response clears the cookies — logging the user straight back out.
 	}
 
 	/** Whether the user checked "keep me logged in". */
