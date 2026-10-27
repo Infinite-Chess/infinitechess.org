@@ -33,12 +33,12 @@ const COOKIE_OPTIONS: CookieOptions = {
 
 // Functions -------------------------------------------------------------------
 
-/** Sets the `browser-id` cookie to the given id, living for `maxAgeMillis` milliseconds. */
-function setCookie(res: Response, id: string, maxAgeMillis: number): void {
-	res.cookie('browser-id', id, { ...COOKIE_OPTIONS, maxAge: maxAgeMillis });
+/** Sets the `browser-id` cookie to the given id, living for `expiryMillis`. */
+function setCookie(res: Response, id: string, expiryMillis: number): void {
+	res.cookie('browser-id', id, { ...COOKIE_OPTIONS, maxAge: expiryMillis });
 }
 
-/** Assigns the browser-id cookie if they have none, otherwise renews the existing one for 7 more days. */
+/** Assigns a browser-id if they have none, else renews theirs for another {@link LIFETIME_MS}. */
 function assignOrRenew(req: Request, res: Response): void {
 	if (!req.cookies['browser-id']) assignNew(res);
 	else renew(req, res);
@@ -47,7 +47,7 @@ function assignOrRenew(req: Request, res: Response): void {
 /** Assigns a fresh browser-id cookie. */
 function assignNew(res: Response): void {
 	// Browser ids are the sole identity credential for signed-out users (guests
-	// in live games), so they should be unguessable. Use 'crypto' insteadof uuid.ts.
+	// in live games), so they should be unguessable. Use 'crypto' instead of uuid.ts.
 	const id = crypto.randomBytes(16).toString('base64url');
 
 	setCookie(res, id, LIFETIME_MS);
@@ -69,5 +69,7 @@ function makePermanent(req: Request, res: Response, browserID: string): void {
 	const logThis = `Making banned browser-id PERMANENT: ${browserID} !!! ${req.headers.origin}   ${req.method}   ${req.url}   ${req.headers['user-agent']!}`;
 	logEvents.addAndPrint(logThis, 'bannedIPLog');
 }
+
+// Exports ---------------------------------------------------------------------
 
 export default { assignOrRenew };
