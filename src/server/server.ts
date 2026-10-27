@@ -23,6 +23,7 @@ import requestMeter from './utility/requestMeter.js';
 import socketServer from './socket/socketServer.js';
 import databaseInit from './database/databaseInit.js';
 import featuredGames from './game/featured/featuredGames.js';
+import playerRatings from './game/ratings/playerRatings.js';
 import gameLifecycle from './game/gamemanager/gameLifecycle.js';
 import startupLogger from './utility/startupLogger.js';
 import cheatDetection from './game/cheatdetection/cheatDetection.js';
@@ -98,6 +99,7 @@ cheatDetection.start();
 // Restore live games from the database into memory before accepting new connections.
 gameRestart.restoreLiveGames();
 gameLifecycle.startPeriodicAbandonmentSweep();
+playerRatings.startPeriodicDecay();
 featuredGames.start();
 requestMeter.start();
 contributors.start();

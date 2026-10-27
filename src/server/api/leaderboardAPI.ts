@@ -8,7 +8,9 @@ import type { Request, Response } from 'express';
 import type { Leaderboard } from '../../shared/chess/variants/leaderboardregistry.js';
 
 import logEvents from '../utility/logEvents.js';
+import playerRatings from '../game/ratings/playerRatings.js';
 import memberManager from '../database/memberManager.js';
+import ratingCalculation from '../utility/ratingCalculation.js';
 import leaderboardsManager from '../database/leaderboardsManager.js';
 
 // Constants -------------------------------------------------------------------
@@ -54,11 +56,7 @@ function getData(req: Request, res: Response): void {
 
 	try {
 		// Query leaderboard database
-		const top_players = leaderboardsManager.getTopPlayers(
-			leaderboard_id,
-			start_rank,
-			n_players,
-		);
+		const top_players = leaderboardsManager.getTopPlayers(leaderboard_id, start_rank, n_players, ratingCalculation.UNCERTAIN_LEADERBOARD_RD); // prettier-ignore
 
 		// Fetch every username on this page in ONE query.
 		const usernameByUserID = getUsernamesByUserID(top_players.map((player) => player.user_id));
@@ -144,17 +142,11 @@ function getRankStringOfRequester(
 	);
 	if (requesterRecord === undefined) return undefined;
 
-	const requester_rank = leaderboardsManager.getPlayerRank(
-		requesterRecord.user_id,
-		leaderboard_id,
-	);
+	const requester_rank = leaderboardsManager.getPlayerRank(requesterRecord.user_id, leaderboard_id, ratingCalculation.UNCERTAIN_LEADERBOARD_RD); // prettier-ignore
 	if (requester_rank === undefined) return '?';
 
 	// If the display elo contains a ?, then the rank_string should also contain a ?
-	const requester_elo = leaderboardsManager.getEloOfPlayer(
-		requesterRecord.user_id,
-		leaderboard_id,
-	);
+	const requester_elo = playerRatings.get(requesterRecord.user_id, leaderboard_id);
 	return requester_elo.confident ? `#${requester_rank}` : `#${requester_rank}?`;
 }
 

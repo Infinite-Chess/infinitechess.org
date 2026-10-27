@@ -43,7 +43,7 @@ import servervalidation from '../../../shared/chess/variants/servervalidation.js
 import leaderboardregistry from '../../../shared/chess/variants/leaderboardregistry.js';
 
 import logEvents from '../../utility/logEvents.js';
-import leaderboardsManager from '../../database/leaderboardsManager.js';
+import playerRatings from '../ratings/playerRatings.js';
 
 // Construction ----------------------------------------------------------------
 
@@ -189,7 +189,7 @@ function readRatings(match: MatchInfo): PlayerGroup<MemberRating> {
 	const ratings: PlayerGroup<MemberRating> = {};
 	for (const [color, { identifier }] of Object.entries(match.playerData)) {
 		if (!identifier.signedIn) continue; // Guests have no rating
-		const rating = leaderboardsManager.getEloOfPlayer(identifier.user_id, leaderboardId);
+		const rating = playerRatings.get(identifier.user_id, leaderboardId);
 		ratings[Number(color) as Player] = { rating };
 	}
 	return ratings;

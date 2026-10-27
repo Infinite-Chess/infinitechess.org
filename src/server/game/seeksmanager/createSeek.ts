@@ -33,9 +33,9 @@ import seekUtility from './seekUtility.js';
 import activeSeeks from './activeSeeks.js';
 import activeGames from '../gamemanager/activeGames.js';
 import activePlayers from '../gamemanager/activePlayers.js';
+import playerRatings from '../ratings/playerRatings.js';
 import memberInfoUtil from '../../auth/memberInfoUtil.js';
 import challengeManager from './challengeManager.js';
-import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -76,7 +76,7 @@ function create(ws: CustomWebSocket, messageContents: CreateSeekMessage): void {
 /**
  * Builds an {@link AuthSeek} from the client's createseek message, validating its position.
  * Returns `void` after sending an error to the client if any check fails.
- * @throws If a database error occurs (from {@link leaderboardsManager.getEloOfPlayer}).
+ * @throws If a database error occurs (from {@link playerRatings.get}).
  */
 function getSeekFromWebsocketMessageContents(
 	ws: CustomWebSocket,
@@ -89,7 +89,7 @@ function getSeekFromWebsocketMessageContents(
 	let rating: Rating | undefined;
 	if (ws.metadata.memberInfo.signedIn) {
 		const leaderboardId = leaderboardregistry.ratingSourceOf(messageContents.variant);
-		rating = leaderboardsManager.getEloOfPlayer(ws.metadata.memberInfo.user_id, leaderboardId);
+		rating = playerRatings.get(ws.metadata.memberInfo.user_id, leaderboardId);
 	}
 
 	const player = memberInfoUtil.buildPublicIdentity(owner, rating);

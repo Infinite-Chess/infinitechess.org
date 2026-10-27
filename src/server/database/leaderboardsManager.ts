@@ -4,21 +4,16 @@
  * This script handles queries to the leaderboards table.
  */
 
-import type { Rating } from '../../shared/chess/util/metadatautil.js';
 import type { Leaderboard } from '../../shared/chess/variants/leaderboardregistry.js';
 
-import jsutil from '../../shared/util/jsutil.js';
-
 import db from './database.js';
-import logEvents from '../utility/logEvents.js';
-import ratingCalculation from '../utility/ratingCalculation.js';
 
 // Types -----------------------------------------------------------------------
 
 /** Structure of a complete leaderboard entry record. */
 interface LeaderboardEntry {
 	user_id: number;
-	leaderboard_id: number;
+	leaderboard_id: Leaderboard;
 	elo: number;
 	rating_deviation: number;
 	rd_last_update_date: string;
@@ -72,10 +67,22 @@ function getPlayerRating(
 }
 
 /**
+ * Retrieves all entries of the leaderboards table.
+ * @throws If a database error occurs.
+ */
+function getAll(): LeaderboardEntry[] {
+	return db.call(
+		() => db.all<LeaderboardEntry>('SELECT * FROM leaderboards'),
+		'Error retrieving all leaderboard entries',
+	);
+}
+
+/**
  * Gets the top N players for a specific leaderboard by elo, starting from a given rank.
  * @param leaderboard_id - The id for the specific leaderboard.
  * @param start_rank - The 1-based rank to start from (e.g. 1 = top player, 2 = second-best, etc.)
  * @param n_players - The maximum number of players to retrieve, starting from start_rank
+ * @param max_rd - Players with a rating deviation above this are left off the leaderboard.
  * @returns An array of top player leaderboard entries, potentially empty.
  * @throws If the database query fails.
  */
@@ -83,21 +90,22 @@ function getTopPlayers(
 	leaderboard_id: Leaderboard,
 	start_rank: number,
 	n_players: number,
-): LeaderboardEntry[] {
+	max_rd: number,
+): Pick<LeaderboardEntry, 'user_id' | 'elo'>[] {
 	const offset = Math.max(0, start_rank - 1); // SQL OFFSET is 0-based
 	const query = `
-		SELECT user_id, elo, rating_deviation, rd_last_update_date
+		SELECT user_id, elo
 		FROM leaderboards
 		WHERE leaderboard_id = ?
-		AND rating_deviation <= ? -- Disregard any members with a too high RD
+		AND rating_deviation <= ?
 		ORDER BY elo DESC
 		LIMIT ? OFFSET ?
 	`;
 	return db.call(
 		() =>
-			db.all<LeaderboardEntry>(query, [
+			db.all<Pick<LeaderboardEntry, 'user_id' | 'elo'>>(query, [
 				leaderboard_id,
-				ratingCalculation.UNCERTAIN_LEADERBOARD_RD,
+				max_rd,
 				n_players,
 				offset,
 			]),
@@ -111,11 +119,16 @@ function getTopPlayers(
  * but the next rank number is skipped, creating potential gaps, e.g., 1, 1, 3).
  * @param user_id - The ID of the user whose rank is needed.
  * @param leaderboard_id - The ID of the leaderboard to check.
+ * @param max_rd - Other players with a rating deviation above this are left off the leaderboard.
  * @returns The user's rank (1-based) as a number, or undefined if the user is not found
  *          on that leaderboard.
  * @throws If a database error occurs.
  */
-function getPlayerRank(user_id: number, leaderboard_id: Leaderboard): number | undefined {
+function getPlayerRank(
+	user_id: number,
+	leaderboard_id: Leaderboard,
+	max_rd: number,
+): number | undefined {
 	const query = `
 		WITH RankedPlayers AS (
 			SELECT
@@ -123,103 +136,25 @@ function getPlayerRank(user_id: number, leaderboard_id: Leaderboard): number | u
 				RANK() OVER (ORDER BY elo DESC) as rank
 			FROM leaderboards
 			WHERE leaderboard_id = ? -- Filter for the specific leaderboard FIRST
-			AND (rating_deviation <= ? OR user_id = ?) -- Disregard any other users with a too high RD
+			AND (rating_deviation <= ? OR user_id = ?)
 		)
 		SELECT rank
 		FROM RankedPlayers
 		WHERE user_id = ?; -- Then find the rank for the specific user
 	`;
 	const result = db.call(
-		() =>
-			db.get<{ rank: number }>(query, [
-				leaderboard_id,
-				ratingCalculation.UNCERTAIN_LEADERBOARD_RD,
-				user_id,
-				user_id,
-			]),
+		() => db.get<{ rank: number }>(query, [leaderboard_id, max_rd, user_id, user_id]),
 		`Error getting rank for user "${user_id}" on leaderboard "${leaderboard_id}"`,
 	);
 	return result?.rank;
 }
 
-// Helper Functions ------------------------------------------------------------
-
-/**
- * Returns the elo of a player on a specific leaderboard, or their elo if they were
- * to join it now, and whether we are confident about it.
- * @param user_id - The id for the user
- * @param leaderboard_id - The id for the specific leaderboard.
- * @returns The player's leaderboard elo and whether we are confident about it.
- * @throws If a database error occurs.
- */
-function getEloOfPlayer(user_id: number, leaderboard_id: Leaderboard): Rating {
-	const rating_values = getPlayerRating(user_id, leaderboard_id);
-	if (!rating_values)
-		return { value: ratingCalculation.DEFAULT_LEADERBOARD_ELO, confident: false }; // No rating, return un-confident default elo
-
-	return ratingCalculation.toRating(rating_values.elo, rating_values.rating_deviation);
-}
-
-/**
- * Retrieves all entries of the leaderboards table.
- * @throws If a database error occurs.
- */
-function getAllLeaderboardEntries(): LeaderboardEntry[] {
-	return db.call(
-		() => db.all<LeaderboardEntry>('SELECT * FROM leaderboards'),
-		'Error retrieving all leaderboard entries',
-	);
-}
-
-// Regular Table Utility Functions ---------------------------------------------
-
-/** Calls updateAllRatingDeviationsOfLeaderboardTable() every {@link ratingCalculation.RD_UPDATE_FREQUENCY} milliseconds */
-function startPeriodicRatingDeviationUpdate(): void {
-	setInterval(
-		() => updateAllRatingDeviationsOfLeaderboardTable(),
-		ratingCalculation.RD_UPDATE_FREQUENCY,
-	);
-}
-
-/** Retrieves all entries of the leaderboards table and updates their RD */
-function updateAllRatingDeviationsOfLeaderboardTable(): void {
-	try {
-		const entries = getAllLeaderboardEntries();
-		for (const entry of entries) {
-			const updatedRD = ratingCalculation.getTrueRD(
-				entry.rating_deviation,
-				entry.rd_last_update_date,
-			);
-			setPlayerRating(
-				entry.user_id,
-				entry.leaderboard_id as Leaderboard,
-				entry.elo,
-				updatedRD,
-			);
-		}
-		logEvents.addAndPrint(
-			`Updated all rating deviations in leaderboard table.`,
-			'leaderboardLog',
-		);
-	} catch (error: unknown) {
-		const detail = jsutil.getErrorStack(error);
-		logEvents.addAndPrint(
-			`Error updating all rating deviations in leaderboard table: ${detail}`,
-			'errLog',
-		);
-	}
-}
-
 // Exports ---------------------------------------------------------------------
 
 export default {
-	// Methods
 	setPlayerRating,
 	getPlayerRating,
+	getAll,
 	getTopPlayers,
 	getPlayerRank,
-	// Helper Functions
-	getEloOfPlayer,
-	// Regular Table Utility Functions
-	startPeriodicRatingDeviationUpdate,
 };

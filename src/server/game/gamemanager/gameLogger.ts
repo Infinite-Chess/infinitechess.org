@@ -31,6 +31,7 @@ import db from '../../database/database.js';
 import logEvents from '../../utility/logEvents.js';
 import gameUtility from './gameUtility.js';
 import gamesManager from '../../database/gamesManager.js';
+import playerRatings from '../ratings/playerRatings.js';
 import modifierColumns from './modifierColumns.js';
 import gameStateBuilder from './gameStateBuilder.js';
 import liveGamesManager from '../../database/liveGamesManager.js';
@@ -103,7 +104,7 @@ function logGameInTransaction(servergame: ServerGame): RatingData | undefined {
 
 /**
  * Reads each signed-in player's current rating from the leaderboard of {@link leaderboardregistry.ratingSourceOf},
- * unchanged since the game began. A player not on it gets the default rating.
+ * unchanged since the game began. A player not on it gets a newcomer's.
  * @throws If a database error occurs.
  */
 function readCurrentRatings(match: MatchInfo): RatingData {
@@ -115,11 +116,11 @@ function readCurrentRatings(match: MatchInfo): RatingData {
 		const user_id = getUserID(match.playerData[player]);
 		if (user_id === undefined) continue; // Guests have no rating.
 
-		const entry = leaderboardsManager.getPlayerRating(user_id, leaderboard_id);
+		const stored = playerRatings.getStored(user_id, leaderboard_id);
 		ratingData[player] = {
-			elo_at_game: entry?.elo ?? ratingCalculation.DEFAULT_LEADERBOARD_ELO,
-			rating_deviation_at_game: entry?.rating_deviation ?? ratingCalculation.DEFAULT_LEADERBOARD_RD, // prettier-ignore
-			rd_last_update_date: entry?.rd_last_update_date ?? null,
+			elo_at_game: stored.elo,
+			rating_deviation_at_game: stored.rating_deviation,
+			rd_last_update_date: stored.rd_last_update_date,
 		};
 	}
 	return ratingData;

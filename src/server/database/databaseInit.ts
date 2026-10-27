@@ -13,7 +13,6 @@ import migrations from './migrations.js';
 import cleanupTasks from './cleanupTasks.js';
 import backupManager from './backupManager.js';
 import databaseTables from './databaseTables.js';
-import leaderboardsManager from './leaderboardsManager.js';
 
 // Functions -------------------------------------------------------------------
 
@@ -31,10 +30,9 @@ function buildSchema(): void {
 	db.cacheAllColumns();
 }
 
-/** Starts every recurring database task: stale-data cleanup, rating decay, and backups. */
+/** Starts every recurring database task: stale-data cleanup and backups. */
 function startPeriodicTasks(): void {
 	cleanupTasks.startPeriodic();
-	leaderboardsManager.startPeriodicRatingDeviationUpdate();
 	backupManager.startDaily();
 }
 
