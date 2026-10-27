@@ -29,6 +29,7 @@ import * as z from 'zod';
 import math from '../../../../shared/util/math/math.js';
 import timeutil from '../../../../shared/util/timeutil.js';
 import winchance from '../../../../shared/chess/util/winchance.js';
+import gamerules from '../../../../shared/chess/util/gamerules.js';
 import engineicn from '../../../../shared/chess/logic/icn/engineicn.js';
 import winconutil from '../../../../shared/chess/util/winconutil.js';
 import apeironcard from '../../../../shared/chess/engines/apeironcard.js';
@@ -252,8 +253,6 @@ const positionAttempts = new Map<number, number>();
 let mainlineNodes: AnalysisMoveNode[] = [];
 /** The game serialized once at review start; `.moves` is re-sliced per position. */
 let longformIn: LongFormatIn | undefined;
-/** Turn order captured at review start, for mover resolution. */
-let turnOrder: Player[] = [];
 let division: ReviewDivision = {};
 
 /** Per-position engine results, indexed 0 (start position) … N (final position). */
@@ -409,7 +408,6 @@ function resetState(): void {
 	positionAttempts.clear();
 	mainlineNodes = [];
 	longformIn = undefined;
-	turnOrder = [];
 	division = {};
 	results = [];
 	effectiveWhiteCp = [];
@@ -426,7 +424,6 @@ function start(): void {
 	const gamefile: GameFile = gameslot.getGamefile()!;
 
 	mainlineNodes = captureMainline();
-	turnOrder = [...gamefile.gameRules.turnOrder];
 
 	// Serialize the game once; each position re-slices the move list.
 	longformIn = gamecompressor.compressGamefile(gamefile);
@@ -716,7 +713,8 @@ function serializePosition(index: number): string {
 
 /** The player to move at position `index` (= the mover of mainline move `index`). */
 function moverAtPly(index: number): Player {
-	return turnOrder[index % turnOrder.length]!;
+	const gamefile = gameslot.getGamefile()!; // A review only exists while its game is loaded.
+	return gamerules.getWhosTurnAtMoveIndex(gamefile.gameRules, index - 1);
 }
 
 // Stall watchdog --------------------------------------------------------------
