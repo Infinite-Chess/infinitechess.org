@@ -22,15 +22,12 @@ interface LeaderboardEntry {
 // Methods ---------------------------------------------------------------------
 
 /**
- * Sets a player's rating on a specific leaderboard, adding them to it if absent,
- * and stamps the rating deviation's last update as now.
+ * Sets players' ratings, adding each to their leaderboard if absent, and stamps each rating
+ * deviation's last update as now. All or none, in a single transaction.
  * @throws If a database error occurs.
  */
-function setPlayerRating(
-	user_id: number,
-	leaderboard_id: Leaderboard,
-	elo: number,
-	rd: number,
+function setPlayerRatings(
+	entries: Pick<LeaderboardEntry, 'user_id' | 'leaderboard_id' | 'elo' | 'rating_deviation'>[],
 ): void {
 	const query = `
 		INSERT INTO leaderboards (user_id, leaderboard_id, elo, rating_deviation, rd_last_update_date)
@@ -41,8 +38,11 @@ function setPlayerRating(
 			rd_last_update_date = excluded.rd_last_update_date
 	`;
 	db.call(
-		() => db.run(query, [user_id, leaderboard_id, elo, rd]),
-		`Error setting leaderboard rating for user "${user_id}" on leaderboard "${leaderboard_id}"`,
+		() =>
+			db.transaction(() => {
+				for (const e of entries) db.run(query, [e.user_id, e.leaderboard_id, e.elo, e.rating_deviation]); // prettier-ignore
+			})(),
+		`Error setting ${entries.length} leaderboard ratings`,
 	);
 }
 
@@ -152,7 +152,7 @@ function getPlayerRank(
 // Exports ---------------------------------------------------------------------
 
 export default {
-	setPlayerRating,
+	setPlayerRatings,
 	getPlayerRating,
 	getAll,
 	getTopPlayers,

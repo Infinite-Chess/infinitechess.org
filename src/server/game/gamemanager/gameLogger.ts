@@ -139,17 +139,13 @@ function updateLeaderboardsInTransaction(
 
 	ratingCalculation.computeChanges(ratingData, victor);
 
-	for (const playerStr in ratingData) {
-		const player = Number(playerStr) as Player;
-		const user_id = getUserID(match.playerData[player])!; // The snapshot holds only signed-in players.
-		const data = ratingData[player]!;
-		leaderboardsManager.setPlayerRating(
-			user_id,
-			leaderboard_id,
-			data.elo_after_game!,
-			data.rating_deviation_after_game!,
-		);
-	}
+	const entries = Object.entries(ratingData).map(([playerStr, data]) => ({
+		user_id: getUserID(match.playerData[Number(playerStr) as Player])!, // The snapshot holds only signed-in players.
+		leaderboard_id,
+		elo: data.elo_after_game!,
+		rating_deviation: data.rating_deviation_after_game!,
+	}));
+	leaderboardsManager.setPlayerRatings(entries);
 }
 
 /** [INTERNAL] Adds the records to the `games`, `player_games` and `engine_games` tables. Throws on error. */

@@ -59,18 +59,11 @@ function startPeriodicDecay(): void {
 /** Grows every stored rating deviation by the idle time since its last update. */
 function decayAll(): void {
 	try {
-		for (const entry of leaderboardsManager.getAll()) {
-			const updatedRD = ratingCalculation.getTrueRD(
-				entry.rating_deviation,
-				entry.rd_last_update_date,
-			);
-			leaderboardsManager.setPlayerRating(
-				entry.user_id,
-				entry.leaderboard_id,
-				entry.elo,
-				updatedRD,
-			);
-		}
+		const decayed = leaderboardsManager.getAll().map((entry) => ({
+			...entry,
+			rating_deviation: ratingCalculation.getTrueRD(entry.rating_deviation, entry.rd_last_update_date), // prettier-ignore
+		}));
+		leaderboardsManager.setPlayerRatings(decayed);
 		logEvents.addAndPrint(
 			`Updated all rating deviations in leaderboard table.`,
 			'leaderboardLog',

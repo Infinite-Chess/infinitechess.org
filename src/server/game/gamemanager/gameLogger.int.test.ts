@@ -144,7 +144,7 @@ describe('gameLogger', () => {
 		alice = createMember('alice');
 		bob = createMember('bob');
 		const { elo, rd } = ALICE_RATING;
-		leaderboardsManager.setPlayerRating(alice.user_id, INFINITY, elo, rd);
+		leaderboardsManager.setPlayerRatings([{ user_id: alice.user_id, leaderboard_id: INFINITY, elo, rating_deviation: rd }]); // prettier-ignore
 	});
 
 	it('snapshots the ratings of an unrated game, changing none', () => {
@@ -208,7 +208,7 @@ describe('gameLogger', () => {
 		const game = buildGame(CLASSICAL, false, alice.identity, bob.identity, original);
 		gameLogger.log(game);
 
-		leaderboardsManager.setPlayerRating(alice.user_id, INFINITY, 2400, 60);
+		leaderboardsManager.setPlayerRatings([{ user_id: alice.user_id, leaderboard_id: INFINITY, elo: 2400, rating_deviation: 60 }]); // prettier-ignore
 		game.moves.pop();
 		game.gameConclusion = { condition: 'aborted' };
 		gameLogger.updateOverturned(game, original, 2);
