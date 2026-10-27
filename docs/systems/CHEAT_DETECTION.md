@@ -574,6 +574,9 @@ one bit.
   think times from the stored clock stamps), with close and dismiss actions. Dismissing should stop
   that evidence counting toward future cases.
 - **Measure real precision** from your verdicts and retune the case line from them.
+- **Once prod's `player_games` has the RD columns:** delete `reconstruct-rd.ts`, have
+  `build-corpus.ts` read `rating_deviation_at_game` from the snapshot, and update the honest
+  baseline's RD note and the Reproducing commands.
 
 ## Refitting the interaction weights
 
