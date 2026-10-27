@@ -19,7 +19,10 @@ interface SocketBusEvents {
 	opening: void;
 	/** The socket closed, for any reason. */
 	closed: void;
-	/** The socket closed involuntarily and we'll attempt to reconnect. Always dispatched right after `closed`. */
+	/**
+	 * An involuntary close, other than the routine expiry, while subscribed.
+	 * Always dispatched right after `closed`.
+	 */
 	'connection-lost': void;
 	/** RTT (Round Trip Time) ping value in milliseconds. */
 	ping: number;

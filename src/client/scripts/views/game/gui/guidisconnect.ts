@@ -137,7 +137,7 @@ element_ClaimDraw?.addEventListener('click', callback_ClaimDraw);
 
 // Our own disconnection -------------------------------------------------------
 
-// Only fires on an involuntary close while we still hold a subscription — exactly when
+// Only fires on a lost connection while we still hold a subscription — exactly when
 // our opponent's claim timer is running against us.
 SocketBus.addEventListener('connection-lost', () => onSelfDisconnect());
 

@@ -214,9 +214,10 @@ gates every upgrade, in order:
 Finally the socket is registered, logged, given its listeners, and sent `general/protocolversion`.
 
 **Sockets expire after 15 minutes** (`MAX_WEBSOCKET_AGE_MS`,
-[socketRegistry.ts](/src/server/socket/socketRegistry.ts)), closing with `1000 CONNECTION_EXPIRED` —
-which the client treats as involuntary and immediately reconnects through. Users must therefore
-re-present authentication at least every 15 minutes.
+[socketRegistry.ts](/src/server/socket/socketRegistry.ts)), closing with `1000 CONNECTION_EXPIRED`.
+A socket's identity is fixed at upgrade, so this bounds how long it outlives the session it opened
+with — a re-login or a renewed refresh token closes nothing. Revocations that must land at once
+close their sockets themselves, with `LOGGED_OUT`. The client reconnects through it unannounced.
 
 ### Rate limit and payload cap
 
@@ -307,7 +308,8 @@ abandonment, an abort if not yet resignable, or an engine win by disconnect in a
 ### Client-side close handling
 
 [socketclose.ts](/src/client/scripts/socket/socketclose.ts) clears pending timers, dispatches
-`closed` (then `connection-lost` if involuntary _and_ we had subs), clears its sub flags, and:
+`closed` (then `connection-lost` if involuntary, not expiry, _and_ we had subs), clears its sub
+flags, and:
 
 | Trigger                              | Response                                                                                    |
 | ------------------------------------ | ------------------------------------------------------------------------------------------- |
@@ -416,15 +418,15 @@ Messages arriving before the gamefile's logical part exists are **queued** and r
 [SocketBus.ts](/src/client/scripts/socket/SocketBus.ts) is the client's typed event bus; nothing
 imports a socket handler directly, handlers self-register.
 
-| Event                          | Fired when                                                                                 |
-| ------------------------------ | ------------------------------------------------------------------------------------------ |
-| `opening`                      | A connection attempt starts                                                                |
-| `closed`                       | The socket closed, for any reason                                                          |
-| `connection-lost`              | Right after `closed`, if involuntary and we had subs (so its handlers override `closed`'s) |
-| `reconnect`                    | Subsystems should re-subscribe                                                             |
-| `ping`                         | An echo returned; detail is the RTT in ms                                                  |
-| `intents`                      | Intent lock or route readiness changed                                                     |
-| `lobby` / `game` / `challenge` | A validated incoming message for that route                                                |
+| Event                          | Fired when                                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `opening`                      | A connection attempt starts                                                              |
+| `closed`                       | The socket closed, for any reason                                                        |
+| `connection-lost`              | Right after `closed`, if involuntary (not expiry) and we had subs, overriding `closed`'s |
+| `reconnect`                    | Subsystems should re-subscribe                                                           |
+| `ping`                         | An echo returned; detail is the RTT in ms                                                |
+| `intents`                      | Intent lock or route readiness changed                                                   |
+| `lobby` / `game` / `challenge` | A validated incoming message for that route                                              |
 
 ## The intent layer (client)
 

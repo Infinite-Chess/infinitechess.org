@@ -27,11 +27,6 @@ const RESUB_DELAY_MS = 10000;
 /** Whether we're in a rate-limit timeout, during which we won't reconnect. */
 let inTimeout = false;
 
-/** Returns whether we're currently in a rate-limit timeout. */
-function isInTimeout(): boolean {
-	return inTimeout;
-}
-
 // Close Handler ---------------------------------------------------------------
 
 /**
@@ -49,10 +44,12 @@ function onclose(code: number, reason: string): void {
 	const involuntary = socketutil.wasSocketClosureInvoluntary(code, trimmedReason);
 
 	SocketBus.dispatch('closed');
-	// An involuntary close (with subs to reconnect for) means we lost the connection and
-	// will retry. Dispatched after `closed` so its handlers — e.g. the ping meter's loading
-	// state — override the generic close behavior.
-	if (involuntary && !socketsubs.zeroSubs()) SocketBus.dispatch('connection-lost');
+	// An involuntary close (with subs to reconnect for) means we lost the connection and will
+	// retry — except the server's routine expiry, which we reconnect through at once, unannounced.
+	// Dispatched after `closed` so its handlers — e.g. the ping meter's loading state — override
+	// the generic close behavior.
+	const expired = trimmedReason === socketutil.CLOSURE_REASONS.CONNECTION_EXPIRED;
+	if (involuntary && !expired && !socketsubs.zeroSubs()) SocketBus.dispatch('connection-lost');
 
 	// The server drops all subscriptions on close. Reconnect handlers should re-subscribe.
 	socketsubs.clearAllSubs();
@@ -124,9 +121,7 @@ function onclose(code: number, reason: string): void {
 
 // Timeout Management ----------------------------------------------------------
 
-/**
- * Enters a rate-limit timeout period during which we won't reconnect.
- */
+/** Enters a rate-limit timeout period during which we won't reconnect. */
 function enterTimeout(): void {
 	if (inTimeout) return;
 	inTimeout = true;
@@ -137,6 +132,11 @@ function enterTimeout(): void {
 function leaveTimeout(): void {
 	inTimeout = false;
 	socketconnection.resubAll();
+}
+
+/** Returns whether we're currently in a rate-limit timeout. */
+function isInTimeout(): boolean {
+	return inTimeout;
 }
 
 // Exports ---------------------------------------------------------------------

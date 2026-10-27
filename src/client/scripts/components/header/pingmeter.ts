@@ -19,7 +19,7 @@ const loadingAnim = document.querySelector('.ping-meter .svg-pawn')!; // Spinnin
 SocketBus.addEventListener('ping', (event) => updatePing(event.detail));
 SocketBus.addEventListener('opening', () => openMeterAndDisplayLoading());
 SocketBus.addEventListener('closed', () => closeMeter());
-// Fires right after `closed` on an involuntary close, overriding closeMeter()
+// Fires right after `closed` on a lost connection, overriding closeMeter()
 // above so a reconnecting socket shows the loading animation instead.
 SocketBus.addEventListener('connection-lost', () => openMeterAndDisplayLoading());
 
