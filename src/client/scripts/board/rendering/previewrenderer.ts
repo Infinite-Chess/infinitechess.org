@@ -8,7 +8,7 @@
  */
 
 import type { Mesh } from './piecemodels.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 
 import area from './area.js';
 import piecemodels from './piecemodels.js';
@@ -28,7 +28,7 @@ async function createContext(canvas: HTMLCanvasElement): Promise<RenderContext> 
 }
 
 /** Draws the board's start position into the context, framed to fit its canvas. */
-function render(ctx: RenderContext, boardsim: BoardPreview): void {
+function render(ctx: RenderContext, boardsim: BoardBase): void {
 	// The canvas may have resized since the last draw
 	ctx.camera.syncCanvasDimensions();
 

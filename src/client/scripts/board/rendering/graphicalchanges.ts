@@ -11,7 +11,7 @@ import type LiveBoard from './LiveBoard.js';
 import type { Piece } from '../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../shared/util/coordutil.js';
 import type RenderContext from './RenderContext.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 import type {
 	ChangeApplication,
 	Change,
@@ -51,7 +51,7 @@ const CHANGE_FUNCS: ChangeApplication<genericChangeFunc<Mesh>> = {
  */
 function runMeshChanges(
 	ctx: RenderContext,
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	mesh: Mesh,
 	edit: Edit,
 	forward: boolean,

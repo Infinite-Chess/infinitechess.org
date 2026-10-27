@@ -11,7 +11,7 @@
  */
 
 import type { TypeGroup } from '../../../../shared/chess/util/typeutil.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 
 import typeutil from '../../../../shared/chess/util/typeutil.js';
 import piecethemes from '../../../../shared/chess/util/piecethemes.js';
@@ -31,7 +31,7 @@ export interface TextureCache {
 	 * @param gl - The WebGL2 rendering context.
 	 * @param boardsim - The board containing the list of piece types used.
 	 */
-	initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardPreview): void;
+	initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardBase): void;
 	/**
 	 * Retrieves a WebGLTexture from the cache.
 	 * ASSUMES `initTexturesForGame` has been called successfully for the current game.
@@ -51,7 +51,7 @@ function createTextureCache(): TextureCache {
 	/** Internal cache storing WebGLTexture objects, keyed by piece type. */
 	const textureCache: TypeGroup<WebGLTexture> = {};
 
-	function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardPreview): void {
+	function initTexturesForGame(gl: WebGL2RenderingContext, boardsim: BoardBase): void {
 		// 1. Determine required piece types (mirroring imagecache logic, filter SVG-less)
 		const types = boardsim.existingTypes.filter(
 			(t: number) => !piecethemes.SVGLESS_TYPES.has(typeutil.getRawType(t)),

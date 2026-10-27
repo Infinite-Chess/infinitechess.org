@@ -7,8 +7,8 @@
  */
 
 import type { GameFile } from '../logic/gamefile.js';
+import type { BoardBase } from '../logic/boardbase.js';
 import type { VariantCode } from '../util/variantcodes.js';
-import type { BoardPreview } from '../logic/boardpreviewer.js';
 import type { EngineRefusal } from '../util/engineglue.js';
 import type { GameruleWinCondition } from '../util/winconutil.js';
 
@@ -81,7 +81,7 @@ const MAX_PIECES = 10_000;
  * {@link isPlaySupported} these require no bounded board — the engine takes coordinates of any
  * size itself.
  */
-function checkGameRules(board: BoardPreview): SupportedResult {
+function checkGameRules(board: BoardBase): SupportedResult {
 	if (variantmodule.hasCustomMovement(board.variant?.mod))
 		return { supported: false, reason: 'unsupported_variant' };
 
@@ -185,7 +185,7 @@ function isPlaySupported(gamefile: GameFile): SupportedResult {
  * was unplayable (too many pieces / an unsupported piece) back into range, so we don't disqualify
  * a game for something at another ply. The engine may still refuse the position itself ({@link EngineRefusal}).
  */
-function isAnalysisSupported(board: BoardPreview): SupportedResult {
+function isAnalysisSupported(board: BoardBase): SupportedResult {
 	const gameRulesResult = checkGameRules(board);
 	if (!gameRulesResult.supported) return gameRulesResult;
 
@@ -206,7 +206,7 @@ function isAnalysisSupported(board: BoardPreview): SupportedResult {
  * every piece type that appears across the game (start pieces plus promotion targets).
  * A position the engine refuses ({@link EngineRefusal}) is left as a gap in the review.
  */
-function isGameReviewSupported(board: BoardPreview): SupportedResult {
+function isGameReviewSupported(board: BoardBase): SupportedResult {
 	const gameRulesResult = checkGameRules(board);
 	if (!gameRulesResult.supported) return gameRulesResult;
 

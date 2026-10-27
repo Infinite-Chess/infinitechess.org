@@ -8,7 +8,7 @@ import type { Piece } from '../../../../shared/chess/logic/boardutil.js';
 import type { Coords } from '../../../../shared/util/coordutil.js';
 import type { TypeGroup } from '../../../../shared/chess/util/typeutil.js';
 import type RenderContext from './RenderContext.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 import type {
 	AttributeInfoInstanced,
 	PersistentRenderableInstanced,
@@ -93,7 +93,7 @@ const ATTRIBUTE_INFO: AttributeInfoInstanced = {
  *
  * SLOWEST. Minimize calling.
  */
-function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undefined): void {
+function regenAll(ctx: RenderContext, boardsim: BoardBase, mesh: Mesh | undefined): void {
 	if (!mesh) return;
 	// console.log('Regenerating all piece type meshes.');
 
@@ -122,12 +122,7 @@ function regenAll(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh | undef
  * SLOWEST. Minimize calling.
  * @param type - The type of piece of which to generate the model for
  */
-function genTypeModel(
-	ctx: RenderContext,
-	boardsim: BoardPreview,
-	mesh: Mesh,
-	type: number,
-): MeshData {
+function genTypeModel(ctx: RenderContext, boardsim: BoardBase, mesh: Mesh, type: number): MeshData {
 	const vertexData = instancedshapes.getDataTexture(mesh.inverted);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
 
@@ -151,12 +146,7 @@ function genTypeModel(
  *
  * SLOWEST. Minimize calling.
  */
-function genVoidModel(
-	ctx: RenderContext,
-	boardsim: BoardPreview,
-	mesh: Mesh,
-	type: number,
-): MeshData {
+function genVoidModel(ctx: RenderContext, boardsim: BoardBase, mesh: Mesh, type: number): MeshData {
 	const voidColor = ctx.gl.getParameter(ctx.gl.COLOR_CLEAR_VALUE); // Same color as the sky / void space star field. HAS NO AFFECT SINCE IT'S A MASK.
 	const vertexData: number[] = instancedshapes.getDataLegalMoveSquare(voidColor);
 	const instanceData: InstanceData = getInstanceDataForTypeRange(boardsim, mesh, type);
@@ -178,11 +168,7 @@ function genVoidModel(
  * The instance data contains only the offset of each piece instance, with a stride of 2.
  * Thus, this works will all types of pieces, even those without a texture, such as voids.
  */
-function getInstanceDataForTypeRange(
-	boardsim: BoardPreview,
-	mesh: Mesh,
-	type: number,
-): InstanceData {
+function getInstanceDataForTypeRange(boardsim: BoardBase, mesh: Mesh, type: number): InstanceData {
 	const instanceData: InstanceData = []; // Initialize empty
 
 	let currIndex: number = 0;

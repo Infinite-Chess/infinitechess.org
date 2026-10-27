@@ -10,7 +10,7 @@ import type { Color } from '../../../../shared/types/color.js';
 import type { MoveFull } from '../../../../shared/chess/logic/movepiece.js';
 import type { Animation } from './animation/animation.js';
 import type RenderContext from './RenderContext.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 import type { BDCoords, Coords, CoordsKey } from '../../../../shared/util/coordutil.js';
 import type { Renderable, AttributeInfoInstanced } from '../../webgl/Renderable.js';
 
@@ -59,7 +59,7 @@ const ATTRIB_INFO: AttributeInfoInstanced = {
  */
 function forEachRenderablePiece(
 	ctx: RenderContext,
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	animations: Animation[],
 	callback: (coords: BDCoords, type: number) => void,
 ): void {
@@ -91,7 +91,7 @@ function forEachRenderablePiece(
  * @param moves - The board's moves, viewed at its move index. A static position has none.
  */
 function forEachLastAndNextMovePiece(
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	moves: MoveFull[],
 	animations: Animation[],
 	callback: (coords: BDCoords, type: number) => void,
@@ -105,7 +105,7 @@ function forEachLastAndNextMovePiece(
 
 /** Invokes the callback for the piece on a square, unless an animation landing there already shows it. */
 function visitPieceAt(
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	animations: Animation[],
 	coords: Coords,
 	callback: (coords: BDCoords, type: number) => void,
@@ -164,7 +164,7 @@ function getMaxAnimationDistance(ctx: RenderContext): BigDecimal {
  */
 function buildInstanceData(
 	ctx: RenderContext,
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	moves: MoveFull[],
 	animations: Animation[],
 ): TypeGroup<number[]> {
@@ -186,7 +186,7 @@ function buildInstanceData(
 }
 
 /** Whether a board has more than {@link MAX_PIECE_COUNT} pieces. */
-function isOverPieceCap(boardsim: BoardPreview): boolean {
+function isOverPieceCap(boardsim: BoardBase): boolean {
 	return boardutil.getPieceCountOfGame(boardsim.pieces) > MAX_PIECE_COUNT;
 }
 

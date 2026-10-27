@@ -1,8 +1,8 @@
 // src/shared/chess/logic/boardinit.ts
 
 /**
- * Creates the Board (board state) for a game: the move-execution tier of the
- * BoardPreview -> Board -> GameFile ladder. Reads the variant's movesets and
+ * Creates the Board for a game: the move-execution tier of the
+ * BoardBase -> Board -> GameFile ladder. Reads the variant's movesets and
  * special moves, the only place those are needed.
  */
 
@@ -15,24 +15,20 @@ import type { VariantModule } from './variantmodule.js';
 import type { LoadedVariant } from './gamefile.js';
 import type { OrganizedPieces } from './organizedpieces.js';
 import type { RawType, RawTypeGroup } from '../util/typeutil.js';
-import type { BoardInitOptions, BoardPreview } from './boardpreviewer.js';
+import type { BoardInitOptions, BoardBase } from './boardbase.js';
 import type { SpecialMoveFunction, SpecialVicinity } from './specialmove.js';
 
 import movesets from './movesets.js';
 import typeutil from '../util/typeutil.js';
 import coordutil from '../../util/coordutil.js';
+import boardbase from './boardbase.js';
 import specialmove from './specialmove.js';
-import boardpreviewer from './boardpreviewer.js';
 import organizedpieces from './organizedpieces.js';
 
 // Types -----------------------------------------------------------------------
 
-/**
- * Game data used for simulating game logic and board state.
- * Extends {@link BoardPreview} with move-execution machinery.
- * Used by client always, may not be used by the server.
- */
-export interface Board extends BoardPreview {
+/** Extends {@link BoardBase} with the machinery for executing moves. */
+export interface Board extends BoardBase {
 	/** Fully-populated organized pieces, with slide lines and all. */
 	pieces: OrganizedPieces;
 	moves: MoveFull[];
@@ -49,41 +45,40 @@ type Vicinity = { offset: Coords; types: RawType[] }[];
 
 // Board Construction ----------------------------------------------------------
 
-/** Creates a new {@link Board} object from provided arguments */
+/** Creates a new {@link Board} from the provided arguments. */
 function init(
 	/** The rules to base the board on. Deep-copied — the board owns its own rules. */
 	gameRules: GameRules,
 	variant: LoadedVariant | undefined,
 	options: BoardInitOptions = {},
 ): Board {
-	const boardPreview = boardpreviewer.init(gameRules, variant, options);
+	const base = boardbase.init(gameRules, variant, options);
 
 	// Calculate movesets
-	const pieceMovesets = getMovesetsOfVariant(variant?.mod, boardPreview.gameRules.slideLimit);
+	const pieceMovesets = getMovesetsOfVariant(variant?.mod, base.gameRules.slideLimit);
 	const specialMoves = getSpecialMovesOfVariant(variant?.mod);
 
 	// Trim both groups to only include types actually present in the game
-	typeutil.deleteUnusedFromRawTypeGroup(boardPreview.existingRawTypes, pieceMovesets);
-	typeutil.deleteUnusedFromRawTypeGroup(boardPreview.existingRawTypes, specialMoves);
+	typeutil.deleteUnusedFromRawTypeGroup(base.existingRawTypes, pieceMovesets);
+	typeutil.deleteUnusedFromRawTypeGroup(base.existingRawTypes, specialMoves);
 
-	// Populate slide lines — upgrades boardPreview.pieces (OrganizedPiecesBase) to a full OrganizedPieces.
-	// The board preview didn't need slide lines.
-	const pieces = organizedpieces.addSlideLines(boardPreview.pieces, pieceMovesets);
+	// Upgrades the base's pieces to a full OrganizedPieces, with slide lines.
+	const pieces = organizedpieces.addSlideLines(base.pieces, pieceMovesets);
 
 	const vicinity = genVicinity(pieceMovesets);
-	const specialVicinity = genSpecialVicinity(variant?.mod, boardPreview.existingRawTypes);
+	const specialVicinity = genSpecialVicinity(variant?.mod, base.existingRawTypes);
 
 	const moves: MoveFull[] = [];
 
 	return {
-		...boardPreview,
-		pieces, // Replaces the boardPreview's pieces
+		...base,
+		pieces,
 		moves,
 		vicinity,
 		specialVicinity,
 		pieceMovesets,
 		specialMoves,
-		whosTurn: boardPreview.gameRules.turnOrder[0]!,
+		whosTurn: base.gameRules.turnOrder[0]!,
 	};
 }
 

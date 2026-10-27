@@ -10,7 +10,7 @@ import type { Mesh } from './piecemodels.js';
 import type { MoveFull } from '../../../../shared/chess/logic/movepiece.js';
 import type { Animation } from './animation/animation.js';
 import type RenderContext from './RenderContext.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 import type { RenderContextParams } from './RenderContext.js';
 
 import webgl from './webgl.js';
@@ -56,7 +56,7 @@ function createContextParams(canvas: HTMLCanvasElement): RenderContextParams {
 }
 
 /** Loads any not-yet-cached images and textures the board needs into the context. */
-async function load(ctx: RenderContext, boardsim: BoardPreview): Promise<void> {
+async function load(ctx: RenderContext, boardsim: BoardBase): Promise<void> {
 	await imagecache.initImagesForGame(boardsim);
 	ctx.textures.initTexturesForGame(ctx.gl, boardsim);
 }
@@ -64,7 +64,7 @@ async function load(ctx: RenderContext, boardsim: BoardPreview): Promise<void> {
 // Drawing ---------------------------------------------------------------------
 
 /** Draws the board's tiles and promotion lines, masked to its playable region with voids cut out. */
-function renderBoard(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh): void {
+function renderBoard(ctx: RenderContext, boardsim: BoardBase, mesh: Mesh): void {
 	const { gameRules } = boardsim;
 	ctx.maskedDraw.execute(
 		() => border.drawPlayableRegionMask(ctx, gameRules.worldBorder), // INCLUSION MASK: playable region
@@ -85,7 +85,7 @@ function renderBoard(ctx: RenderContext, boardsim: BoardPreview, mesh: Mesh): vo
  */
 function renderPieces(
 	ctx: RenderContext,
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	mesh: Mesh,
 	moves: MoveFull[],
 	animations: Animation[],

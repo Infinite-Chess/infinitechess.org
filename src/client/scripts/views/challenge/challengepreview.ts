@@ -4,8 +4,8 @@
  * Draws the challenge's start position into the card's preview canvas, from White's view.
  */
 
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 import type { SeekVariant } from '../../../../shared/chess/util/variantselection.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
 
 import icnimport from '../../../../shared/chess/logic/icn/icnimport.js';
 import icnconverter from '../../../../shared/chess/logic/icn/icnconverter.js';
@@ -50,7 +50,7 @@ async function init(): Promise<void> {
 }
 
 /** Builds the seek's start position: a preset's, or its custom ICN's. */
-async function buildBoard(variant: SeekVariant): Promise<BoardPreview> {
+async function buildBoard(variant: SeekVariant): Promise<BoardBase> {
 	if (variant.kind === 'preset') {
 		return previewboards.ofPreset(variant.code);
 	} else {

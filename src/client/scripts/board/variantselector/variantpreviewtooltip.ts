@@ -9,8 +9,8 @@
  */
 
 import type RenderContext from '../rendering/RenderContext.js';
+import type { BoardBase } from '../../../../shared/chess/logic/boardbase.js';
 import type { VariantCode } from '../../../../shared/chess/util/variantcodes.js';
-import type { BoardPreview } from '../../../../shared/chess/logic/boardpreviewer.js';
 import type { GameModifier } from '../../../../shared/chess/util/modutil.js';
 import type { VariantOptions } from '../../../../shared/chess/logic/gamefile.js';
 
@@ -160,7 +160,7 @@ function hide(): void {
 async function showForBoard(
 	anchor: HTMLElement,
 	name: string,
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	token: number,
 	placement: 'left' | 'below',
 	/** Undefined for custom positions, which have no variant. */
@@ -227,7 +227,7 @@ function startPositionLoop(anchor: HTMLElement, placement: 'left' | 'below'): vo
 
 /** Builds the rule summary. Off-DOM so a stale async preview cannot change the visible tooltip. */
 async function buildRules(
-	boardsim: BoardPreview,
+	boardsim: BoardBase,
 	variantCode: VariantCode | undefined,
 	modifiers: GameModifier[] | undefined,
 ): Promise<DocumentFragment> {

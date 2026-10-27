@@ -1,11 +1,8 @@
-// src/shared/chess/logic/boardpreviewer.ts
+// src/shared/chess/logic/boardbase.ts
 
 /**
- * Defines BoardPreview — the static-position tier of the BoardPreview -> Board ->
- * GameFile ladder, holding everything needed to render a snapshot and none of the
- * move-execution fields (pieceMovesets, specialMoves, vicinity, specialVicinity, moves).
- *
- * Renderers take a BoardPreview so their signature states they read a position and
+ * Creates the BoardBase for a game: the static-position tier of the BoardBase -> Board ->
+ * GameFile ladder. Renderers take one so their signatures state they read a position and
  * never simulate on it.
  */
 
@@ -23,7 +20,7 @@ import organizedpieces from './organizedpieces.js';
 
 // Types -----------------------------------------------------------------------
 
-/** Shared setup options for board and board-preview initialization. */
+/** Shared setup options for board and board-base initialization. */
 export interface BoardInitOptions {
 	/** Optional variant-specific state for custom or loaded positions. */
 	variantOptions?: VariantOptions;
@@ -31,15 +28,10 @@ export interface BoardInitOptions {
 	editor?: boolean;
 }
 
-/**
- * The lightweight subset of {@link Board} used by preview renderers.
- * Contains everything needed to render a static position snapshot, but
- * none of the move-execution fields (pieceMovesets, specialMoves, vicinity,
- * specialVicinity, moves).
- */
-export type BoardPreview = {
+/** The static-position subset of {@link Board}: everything but its move-execution fields. */
+export type BoardBase = {
 	/**
-	 * An array of all types of pieces that are in this game, without their color extension: `['pawns','queens']`,
+	 * An array of all piece types that are in this game, with their color,
 	 * including pieces that may join via promotion or the board editor.
 	 */
 	existingTypes: number[];
@@ -64,19 +56,19 @@ export type BoardPreview = {
 	 */
 	variant?: LoadedVariant;
 
-	/** Information about the beginning snapshot of the game (position, positionString, specialRights, turn) */
+	/** The position the game began from. */
 	startSnapshot: Snapshot;
 };
 
 // Functions -------------------------------------------------------------------
 
-/** Creates a new {@link BoardPreview} from the provided arguments. */
+/** Creates a new {@link BoardBase} from the provided arguments. */
 function init(
 	/** The rules to base the board on. */
 	gameRulesIn: GameRules,
 	variant: LoadedVariant | undefined,
 	options: BoardInitOptions = {},
-): BoardPreview {
+): BoardBase {
 	const { variantOptions, editor = false } = options;
 
 	// The board owns its rules: the generated world border is written onto this copy, never the
