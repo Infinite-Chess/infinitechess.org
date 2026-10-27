@@ -61,10 +61,10 @@ function caughtAt(pool: EngineGame[], elo: number, rd: number, random: () => num
 		const ratios = bettingScore.gameLogRatios(evidence, model, ceiling);
 		history.push(bettingScore.gameScore(ratios, bettingScore.EMPTY_INTERACTION));
 		if (bettingScore.bestRunLogScore(history) >= settings.CASE_LOG_SCORE) return game;
-		// A null last update leaves the deviation undecayed: games are back to back.
+		// Undecayed: games are back to back.
 		const ratings: RatingData = {
-			[p.WHITE]: { elo_at_game: rating, rating_deviation_at_game: deviation, rd_last_update_date: null }, // prettier-ignore
-			[p.BLACK]: { elo_at_game: rating, rating_deviation_at_game: OPPONENT_RD, rd_last_update_date: null }, // prettier-ignore
+			[p.WHITE]: { elo_at_game: rating, rating_deviation_at_game: deviation },
+			[p.BLACK]: { elo_at_game: rating, rating_deviation_at_game: OPPONENT_RD },
 		};
 		ratingCalculation.computeChanges(ratings, p.WHITE);
 		rating = ratings[p.WHITE]!.elo_after_game!;

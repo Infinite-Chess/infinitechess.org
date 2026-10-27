@@ -297,9 +297,8 @@ function dropLiveGamesConclusionColumnsIfPresent(): void {
  *
  * Rebuilds `player_games` with the RD columns and NOT NULL pre-game ratings, derived by replaying
  * every rated game in finishing order through the live rating code. Keeps every stored elo and
- * rating change, and writes nothing unless the replay reproduces them all. Elo is exact; a
- * pre-game RD includes idle decay up to the game, which live logging only applied as far as the
- * RD job's last, unrecorded run. Also drops the vestigial `clock_at_end_millis`.
+ * rating change, and writes nothing unless the replay reproduces them all. Also drops the
+ * vestigial `clock_at_end_millis`.
  */
 function backfillPlayerGamesRatingsIfNeeded(): void {
 	if (!db.columnIsNullable('player_games', 'elo_at_game')) return; // Already migrated.
@@ -349,8 +348,7 @@ function replayRatings(games: LoggedGame[]): PlayerGamesRecord[] {
 			const rating = ratings.get(keyOf(row)) ?? DEFAULT_RATING;
 			ratingData[row.player_number] = {
 				elo_at_game: rating.elo,
-				rating_deviation_at_game: rating.rating_deviation,
-				rd_last_update_date: rating.rd_last_update_date,
+				rating_deviation_at_game: ratingCalculation.getTrueRD(rating.rating_deviation, rating.rd_last_update_date, game.ended), // prettier-ignore
 			};
 		}
 
@@ -358,7 +356,7 @@ function replayRatings(games: LoggedGame[]): PlayerGamesRecord[] {
 		const changesRatings = game.rated && game.rows.every((row) => row.score !== null);
 		if (changesRatings) {
 			const victor = game.rows.find((row) => row.score === 1)?.player_number ?? null;
-			ratingCalculation.computeChanges(ratingData, victor, game.ended);
+			ratingCalculation.computeChanges(ratingData, victor);
 		}
 
 		for (const row of game.rows) {
@@ -373,7 +371,7 @@ function replayRatings(games: LoggedGame[]): PlayerGamesRecord[] {
 				score: row.score,
 				elo_at_game: row.elo_at_game ?? data.elo_at_game,
 				elo_change_from_game: row.elo_change_from_game ?? elo_change_from_game,
-				rating_deviation_at_game: ratingCalculation.getTrueRD(data.rating_deviation_at_game, data.rd_last_update_date, game.ended), // prettier-ignore
+				rating_deviation_at_game: data.rating_deviation_at_game,
 				rating_deviation_after_game: data.rating_deviation_after_game ?? null,
 			});
 			if (changesRatings) {

@@ -116,11 +116,10 @@ function readCurrentRatings(match: MatchInfo): RatingData {
 		const user_id = getUserID(match.playerData[player]);
 		if (user_id === undefined) continue; // Guests have no rating.
 
-		const stored = playerRatings.getStored(user_id, leaderboard_id);
+		const current = playerRatings.getCurrent(user_id, leaderboard_id);
 		ratingData[player] = {
-			elo_at_game: stored.elo,
-			rating_deviation_at_game: stored.rating_deviation,
-			rd_last_update_date: stored.rd_last_update_date,
+			elo_at_game: current.elo,
+			rating_deviation_at_game: current.rating_deviation,
 		};
 	}
 	return ratingData;

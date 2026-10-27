@@ -16,9 +16,8 @@ import { PlayerGroup, Player, players as p } from '../../shared/chess/util/typeu
 /** Type containing all relevant rating calculation quantities for a specific player */
 type PlayerRatingData = {
 	elo_at_game: number;
+	/** Decayed up to the game, by {@link getTrueRD}. */
 	rating_deviation_at_game: number;
-	/** A date in string format, as used in the database. Can be null if no games played yet */
-	rd_last_update_date: string | null;
 	elo_after_game?: number;
 	rating_deviation_after_game?: number;
 	elo_change_from_game?: number;
@@ -146,16 +145,11 @@ function new_RD(r: number, RD: number, r_opp: number, RD_opp: number): number {
 }
 
 /**
- * Takes ratingdata object as an input, with entries: elo_at_game, rating_deviation_at_game and rd_last_update_date.
+ * Takes ratingdata object as an input, with entries: elo_at_game and rating_deviation_at_game.
  * Computes rating data changes and returns ratingdata object by overwriting entries: elo_after_game, rating_deviation_after_game and elo_change_from_game.
  * MUTATING. Modifies original ratingdata object.
- * @param now - The epoch ms the game ended, up to which each player's deviation decays.
  */
-function computeChanges(
-	ratingdata: RatingData,
-	victor: Player | null,
-	now = Date.now(),
-): RatingData {
+function computeChanges(ratingdata: RatingData, victor: Player | null): RatingData {
 	// Currently, only rating calculations for 2-player games with White vs Black are supported
 	const playerCount = Object.keys(ratingdata).length;
 	if (playerCount !== 2) throw Error('Rating changes are only supported in two player games!');
@@ -164,16 +158,8 @@ function computeChanges(
 
 	const r1 = ratingdata[p.WHITE]!.elo_at_game;
 	const r2 = ratingdata[p.BLACK]!.elo_at_game;
-	const RD1 = getTrueRD(
-		ratingdata[p.WHITE]!.rating_deviation_at_game,
-		ratingdata[p.WHITE]!.rd_last_update_date,
-		now,
-	);
-	const RD2 = getTrueRD(
-		ratingdata[p.BLACK]!.rating_deviation_at_game,
-		ratingdata[p.BLACK]!.rd_last_update_date,
-		now,
-	);
+	const RD1 = ratingdata[p.WHITE]!.rating_deviation_at_game;
+	const RD2 = ratingdata[p.BLACK]!.rating_deviation_at_game;
 	const outcome_white = victor === p.WHITE ? 1 : victor === p.BLACK ? 0 : 0.5;
 	const outcome_black = victor === p.WHITE ? 0 : victor === p.BLACK ? 1 : 0.5;
 

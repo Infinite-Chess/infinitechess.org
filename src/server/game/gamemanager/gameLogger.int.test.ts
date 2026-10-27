@@ -100,7 +100,7 @@ function getRatingRows(game_id: number): Record<number, object> {
 
 /** The logged rating columns of a player whose rating the game left unchanged. */
 function buildUnchangedRow(rating: PlayerRating): object {
-	return { elo_at_game: rating.elo, rating_deviation_at_game: rating.rd, elo_change_from_game: null, rating_deviation_after_game: null }; // prettier-ignore
+	return { elo_at_game: rating.elo, rating_deviation_at_game: expect.closeTo(rating.rd), elo_change_from_game: null, rating_deviation_after_game: null }; // prettier-ignore
 }
 
 /** A logged game's ICN. */
@@ -188,7 +188,7 @@ describe('gameLogger', () => {
 
 		expect(Object.keys(gameLogger.log(game)!)).toEqual(['1', '2']);
 		const rows = getRatingRows(game.match.id);
-		expect(rows[1]).toMatchObject({ elo_at_game: ALICE_RATING.elo, rating_deviation_at_game: ALICE_RATING.rd }); // prettier-ignore
+		expect(rows[1]).toMatchObject({ elo_at_game: ALICE_RATING.elo, rating_deviation_at_game: expect.closeTo(ALICE_RATING.rd) }); // prettier-ignore
 		expect(rows[2]).toMatchObject({ elo_at_game: BOB_RATING.elo, rating_deviation_at_game: BOB_RATING.rd }); // prettier-ignore
 		expectRatingsChanged(game.match.id, { 1: -1, 2: 1 });
 		// Bob's first rated game adds him to the leaderboard.

@@ -1,8 +1,9 @@
 // src/server/game/ratings/playerRatings.ts
 
 /**
- * A member's rating on a leaderboard as the rest of the server reads it: their stored row, or the
- * default a newcomer starts from. Also keeps every stored rating deviation decaying while idle.
+ * A member's rating on a leaderboard as the rest of the server reads it: their stored row with its
+ * deviation decayed up to now, or the default a newcomer starts from. Also keeps every stored
+ * rating deviation decaying while idle.
  */
 
 import type { Rating } from '../../../shared/chess/util/metadatautil.js';
@@ -16,12 +17,10 @@ import leaderboardsManager from '../../database/leaderboardsManager.js';
 
 // Types -----------------------------------------------------------------------
 
-/** A member's stored rating on a leaderboard. */
-type StoredRating = {
+/** A member's current rating on a leaderboard. */
+type CurrentRating = {
 	elo: number;
 	rating_deviation: number;
-	/** Null for a newcomer, whose deviation has never been updated. */
-	rd_last_update_date: string | null;
 };
 
 // Reading ---------------------------------------------------------------------
@@ -31,22 +30,26 @@ type StoredRating = {
  * @throws If a database error occurs.
  */
 function get(user_id: number, leaderboard_id: Leaderboard): Rating {
-	const stored = getStored(user_id, leaderboard_id);
-	return ratingCalculation.toRating(stored.elo, stored.rating_deviation);
+	const current = getCurrent(user_id, leaderboard_id);
+	return ratingCalculation.toRating(current.elo, current.rating_deviation);
 }
 
 /**
- * A member's stored rating on a leaderboard, or the default a newcomer starts from.
+ * A member's current rating on a leaderboard, or the default a newcomer starts from.
  * @throws If a database error occurs.
  */
-function getStored(user_id: number, leaderboard_id: Leaderboard): StoredRating {
-	return (
-		leaderboardsManager.getPlayerRating(user_id, leaderboard_id) ?? {
+function getCurrent(user_id: number, leaderboard_id: Leaderboard): CurrentRating {
+	const stored = leaderboardsManager.getPlayerRating(user_id, leaderboard_id);
+	if (stored === undefined) {
+		return {
 			elo: ratingCalculation.DEFAULT_LEADERBOARD_ELO,
 			rating_deviation: ratingCalculation.DEFAULT_LEADERBOARD_RD,
-			rd_last_update_date: null,
-		}
-	);
+		};
+	}
+	return {
+		elo: stored.elo,
+		rating_deviation: ratingCalculation.getTrueRD(stored.rating_deviation, stored.rd_last_update_date), // prettier-ignore
+	};
 }
 
 // Rating Deviation Decay ------------------------------------------------------
@@ -82,7 +85,7 @@ function decayAll(): void {
 export default {
 	// Reading
 	get,
-	getStored,
+	getCurrent,
 	// Rating Deviation Decay
 	startPeriodicDecay,
 };

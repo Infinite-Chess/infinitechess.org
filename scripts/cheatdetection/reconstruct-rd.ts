@@ -51,14 +51,15 @@ for (const game of games) {
 		const key = `${p.user_id}/${game.leaderboard_id}`;
 		const standing = standings.get(key) ?? { elo: ratingCalculation.DEFAULT_LEADERBOARD_ELO, rd: ratingCalculation.DEFAULT_LEADERBOARD_RD, last: null }; // prettier-ignore
 		standings.set(key, standing);
-		ratingData[p.player_number] = { elo_at_game: standing.elo, rating_deviation_at_game: standing.rd, rd_last_update_date: standing.last }; // prettier-ignore
-		rds[`${game.game_id}/${p.user_id}`] = ratingCalculation.getTrueRD(standing.rd, standing.last, finish(game)); // prettier-ignore
+		// As the game was logged: at its end.
+		const rd = ratingCalculation.getTrueRD(standing.rd, standing.last, finish(game));
+		ratingData[p.player_number] = { elo_at_game: standing.elo, rating_deviation_at_game: rd };
+		rds[`${game.game_id}/${p.user_id}`] = rd;
 	}
 	if (players.some((p) => p.score === null)) continue;
 
-	// As the game was logged: at its end.
 	const white = players.find((p) => p.player_number === 1)!;
-	ratingCalculation.computeChanges(ratingData, white.score === 1 ? 1 : white.score === 0 ? 2 : null, finish(game)); // prettier-ignore
+	ratingCalculation.computeChanges(ratingData, white.score === 1 ? 1 : white.score === 0 ? 2 : null); // prettier-ignore
 
 	for (const p of players) {
 		const data = ratingData[p.player_number]!;
