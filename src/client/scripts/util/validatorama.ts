@@ -8,6 +8,8 @@
 
 import type { MemberInfoCookie } from '../../../shared/types/memberinfo.js';
 
+import timeutil from '../../../shared/util/timeutil.js';
+
 import docutil from './docutil.js';
 import navigate from './navigate.js';
 
@@ -16,13 +18,15 @@ import navigate from './navigate.js';
 /** Our identity (the cookie payload) when signed in, else just the flag. */
 type MemberInfoState = ({ signedIn: true } & MemberInfoCookie) | { signedIn: false };
 
+// Constants -------------------------------------------------------------------
+
+/** How often we check whether our session has ended. */
+const SESSION_CHECK_INTERVAL_MS = timeutil.toMillis(1, 'minutes');
+
 // State -----------------------------------------------------------------------
 
 /** Pings the browser's other tabs, prompting them to re-check who they're rendered for. */
 let identityChannel = openIdentityChannel();
-
-/** The timeout ID for the timer to check session expiry. */
-let sessionExpiryTimer: number | undefined;
 
 let memberInfo: MemberInfoState = { signedIn: false };
 
@@ -36,6 +40,8 @@ let memberInfo: MemberInfoState = { signedIn: false };
 
 	// Empty payload on purpose: every tab answers by re-reading the cookie they all share.
 	identityChannel.postMessage(null);
+
+	window.setInterval(() => checkSessionExpiry(), SESSION_CHECK_INTERVAL_MS);
 })();
 
 /** Re-checks our identity whenever the page is shown, and whenever another tab pings. */
@@ -69,76 +75,35 @@ function resyncMemberInfo(): void {
 	if (getOurUserId() !== previousUserId) navigate.reload();
 }
 
-/**
- * Read the memberInfo cookie, which is present if we have a session,
- * to grab our username and user_id properties if we are signed in.
- */
+/** Sets our memberInfo from the `memberInfo` cookie, which is present if we have a session. */
 function readMemberInfoCookie(): void {
-	resetMemberInfo();
-
-	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
-	if (!encodedMemberInfo) return; // No cookie, not signed in.
-	// Decode the URL-encoded string (cookies can't hold the special characters of raw JSON).
-	const parsed: MemberInfoCookie = JSON.parse(decodeURIComponent(encodedMemberInfo));
-	memberInfo = { signedIn: true, ...parsed };
-
-	scheduleSessionLogout();
+	const parsed = parseMemberInfoCookie();
+	memberInfo = parsed ? { signedIn: true, ...parsed } : { signedIn: false };
 }
 
-/** Resets our member info variables as if we were logged out. */
-function resetMemberInfo(): void {
-	clearTimeout(sessionExpiryTimer); // Prevent ghost logout events after we've manually reset
-	memberInfo = { signedIn: false };
+/** The `memberInfo` cookie's payload, or undefined if it's absent (not signed in). */
+function parseMemberInfoCookie(): MemberInfoCookie | undefined {
+	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
+	if (!encodedMemberInfo) return undefined;
+	// Decode the URL-encoded string (cookies can't hold the special characters of raw JSON).
+	return JSON.parse(decodeURIComponent(encodedMemberInfo));
 }
 
 // Session End -----------------------------------------------------------------
 
-/** Calculates time until session expiry and sets a timer to check session status. */
-function scheduleSessionLogout(): void {
-	clearTimeout(sessionExpiryTimer);
-	if (!memberInfo.signedIn || !memberInfo.expires) return;
-
-	const timeUntilExpiry = memberInfo.expires - Date.now();
-	sessionExpiryTimer = window.setTimeout(() => checkSessionExpiry(), timeUntilExpiry);
-}
-
-/**
- * Callback for the session expiry timer.
- * Re-verifies cookie existence/expiry before deciding to reload or reschedule.
- */
+/** Reloads as signed out once our session has ended: its cookie gone, or past its expiry. */
 function checkSessionExpiry(): void {
-	const encodedMemberInfo = docutil.getCookieValue('memberInfo');
-
-	// If the cookie is gone, we are definitely logged out.
-	if (!encodedMemberInfo) {
-		// Only reload if we thought we were signed in
-		if (memberInfo.signedIn) {
-			console.log('Detected session expired. Reloading. - 1');
-			reloadAfterLogout();
-		}
-		return;
-	}
-
-	const info: MemberInfoCookie = JSON.parse(decodeURIComponent(encodedMemberInfo));
-
-	// Final check: Is it actually in the future? (has since been renewed)
-	if (info.expires && info.expires > Date.now()) {
-		// It was renewed! Update our local state and reschedule.
-		readMemberInfoCookie();
-	} else {
-		// Still expired. Reload.
-		console.log('Detected session expired. Reloading. - 2');
-		reloadAfterLogout();
-	}
+	if (!memberInfo.signedIn) return;
+	const info = parseMemberInfoCookie();
+	if (info !== undefined && info.expires > Date.now()) return; // Still live, or since renewed
+	console.log('Detected session expired. Reloading.');
+	reloadAfterLogout();
 }
 
-/**
- * Cleans up local auth state, then reloads the page to reflect the logged-out state.
- * Cleanup cancels the session-expiry timer so it can't fire again after the reset.
- */
+/** Deletes our `memberInfo` cookie, then reloads the page to reflect the logged-out state. */
 function reloadAfterLogout(): void {
 	docutil.deleteCookie('memberInfo');
-	resetMemberInfo();
+	memberInfo = { signedIn: false };
 	navigate.reload();
 }
 
