@@ -261,11 +261,10 @@ followed, tell me.
 ### Committing
 
 39. Never commit until I explicitly ask you to. All changes are reviewed by me first. The exception
-    is a branch of your own that is the only way the work reaches me — a worktree task branch, or a
-    cloud run's branch. Commit there as normal without asking, then for a worktree deliver and clean
-    up per rule 41, and for a cloud run push, since I review it on GitHub. Otherwise, I stage files
-    as I review them, so expect your changes to move into the index mid-session — a clean `git diff`
-    doesn't mean your edits vanished.
+    is a cloud run's branch, the only way that work reaches me: commit there as normal without
+    asking, and push, since I review it on GitHub. Otherwise, I stage files as I review them, so
+    expect your changes to move into the index mid-session — a clean `git diff` doesn't mean your
+    edits vanished.
 
 40. When I _do_ ask you to commit, split unrelated changes into their own commits (unless they are
     all tiny), then `git push` immediately after. If a change I ask for would need its own commit,
@@ -278,10 +277,9 @@ followed, tell me.
 41. When I ask for work in a worktree, run its whole lifecycle yourself — I never type any of these
     commands. Create it in `.worktrees/`, branched from the branch I have checked out, never from
     `main`: `git worktree add .worktrees/<task> -b <task> <my-branch>`. Node walks up to the repo's
-    `node_modules`, so it needs no install. Commit there per rule 39. Only when requested, deliver
-    it unstaged into my working tree with `git cherry-pick -n <task>` and `git reset`, so I review
-    it in my own editor. Immediately remove the worktree and delete the branch — any revision I ask
-    for afterwards is ordinary work in my tree.
+    `node_modules`, so it needs no install. Only when requested, deliver it unstaged into my working
+    tree, so I review it in my own editor. Immediately remove the worktree and delete the branch —
+    any revision I ask for afterwards is ordinary work in my tree.
 
 42. After committing, move to the trash (no irreversible delete) all remaining sandbox scripts you
     created that are deemed no longer needed. Any repurposed ones should have already been moved out
