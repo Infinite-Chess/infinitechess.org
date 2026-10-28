@@ -116,17 +116,18 @@ async function syncLatestRelease(localVersion: string, hasLocalCopy: boolean): P
 	const zipAsset = releaseData.assets.find((a) => a.name === 'apeiron-wasm.zip');
 	if (!zipAsset) throw new Error(`Release ${remoteVersion} is missing apeiron-wasm.zip`);
 
-	// Fetch fully into memory first, so a failed download leaves any existing local copy intact.
+	// Fetch, unzip and resolve every path before the wipe, so a failed download or an entry escaping
+	// pkg leaves any existing local copy intact.
 	const response = await fetch(zipAsset.browser_download_url);
 	if (!response.ok) throw new Error(`Engine zip download failed: ${response.status} ${response.statusText}`); // prettier-ignore
-	const entries = unzipSync(new Uint8Array(await response.arrayBuffer()));
+	const files = Object.entries(unzipSync(new Uint8Array(await response.arrayBuffer())))
+		.filter(([entryPath]) => !entryPath.endsWith('/')) // Skip dir entries; parents are made from file paths.
+		.map(([entryPath, bytes]) => [resolveEntryPath(entryPath), bytes] as const);
 
 	// Replace pkg wholesale so no file from a prior version lingers. The version is re-stamped below.
 	await fs.promises.rm(PKG_DIR, { recursive: true, force: true });
 	await Promise.all(
-		Object.entries(entries).map(async ([entryPath, bytes]) => {
-			if (entryPath.endsWith('/')) return; // Skip dir entries; parents are made from file paths.
-			const dest = path.join(PKG_DIR, entryPath);
+		files.map(async ([dest, bytes]) => {
 			await fs.promises.mkdir(path.dirname(dest), { recursive: true });
 			await fs.promises.writeFile(dest, bytes);
 		}),
@@ -158,6 +159,16 @@ async function fetchLatestRelease(): Promise<z.infer<typeof releaseDataSchema>> 
 		throw new Error(`GitHub API returned invalid data: ${parseResult.error.message}`);
 	}
 	return parseResult.data;
+}
+
+/**
+ * Resolves a release zip entry to its destination inside the pkg dir.
+ * @throws If the entry's path escapes the pkg dir.
+ */
+function resolveEntryPath(entryPath: string): string {
+	const dest = path.resolve(PKG_DIR, entryPath);
+	if (!dest.startsWith(PKG_DIR + path.sep)) throw new Error(`Engine zip entry escapes pkg: ${entryPath}`); // prettier-ignore
+	return dest;
 }
 
 /**

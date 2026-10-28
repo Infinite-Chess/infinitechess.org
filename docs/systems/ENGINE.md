@@ -97,9 +97,9 @@ is `rimraf dist` only, and never touches `pkg/`).
 4. **Up-to-date check** — if the stamped tag equals the remote tag _and_ `apeiron_bg.wasm` +
    `apeiron.js` exist, do nothing.
 5. **New version** — find the asset `apeiron-wasm.zip`, fetch it fully into memory, `unzipSync` (via
-   `fflate`) **before** touching disk (so a bad download doesn't destroy the working copy), then
-   wipe `pkg/` wholesale and write every entry at its archive-relative path (recreating the
-   `snippets/` tree). Finally, stamp `.engine-version` with the new tag.
+   `fflate`) and resolve every entry's path **before** touching disk (so a bad download, or an entry
+   escaping `pkg/`, fails without destroying the working copy), then wipe `pkg/` wholesale and write
+   the entries (recreating the `snippets/` tree). Finally, stamp `.engine-version` with the new tag.
 
 If any of steps 3–5 fails, the build proceeds with the local copy, or fails with the reason when
 there is none. `copyEngineToDist()` likewise fails it if the pkg lacks the glue or `.wasm`.
