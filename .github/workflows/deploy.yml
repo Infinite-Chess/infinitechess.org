@@ -23,4 +23,4 @@ jobs:
       - name: Dispatch the private deploy workflow
         env:
           GH_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
-        run: gh workflow run deploy.yml -R Infinite-Chess/infinitechess.org-deploy -f pull=true
+        run: gh api repos/Infinite-Chess/infinitechess.org-deploy/actions/workflows/deploy.yml/dispatches -f ref=main -f 'inputs[pull]=true'
