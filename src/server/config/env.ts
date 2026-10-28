@@ -28,7 +28,6 @@ const BaseSchema = z.object({
 	NODE_ENV: z.enum(['development', 'production', 'test']),
 	APP_BASE_URL: z.string(),
 	HTTPPORT: PortSchema,
-	/** In production, must match the HTTPSPORT repository variable for the Deploy workflow. */
 	HTTPSPORT: PortSchema,
 	HTTPPORT_LOCAL: PortSchema,
 	HTTPSPORT_LOCAL: PortSchema,

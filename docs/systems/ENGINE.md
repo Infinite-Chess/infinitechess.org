@@ -28,9 +28,9 @@ upstream improves engine, bumps Cargo.toml version (on an Elo gain)
         │  we pull upstream → push to fork `main`
         ▼
 fork build-wasm.yml:  wasm-pack build → zip pkg/ → GitHub Release (apeiron-wasm.zip)
-        │  last step: POST workflow_dispatch → infinitechess.org deploy.yml (ref=prod)
+        │  last step: dispatch → infinitechess.org-deploy's deploy.yml
         ▼
-infinitechess.org deploy.yml (self-hosted):  npm run build → pm2 reload
+infinitechess.org-deploy deploy.yml (self-hosted):  npm run build → pm2 reload
         │  build runs downloadEngineWasm() → sees new release tag → downloads+extracts zip
         ▼
 copyEngineToDist() → /engine/<hash>/ ;  manifest['engine'] + ['engineVersion']
@@ -56,8 +56,8 @@ own workflows — notably its auto-release that bumps the Cargo semver on an Elo
 4. **Zip `pkg/`** (`cd pkg && zip -r ../apeiron-wasm.zip . -x ".*"`), preserving the nested
    `snippets/` tree.
 5. **Create Release** with `apeiron-wasm.zip`, tagged/named as in step 3.
-6. **Trigger the deploy** — `POST …/infinitechess.org/actions/workflows/deploy.yml/dispatches` with
-   `{"ref":"prod"}`, authed by `secrets.INFINITECHESS_DISPATCH_TOKEN`.
+6. **Trigger the deploy** — `gh workflow run deploy.yml -R Infinite-Chess/infinitechess.org-deploy`,
+   authed by `secrets.DEPLOY_DISPATCH_TOKEN`.
 
 ### The version scheme — two identifiers, distinct jobs
 
@@ -134,21 +134,23 @@ Runtime consumption:
   cross-origin-isolated page); otherwise it degrades to single-thread.
 - This list isn't exhaustive — more consumers may exist, whether or not they are added here.
 
-## Deploy — [.github/workflows/deploy.yml](/.github/workflows/deploy.yml)
+## Deploy — `Infinite-Chess/infinitechess.org-deploy`
 
-Runs on the **self-hosted** prod machine. Concurrency group `deploy` with
-`cancel-in-progress: false` — one deploy at a time; a second queues rather than being dropped. Two
-trigger paths, same job, differing only by which steps run:
+The deploy job lives in that **private** repo, running on the **self-hosted** prod machine. Never
+register a runner to this public repo: any PR could run workflows on it. This repo's
+[deploy.yml](/.github/workflows/deploy.yml) only dispatches it on each push to `prod`. Concurrency
+group `deploy` with `cancel-in-progress: false` — one deploy at a time; a second queues rather than
+being dropped. One `pull` input decides which steps run:
 
-| Step                                                                          | On push to `prod` (code deploy) | On `workflow_dispatch` (engine release / manual) |
-| ----------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------ |
-| 1. Pre-deploy DB backup (loopback `/api/prepare-restart`; aborts if it fails) | ✅ `if: push`                   | ⏭️ skipped                                       |
-| 2. `git pull && npm ci`                                                       | ✅ `if: push`                   | ⏭️ skipped                                       |
-| 3. **`npm run build`**                                                        | ✅ always                       | ✅ always                                        |
-| 4. `pm2 reload infinitechess`                                                 | ✅ always                       | ✅ always                                        |
-| 5. Health check (curl homepage, expect 200)                                   | ✅ always                       | ✅ always                                        |
+| Step                                                                          | `pull` on (push to `prod`) | `pull` off (engine release / manual) |
+| ----------------------------------------------------------------------------- | -------------------------- | ------------------------------------ |
+| 1. Pre-deploy DB backup (loopback `/api/prepare-restart`; aborts if it fails) | ✅                         | ⏭️ skipped                           |
+| 2. `git pull && npm ci`                                                       | ✅                         | ⏭️ skipped                           |
+| 3. **`npm run build`**                                                        | ✅ always                  | ✅ always                            |
+| 4. `pm2 reload infinitechess`                                                 | ✅ always                  | ✅ always                            |
+| 5. Health check (curl homepage, expect 200)                                   | ✅ always                  | ✅ always                            |
 
-An **engine release triggers the dispatch path**: it does **not** pull infinitechess.org code or
+An **engine release dispatches with `pull` off**: it does **not** pull infinitechess.org code or
 reinstall deps — it just re-runs the build against the code already on `prod`. Step 3 is where the
 new engine is picked up: `downloadEngineWasm()` sees the new release tag, downloads+extracts the new
 zip, and esbuild rebuilds so the new content-hashed engine URL lands in the manifest.
@@ -181,5 +183,6 @@ auto-reconnect). Engine download/extract time never touches users.
 | Analysis page SSR (engineUrl, engine name)               | [src/server/views/analysis.njk](/src/server/views/analysis.njk)                                                             |
 | Worker: load glue, init threads                          | [src/client/scripts/views/analysis/apeironanalysis.worker.ts](/src/client/scripts/views/analysis/apeironanalysis.worker.ts) |
 | Worker lifecycle / eval driver                           | [src/client/scripts/views/analysis/ceval.ts](/src/client/scripts/views/analysis/ceval.ts)                                   |
-| Site deploy job                                          | [.github/workflows/deploy.yml](/.github/workflows/deploy.yml)                                                               |
+| Site deploy job                                          | `Infinite-Chess/infinitechess.org-deploy` → `.github/workflows/deploy.yml` (private)                                        |
+| Its trigger on push to `prod`                            | [.github/workflows/deploy.yml](/.github/workflows/deploy.yml)                                                               |
 | Engine build+release job                                 | `Infinite-Chess/apeiron` → `.github/workflows/build-wasm.yml` (separate adjacent repo)                                      |
