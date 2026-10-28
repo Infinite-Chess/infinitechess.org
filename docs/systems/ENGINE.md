@@ -56,8 +56,8 @@ own workflows — notably its auto-release that bumps the Cargo semver on an Elo
 4. **Zip `pkg/`** (`cd pkg && zip -r ../apeiron-wasm.zip . -x ".*"`), preserving the nested
    `snippets/` tree.
 5. **Create Release** with `apeiron-wasm.zip`, tagged/named as in step 3.
-6. **Trigger the deploy** — `gh workflow run deploy.yml -R Infinite-Chess/infinitechess.org-deploy`,
-   authed by `secrets.DEPLOY_DISPATCH_TOKEN`.
+6. **Trigger the deploy** — `POST` to `infinitechess.org-deploy`'s `deploy.yml` dispatch endpoint
+   via `gh api`, authed by `secrets.DEPLOY_DISPATCH_TOKEN`.
 
 ### The version scheme — two identifiers, distinct jobs
 
